@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import { useTheme } from "../contexts/ThemeContext";
 import { auth } from "../utils/auth";
 
@@ -24,36 +25,38 @@ interface OnboardingPage {
   buttonText: string;
 }
 
-const ONBOARDING_DATA: OnboardingPage[] = [
+const getOnboardingData = (t: (key: string) => string): OnboardingPage[] => [
   {
     id: 1,
     image: require("../../assets/images/OnBoarding/ManLookingUp.jpg"),
-    title: "Your Fitness, Your",
-    subtitle: '"Built for your body and goals."',
-    buttonText: "Get Started",
+    title: t("onboarding.page1Title"),
+    subtitle: t("onboarding.page1Subtitle"),
+    buttonText: t("onboarding.page1Button"),
   },
   {
     id: 2,
     image: require("../../assets/images/OnBoarding/ManWithOneWeights.jpg"),
-    title: "Welcome To",
-    subtitle: '"Your personal fitness journey starts here."',
-    buttonText: "Next",
+    title: t("onboarding.page2Title"),
+    subtitle: t("onboarding.page2Subtitle"),
+    buttonText: t("onboarding.page2Button"),
   },
   {
     id: 3,
     image: require("../../assets/images/OnBoarding/ManWithTwoWeights.jpg"),
-    title: "Start Your Fitness",
-    subtitle: '"Personalized workouts just for you"',
-    buttonText: "Next",
+    title: t("onboarding.page3Title"),
+    subtitle: t("onboarding.page3Subtitle"),
+    buttonText: t("onboarding.page3Button"),
   },
 ];
 
 export default function OnBoarding() {
+  const { t } = useTranslation();
   const [currentPage, setCurrentPage] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
   const router = useRouter();
   const { theme } = useTheme();
   const styles = createStyles(theme);
+  const ONBOARDING_DATA = getOnboardingData(t);
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const offsetX = event.nativeEvent.contentOffset.x;
@@ -124,12 +127,14 @@ export default function OnBoarding() {
               <View style={styles.contentContainer}>
                 <View style={styles.titleContainer}>
                   <Text style={styles.title}>{page.title}</Text>
-                  {page.id === 1 && <Text style={styles.titleBold}>Ways!</Text>}
+                  {page.id === 1 && (
+                    <Text style={styles.titleBold}>{t("onboarding.page1TitleBold")}</Text>
+                  )}
                   {page.id === 2 && (
-                    <Text style={styles.titleBold}>FitLife!</Text>
+                    <Text style={styles.titleBold}>{t("onboarding.page2TitleBold")}</Text>
                   )}
                   {page.id === 3 && (
-                    <Text style={styles.titleBold}>Journey</Text>
+                    <Text style={styles.titleBold}>{t("onboarding.page3TitleBold")}</Text>
                   )}
                 </View>
                 <Text style={styles.subtitle}>{page.subtitle}</Text>
@@ -152,7 +157,7 @@ export default function OnBoarding() {
                   onPress={handleSkip}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.skipButtonText}>Skip</Text>
+                  <Text style={styles.skipButtonText}>{t("common.skip")}</Text>
                 </TouchableOpacity>
               </View>
             </View>

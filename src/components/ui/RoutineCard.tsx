@@ -1,8 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { memo } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { useTheme } from "../../contexts/ThemeContext";
 import { Routine } from "../../data/mockData";
+import { translateRoutineName } from "../../utils/exerciseTranslator";
 
 type Props = {
   routine: Routine;
@@ -18,8 +20,10 @@ const RoutineCard = ({
   onStart,
   fullWidth = false,
 }: Props) => {
+  const { t, i18n } = useTranslation();
   const { theme } = useTheme();
   const styles = createStyles(theme);
+  const translatedName = i18n.language === "fr" ? translateRoutineName(routine.name) : routine.name;
 
   const difficultyStyle = {
     beginner: styles.difficulty_beginner,
@@ -35,7 +39,7 @@ const RoutineCard = ({
     >
       <View style={styles.header}>
         <Text style={styles.name} numberOfLines={1}>
-          {routine.name}
+          {translatedName}
         </Text>
         <View style={[styles.difficultyBadge, difficultyStyle]}>
           <Text style={styles.difficultyText}>{routine.difficulty}</Text>
@@ -49,15 +53,15 @@ const RoutineCard = ({
       <View style={styles.statsRow}>
         <View style={styles.statItem}>
           <Text style={styles.statValue}>{routine.exercises.length}</Text>
-          <Text style={styles.statLabel}>Exercises</Text>
+          <Text style={styles.statLabel}>{t("routines.exercises")}</Text>
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statValue}>{routine.estimatedDuration}m</Text>
-          <Text style={styles.statLabel}>Duration</Text>
+          <Text style={styles.statLabel}>{t("routines.duration")}</Text>
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statValue}>{routine.timesCompleted}</Text>
-          <Text style={styles.statLabel}>Completed</Text>
+          <Text style={styles.statLabel}>{t("routines.completed")}</Text>
         </View>
       </View>
 
@@ -74,7 +78,7 @@ const RoutineCard = ({
         style={styles.startButton}
         activeOpacity={0.85}
       >
-        <Text style={styles.startButtonText}>Start Routine</Text>
+        <Text style={styles.startButtonText}>{t("routines.startRoutine")}</Text>
         <Ionicons
           name="arrow-forward"
           size={14}

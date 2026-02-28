@@ -9,10 +9,12 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import { Theme } from "../../constants/themes";
 import { useActiveWorkout } from "../../contexts/ActiveWorkoutContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { addRoutine, getRoutinesByUserId } from "../../data/mockData";
+import { translateRoutineName, translateRoutineCategory } from "../../utils/exerciseTranslator";
 import {
     DIFFICULTY_META,
     getExploreRoutineById,
@@ -29,6 +31,7 @@ const REST_LABEL = (s: number) => {
 export default function ExploreRoutineDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { theme } = useTheme();
+  const { t, i18n } = useTranslation();
   const styles = createStyles(theme);
   const router = useRouter();
   const { startWorkout } = useActiveWorkout();
@@ -49,9 +52,9 @@ export default function ExploreRoutineDetail() {
           size={48}
           color={theme.foreground.gray}
         />
-        <Text style={styles.notFoundText}>Routine not found.</Text>
+        <Text style={styles.notFoundText}>{t("routines.routineNotFound")}</Text>
         <TouchableOpacity onPress={() => router.back()}>
-          <Text style={styles.backLink}>Go back</Text>
+          <Text style={styles.backLink}>{t("routines.goBack")}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -70,7 +73,8 @@ export default function ExploreRoutineDetail() {
       lastUsed: undefined,
     });
     setSaved(true);
-    Alert.alert("Saved!", `"${routine.name}" has been added to My Routines.`);
+    const translatedName = i18n.language === "fr" ? translateRoutineName(routine.name) : routine.name;
+    Alert.alert(t("routines.saved"), `"${translatedName}" ${t("routines.hasBeenAdded")}`);
   };
 
   const handleStart = () => {
@@ -93,7 +97,7 @@ export default function ExploreRoutineDetail() {
           />
         </TouchableOpacity>
         <Text style={styles.headerTitle} numberOfLines={1}>
-          Routine Details
+          {t("routines.routineDetails")}
         </Text>
         <View style={{ width: 40 }} />
       </View>
@@ -113,12 +117,16 @@ export default function ExploreRoutineDetail() {
               </Text>
             </View>
             <View style={styles.categoryBadge}>
-              <Text style={styles.categoryBadgeText}>{routine.category}</Text>
+              <Text style={styles.categoryBadgeText}>
+                {i18n.language === "fr" ? translateRoutineCategory(routine.category) : routine.category}
+              </Text>
             </View>
           </View>
 
-          <Text style={styles.routineName}>{routine.name}</Text>
-          <Text style={styles.routineAuthor}>by {routine.author}</Text>
+          <Text style={styles.routineName}>
+            {i18n.language === "fr" ? translateRoutineName(routine.name) : routine.name}
+          </Text>
+          <Text style={styles.routineAuthor}>{t("routines.by")} {routine.author}</Text>
           <Text style={styles.routineDescription}>{routine.description}</Text>
 
           {/* Tags */}
@@ -160,7 +168,7 @@ export default function ExploreRoutineDetail() {
               color={theme.primary.main}
             />
             <Text style={styles.statValue}>{totalSets}</Text>
-            <Text style={styles.statLabel}>Total Sets</Text>
+            <Text style={styles.statLabel}>{t("schedule.totalSets")}</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
@@ -170,7 +178,7 @@ export default function ExploreRoutineDetail() {
               color={theme.primary.main}
             />
             <Text style={styles.statValue}>{routine.daysPerWeek}×</Text>
-            <Text style={styles.statLabel}>Per Week</Text>
+            <Text style={styles.statLabel}>{t("routines.perWeek")}</Text>
           </View>
         </View>
 
@@ -188,7 +196,7 @@ export default function ExploreRoutineDetail() {
 
         {/* ── Exercises ── */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Exercises</Text>
+          <Text style={styles.sectionTitle}>{t("routines.exercises")}</Text>
           <View style={styles.exercisesList}>
             {routine.exercises.map((ex, idx) => (
               <View key={ex.id} style={styles.exerciseRow}>
@@ -198,7 +206,7 @@ export default function ExploreRoutineDetail() {
                 <View style={styles.exerciseInfo}>
                   <Text style={styles.exerciseName}>{ex.name}</Text>
                   <Text style={styles.exerciseMeta}>
-                    {ex.sets} sets × {ex.reps} reps
+                    {ex.sets} {t("createRoutine.sets")} × {ex.reps} {t("createRoutine.reps")}
                     {ex.notes ? `  ·  ${ex.notes}` : ""}
                   </Text>
                 </View>

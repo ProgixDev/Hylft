@@ -8,10 +8,13 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import { Theme } from "../../constants/themes";
 import { useActiveWorkout } from "../../contexts/ActiveWorkoutContext";
 import { useTheme } from "../../contexts/ThemeContext";
+import { formatDisplayDate } from "../../utils/dateFormatter";
 import { getRoutineById } from "../../data/mockData";
+import { translateRoutineName } from "../../utils/exerciseTranslator";
 
 const DIFFICULTY_COLORS = {
   beginner: { bg: "rgba(34, 197, 94, 0.15)", text: "#22c55e" },
@@ -29,6 +32,7 @@ const REST_LABEL = (seconds: number) => {
 export default function RoutineDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { theme } = useTheme();
+  const { t, i18n } = useTranslation();
   const styles = createStyles(theme);
   const router = useRouter();
   const { startWorkout } = useActiveWorkout();
@@ -43,12 +47,12 @@ export default function RoutineDetail() {
           size={48}
           color={theme.foreground.gray}
         />
-        <Text style={styles.notFoundText}>Routine not found</Text>
+        <Text style={styles.notFoundText}>{t("routines.routineNotFound")}</Text>
         <TouchableOpacity
           style={styles.backFallback}
           onPress={() => router.back()}
         >
-          <Text style={styles.backFallbackText}>Go back</Text>
+          <Text style={styles.backFallbackText}>{t("routines.goBack")}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -85,7 +89,7 @@ export default function RoutineDetail() {
           />
         </TouchableOpacity>
         <Text style={styles.headerTitle} numberOfLines={1}>
-          {routine.name}
+          {i18n.language === "fr" ? translateRoutineName(routine.name) : routine.name}
         </Text>
         <View style={{ width: 40 }} />
       </View>
@@ -99,7 +103,9 @@ export default function RoutineDetail() {
         <View style={styles.heroCard}>
           {/* Title Row */}
           <View style={styles.heroTitleRow}>
-            <Text style={styles.heroName}>{routine.name}</Text>
+            <Text style={styles.heroName}>
+              {i18n.language === "fr" ? translateRoutineName(routine.name) : routine.name}
+            </Text>
             <View
               style={[
                 styles.difficultyBadge,
@@ -123,22 +129,22 @@ export default function RoutineDetail() {
           <View style={styles.statsRow}>
             <View style={styles.statItem}>
               <Text style={styles.statValue}>{routine.estimatedDuration}m</Text>
-              <Text style={styles.statLabel}>Duration</Text>
+              <Text style={styles.statLabel}>{t("routines.duration")}</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
               <Text style={styles.statValue}>{routine.exercises.length}</Text>
-              <Text style={styles.statLabel}>Exercises</Text>
+              <Text style={styles.statLabel}>{t("routines.exercises")}</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
               <Text style={styles.statValue}>{totalSets}</Text>
-              <Text style={styles.statLabel}>Sets</Text>
+              <Text style={styles.statLabel}>{t("createRoutine.sets")}</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
               <Text style={styles.statValue}>{routine.timesCompleted}</Text>
-              <Text style={styles.statLabel}>Done</Text>
+              <Text style={styles.statLabel}>{t("profile.done")}</Text>
             </View>
           </View>
 
@@ -151,12 +157,8 @@ export default function RoutineDetail() {
                 color={theme.foreground.gray}
               />
               <Text style={styles.lastUsedText}>
-                Last used{" "}
-                {new Date(routine.lastUsed).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                })}
+                {t("routines.lastUsed")}{" "}
+                {formatDisplayDate(routine.lastUsed, { month: "short", day: "numeric", year: "numeric" })}
               </Text>
             </View>
           )}
@@ -175,7 +177,7 @@ export default function RoutineDetail() {
         </View>
 
         {/* Exercise List */}
-        <Text style={styles.sectionTitle}>Exercises</Text>
+        <Text style={styles.sectionTitle}>{t("routines.exercises")}</Text>
 
         {routine.exercises.map((exercise, index) => (
           <View key={exercise.id} style={styles.exerciseCard}>
@@ -244,7 +246,7 @@ export default function RoutineDetail() {
           activeOpacity={0.85}
         >
           <Ionicons name="play" size={18} color={theme.background.dark} />
-          <Text style={styles.startButtonText}>Start Routine</Text>
+          <Text style={styles.startButtonText}>{t("routines.startRoutine")}</Text>
         </TouchableOpacity>
       </View>
     </View>

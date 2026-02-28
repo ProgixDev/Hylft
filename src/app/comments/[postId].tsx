@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import { useTheme } from "../../contexts/ThemeContext";
 import {
   Comment,
@@ -48,6 +49,7 @@ interface ReplyWithUser {
 }
 
 export default function CommentsScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const { postId } = useLocalSearchParams();
   const { theme } = useTheme();
@@ -192,7 +194,7 @@ export default function CommentsScreen() {
           <Text style={styles.timestamp}>{reply.timestamp}</Text>
           {reply.likes > 0 && (
             <Text style={styles.likes}>
-              {reply.likes} {reply.likes === 1 ? "like" : "likes"}
+              {reply.likes} {reply.likes === 1 ? t("comments.like") : t("comments.likes")}
             </Text>
           )}
         </View>
@@ -230,11 +232,11 @@ export default function CommentsScreen() {
             <Text style={styles.timestamp}>{item.timestamp}</Text>
             {item.likes > 0 && (
               <Text style={styles.likes}>
-                {item.likes} {item.likes === 1 ? "like" : "likes"}
+                {item.likes} {item.likes === 1 ? t("comments.like") : t("comments.likes")}
               </Text>
             )}
             <TouchableOpacity onPress={() => setReplyingTo(item.id)}>
-              <Text style={styles.replyButton}>Reply</Text>
+              <Text style={styles.replyButton}>{t("comments.reply")}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -279,8 +281,8 @@ export default function CommentsScreen() {
               <View style={styles.viewMoreRepliesLine} />
               <Text style={styles.viewMoreRepliesText}>
                 {expandedReplies.has(item.id)
-                  ? "Hide replies"
-                  : `View ${item.replies.length} ${item.replies.length === 1 ? "reply" : "replies"}`}
+                  ? t("comments.hideReplies")
+                  : t("comments.viewReplies").replace("{count}", String(item.replies.length)).replace(/\{count, plural, one \{reply\} other \{replies\}\}/, item.replies.length === 1 ? t("comments.reply") : t("comments.replies"))}
               </Text>
             </TouchableOpacity>
           )}
@@ -324,7 +326,7 @@ export default function CommentsScreen() {
             color={theme.foreground.white}
           />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Comments</Text>
+        <Text style={styles.headerTitle}>{t("comments.title")}</Text>
         <View style={styles.headerRight} />
       </View>
 
@@ -351,7 +353,7 @@ export default function CommentsScreen() {
           {replyingTo && (
             <View style={styles.replyingToLabel}>
               <Text style={styles.replyingToText}>
-                Replying to{" "}
+                {t("comments.replyingTo")}{" "}
                 {comments.find((c) => c.id === replyingTo)?.user.username}
               </Text>
               <TouchableOpacity onPress={() => setReplyingTo(null)}>
@@ -375,7 +377,7 @@ export default function CommentsScreen() {
             />
             <TextInput
               style={styles.input}
-              placeholder={replyingTo ? "Add a reply..." : "Add a comment..."}
+              placeholder={replyingTo ? t("comments.addReply") : t("comments.addComment")}
               placeholderTextColor={theme.foreground.gray}
               value={commentText}
               onChangeText={setCommentText}
@@ -396,7 +398,7 @@ export default function CommentsScreen() {
                   },
                 ]}
               >
-                {replyingTo ? "Reply" : "Post"}
+                {replyingTo ? t("comments.reply") : t("comments.post")}
               </Text>
             </TouchableOpacity>
           </View>

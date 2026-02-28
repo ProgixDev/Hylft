@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import { useTheme } from "../../contexts/ThemeContext";
 import ImageCarousel from "./ImageCarousel";
 
@@ -40,6 +41,7 @@ type PostProps = {
 
 const Post = memo(
   ({ post, onLike }: PostProps) => {
+    const { t } = useTranslation();
     const router = useRouter();
     const { theme } = useTheme();
     const [isSaved, setIsSaved] = useState(false);
@@ -51,9 +53,9 @@ const Post = memo(
     const handleShare = async () => {
       try {
         await Share.share({
-          message: `Check out this post by ${post.user.username}!`,
+          message: `${t("post.checkOutPost")} ${post.user.username}!`,
           url: post.images[0],
-          title: "Share Post",
+          title: t("post.sharePost"),
         });
       } catch (error) {
         console.error("Error sharing:", error);
@@ -92,25 +94,25 @@ const Post = memo(
             <View style={styles.metricsContainer}>
               {post.weight && (
                 <View style={styles.metricItem}>
-                  <Text style={styles.metricLabel}>Weight</Text>
+                  <Text style={styles.metricLabel}>{t("post.weight")}</Text>
                   <Text style={styles.metricValue}>{post.weight}</Text>
                 </View>
               )}
               {post.sets && (
                 <View style={styles.metricItem}>
-                  <Text style={styles.metricLabel}>Sets</Text>
+                  <Text style={styles.metricLabel}>{t("post.sets")}</Text>
                   <Text style={styles.metricValue}>{post.sets}</Text>
                 </View>
               )}
               {post.reps && (
                 <View style={styles.metricItem}>
-                  <Text style={styles.metricLabel}>Reps</Text>
+                  <Text style={styles.metricLabel}>{t("post.reps")}</Text>
                   <Text style={styles.metricValue}>{post.reps}</Text>
                 </View>
               )}
               {post.duration && (
                 <View style={styles.metricItem}>
-                  <Text style={styles.metricLabel}>Duration</Text>
+                  <Text style={styles.metricLabel}>{t("post.duration")}</Text>
                   <Text style={styles.metricValue}>{post.duration}</Text>
                 </View>
               )}
@@ -170,7 +172,7 @@ const Post = memo(
 
         {/* Post Info */}
         <View style={styles.postInfo}>
-          <Text style={styles.likes}>{post.likes.toLocaleString()} likes</Text>
+          <Text style={styles.likes}>{post.likes.toLocaleString()} {t("post.likes")}</Text>
           <Text style={styles.caption}>
             <Text style={styles.username}>{post.user.username} </Text>
             {post.caption}
@@ -178,7 +180,7 @@ const Post = memo(
           {post.comments > 0 && (
             <TouchableOpacity onPress={handleComments}>
               <Text style={styles.viewComments}>
-                View all {post.comments} comments
+                {t("post.viewAllComments").replace("{count}", String(post.comments))}
               </Text>
             </TouchableOpacity>
           )}

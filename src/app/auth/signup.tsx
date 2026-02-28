@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
 import { auth } from "../../utils/auth";
@@ -114,6 +115,7 @@ function createStyles(theme: Theme) {
 }
 
 export default function SignUp() {
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -132,22 +134,22 @@ export default function SignUp() {
   const handleSignUp = async () => {
     // Validation
     if (!username || !email || !password || !confirmPassword) {
-      Alert.alert("Error", "Please fill in all fields");
+      Alert.alert(t("auth.error"), t("auth.fillAllFields"));
       return;
     }
 
     if (!validateEmail(email)) {
-      Alert.alert("Error", "Please enter a valid email address");
+      Alert.alert(t("auth.error"), t("signup.validEmail"));
       return;
     }
 
     if (password.length < 6) {
-      Alert.alert("Error", "Password must be at least 6 characters long");
+      Alert.alert(t("auth.error"), t("signup.passwordLength"));
       return;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert("Error", "Passwords do not match");
+      Alert.alert(t("auth.error"), t("signup.passwordsDoNotMatch"));
       return;
     }
 
@@ -183,17 +185,17 @@ export default function SignUp() {
         </View>
 
         <View style={styles.contentContainer}>
-          <Text style={styles.title}>Create Account</Text>
+          <Text style={styles.title}>{t("signup.createAccount")}</Text>
           <Text style={styles.subtitle}>
-            Sign up to start your fitness journey
+            {t("signup.signUpToStart")}
           </Text>
 
           <View style={styles.formContainer}>
             <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Username</Text>
+              <Text style={styles.inputLabel}>{t("signup.username")}</Text>
               <TextInput
                 style={styles.input}
-                placeholder="Choose a username"
+                placeholder={t("signup.chooseUsername")}
                 placeholderTextColor={theme.foreground.gray}
                 value={username}
                 onChangeText={setUsername}
@@ -203,10 +205,10 @@ export default function SignUp() {
             </View>
 
             <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Email</Text>
+              <Text style={styles.inputLabel}>{t("auth.email")}</Text>
               <TextInput
                 style={styles.input}
-                placeholder="Enter your email"
+                placeholder={t("auth.enterEmail")}
                 placeholderTextColor={theme.foreground.gray}
                 value={email}
                 onChangeText={setEmail}
@@ -217,10 +219,10 @@ export default function SignUp() {
             </View>
 
             <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Password</Text>
+              <Text style={styles.inputLabel}>{t("auth.password")}</Text>
               <TextInput
                 style={styles.input}
-                placeholder="Create a password (min 6 characters)"
+                placeholder={t("signup.createPassword")}
                 placeholderTextColor={theme.foreground.gray}
                 value={password}
                 onChangeText={setPassword}
@@ -231,10 +233,10 @@ export default function SignUp() {
             </View>
 
             <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Confirm Password</Text>
+              <Text style={styles.inputLabel}>{t("signup.confirmPassword")}</Text>
               <TextInput
                 style={styles.input}
-                placeholder="Confirm your password"
+                placeholder={t("signup.confirmYourPassword")}
                 placeholderTextColor={theme.foreground.gray}
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
@@ -251,13 +253,13 @@ export default function SignUp() {
               activeOpacity={0.8}
             >
               <Text style={styles.signUpButtonText}>
-                {isLoading ? "Creating Account..." : "Sign Up"}
+                {isLoading ? t("signup.creatingAccount") : t("signup.signUp")}
               </Text>
             </TouchableOpacity>
 
             <View style={styles.dividerContainer}>
               <View style={styles.divider} />
-              <Text style={styles.dividerText}>or</Text>
+              <Text style={styles.dividerText}>{t("common.or")}</Text>
               <View style={styles.divider} />
             </View>
 
@@ -267,7 +269,7 @@ export default function SignUp() {
               activeOpacity={0.7}
             >
               <Text style={styles.signInButtonText}>
-                Already have an account? Sign In
+                {t("signup.alreadyHaveAccountSignIn")}
               </Text>
             </TouchableOpacity>
           </View>

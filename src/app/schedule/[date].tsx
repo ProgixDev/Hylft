@@ -9,9 +9,12 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import { Theme } from "../../constants/themes";
 import { useActiveWorkout } from "../../contexts/ActiveWorkoutContext";
 import { useTheme } from "../../contexts/ThemeContext";
+import { formatDate, formatWeekday } from "../../utils/dateFormatter";
+import { translateRoutineName } from "../../utils/exerciseTranslator";
 import {
   getRoutineById,
   getScheduleForDate,
@@ -23,33 +26,23 @@ import {
 
 const MY_USER_ID = "1";
 
-function formatDate(dateStr: string): string {
-  const d = new Date(dateStr + "T00:00:00");
-  return d.toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
-function getDayLabel(dateStr: string): string {
+function getDayLabel(dateStr: string, t: (key: string) => string): string {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const d = new Date(dateStr + "T00:00:00");
   const diff = Math.round(
     (d.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
   );
-  if (diff === -1) return "Yesterday";
-  if (diff === 0) return "Today";
-  if (diff === 1) return "Tomorrow";
-  if (diff === 2) return "In 2 days";
-  return d.toLocaleDateString("en-US", { weekday: "long" });
+  if (diff === -1) return t("scheduleDetail.yesterday");
+  if (diff === 0) return t("scheduleDetail.today");
+  if (diff === 1) return t("scheduleDetail.tomorrow");
+  if (diff === 2) return t("scheduleDetail.in2Days");
+  return formatWeekday(dateStr);
 }
 
-function formatRestTime(seconds: number): string {
-  if (seconds >= 60) return `${Math.round(seconds / 60)}min rest`;
-  return `${seconds}s rest`;
+function formatRestTime(seconds: number, t: (key: string) => string): string {
+  if (seconds >= 60) return `${Math.round(seconds / 60)}${t("scheduleDetail.minRest")}`;
+  return `${seconds}${t("scheduleDetail.sRest")}`;
 }
 
 // ─── Exercise Row ─────────────────────────────────────────────────────────────
@@ -59,11 +52,13 @@ function ExerciseRow({
   index,
   theme,
   isCompleted,
+  t,
 }: {
   exercise: RoutineExercise;
   index: number;
   theme: Theme;
   isCompleted: boolean;
+  t: (key: string) => string;
 }) {
   const [expanded, setExpanded] = useState(false);
 
@@ -120,7 +115,7 @@ function ExerciseRow({
               <Text
                 style={[styles.exMetaText, { color: theme.foreground.gray }]}
               >
-                {exercise.sets} sets
+                {exercise.sets} {t("scheduleDetail.sets")}
               </Text>
             </View>
             <View
@@ -137,7 +132,7 @@ function ExerciseRow({
               <Text
                 style={[styles.exMetaText, { color: theme.foreground.gray }]}
               >
-                {exercise.reps} reps
+                {exercise.reps} {t("scheduleDetail.reps")}
               </Text>
             </View>
             <View
@@ -154,7 +149,7 @@ function ExerciseRow({
               <Text
                 style={[styles.exMetaText, { color: theme.foreground.gray }]}
               >
-                {formatRestTime(exercise.restTime)}
+                {formatRestTime(exercise.restTime, t)}
               </Text>
             </View>
           </View>
@@ -198,13 +193,13 @@ function ExerciseRow({
                 <Text
                   style={[styles.setNumText, { color: theme.foreground.gray }]}
                 >
-                  Set {si + 1}
+                  {t("scheduleDetail.set")} {si + 1}
                 </Text>
               </View>
               <Text
                 style={[styles.setRepsText, { color: theme.foreground.white }]}
               >
-                {exercise.reps} reps
+                {exercise.reps} {t("scheduleDetail.reps")}
               </Text>
               {isCompleted && (
                 <Ionicons name="checkmark-circle" size={14} color="#4CAF50" />
@@ -220,6 +215,7 @@ function ExerciseRow({
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 
 export default function ScheduleDetailPage() {
+  const { t, i18n } = useTranslation();
   const { date } = useLocalSearchParams<{ date: string }>();
   const router = useRouter();
   const { theme } = useTheme();
@@ -241,7 +237,7 @@ export default function ScheduleDetailPage() {
 
   const isCompleted = schedDay?.status === "completed";
   const isRest = !schedDay || schedDay.status === "rest";
-  const dayLabel = date ? getDayLabel(date) : "";
+  const dayLabel = date ? getDayLabel(date, t) : "";
   const formattedDate = date ? formatDate(date) : "";
 
   const today = new Date();
@@ -253,10 +249,10 @@ export default function ScheduleDetailPage() {
 
   const handleMarkCompleted = () => {
     if (!date) return;
-    Alert.alert("Mark as Completed", "Mark this workout as completed?", [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert(t("scheduleDetail.markAsCompleted"), t("scheduleDetail.markWorkoutCompleted"), [
+      { text: t("common.cancel"), style: "cancel" },
       {
-        text: "Mark Complete",
+        text: t("scheduleDetail.markComplete"),
         onPress: () => {
           updateScheduleDay(date, { status: "completed" });
           setSchedDay((prev) =>
@@ -269,10 +265,10 @@ export default function ScheduleDetailPage() {
 
   const handleMarkRest = () => {
     if (!date) return;
-    Alert.alert("Change to Rest Day", "Change this day to a rest day?", [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert(t("scheduleDetail.changeToRestDay"), t("scheduleDetail.changeDayToRest"), [
+      { text: t("common.cancel"), style: "cancel" },
       {
-        text: "Set Rest Day",
+        text: t("scheduleDetail.setRestDay"),
         onPress: () => {
           updateScheduleDay(date, { status: "rest", routineId: undefined });
           setSchedDay((prev) =>
@@ -412,10 +408,10 @@ export default function ScheduleDetailPage() {
               ]}
             >
               {isCompleted
-                ? "Workout Completed"
+                ? t("scheduleDetail.workoutCompleted")
                 : isRest
-                  ? "Rest Day"
-                  : "Workout Scheduled"}
+                  ? t("scheduleDetail.restDay")
+                  : t("scheduleDetail.workoutScheduled")}
             </Text>
             {schedDay?.notes && (
               <Text
@@ -439,29 +435,28 @@ export default function ScheduleDetailPage() {
               <Ionicons name="moon" size={48} color={theme.foreground.gray} />
             </View>
             <Text style={[styles.restTitle, { color: theme.foreground.white }]}>
-              Rest & Recovery
+              {t("scheduleDetail.restAndRecovery")}
             </Text>
             <Text style={[styles.restBody, { color: theme.foreground.gray }]}>
-              Rest days are just as important as workout days. Your muscles
-              repair and grow stronger during recovery time.
+              {t("scheduleDetail.restDaysImportant")}
             </Text>
             <View style={styles.restTipsList}>
               {[
                 {
                   icon: "water-outline",
-                  tip: "Drink at least 2–3 litres of water",
+                  tip: t("scheduleDetail.drinkWater"),
                 },
                 {
                   icon: "bed-outline",
-                  tip: "Aim for 7–9 hours of quality sleep",
+                  tip: t("scheduleDetail.qualitySleep"),
                 },
                 {
                   icon: "walk-outline",
-                  tip: "Light walking or stretching is fine",
+                  tip: t("scheduleDetail.lightWalking"),
                 },
                 {
                   icon: "nutrition-outline",
-                  tip: "Eat enough protein to aid muscle repair",
+                  tip: t("scheduleDetail.eatProtein"),
                 },
               ].map((item) => (
                 <View
@@ -506,7 +501,7 @@ export default function ScheduleDetailPage() {
                       { color: theme.foreground.white },
                     ]}
                   >
-                    {routine.name}
+                    {i18n.language === "fr" ? translateRoutineName(routine.name) : routine.name}
                   </Text>
                   <Text
                     style={[
@@ -555,7 +550,7 @@ export default function ScheduleDetailPage() {
                       { color: theme.foreground.gray },
                     ]}
                   >
-                    Exercises
+                    {t("scheduleDetail.exercises")}
                   </Text>
                 </View>
                 <View
@@ -579,7 +574,7 @@ export default function ScheduleDetailPage() {
                       { color: theme.foreground.gray },
                     ]}
                   >
-                    Total Sets
+                    {t("scheduleDetail.totalSets")}
                   </Text>
                 </View>
                 <View
@@ -603,7 +598,7 @@ export default function ScheduleDetailPage() {
                       { color: theme.foreground.gray },
                     ]}
                   >
-                    Est. Time
+                    {t("scheduleDetail.estTime")}
                   </Text>
                 </View>
                 <View
@@ -627,7 +622,7 @@ export default function ScheduleDetailPage() {
                       { color: theme.foreground.gray },
                     ]}
                   >
-                    Done before
+                    {t("scheduleDetail.doneBefore")}
                   </Text>
                 </View>
               </View>
@@ -663,7 +658,7 @@ export default function ScheduleDetailPage() {
             <Text
               style={[styles.sectionTitle, { color: theme.foreground.gray }]}
             >
-              EXERCISE LIST
+              {t("scheduleDetail.exerciseList")}
             </Text>
             {routine.exercises.map((ex, idx) => (
               <ExerciseRow
@@ -672,6 +667,7 @@ export default function ScheduleDetailPage() {
                 index={idx}
                 theme={theme}
                 isCompleted={isCompleted}
+                t={t}
               />
             ))}
 
@@ -699,7 +695,7 @@ export default function ScheduleDetailPage() {
                       <Text
                         style={[styles.secondaryBtnText, { color: "#4CAF50" }]}
                       >
-                        Mark Completed
+                        {t("scheduleDetail.markComplete")}
                       </Text>
                     </TouchableOpacity>
                   )}
@@ -712,7 +708,7 @@ export default function ScheduleDetailPage() {
                     activeOpacity={0.85}
                   >
                     <Ionicons name="play" size={18} color="#0B0D0E" />
-                    <Text style={styles.primaryBtnText}>Start Workout</Text>
+                    <Text style={styles.primaryBtnText}>{t("scheduleDetail.startWorkout")}</Text>
                   </TouchableOpacity>
                 </>
               )}
@@ -730,7 +726,7 @@ export default function ScheduleDetailPage() {
                     { color: theme.foreground.gray },
                   ]}
                 >
-                  Change to rest day instead
+                  {t("scheduleDetail.changeToRestInstead")}
                 </Text>
               </TouchableOpacity>
             )}
@@ -745,10 +741,10 @@ export default function ScheduleDetailPage() {
             <Text
               style={[styles.emptyTitle, { color: theme.foreground.white }]}
             >
-              Nothing planned
+              {t("scheduleDetail.nothingPlanned")}
             </Text>
             <Text style={[styles.emptyBody, { color: theme.foreground.gray }]}>
-              No workout has been assigned to this day yet.
+              {t("scheduleDetail.noWorkoutAssigned")}
             </Text>
           </View>
         )}

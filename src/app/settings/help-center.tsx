@@ -12,6 +12,7 @@ import {
   UIManager,
   View,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
 
@@ -259,6 +260,7 @@ function FAQItem({ question, answer, isLast, styles, theme }: FAQItemProps) {
 }
 
 export default function HelpCenter() {
+  const { t } = useTranslation();
   const router = useRouter();
   const { theme } = useTheme();
   const styles = createStyles(theme);
@@ -286,7 +288,7 @@ export default function HelpCenter() {
             color={theme.foreground.white}
           />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Help Center</Text>
+        <Text style={styles.headerTitle}>{t("helpCenter.title")}</Text>
       </View>
 
       <ScrollView
@@ -304,7 +306,7 @@ export default function HelpCenter() {
             style={styles.searchInput}
             value={search}
             onChangeText={setSearch}
-            placeholder="Search questions…"
+            placeholder={t("helpCenter.searchQuestions")}
             placeholderTextColor={theme.foreground.gray}
             returnKeyType="search"
           />
@@ -327,7 +329,7 @@ export default function HelpCenter() {
               size={48}
               color={theme.foreground.gray}
             />
-            <Text style={styles.noResultsText}>No results for &quot;{search}&quot;</Text>
+            <Text style={styles.noResultsText}>{t("helpCenter.noResults")} &quot;{search}&quot;</Text>
           </View>
         ) : (
           filtered.map((cat) => (
@@ -338,7 +340,13 @@ export default function HelpCenter() {
                   size={18}
                   color={theme.primary.main}
                 />
-                <Text style={styles.categoryTitle}>{cat.category}</Text>
+                <Text style={styles.categoryTitle}>
+                  {cat.category === "Getting Started" ? t("helpCenter.gettingStarted") :
+                   cat.category === "Workouts & Tracking" ? t("helpCenter.workoutsTracking") :
+                   cat.category === "Account & Privacy" ? t("helpCenter.accountPrivacy") :
+                   cat.category === "Social Features" ? t("helpCenter.socialFeatures") :
+                   cat.category}
+                </Text>
               </View>
               <View style={styles.faqCard}>
                 {cat.items.map((item, idx) => (
@@ -359,17 +367,16 @@ export default function HelpCenter() {
         {/* Contact support */}
         <View style={styles.contactSection}>
           <Ionicons name="mail-outline" size={36} color={theme.primary.main} />
-          <Text style={styles.contactTitle}>Still need help?</Text>
+          <Text style={styles.contactTitle}>{t("helpCenter.stillNeedHelp")}</Text>
           <Text style={styles.contactSubtitle}>
-            Can&apos;t find what you&apos;re looking for? Our support team is here for
-            you.
+            {t("helpCenter.cantFindWhat")}
           </Text>
           <TouchableOpacity
             style={styles.contactBtn}
             activeOpacity={0.8}
             onPress={() => {}}
           >
-            <Text style={styles.contactBtnText}>Contact Support</Text>
+            <Text style={styles.contactBtnText}>{t("helpCenter.contactSupport")}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

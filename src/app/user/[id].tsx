@@ -9,10 +9,12 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getUserProfile } from "../../data/mockData";
 
 export default function UserProfile() {
+  const { t } = useTranslation();
   const router = useRouter();
   const { id } = useLocalSearchParams();
   const { theme } = useTheme();
@@ -23,7 +25,7 @@ export default function UserProfile() {
   if (!userProfileData) {
     return (
       <View style={styles.container}>
-        <Text style={{ color: theme.foreground.white }}>User not found</Text>
+        <Text style={{ color: theme.foreground.white }}>{t("user.userNotFound")}</Text>
       </View>
     );
   }
@@ -78,7 +80,7 @@ export default function UserProfile() {
         <View style={styles.statsContainer}>
           <View style={styles.statBox}>
             <Text style={styles.statNumber}>{userProfileData.postsCount}</Text>
-            <Text style={styles.statLabel}>Posts</Text>
+            <Text style={styles.statLabel}>{t("user.posts")}</Text>
           </View>
           <View style={styles.statBox}>
             <Text style={styles.statNumber}>
@@ -86,7 +88,7 @@ export default function UserProfile() {
                 ? (userProfileData.followers / 1000).toFixed(1) + "k"
                 : userProfileData.followers}
             </Text>
-            <Text style={styles.statLabel}>Followers</Text>
+            <Text style={styles.statLabel}>{t("user.followers")}</Text>
           </View>
           <View style={styles.statBox}>
             <Text style={styles.statNumber}>
@@ -94,7 +96,7 @@ export default function UserProfile() {
                 ? (userProfileData.following / 1000).toFixed(1) + "k"
                 : userProfileData.following}
             </Text>
-            <Text style={styles.statLabel}>Following</Text>
+            <Text style={styles.statLabel}>{t("user.following")}</Text>
           </View>
         </View>
 
@@ -109,7 +111,7 @@ export default function UserProfile() {
               isFollowing && styles.followingButtonText,
             ]}
           >
-            {isFollowing ? "Following" : "Follow"}
+            {isFollowing ? t("user.following") : t("user.follow")}
           </Text>
         </TouchableOpacity>
 
@@ -121,9 +123,9 @@ export default function UserProfile() {
               size={64}
               color={theme.foreground.gray}
             />
-            <Text style={styles.privateTitle}>This account is private</Text>
+            <Text style={styles.privateTitle}>{t("user.thisAccountIsPrivate")}</Text>
             <Text style={styles.privateSubtitle}>
-              Follow this user to see their posts
+              {t("user.followToSeePosts")}
             </Text>
           </View>
         ) : userProfileData.posts_data.length === 0 ? (
@@ -133,14 +135,14 @@ export default function UserProfile() {
               size={64}
               color={theme.foreground.gray}
             />
-            <Text style={styles.emptyTitle}>No posts yet</Text>
+            <Text style={styles.emptyTitle}>{t("user.noPostsYet")}</Text>
             <Text style={styles.emptySubtitle}>
-              This user hasn&apos;t shared any posts
+              {t("user.userHasntShared")}
             </Text>
           </View>
         ) : (
           <View style={styles.postsSection}>
-            <Text style={styles.postsTitle}>Posts</Text>
+            <Text style={styles.postsTitle}>{t("user.posts")}</Text>
             <View style={styles.postsGrid}>
               {userProfileData.posts_data.map((post, index) => (
                 <TouchableOpacity

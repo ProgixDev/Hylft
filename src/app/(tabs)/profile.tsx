@@ -9,8 +9,10 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
+import { translateRoutineName } from "../../utils/exerciseTranslator";
 import {
   getPostsByUserId,
   getRoutinesByUserId,
@@ -330,6 +332,7 @@ function calcTotalVolume(workouts: Workout[]): string {
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function Profile() {
+  const { t, i18n } = useTranslation();
   const { theme } = useTheme();
   const router = useRouter();
   const styles = createStyles(theme);
@@ -372,9 +375,9 @@ export default function Profile() {
             size={58}
             color={theme.foreground.gray}
           />
-          <Text style={styles.emptyText}>No posts yet</Text>
+          <Text style={styles.emptyText}>{t("profile.noPostsYet")}</Text>
           <Text style={styles.emptySubtext}>
-            Share your first workout to inspire others
+            {t("profile.shareFirstWorkout")}
           </Text>
         </View>
       );
@@ -421,9 +424,9 @@ export default function Profile() {
             size={58}
             color={theme.foreground.gray}
           />
-          <Text style={styles.emptyText}>No routines yet</Text>
+          <Text style={styles.emptyText}>{t("profile.noRoutinesYet")}</Text>
           <Text style={styles.emptySubtext}>
-            Create your first routine to get started
+            {t("profile.createFirstRoutine")}
           </Text>
         </View>
       );
@@ -442,7 +445,9 @@ export default function Profile() {
               {/* name + difficulty */}
               <View style={styles.routineHeader}>
                 <View style={styles.routineInfo}>
-                  <Text style={styles.routineName}>{routine.name}</Text>
+                  <Text style={styles.routineName}>
+                    {i18n.language === "fr" ? translateRoutineName(routine.name) : routine.name}
+                  </Text>
                   <Text style={styles.routineDesc} numberOfLines={2}>
                     {routine.description}
                   </Text>
@@ -478,7 +483,7 @@ export default function Profile() {
                     color={theme.foreground.gray}
                   />
                   <Text style={styles.routineMetaText}>
-                    {routine.exercises.length} exercises
+                    {routine.exercises.length} {t("profile.exercises")}
                   </Text>
                 </View>
                 <View style={styles.routineMetaItem}>
@@ -488,7 +493,7 @@ export default function Profile() {
                     color={theme.foreground.gray}
                   />
                   <Text style={styles.routineMetaText}>
-                    {routine.timesCompleted}× done
+                    {routine.timesCompleted}× {t("profile.done")}
                   </Text>
                 </View>
               </View>
@@ -551,7 +556,7 @@ export default function Profile() {
         <View style={styles.statsRow}>
           <View style={styles.statBox}>
             <Text style={styles.statNumber}>{user.postsCount}</Text>
-            <Text style={styles.statLabel}>Posts</Text>
+            <Text style={styles.statLabel}>{t("profile.posts")}</Text>
           </View>
           <View style={styles.statDivider} />
           <TouchableOpacity
@@ -562,7 +567,7 @@ export default function Profile() {
             }
           >
             <Text style={styles.statNumber}>{formatCount(user.followers)}</Text>
-            <Text style={styles.statLabel}>Followers</Text>
+            <Text style={styles.statLabel}>{t("profile.followers")}</Text>
           </TouchableOpacity>
           <View style={styles.statDivider} />
           <TouchableOpacity
@@ -573,7 +578,7 @@ export default function Profile() {
             }
           >
             <Text style={styles.statNumber}>{formatCount(user.following)}</Text>
-            <Text style={styles.statLabel}>Following</Text>
+            <Text style={styles.statLabel}>{t("profile.following")}</Text>
           </TouchableOpacity>
         </View>
 
@@ -587,7 +592,7 @@ export default function Profile() {
               style={styles.fitnessIcon}
             />
             <Text style={styles.fitnessValue}>{workouts.length}</Text>
-            <Text style={styles.fitnessLabel}>Workouts</Text>
+            <Text style={styles.fitnessLabel}>{t("profile.workouts")}</Text>
           </View>
           <View style={styles.fitnessDivider} />
           <View style={styles.fitnessCard}>
@@ -598,7 +603,7 @@ export default function Profile() {
               style={styles.fitnessIcon}
             />
             <Text style={styles.fitnessValue}>{totalVolume} kg</Text>
-            <Text style={styles.fitnessLabel}>Total Volume</Text>
+            <Text style={styles.fitnessLabel}>{t("profile.totalVolume")}</Text>
           </View>
           <View style={styles.fitnessDivider} />
           <View style={styles.fitnessCard}>
@@ -609,7 +614,7 @@ export default function Profile() {
               style={styles.fitnessIcon}
             />
             <Text style={styles.fitnessValue}>{routines.length}</Text>
-            <Text style={styles.fitnessLabel}>Routines</Text>
+            <Text style={styles.fitnessLabel}>{t("profile.routines")}</Text>
           </View>
           <View style={styles.fitnessDivider} />
           <View style={styles.fitnessCard}>
@@ -620,7 +625,7 @@ export default function Profile() {
               style={styles.fitnessIcon}
             />
             <Text style={styles.fitnessValue}>7</Text>
-            <Text style={styles.fitnessLabel}>Day Streak</Text>
+            <Text style={styles.fitnessLabel}>{t("profile.dayStreak")}</Text>
           </View>
         </View>
 
@@ -636,7 +641,7 @@ export default function Profile() {
                 activeTab === "posts" && styles.tabTextActive,
               ]}
             >
-              Posts
+              {t("profile.posts")}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -649,7 +654,7 @@ export default function Profile() {
                 activeTab === "routines" && styles.tabTextActive,
               ]}
             >
-              Routines
+              {t("profile.routines")}
             </Text>
           </TouchableOpacity>
         </View>

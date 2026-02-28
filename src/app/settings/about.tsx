@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
 
@@ -152,6 +153,7 @@ function createStyles(theme: Theme) {
 }
 
 export default function About() {
+  const { t } = useTranslation();
   const router = useRouter();
   const { theme } = useTheme();
   const styles = createStyles(theme);
@@ -167,7 +169,7 @@ export default function About() {
             color={theme.foreground.white}
           />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>About Hylift</Text>
+        <Text style={styles.headerTitle}>{t("about.title")}</Text>
       </View>
 
       <ScrollView
@@ -179,40 +181,40 @@ export default function About() {
           <Image source={theme.logo} style={styles.logo} resizeMode="contain" />
           <Text style={styles.appName}>Hylift</Text>
           <Text style={styles.tagline}>
-            Track smarter. Lift harder. Share your gains.
+            {t("about.tagline")}
           </Text>
           <View style={styles.versionBadge}>
-            <Text style={styles.versionText}>Version 1.0.0 (Build 100)</Text>
+            <Text style={styles.versionText}>{t("about.version")}</Text>
           </View>
         </View>
 
         {/* App Info */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>App Info</Text>
+          <Text style={styles.sectionTitle}>{t("about.appInfo")}</Text>
           <View style={styles.card}>
             {[
               {
                 icon: "code-slash-outline",
                 bg: "#1c3a5e",
-                label: "Developer",
+                label: t("about.developer"),
                 value: "DigitariaWebs",
               },
               {
                 icon: "globe-outline",
                 bg: "#1a3a2a",
-                label: "Platform",
+                label: t("about.platform"),
                 value: "iOS & Android",
               },
               {
                 icon: "calendar-outline",
                 bg: "#3a2a1a",
-                label: "Released",
+                label: t("about.released"),
                 value: "2026",
               },
               {
                 icon: "language-outline",
                 bg: "#2a1a3a",
-                label: "Technologies",
+                label: t("about.technologies"),
                 value: "React Native · Expo",
                 last: true,
               },
@@ -237,13 +239,13 @@ export default function About() {
 
         {/* Stats */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>By the numbers</Text>
+          <Text style={styles.sectionTitle}>{t("about.byTheNumbers")}</Text>
           <View style={styles.statGrid}>
             {[
-              { value: "10K+", label: "Exercises in database" },
-              { value: "50+", label: "Muscle groups tracked" },
-              { value: "∞", label: "Workouts you can log" },
-              { value: "Free", label: "And always will be" },
+              { value: "10K+", label: t("about.exercisesInDatabase") },
+              { value: "50+", label: t("about.muscleGroupsTracked") },
+              { value: "∞", label: t("about.workoutsYouCanLog") },
+              { value: "Free", label: t("about.andAlwaysWillBe") },
             ].map((s) => (
               <View key={s.label} style={styles.statCard}>
                 <Text style={styles.statValue}>{s.value}</Text>
@@ -255,25 +257,25 @@ export default function About() {
 
         {/* Links */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Links</Text>
+          <Text style={styles.sectionTitle}>{t("about.links")}</Text>
           <View style={styles.card}>
             {[
               {
                 icon: "document-text-outline",
                 bg: "#1a3a3a",
-                label: "Terms of Service",
+                label: t("settings.termsOfService"),
                 onPress: () => router.push("/settings/terms" as any),
               },
               {
                 icon: "shield-checkmark-outline",
                 bg: "#2a1a3a",
-                label: "Privacy Policy",
+                label: t("settings.privacyPolicy"),
                 onPress: () => router.push("/settings/privacy" as any),
               },
               {
                 icon: "open-outline",
                 bg: "#1c3a5e",
-                label: "Website",
+                label: t("about.website"),
                 onPress: () => Linking.openURL("https://digitariawebs.com"),
                 last: true,
               },
@@ -304,7 +306,7 @@ export default function About() {
 
         {/* Social */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Follow us</Text>
+          <Text style={styles.sectionTitle}>{t("about.followUs")}</Text>
           <View style={styles.socialRow}>
             {[
               { icon: "logo-instagram", url: "https://instagram.com" },
@@ -328,7 +330,7 @@ export default function About() {
         </View>
 
         <Text style={styles.footer}>
-          {"Made with ♥ by DigitariaWebs\n© 2026 Hylift. All rights reserved."}
+          {t("about.madeWithLove")}
         </Text>
       </ScrollView>
     </View>

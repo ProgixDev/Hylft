@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
+import { formatDate } from "../../utils/dateFormatter";
 import { getWorkoutById } from "../../data/mockData";
 
 export default function WorkoutDetail() {
@@ -74,12 +75,7 @@ export default function WorkoutDetail() {
             color={theme.foreground.gray}
           />
           <Text style={styles.dateStripText}>
-            {new Date(workout.date).toLocaleDateString("en-US", {
-              weekday: "long",
-              month: "long",
-              day: "numeric",
-              year: "numeric",
-            })}
+            {formatDate(workout.date)}
           </Text>
           <View style={styles.timeRange}>
             <Text style={styles.timeText}>{workout.startTime}</Text>

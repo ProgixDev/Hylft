@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import RoutineCard from "../../components/ui/RoutineCard";
 import WorkoutCard from "../../components/ui/WorkoutCard";
 import { Theme } from "../../constants/themes";
@@ -24,6 +25,7 @@ import {
 } from "../../data/mockData";
 
 export default function Workout() {
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const styles = createStyles(theme);
   const router = useRouter();
@@ -81,7 +83,7 @@ export default function Workout() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Workout</Text>
+        <Text style={styles.headerTitle}>{t("workout.title")}</Text>
         <TouchableOpacity
           style={styles.addButton}
           onPress={() => setPlusModalVisible(true)}
@@ -109,7 +111,7 @@ export default function Workout() {
                 setPlusModalVisible(false);
               }}
             >
-              <Text style={styles.modalOptionText}>Start Empty Workout</Text>
+              <Text style={styles.modalOptionText}>{t("workout.startEmptyWorkout")}</Text>
             </TouchableOpacity>
 
             <View style={styles.modalDivider} />
@@ -118,7 +120,7 @@ export default function Workout() {
               style={styles.modalOption}
               onPress={handleCreateRoutine}
             >
-              <Text style={styles.modalOptionText}>Create Routine</Text>
+              <Text style={styles.modalOptionText}>{t("workout.createRoutine")}</Text>
             </TouchableOpacity>
 
             <View style={styles.modalDivider} />
@@ -129,7 +131,7 @@ export default function Workout() {
                 setPlusModalVisible(false);
               }}
             >
-              <Text style={styles.modalOptionTextDanger}>Cancel</Text>
+              <Text style={styles.modalOptionTextDanger}>{t("common.cancel")}</Text>
             </TouchableOpacity>
           </View>
         </Pressable>
@@ -157,9 +159,9 @@ export default function Workout() {
               />
             </View>
             <View style={{ alignItems: "center", gap: 2 }}>
-              <Text style={styles.actionButtonText}>Explore Routines</Text>
+              <Text style={styles.actionButtonText}>{t("workout.exploreRoutines")}</Text>
               <Text style={styles.actionButtonSub}>
-                Browse community templates
+                {t("workout.browseCommunityTemplates")}
               </Text>
             </View>
           </TouchableOpacity>
@@ -177,7 +179,7 @@ export default function Workout() {
                   color={theme.primary.main}
                 />
               </View>
-              <Text style={styles.actionButtonText}>Start Empty Workout</Text>
+              <Text style={styles.actionButtonText}>{t("workout.startEmptyWorkout")}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -191,7 +193,7 @@ export default function Workout() {
                   color={theme.primary.main}
                 />
               </View>
-              <Text style={styles.actionButtonText}>Create Routine</Text>
+              <Text style={styles.actionButtonText}>{t("workout.createRoutine")}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -204,9 +206,9 @@ export default function Workout() {
           }}
         >
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>My Routines</Text>
+            <Text style={styles.sectionTitle}>{t("workout.myRoutines")}</Text>
             <TouchableOpacity onPress={() => router.push("/routines" as any)}>
-              <Text style={styles.seeAllText}>See All</Text>
+              <Text style={styles.seeAllText}>{t("common.seeAll")}</Text>
             </TouchableOpacity>
           </View>
 
@@ -218,7 +220,7 @@ export default function Workout() {
                 color={theme.foreground.gray}
               />
               <Text style={styles.emptyRoutinesText}>
-                No routines yet. Create one to get started!
+                {t("workout.noRoutinesYet")}
               </Text>
             </View>
           ) : (
@@ -243,9 +245,9 @@ export default function Workout() {
         {workouts.length > 0 && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Recent Workouts</Text>
+              <Text style={styles.sectionTitle}>{t("workout.recentWorkouts")}</Text>
               <TouchableOpacity onPress={() => router.push("/workouts" as any)}>
-                <Text style={styles.seeAllText}>See All</Text>
+                <Text style={styles.seeAllText}>{t("common.seeAll")}</Text>
               </TouchableOpacity>
             </View>
 

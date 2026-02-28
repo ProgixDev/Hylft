@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import ImageCarousel from "../../components/ui/ImageCarousel";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getPostsByUserId, getUserById } from "../../data/mockData";
@@ -32,6 +33,7 @@ interface UserPost {
 }
 
 export default function UserPosts() {
+  const { t } = useTranslation();
   const router = useRouter();
   const { userId, postIndex } = useLocalSearchParams();
   const { theme } = useTheme();
@@ -117,13 +119,13 @@ export default function UserPosts() {
           {item.sets && (
             <View style={styles.metricItem}>
               <Ionicons name="repeat" size={16} color={theme.primary.main} />
-              <Text style={styles.metricText}>{item.sets} sets</Text>
+              <Text style={styles.metricText}>{item.sets} {t("user.sets")}</Text>
             </View>
           )}
           {item.reps && (
             <View style={styles.metricItem}>
               <Ionicons name="fitness" size={16} color={theme.primary.main} />
-              <Text style={styles.metricText}>{item.reps} reps</Text>
+              <Text style={styles.metricText}>{item.reps} {t("user.reps")}</Text>
             </View>
           )}
           {item.duration && (
@@ -178,7 +180,7 @@ export default function UserPosts() {
 
       {/* Likes and Caption */}
       <View style={styles.contentContainer}>
-        <Text style={styles.likes}>{item.likes.toLocaleString()} likes</Text>
+        <Text style={styles.likes}>{item.likes.toLocaleString()} {t("post.likes")}</Text>
         <View style={styles.captionContainer}>
           <Text style={styles.captionUsername}>{item.user.username}</Text>
           <Text style={styles.caption}> {item.caption}</Text>
@@ -188,7 +190,7 @@ export default function UserPosts() {
             onPress={() => router.navigate(`/comments/${item.id}` as any)}
           >
             <Text style={styles.viewComments}>
-              View all {item.comments} comments
+              {t("post.viewAllComments").replace("{count}", String(item.comments))}
             </Text>
           </TouchableOpacity>
         )}
@@ -207,7 +209,7 @@ export default function UserPosts() {
             color={theme.foreground.white}
           />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Posts</Text>
+        <Text style={styles.headerTitle}>{t("user.posts")}</Text>
         <View style={styles.spacer} />
       </View>
 

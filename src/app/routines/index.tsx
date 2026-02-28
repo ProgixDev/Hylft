@@ -8,12 +8,14 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import RoutineCard from "../../components/ui/RoutineCard";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getRoutinesByUserId, Routine } from "../../data/mockData";
 
 export default function AllRoutines() {
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const styles = createStyles(theme);
   const router = useRouter();
@@ -44,7 +46,7 @@ export default function AllRoutines() {
             color={theme.foreground.white}
           />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>All Routines</Text>
+        <Text style={styles.headerTitle}>{t("routines.allRoutines")}</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -61,7 +63,7 @@ export default function AllRoutines() {
               color={theme.foreground.gray}
             />
             <Text style={styles.emptyText}>
-              No routines yet. Create one to get started!
+              {t("routines.noRoutinesYetCreate")}
             </Text>
           </View>
         ) : (

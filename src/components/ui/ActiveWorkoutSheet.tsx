@@ -21,6 +21,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import { Theme } from "../../constants/themes";
 import {
   ExerciseSet,
@@ -28,6 +29,7 @@ import {
   WorkoutExerciseEntry,
 } from "../../contexts/ActiveWorkoutContext";
 import { useTheme } from "../../contexts/ThemeContext";
+import { formatDisplayDate, formatTime } from "../../utils/dateFormatter";
 
 const REST_TARGET = 90; // seconds
 
@@ -97,6 +99,7 @@ interface ActiveWorkoutSheetProps {
 // ─── Main Sheet ───────────────────────────────────────────────────────────────
 const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
   ({ isExpanded = false }, ref) => {
+    const { t } = useTranslation();
     const router = useRouter();
     const { theme } = useTheme();
     const styles = createStyles(theme);
@@ -117,12 +120,12 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
 
     const handleDiscard = useCallback(() => {
       Alert.alert(
-        "Discard Workout",
-        "Are you sure you want to discard this workout? This cannot be undone.",
+        t("workout.discardWorkout"),
+        t("workout.discardWorkoutConfirm"),
         [
-          { text: "Cancel", style: "cancel" },
+          { text: t("common.cancel"), style: "cancel" },
           {
-            text: "Discard",
+            text: t("workout.discard"),
             style: "destructive",
             onPress: () => {
               discardWorkout();
@@ -134,7 +137,7 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
     }, [discardWorkout, setIsExpanded]);
 
     const handleSave = useCallback(() => {
-      setTempWorkoutName(`Workout ${new Date().toLocaleDateString()}`);
+      setTempWorkoutName(`Workout ${formatDisplayDate(new Date())}`);
       setSaveModalVisible(true);
     }, []);
 
@@ -147,14 +150,8 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
         userId: "1",
         name: tempWorkoutName,
         date: new Date().toISOString().split("T")[0],
-        startTime: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-        endTime: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
+        startTime: formatTime(new Date()),
+        endTime: formatTime(new Date()),
         duration: Math.max(0, Math.round(activeWorkout.duration / 60)),
         caloriesBurned: 0,
         exercises: activeWorkout.exercises.map((ex) => ({
@@ -381,7 +378,7 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
             {/* Column headers */}
             <View style={styles.setHeaderRow}>
               <Text style={[styles.setHeaderLabel, styles.setNumberCell]}>
-                SET
+                {t("workout.set")}
               </Text>
               <Text
                 style={[
@@ -389,13 +386,13 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
                   { flex: 1, textAlign: "center" },
                 ]}
               >
-                PREVIOUS
+                {t("workout.previous")}
               </Text>
               <Text style={[styles.setHeaderLabel, styles.setInputHeader]}>
-                KG
+                {t("workout.kg")}
               </Text>
               <Text style={[styles.setHeaderLabel, styles.setInputHeader]}>
-                REPS
+                {t("workout.reps")}
               </Text>
               <View style={styles.setDoneBtn} />
             </View>
@@ -413,7 +410,7 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
                 size={16}
                 color={theme.primary.main}
               />
-              <Text style={styles.addSetText}>Add Set</Text>
+              <Text style={styles.addSetText}>{t("workout.addSet")}</Text>
             </TouchableOpacity>
           </View>
         );
@@ -437,7 +434,7 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
         >
           {/* ── Header ───────────────────────────────────────────────────── */}
           <View style={styles.header}>
-            <Text style={styles.title}>Active Workout</Text>
+            <Text style={styles.title}>{t("workout.activeWorkout")}</Text>
             <View style={styles.headerButtons}>
               <TouchableOpacity
                 style={styles.headerButton}
@@ -503,7 +500,7 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
                   size={18}
                   color={theme.primary.main}
                 />
-                <Text style={styles.timerLabel}>Rest</Text>
+                <Text style={styles.timerLabel}>{t("scheduleDetail.rest")}</Text>
                 <Text style={styles.timerValue}>
                   {formatTimer(restElapsed)}
                 </Text>
@@ -543,9 +540,9 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
                     color={theme.foreground.gray}
                   />
                 </View>
-                <Text style={styles.emptyTitle}>Get Started</Text>
+                <Text style={styles.emptyTitle}>{t("workout.getStarted")}</Text>
                 <Text style={styles.emptySubtitle}>
-                  Add an exercise to start your workout
+                  {t("workout.addExerciseToStart")}
                 </Text>
               </View>
             )}
@@ -560,7 +557,7 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
                 size={24}
                 color={theme.background.dark}
               />
-              <Text style={styles.addExerciseButtonText}>Add Exercise</Text>
+              <Text style={styles.addExerciseButtonText}>{t("workout.addExercise")}</Text>
             </TouchableOpacity>
           </BottomSheetScrollView>
         </BottomSheet>
@@ -577,12 +574,12 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
             onPress={() => setSaveModalVisible(false)}
           >
             <View style={styles.saveModalContent}>
-              <Text style={styles.saveModalTitle}>Save Workout</Text>
+              <Text style={styles.saveModalTitle}>{t("workout.saveWorkout")}</Text>
               <TextInput
                 style={styles.saveModalInput}
                 value={tempWorkoutName}
                 onChangeText={setTempWorkoutName}
-                placeholder="Enter workout name"
+                placeholder={t("workout.enterWorkoutName")}
                 placeholderTextColor={theme.foreground.gray}
                 selectTextOnFocus
                 autoFocus
@@ -592,13 +589,13 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
                   style={[styles.saveModalButton, styles.cancelButton]}
                   onPress={() => setSaveModalVisible(false)}
                 >
-                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                  <Text style={styles.cancelButtonText}>{t("common.cancel")}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.saveModalButton, styles.confirmButton]}
                   onPress={handleConfirmSave}
                 >
-                  <Text style={styles.confirmButtonText}>Save</Text>
+                  <Text style={styles.confirmButtonText}>{t("common.save")}</Text>
                 </TouchableOpacity>
               </View>
             </View>

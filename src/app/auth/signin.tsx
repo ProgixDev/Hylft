@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
 import { auth } from "../../utils/auth";
@@ -122,6 +123,7 @@ function createStyles(theme: Theme) {
 }
 
 export default function SignIn() {
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -132,7 +134,7 @@ export default function SignIn() {
 
   const handleSignIn = async () => {
     if (!email || !password) {
-      Alert.alert("Error", "Please fill in all fields");
+      Alert.alert(t("auth.error"), t("auth.fillAllFields"));
       return;
     }
 
@@ -154,7 +156,7 @@ export default function SignIn() {
   };
 
   const handleForgotPassword = () => {
-    Alert.alert("Forgot Password", "Password reset functionality coming soon!");
+    Alert.alert(t("auth.forgotPassword"), t("auth.passwordResetComingSoon"));
   };
 
   return (
@@ -168,17 +170,17 @@ export default function SignIn() {
       </View>
 
       <View style={styles.contentContainer}>
-        <Text style={styles.title}>Welcome Back</Text>
+        <Text style={styles.title}>{t("auth.welcomeBack")}</Text>
         <Text style={styles.subtitle}>
-          Sign in to continue your fitness journey
+          {t("auth.signInToContinue")}
         </Text>
 
         <View style={styles.formContainer}>
           <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Email</Text>
+            <Text style={styles.inputLabel}>{t("auth.email")}</Text>
             <TextInput
               style={styles.input}
-              placeholder="Enter your email"
+              placeholder={t("auth.enterEmail")}
               placeholderTextColor={theme.foreground.gray}
               value={email}
               onChangeText={setEmail}
@@ -189,10 +191,10 @@ export default function SignIn() {
           </View>
 
           <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Password</Text>
+            <Text style={styles.inputLabel}>{t("auth.password")}</Text>
             <TextInput
               style={styles.input}
-              placeholder="Enter your password"
+              placeholder={t("auth.enterPassword")}
               placeholderTextColor={theme.foreground.gray}
               value={password}
               onChangeText={setPassword}
@@ -206,7 +208,7 @@ export default function SignIn() {
             style={styles.forgotPasswordButton}
             onPress={handleForgotPassword}
           >
-            <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+            <Text style={styles.forgotPasswordText}>{t("auth.forgotPassword")}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -216,13 +218,13 @@ export default function SignIn() {
             activeOpacity={0.8}
           >
             <Text style={styles.signInButtonText}>
-              {isLoading ? "Signing In..." : "Sign In"}
+              {isLoading ? t("auth.signingIn") : t("auth.signIn")}
             </Text>
           </TouchableOpacity>
 
           <View style={styles.dividerContainer}>
             <View style={styles.divider} />
-            <Text style={styles.dividerText}>or</Text>
+            <Text style={styles.dividerText}>{t("common.or")}</Text>
             <View style={styles.divider} />
           </View>
 
@@ -231,7 +233,7 @@ export default function SignIn() {
             onPress={handleSignUp}
             activeOpacity={0.7}
           >
-            <Text style={styles.signUpButtonText}>Create New Account</Text>
+            <Text style={styles.signUpButtonText}>{t("auth.createNewAccount")}</Text>
           </TouchableOpacity>
         </View>
       </View>

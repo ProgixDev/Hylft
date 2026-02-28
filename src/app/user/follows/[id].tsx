@@ -9,6 +9,7 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import { Theme } from "../../../constants/themes";
 import { useTheme } from "../../../contexts/ThemeContext";
 import {
@@ -137,6 +138,7 @@ function createStyles(theme: Theme) {
 }
 
 export default function FollowsPage() {
+  const { t } = useTranslation();
   const router = useRouter();
   const { id, type = "followers" } = useLocalSearchParams();
   const { theme } = useTheme();
@@ -161,7 +163,7 @@ export default function FollowsPage() {
               color={theme.foreground.white}
             />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>User not found</Text>
+          <Text style={styles.headerTitle}>{t("user.userNotFound")}</Text>
         </View>
       </View>
     );
@@ -203,7 +205,7 @@ export default function FollowsPage() {
                 isFollowingUser && styles.followingBtnText,
               ]}
             >
-              {isFollowingUser ? "Following" : "Follow"}
+              {isFollowingUser ? t("user.following") : t("user.follow")}
             </Text>
           </TouchableOpacity>
         )}
@@ -223,13 +225,13 @@ export default function FollowsPage() {
       />
       <Text style={styles.emptyTitle}>
         {activeTab === "followers"
-          ? "No followers yet"
-          : "Not following anyone"}
+          ? t("user.noFollowersYet")
+          : t("user.notFollowingAnyone")}
       </Text>
       <Text style={styles.emptySubtitle}>
         {activeTab === "followers"
-          ? "When people follow this user, they'll appear here"
-          : "When this user follows others, they'll appear here"}
+          ? t("user.whenPeopleFollow")
+          : t("user.whenUserFollows")}
       </Text>
     </View>
   );
@@ -260,7 +262,7 @@ export default function FollowsPage() {
               activeTab === "followers" && styles.tabTextActive,
             ]}
           >
-            Followers ({followers.length})
+            {t("user.followers")} ({followers.length})
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -273,7 +275,7 @@ export default function FollowsPage() {
               activeTab === "following" && styles.tabTextActive,
             ]}
           >
-            Following ({following.length})
+            {t("user.following")} ({following.length})
           </Text>
         </TouchableOpacity>
       </View>

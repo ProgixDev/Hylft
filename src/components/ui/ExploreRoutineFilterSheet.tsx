@@ -4,12 +4,14 @@ import BottomSheet, {
 } from "@gorhom/bottom-sheet";
 import React, { Dispatch, forwardRef, SetStateAction, useMemo } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
 import {
   EXPLORE_CATEGORIES,
   ExploreCategory,
 } from "../../services/exploreService";
+import { translateRoutineCategory } from "../../utils/exerciseTranslator";
 
 type FilterTab = "difficulty" | "category";
 
@@ -28,15 +30,7 @@ interface ExploreRoutineFilterSheetProps {
   onClearAll: () => void;
 }
 
-const DIFFICULTIES: {
-  label: string;
-  value: "All" | "beginner" | "intermediate" | "advanced";
-}[] = [
-  { label: "All Levels", value: "All" },
-  { label: "Beginner", value: "beginner" },
-  { label: "Intermediate", value: "intermediate" },
-  { label: "Advanced", value: "advanced" },
-];
+// DIFFICULTIES will be translated dynamically
 
 const ExploreRoutineFilterSheet = forwardRef<
   BottomSheet,
@@ -58,6 +52,7 @@ const ExploreRoutineFilterSheet = forwardRef<
     ref,
   ) => {
     const { theme } = useTheme();
+    const { i18n } = useTranslation();
     const styles = createStyles(theme);
     const snapPoints = useMemo(() => ["100%"], []);
 
@@ -87,7 +82,12 @@ const ExploreRoutineFilterSheet = forwardRef<
         case "difficulty":
           return (
             <View style={styles.chipContainer}>
-              {DIFFICULTIES.map(({ label, value }) =>
+              {[
+                { label: i18n.language === "fr" ? t("filters.allLevels") : "All Levels", value: "All" },
+                { label: i18n.language === "fr" ? t("filters.beginner") : "Beginner", value: "beginner" },
+                { label: i18n.language === "fr" ? t("filters.intermediate") : "Intermediate", value: "intermediate" },
+                { label: i18n.language === "fr" ? t("filters.advanced") : "Advanced", value: "advanced" },
+              ].map(({ label, value }) =>
                 renderChip(label, selectedDifficulty === value, () =>
                   onDifficultyChange(
                     selectedDifficulty === value ? null : value,
@@ -99,13 +99,16 @@ const ExploreRoutineFilterSheet = forwardRef<
         case "category":
           return (
             <View style={styles.chipContainer}>
-              {(["All", ...EXPLORE_CATEGORIES] as const).map((cat) =>
-                renderChip(
-                  cat === "All" ? "All Categories" : cat,
+              {(["All", ...EXPLORE_CATEGORIES] as const).map((cat) => {
+                const displayLabel = cat === "All" 
+                  ? (i18n.language === "fr" ? t("filters.allCategories") : "All Categories")
+                  : (i18n.language === "fr" ? translateRoutineCategory(cat) : cat);
+                return renderChip(
+                  displayLabel,
                   selectedCategory === cat,
                   () => onCategoryChange(selectedCategory === cat ? null : cat),
-                ),
-              )}
+                );
+              })}
             </View>
           );
       }
@@ -114,9 +117,9 @@ const ExploreRoutineFilterSheet = forwardRef<
     const getTabLabel = (tab: FilterTab) => {
       switch (tab) {
         case "difficulty":
-          return "Level";
+          return t("filters.level");
         case "category":
-          return "Category";
+          return t("filters.category");
       }
     };
 

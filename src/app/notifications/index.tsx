@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getNotificationsWithUserData } from "../../data/mockData";
 
@@ -27,6 +28,7 @@ interface NotificationWithUser {
 }
 
 export default function Notifications() {
+  const { t } = useTranslation();
   const router = useRouter();
   const { theme } = useTheme();
   const styles = createStyles(theme);
@@ -114,7 +116,7 @@ export default function Notifications() {
             color={theme.foreground.white}
           />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Notifications</Text>
+        <Text style={styles.headerTitle}>{t("notifications.title")}</Text>
         <View style={styles.spacer} />
       </View>
 
@@ -133,7 +135,7 @@ export default function Notifications() {
               color={theme.foreground.gray}
             />
             <Text style={{ color: theme.foreground.gray, marginTop: 12 }}>
-              No notifications yet
+              {t("notifications.noNotificationsYet")}
             </Text>
           </View>
         }

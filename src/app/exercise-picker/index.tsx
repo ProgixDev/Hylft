@@ -16,6 +16,7 @@ import ExerciseFilterSheet from "../../components/ui/ExerciseFilterSheet";
 import { Theme } from "../../constants/themes";
 import { useActiveWorkout } from "../../contexts/ActiveWorkoutContext";
 import { useCreateRoutine } from "../../contexts/CreateRoutineContext";
+import { useI18n } from "../../contexts/I18nContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import {
   Difficulty,
@@ -39,7 +40,9 @@ type FilterTab = "bodyPart" | "equipment" | "difficulty";
 export default function ExercisePicker() {
   const router = useRouter();
   const { theme } = useTheme();
+  const { language } = useI18n();
   const styles = createStyles(theme);
+  const shouldTranslate = language === "fr";
 
   // Main state
   const [searchQuery, setSearchQuery] = useState("");
@@ -84,13 +87,13 @@ export default function ExercisePicker() {
   // Load filter options
   useEffect(() => {
     Promise.all([
-      getAvailableBodyPartsExerciseDb(),
-      getAvailableEquipmentsExerciseDb(),
+      getAvailableBodyPartsExerciseDb(shouldTranslate),
+      getAvailableEquipmentsExerciseDb(shouldTranslate),
     ]).then(([bp, eq]) => {
       setBodyParts(bp);
       setEquipments(eq);
     });
-  }, []);
+  }, [shouldTranslate]);
 
   // Load exercises (paginated)
   const loadExercises = useCallback(
@@ -106,6 +109,7 @@ export default function ExercisePicker() {
         const result = await fetchExercisesExerciseDb({
           page: targetPage,
           limit: 20,
+          translate: shouldTranslate,
         });
         setExercises((prev) =>
           reset ? result.exercises : [...prev, ...result.exercises],
@@ -119,7 +123,7 @@ export default function ExercisePicker() {
         setLoadingMore(false);
       }
     },
-    [page, hasMore],
+    [page, hasMore, shouldTranslate],
   );
 
   useEffect(() => {
@@ -164,7 +168,7 @@ export default function ExercisePicker() {
     searchTimeout.current = setTimeout(async () => {
       setLoading(true);
       try {
-        let results = await searchExercisesExerciseDb(searchQuery);
+        let results = await searchExercisesExerciseDb(searchQuery, shouldTranslate);
         results = applyClientFilters(results);
         setExercises(results);
         setHasMore(false);
@@ -179,7 +183,7 @@ export default function ExercisePicker() {
       if (searchTimeout.current) clearTimeout(searchTimeout.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchQuery, selectedBodyPart, selectedEquipment, selectedDifficulty]);
+  }, [searchQuery, selectedBodyPart, selectedEquipment, selectedDifficulty, shouldTranslate]);
 
   // Filter mode fetch
   useEffect(() => {
@@ -200,14 +204,14 @@ export default function ExercisePicker() {
         // Fetch a broad base of exercises
         if (selectedBodyPart) {
           // If body part selected, get all exercises for that body part
-          results = await searchExercisesByBodyPartExerciseDb(selectedBodyPart);
+          results = await searchExercisesByBodyPartExerciseDb(selectedBodyPart, shouldTranslate);
         } else if (selectedEquipment) {
           // If equipment selected, get all exercises for that equipment
           results =
-            await fetchExercisesByEquipmentExerciseDb(selectedEquipment);
+            await fetchExercisesByEquipmentExerciseDb(selectedEquipment, shouldTranslate);
         } else {
           // If only difficulty or no specific filter, get a large set
-          const broad = await fetchExercisesExerciseDb({ page: 0, limit: 100 });
+          const broad = await fetchExercisesExerciseDb({ page: 0, limit: 100, translate: shouldTranslate });
           results = broad.exercises;
         }
 
@@ -223,7 +227,7 @@ export default function ExercisePicker() {
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedBodyPart, selectedEquipment, selectedDifficulty]);
+  }, [selectedBodyPart, selectedEquipment, selectedDifficulty, shouldTranslate]);
 
   // Clear all filters
   const clearAllFilters = () => {
@@ -369,7 +373,7 @@ export default function ExercisePicker() {
             />
             <TextInput
               style={styles.searchInput}
-              placeholder="Search exercise"
+              placeholder={t("exercisePicker.searchExercise")}
               placeholderTextColor={theme.foreground.gray}
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -436,13 +440,13 @@ export default function ExercisePicker() {
               size={48}
               color={theme.foreground.gray}
             />
-            <Text style={styles.emptyText}>No exercises found</Text>
+            <Text style={styles.emptyText}>{t("exercisePicker.noExercisesFound")}</Text>
             {hasActiveFilters && (
               <TouchableOpacity
                 style={styles.emptyResetButton}
                 onPress={clearAllFilters}
               >
-                <Text style={styles.emptyResetText}>Clear filters</Text>
+                <Text style={styles.emptyResetText}>{t("exercisePicker.clearFilters")}</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -485,7 +489,7 @@ export default function ExercisePicker() {
                     style={{ marginRight: 8 }}
                   />
                   <Text style={styles.addSelectedText}>
-                    Add {selectedIds.length} selected
+                    {t("exercisePicker.addSelected", { count: selectedIds.length })}
                   </Text>
                 </TouchableOpacity>
               </View>

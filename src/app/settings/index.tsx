@@ -11,7 +11,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import { Theme, ThemeType } from "../../constants/themes";
+import { useI18n } from "../../contexts/I18nContext";
 import { useTheme } from "../../contexts/ThemeContext";
 
 // ─── Storage keys ─────────────────────────────────────────────────────────────
@@ -220,6 +222,8 @@ function SettingsRow({
 // ─── Main screen ─────────────────────────────────────────────────────────────
 
 export default function Settings() {
+  const { t } = useTranslation();
+  const { language, setLanguage } = useI18n();
   const router = useRouter();
   const { theme, themeType, setTheme } = useTheme();
   const styles = createStyles(theme);
@@ -306,10 +310,10 @@ export default function Settings() {
   };
 
   const handleLogout = () => {
-    Alert.alert("Log Out", "Are you sure you want to log out?", [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert(t("settings.logOut"), t("settings.logOutConfirm"), [
+      { text: t("common.cancel"), style: "cancel" },
       {
-        text: "Log Out",
+        text: t("settings.logOut"),
         style: "destructive",
         onPress: () => {
           // TODO: clear auth tokens and navigate to auth screen
@@ -321,12 +325,12 @@ export default function Settings() {
 
   const handleDeleteAccount = () => {
     Alert.alert(
-      "Delete Account",
-      "This will permanently delete your account and all data. This action cannot be undone.",
+      t("settings.deleteAccount"),
+      t("settings.deleteAccountConfirm"),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t("common.cancel"), style: "cancel" },
         {
-          text: "Delete",
+          text: t("common.delete"),
           style: "destructive",
           onPress: () => {
             // TODO: call delete account API
@@ -386,7 +390,7 @@ export default function Settings() {
             color={theme.foreground.white}
           />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Settings</Text>
+        <Text style={styles.headerTitle}>{t("settings.title")}</Text>
       </View>
 
       <ScrollView
@@ -395,14 +399,14 @@ export default function Settings() {
       >
         {/* ── ACCOUNT ────────────────────────────────────────── */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionLabel}>Account</Text>
+          <Text style={styles.sectionLabel}>{t("settings.account")}</Text>
         </View>
         <View style={styles.sectionBody}>
           <SettingsRow
             icon="person-outline"
             iconBg="#1c3a5e"
-            title="Edit Profile"
-            subtitle="Change name, username, bio & avatar"
+            title={t("settings.editProfile")}
+            subtitle={t("settings.changeProfileSubtitle")}
             showBorder
             showChevron
             onPress={() => router.push("/settings/edit-profile" as any)}
@@ -412,8 +416,8 @@ export default function Settings() {
           <SettingsRow
             icon="lock-closed-outline"
             iconBg="#3a1a5e"
-            title="Change Password"
-            subtitle="Update your login credentials"
+            title={t("settings.changePassword")}
+            subtitle={t("settings.changePasswordSubtitle")}
             showBorder
             showChevron
             onPress={() => router.push("/settings/change-password" as any)}
@@ -423,8 +427,8 @@ export default function Settings() {
           <SettingsRow
             icon="eye-off-outline"
             iconBg="#1a3a3a"
-            title="Private Account"
-            subtitle="Only followers can see your content"
+            title={t("settings.privateAccount")}
+            subtitle={t("settings.privateAccountSubtitle")}
             showBorder={false}
             right={
               <Switch
@@ -441,23 +445,42 @@ export default function Settings() {
 
         {/* ── APPEARANCE ─────────────────────────────────────── */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionLabel}>Appearance</Text>
+          <Text style={styles.sectionLabel}>{t("settings.appearance")}</Text>
         </View>
         <View style={styles.sectionBody}>
           <SettingsRow
             icon="color-palette-outline"
             iconBg="#2a3a1a"
-            title="Theme"
-            subtitle={themeType === "male" ? "Male (Green)" : "Female (Blue)"}
+            title={t("settings.theme")}
+            subtitle={themeType === "male" ? t("settings.themeMale") : t("settings.themeFemale")}
+            showBorder
+            right={
+              <Seg
+                options={[
+                  { label: t("settings.male"), value: "male" },
+                  { label: t("settings.female"), value: "female" },
+                ]}
+                value={themeType}
+                onChange={(v) => handleTheme(v as ThemeType)}
+              />
+            }
+            styles={styles}
+            theme={theme}
+          />
+          <SettingsRow
+            icon="language-outline"
+            iconBg="#3a2a1a"
+            title={t("settings.language")}
+            subtitle={t("settings.languageSubtitle")}
             showBorder={false}
             right={
               <Seg
                 options={[
-                  { label: "Male", value: "male" },
-                  { label: "Female", value: "female" },
+                  { label: "English", value: "en" },
+                  { label: "Français", value: "fr" },
                 ]}
-                value={themeType}
-                onChange={(v) => handleTheme(v as ThemeType)}
+                value={language}
+                onChange={(v) => setLanguage(v as "en" | "fr")}
               />
             }
             styles={styles}
@@ -467,13 +490,13 @@ export default function Settings() {
 
         {/* ── PREFERENCES ────────────────────────────────────── */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionLabel}>Preferences</Text>
+          <Text style={styles.sectionLabel}>{t("settings.preferences")}</Text>
         </View>
         <View style={styles.sectionBody}>
           <SettingsRow
             icon="scale-outline"
             iconBg="#3a2a1a"
-            title="Weight Unit"
+            title={t("settings.weightUnit")}
             showBorder
             right={
               <Seg
@@ -491,7 +514,7 @@ export default function Settings() {
           <SettingsRow
             icon="navigate-outline"
             iconBg="#1a2a3a"
-            title="Distance Unit"
+            title={t("settings.distanceUnit")}
             showBorder
             right={
               <Seg
@@ -509,7 +532,7 @@ export default function Settings() {
           <SettingsRow
             icon="calendar-outline"
             iconBg="#1a3a2a"
-            title="First Day of Week"
+            title={t("settings.firstDayOfWeek")}
             showBorder={false}
             right={
               <Seg
@@ -528,14 +551,14 @@ export default function Settings() {
 
         {/* ── NOTIFICATIONS ───────────────────────────────────── */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionLabel}>Notifications</Text>
+          <Text style={styles.sectionLabel}>{t("settings.notifications")}</Text>
         </View>
         <View style={styles.sectionBody}>
           <SettingsRow
             icon="notifications-outline"
             iconBg="#3a1a2a"
-            title="Push Notifications"
-            subtitle="Likes, comments and follows"
+            title={t("settings.pushNotifications")}
+            subtitle={t("settings.pushNotificationsSubtitle")}
             showBorder
             right={
               <Switch
@@ -551,8 +574,8 @@ export default function Settings() {
           <SettingsRow
             icon="alarm-outline"
             iconBg="#2a3a1a"
-            title="Workout Reminders"
-            subtitle="Daily nudges to stay consistent"
+            title={t("settings.workoutReminders")}
+            subtitle={t("settings.workoutRemindersSubtitle")}
             showBorder
             right={
               <Switch
@@ -568,8 +591,8 @@ export default function Settings() {
           <SettingsRow
             icon="mail-outline"
             iconBg="#1a2a3a"
-            title="Email Notifications"
-            subtitle="Weekly summaries & news"
+            title={t("settings.emailNotifications")}
+            subtitle={t("settings.emailNotificationsSubtitle")}
             showBorder={false}
             right={
               <Switch
@@ -586,14 +609,14 @@ export default function Settings() {
 
         {/* ── CONNECTED APPS ───────────────────────────────────── */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionLabel}>Connected Apps</Text>
+          <Text style={styles.sectionLabel}>{t("settings.connectedApps")}</Text>
         </View>
         <View style={styles.sectionBody}>
           <SettingsRow
             icon="heart-outline"
             iconBg="#3a1a1a"
-            title="Health Connect"
-            subtitle="Sync steps, calories & heart rate"
+            title={t("settings.healthConnect")}
+            subtitle={t("settings.healthConnectSubtitle")}
             showBorder={false}
             right={
               <Switch
@@ -610,13 +633,13 @@ export default function Settings() {
 
         {/* ── SUPPORT ─────────────────────────────────────────── */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionLabel}>Support</Text>
+          <Text style={styles.sectionLabel}>{t("settings.support")}</Text>
         </View>
         <View style={styles.sectionBody}>
           <SettingsRow
             icon="help-circle-outline"
             iconBg="#1c3a5e"
-            title="Help Center"
+            title={t("settings.helpCenter")}
             showBorder
             showChevron
             onPress={() => router.push("/settings/help-center" as any)}
@@ -626,8 +649,8 @@ export default function Settings() {
           <SettingsRow
             icon="star-outline"
             iconBg="#3a3a1a"
-            title="Rate Hylift"
-            subtitle="Love the app? Leave us a review"
+            title={t("settings.rateHylift")}
+            subtitle={t("settings.rateHyliftSubtitle")}
             showBorder
             showChevron
             onPress={() => {}}
@@ -637,8 +660,8 @@ export default function Settings() {
           <SettingsRow
             icon="information-circle-outline"
             iconBg="#2a2a3a"
-            title="About Hylift"
-            subtitle="Version 1.0.0"
+            title={t("settings.aboutHylift")}
+            subtitle={t("settings.version")}
             showBorder
             showChevron
             onPress={() => router.push("/settings/about" as any)}
@@ -648,7 +671,7 @@ export default function Settings() {
           <SettingsRow
             icon="document-text-outline"
             iconBg="#1a3a3a"
-            title="Terms of Service"
+            title={t("settings.termsOfService")}
             showBorder
             showChevron
             onPress={() => router.push("/settings/terms" as any)}
@@ -658,7 +681,7 @@ export default function Settings() {
           <SettingsRow
             icon="shield-checkmark-outline"
             iconBg="#2a1a3a"
-            title="Privacy Policy"
+            title={t("settings.privacyPolicy")}
             showBorder={false}
             showChevron
             onPress={() => router.push("/settings/privacy" as any)}
@@ -670,7 +693,7 @@ export default function Settings() {
         {/* ── DANGER ZONE ─────────────────────────────────────── */}
         <View style={styles.sectionHeader}>
           <Text style={[styles.sectionLabel, { color: "#f87171" }]}>
-            Account Actions
+            {t("settings.accountActions")}
           </Text>
         </View>
         <View style={styles.dangerSection}>
@@ -681,7 +704,7 @@ export default function Settings() {
           >
             <Ionicons name="log-out-outline" size={20} color="#f87171" />
             <Text style={[styles.dangerText, { color: "#f87171" }]}>
-              Log Out
+              {t("settings.logOut")}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -691,7 +714,7 @@ export default function Settings() {
           >
             <Ionicons name="trash-outline" size={20} color="#ef4444" />
             <Text style={[styles.dangerText, { color: "#ef4444" }]}>
-              Delete Account
+              {t("settings.deleteAccount")}
             </Text>
           </TouchableOpacity>
         </View>

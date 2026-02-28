@@ -10,21 +10,24 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import { Theme } from "../../constants/themes";
 import { useCreateRoutine } from "../../contexts/CreateRoutineContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { addRoutine, RoutineExercise } from "../../data/mockData";
 
-const DIFFICULTIES = [
-  { value: "beginner", label: "Beginner", color: "#22c55e" },
-  { value: "intermediate", label: "Intermediate", color: "#f59e0b" },
-  { value: "advanced", label: "Advanced", color: "#ef4444" },
+const getDifficulties = (t: (key: string) => string) => [
+  { value: "beginner", label: t("createRoutine.beginner"), color: "#22c55e" },
+  { value: "intermediate", label: t("createRoutine.intermediate"), color: "#f59e0b" },
+  { value: "advanced", label: t("createRoutine.advanced"), color: "#ef4444" },
 ] as const;
 
 export default function CreateRoutineScreen() {
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const styles = createStyles(theme);
   const router = useRouter();
+  const DIFFICULTIES = getDifficulties(t);
 
   const {
     draft,
@@ -46,11 +49,11 @@ export default function CreateRoutineScreen() {
 
   const handleSave = () => {
     if (!draft.name.trim()) {
-      Alert.alert("Missing Name", "Please enter a routine name.");
+      Alert.alert(t("createRoutine.missingName"), t("createRoutine.pleaseEnterRoutineName"));
       return;
     }
     if (draft.exercises.length === 0) {
-      Alert.alert("No Exercises", "Add at least one exercise to your routine.");
+      Alert.alert(t("createRoutine.noExercises"), t("createRoutine.addAtLeastOneExercise"));
       return;
     }
 
@@ -75,17 +78,17 @@ export default function CreateRoutineScreen() {
 
     clearCreation();
     Alert.alert(
-      "Routine Saved!",
-      `"${draft.name}" has been added to My Routines.`,
-      [{ text: "OK", onPress: () => router.back() }],
+      t("createRoutine.routineSaved"),
+      `"${draft.name}" ${t("createRoutine.routineAdded")}`,
+      [{ text: t("common.done"), onPress: () => router.back() }],
     );
   };
 
   const handleDiscard = () => {
-    Alert.alert("Discard Routine?", "All changes will be lost.", [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert(t("createRoutine.discardRoutine"), t("createRoutine.allChangesLost"), [
+      { text: t("common.cancel"), style: "cancel" },
       {
-        text: "Discard",
+        text: t("createRoutine.discard"),
         style: "destructive",
         onPress: () => {
           clearCreation();
@@ -102,9 +105,9 @@ export default function CreateRoutineScreen() {
         <TouchableOpacity onPress={handleDiscard} style={styles.headerBtn}>
           <Ionicons name="close" size={24} color={theme.foreground.white} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Create Routine</Text>
+        <Text style={styles.headerTitle}>{t("createRoutine.title")}</Text>
         <TouchableOpacity onPress={handleSave} style={styles.saveBtn}>
-          <Text style={styles.saveBtnText}>Save</Text>
+          <Text style={styles.saveBtnText}>{t("common.save")}</Text>
         </TouchableOpacity>
       </View>
 
@@ -117,10 +120,10 @@ export default function CreateRoutineScreen() {
       >
         {/* Name */}
         <View style={styles.section}>
-          <Text style={styles.label}>Routine Name *</Text>
+          <Text style={styles.label}>{t("createRoutine.routineName")}</Text>
           <TextInput
             style={styles.input}
-            placeholder="e.g. Push Day, Full Body..."
+            placeholder={t("createRoutine.routineNamePlaceholder")}
             placeholderTextColor={theme.foreground.gray}
             value={draft.name}
             onChangeText={(v) => updateDraft({ name: v })}
@@ -130,10 +133,10 @@ export default function CreateRoutineScreen() {
 
         {/* Description */}
         <View style={styles.section}>
-          <Text style={styles.label}>Description</Text>
+          <Text style={styles.label}>{t("createRoutine.description")}</Text>
           <TextInput
             style={[styles.input, styles.inputMultiline]}
-            placeholder="What is this routine about?"
+            placeholder={t("createRoutine.descriptionPlaceholder")}
             placeholderTextColor={theme.foreground.gray}
             value={draft.description}
             onChangeText={(v) => updateDraft({ description: v })}
@@ -144,7 +147,7 @@ export default function CreateRoutineScreen() {
 
         {/* Difficulty */}
         <View style={styles.section}>
-          <Text style={styles.label}>Difficulty</Text>
+          <Text style={styles.label}>{t("createRoutine.difficulty")}</Text>
           <View style={styles.difficultyRow}>
             {DIFFICULTIES.map((d) => (
               <TouchableOpacity
@@ -178,14 +181,14 @@ export default function CreateRoutineScreen() {
         <View style={styles.section}>
           <View style={styles.exercisesHeader}>
             <Text style={styles.label}>
-              Exercises ({draft.exercises.length})
+              {t("createRoutine.exercises")} ({draft.exercises.length})
             </Text>
             <TouchableOpacity
               style={styles.addExBtn}
               onPress={() => router.push("/exercise-picker" as any)}
             >
               <Ionicons name="add" size={18} color={theme.background.dark} />
-              <Text style={styles.addExBtnText}>Add</Text>
+              <Text style={styles.addExBtnText}>{t("createRoutine.add")}</Text>
             </TouchableOpacity>
           </View>
 
@@ -199,7 +202,7 @@ export default function CreateRoutineScreen() {
                 size={32}
                 color={theme.foreground.gray}
               />
-              <Text style={styles.emptyExText}>Tap to add exercises</Text>
+              <Text style={styles.emptyExText}>{t("createRoutine.tapToAddExercises")}</Text>
             </TouchableOpacity>
           ) : (
             draft.exercises.map((ex, index) => (
@@ -211,6 +214,7 @@ export default function CreateRoutineScreen() {
                 styles={styles}
                 onUpdate={(updates) => updateRoutineExercise(ex.id, updates)}
                 onRemove={() => removeExerciseFromRoutine(ex.id)}
+                t={t}
               />
             ))
           )}
@@ -219,7 +223,7 @@ export default function CreateRoutineScreen() {
         {/* Target Muscles (auto-detected, read-only chips) */}
         {draft.targetMuscles.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.label}>Target Muscles</Text>
+            <Text style={styles.label}>{t("createRoutine.targetMuscles")}</Text>
             <View style={styles.muscleChips}>
               {draft.targetMuscles.map((m) => (
                 <View key={m} style={styles.muscleChip}>
@@ -250,7 +254,8 @@ function ExerciseRow({
   styles,
   onUpdate,
   onRemove,
-}: ExerciseRowProps) {
+  t,
+}: ExerciseRowProps & { t: (key: string) => string }) {
   return (
     <View style={styles.exerciseCard}>
       <View style={styles.exerciseCardHeader}>
@@ -271,7 +276,7 @@ function ExerciseRow({
       <View style={styles.exerciseFields}>
         {/* Sets */}
         <View style={styles.field}>
-          <Text style={styles.fieldLabel}>Sets</Text>
+          <Text style={styles.fieldLabel}>{t("createRoutine.sets")}</Text>
           <TextInput
             style={styles.fieldInput}
             keyboardType="numeric"
@@ -283,7 +288,7 @@ function ExerciseRow({
 
         {/* Reps */}
         <View style={styles.field}>
-          <Text style={styles.fieldLabel}>Reps</Text>
+          <Text style={styles.fieldLabel}>{t("createRoutine.reps")}</Text>
           <TextInput
             style={styles.fieldInput}
             placeholder="e.g. 8-12"
@@ -296,7 +301,7 @@ function ExerciseRow({
 
         {/* Rest */}
         <View style={styles.field}>
-          <Text style={styles.fieldLabel}>Rest (s)</Text>
+          <Text style={styles.fieldLabel}>{t("createRoutine.rest")}</Text>
           <TextInput
             style={styles.fieldInput}
             keyboardType="numeric"
@@ -310,7 +315,7 @@ function ExerciseRow({
       {/* Notes */}
       <TextInput
         style={styles.notesInput}
-        placeholder="Add notes (optional)"
+        placeholder={t("createRoutine.addNotes")}
         placeholderTextColor={theme.foreground.gray}
         value={exercise.notes ?? ""}
         onChangeText={(v) => onUpdate({ notes: v })}

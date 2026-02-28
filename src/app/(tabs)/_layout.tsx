@@ -2,12 +2,14 @@ import BottomSheet from "@gorhom/bottom-sheet";
 import { Tabs } from "expo-router";
 import React, { useRef } from "react";
 import { View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { CustomTabBar } from "../../components/layout/CustomTabBar";
 import ActiveWorkoutSheet from "../../components/ui/ActiveWorkoutSheet";
 import { MiniWorkoutPlayer } from "../../components/ui/MiniWorkoutPlayer";
 import { useActiveWorkout } from "../../contexts/ActiveWorkoutContext";
 
 function TabsLayoutContent() {
+  const { t } = useTranslation();
   const { activeWorkout, setIsExpanded, isExpanded } = useActiveWorkout();
   const activeWorkoutSheetRef = useRef<BottomSheet>(null);
 
@@ -33,25 +35,25 @@ function TabsLayoutContent() {
         <Tabs.Screen
           name="schedule"
           options={{
-            title: "Schedule",
+            title: t("tabs.schedule"),
           }}
         />
         <Tabs.Screen
           name="workout"
           options={{
-            title: "Workout",
+            title: t("tabs.workout"),
           }}
         />
         <Tabs.Screen
           name="home"
           options={{
-            title: "Home",
+            title: t("tabs.home"),
           }}
         />
         <Tabs.Screen
           name="profile"
           options={{
-            title: "Profile",
+            title: t("tabs.profile"),
           }}
         />
       </Tabs>

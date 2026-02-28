@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
 
@@ -112,6 +113,7 @@ function createStyles(theme: Theme) {
 }
 
 export default function AuthLanding() {
+  const { t } = useTranslation();
   const router = useRouter();
   const { theme } = useTheme();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -181,7 +183,7 @@ export default function AuthLanding() {
 
         {/* Bottom Section */}
         <View style={styles.bottomSection}>
-          <Text style={styles.title}>Sign up to get started</Text>
+          <Text style={styles.title}>{t("auth.signUpToGetStarted")}</Text>
 
           {/* Google Sign Up Button */}
           <TouchableOpacity
@@ -195,7 +197,7 @@ export default function AuthLanding() {
               color={theme.background.dark}
               style={styles.buttonIcon}
             />
-            <Text style={styles.googleButtonText}>Continue with Google</Text>
+            <Text style={styles.googleButtonText}>{t("auth.continueWithGoogle")}</Text>
           </TouchableOpacity>
 
           {/* Email Sign Up Button */}
@@ -210,14 +212,14 @@ export default function AuthLanding() {
               color={theme.background.dark}
               style={styles.buttonIcon}
             />
-            <Text style={styles.emailButtonText}>Continue with Email</Text>
+            <Text style={styles.emailButtonText}>{t("auth.continueWithEmail")}</Text>
           </TouchableOpacity>
 
           {/* Sign In Link */}
           <View style={styles.signInContainer}>
-            <Text style={styles.signInText}>Already have an account? </Text>
+            <Text style={styles.signInText}>{t("auth.alreadyHaveAccount")}</Text>
             <TouchableOpacity onPress={handleSignIn} activeOpacity={0.7}>
-              <Text style={styles.signInLink}>Log in</Text>
+              <Text style={styles.signInLink}>{t("auth.logIn")}</Text>
             </TouchableOpacity>
           </View>
         </View>

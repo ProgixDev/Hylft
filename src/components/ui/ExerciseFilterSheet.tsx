@@ -4,6 +4,7 @@ import BottomSheet, {
 } from "@gorhom/bottom-sheet";
 import React, { Dispatch, forwardRef, SetStateAction, useMemo } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
 import { Difficulty } from "../../services/exerciseDbApi";
@@ -28,11 +29,7 @@ interface ExerciseFilterSheetProps {
   onClearAll: () => void;
 }
 
-const DIFFICULTIES: { label: string; value: Difficulty }[] = [
-  { label: "Beginner", value: "beginner" },
-  { label: "Intermediate", value: "intermediate" },
-  { label: "Advanced", value: "advanced" },
-];
+// DIFFICULTIES will be translated dynamically
 
 const ExerciseFilterSheet = forwardRef<BottomSheet, ExerciseFilterSheetProps>(
   (
@@ -54,6 +51,7 @@ const ExerciseFilterSheet = forwardRef<BottomSheet, ExerciseFilterSheetProps>(
     },
     ref,
   ) => {
+    const { t, i18n } = useTranslation();
     const { theme } = useTheme();
     const styles = createStyles(theme);
     const snapPoints = useMemo(() => ["100%"], []); // full-screen like ActiveWorkoutSheet
@@ -84,7 +82,11 @@ const ExerciseFilterSheet = forwardRef<BottomSheet, ExerciseFilterSheetProps>(
         case "difficulty":
           return (
             <View style={styles.chipContainer}>
-              {DIFFICULTIES.map(({ label, value }) =>
+              {[
+                { label: t("filters.beginner"), value: "beginner" },
+                { label: t("filters.intermediate"), value: "intermediate" },
+                { label: t("filters.advanced"), value: "advanced" },
+              ].map(({ label, value }) =>
                 renderChip(label, selectedDifficulty === value, () =>
                   onDifficultyChange(
                     selectedDifficulty === value ? null : value,
@@ -119,11 +121,11 @@ const ExerciseFilterSheet = forwardRef<BottomSheet, ExerciseFilterSheetProps>(
     const getTabLabel = (tab: FilterTab) => {
       switch (tab) {
         case "bodyPart":
-          return "Body Part";
+          return t("filters.bodyPart");
         case "equipment":
-          return "Equipment";
+          return t("filters.equipment");
         case "difficulty":
-          return "Difficulty";
+          return t("filters.difficulty");
       }
     };
 
@@ -141,10 +143,10 @@ const ExerciseFilterSheet = forwardRef<BottomSheet, ExerciseFilterSheetProps>(
         <BottomSheetView style={styles.container}>
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.title}>Filter Exercises</Text>
+            <Text style={styles.title}>{t("filters.filterExercises")}</Text>
             {hasActiveFilters && (
               <TouchableOpacity style={styles.clearButton} onPress={onClearAll}>
-                <Text style={styles.clearButtonText}>Reset</Text>
+                <Text style={styles.clearButtonText}>{t("filters.reset")}</Text>
               </TouchableOpacity>
             )}
           </View>
