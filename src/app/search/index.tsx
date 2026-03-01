@@ -10,11 +10,13 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getAllUsers, User } from "../../data/mockData";
 
 export default function Search() {
   const router = useRouter();
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const styles = createStyles(theme);
   const [searchQuery, setSearchQuery] = useState("");
@@ -66,7 +68,7 @@ export default function Search() {
               item.isFollowing && styles.followingButtonText,
             ]}
           >
-            {item.isFollowing ? "Following" : "Follow"}
+            {item.isFollowing ? t("user.following") : t("user.follow")}
           </Text>
         </TouchableOpacity>
       </View>
@@ -84,7 +86,7 @@ export default function Search() {
             color={theme.foreground.white}
           />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Find People</Text>
+        <Text style={styles.headerTitle}>{t("search.findPeople")}</Text>
         <View style={styles.spacer} />
       </View>
 
@@ -98,7 +100,7 @@ export default function Search() {
         />
         <TextInput
           style={styles.searchInput}
-          placeholder="Search people..."
+          placeholder={t("search.searchPeople")}
           placeholderTextColor={theme.foreground.gray}
           value={searchQuery}
           onChangeText={setSearchQuery}
@@ -130,9 +132,9 @@ export default function Search() {
             size={48}
             color={theme.foreground.gray}
           />
-          <Text style={styles.emptyText}>No users found</Text>
+          <Text style={styles.emptyText}>{t("search.noUsersFound")}</Text>
           <Text style={styles.emptySubtext}>
-            Try searching for a different username
+            {t("search.tryDifferentUsername")}
           </Text>
         </View>
       )}

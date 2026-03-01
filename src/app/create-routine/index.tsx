@@ -11,6 +11,7 @@ import {
   View,
 } from "react-native";
 import { useTranslation } from "react-i18next";
+import { translateExerciseName } from "../../utils/exerciseTranslator";
 import { Theme } from "../../constants/themes";
 import { useCreateRoutine } from "../../contexts/CreateRoutineContext";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -215,6 +216,7 @@ export default function CreateRoutineScreen() {
                 onUpdate={(updates) => updateRoutineExercise(ex.id, updates)}
                 onRemove={() => removeExerciseFromRoutine(ex.id)}
                 t={t}
+                i18n={i18n}
               />
             ))
           )}
@@ -255,7 +257,8 @@ function ExerciseRow({
   onUpdate,
   onRemove,
   t,
-}: ExerciseRowProps & { t: (key: string) => string }) {
+  i18n,
+}: ExerciseRowProps & { t: (key: string) => string; i18n: { language: string } }) {
   return (
     <View style={styles.exerciseCard}>
       <View style={styles.exerciseCardHeader}>
@@ -263,7 +266,7 @@ function ExerciseRow({
           <Text style={styles.exerciseIndexText}>{index + 1}</Text>
         </View>
         <Text style={styles.exerciseName} numberOfLines={1}>
-          {exercise.name}
+          {translateExerciseName(exercise.name)}
         </Text>
         <TouchableOpacity
           onPress={onRemove}

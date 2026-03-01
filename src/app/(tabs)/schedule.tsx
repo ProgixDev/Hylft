@@ -16,7 +16,7 @@ import { Theme } from "../../constants/themes";
 import { useActiveWorkout } from "../../contexts/ActiveWorkoutContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { formatDisplayDate, formatWeekday } from "../../utils/dateFormatter";
-import { translateRoutineName } from "../../utils/exerciseTranslator";
+import { translateRoutineName, translateRoutineDescription, translateExerciseTerm, translateExerciseName, translateApiData } from "../../utils/exerciseTranslator";
 import {
   addScheduleListener,
   getRoutineById,
@@ -82,7 +82,8 @@ function DayCard({
   onPress,
   onStartWorkout,
   t,
-}: DayCardProps & { t: (key: string) => string }) {
+  i18n,
+}: DayCardProps & { t: (key: string) => string; i18n: { language: string } }) {
   const isCompleted = schedDay?.status === "completed";
   const isRest = !schedDay || schedDay.status === "rest";
 
@@ -167,6 +168,7 @@ function DayCard({
               theme={theme}
               isCompleted={isCompleted}
               t={t}
+              i18n={i18n}
             />
           )}
 
@@ -319,16 +321,17 @@ function WorkoutContent({
   theme,
   isCompleted,
   t,
+  i18n,
 }: {
   routine: Routine | undefined;
   schedDay: ScheduledDay | undefined;
   theme: Theme;
   isCompleted: boolean;
   t: (key: string) => string;
+  i18n: { language: string };
 }) {
-  const { i18n } = useTranslation();
   const getTranslatedName = (name: string) => {
-    return i18n.language === "fr" ? translateRoutineName(name) : name;
+    return translateRoutineName(name);
   };
   if (!routine) {
     return (
@@ -364,7 +367,7 @@ function WorkoutContent({
             style={[styles.workoutDesc, { color: theme.foreground.gray }]}
             numberOfLines={2}
           >
-            {routine.description}
+            {translateRoutineDescription(routine.description)}
           </Text>
         </View>
         <View
@@ -374,8 +377,7 @@ function WorkoutContent({
           ]}
         >
           <Text style={[styles.diffText, { color: diffColor }]}>
-            {routine.difficulty.charAt(0).toUpperCase() +
-              routine.difficulty.slice(1)}
+            {translateApiData(routine.difficulty)}
           </Text>
         </View>
       </View>
@@ -425,19 +427,22 @@ function WorkoutContent({
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.muscleTags}
       >
-        {routine.targetMuscles.map((muscle) => (
-          <View
-            key={muscle}
-            style={[
-              styles.muscleTag,
-              { backgroundColor: theme.primary.main + "18" },
-            ]}
-          >
-            <Text style={[styles.muscleTagText, { color: theme.primary.main }]}>
-              {muscle.charAt(0).toUpperCase() + muscle.slice(1)}
-            </Text>
-          </View>
-        ))}
+        {routine.targetMuscles.map((muscle) => {
+          const translatedMuscle = i18n.language === "fr" ? translateExerciseTerm(muscle, "targetMuscles") : muscle;
+          return (
+            <View
+              key={muscle}
+              style={[
+                styles.muscleTag,
+                { backgroundColor: theme.primary.main + "18" },
+              ]}
+            >
+              <Text style={[styles.muscleTagText, { color: theme.primary.main }]}>
+                {translatedMuscle.charAt(0).toUpperCase() + translatedMuscle.slice(1)}
+              </Text>
+            </View>
+          );
+        })}
       </ScrollView>
 
       {/* Exercise Preview List */}
@@ -470,7 +475,7 @@ function WorkoutContent({
               style={[styles.exName, { color: theme.foreground.white }]}
               numberOfLines={1}
             >
-              {ex.name}
+              {translateExerciseName(ex.name)}
             </Text>
           </View>
           <Text style={[styles.exSetsReps, { color: theme.foreground.gray }]}>
@@ -522,7 +527,7 @@ function StatItem({
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 
 export default function Schedule() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { theme } = useTheme();
   const router = useRouter();
   const { startWorkout } = useActiveWorkout();
@@ -719,6 +724,7 @@ export default function Schedule() {
               onPress={() => handleNavigateToDetail(item.date)}
               onStartWorkout={() => handleStartWorkout(item)}
               t={t}
+              i18n={i18n}
             />
           );
         }}

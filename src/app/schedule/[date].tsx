@@ -14,7 +14,7 @@ import { Theme } from "../../constants/themes";
 import { useActiveWorkout } from "../../contexts/ActiveWorkoutContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { formatDate, formatWeekday } from "../../utils/dateFormatter";
-import { translateRoutineName } from "../../utils/exerciseTranslator";
+import { translateRoutineName, translateRoutineDescription, translateExerciseTerm, translateExerciseName, translateApiData } from "../../utils/exerciseTranslator";
 import {
   getRoutineById,
   getScheduleForDate,
@@ -53,12 +53,14 @@ function ExerciseRow({
   theme,
   isCompleted,
   t,
+  i18n,
 }: {
   exercise: RoutineExercise;
   index: number;
   theme: Theme;
   isCompleted: boolean;
   t: (key: string) => string;
+  i18n: { language: string };
 }) {
   const [expanded, setExpanded] = useState(false);
 
@@ -98,7 +100,7 @@ function ExerciseRow({
         {/* Name + sets×reps */}
         <View style={{ flex: 1 }}>
           <Text style={[styles.exCardName, { color: theme.foreground.white }]}>
-            {exercise.name}
+            {translateExerciseName(exercise.name)}
           </Text>
           <View style={styles.exMetaRow}>
             <View
@@ -169,7 +171,7 @@ function ExerciseRow({
         >
           <Ionicons name="bulb-outline" size={13} color={theme.primary.main} />
           <Text style={[styles.exNotesText, { color: theme.foreground.gray }]}>
-            {exercise.notes}
+            {translateApiData(exercise.notes)}
           </Text>
         </View>
       )}
@@ -501,7 +503,7 @@ export default function ScheduleDetailPage() {
                       { color: theme.foreground.white },
                     ]}
                   >
-                    {i18n.language === "fr" ? translateRoutineName(routine.name) : routine.name}
+                    {translateRoutineName(routine.name)}
                   </Text>
                   <Text
                     style={[
@@ -509,7 +511,7 @@ export default function ScheduleDetailPage() {
                       { color: theme.foreground.gray },
                     ]}
                   >
-                    {routine.description}
+                    {translateRoutineDescription(routine.description)}
                   </Text>
                 </View>
                 <View
@@ -522,8 +524,7 @@ export default function ScheduleDetailPage() {
                   ]}
                 >
                   <Text style={[styles.diffText, { color: diffColor }]}>
-                    {routine.difficulty.charAt(0).toUpperCase() +
-                      routine.difficulty.slice(1)}
+                    {translateApiData(routine.difficulty)}
                   </Text>
                 </View>
               </View>
@@ -633,24 +634,27 @@ export default function ScheduleDetailPage() {
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.muscleTags}
               >
-                {routine.targetMuscles.map((m) => (
-                  <View
-                    key={m}
-                    style={[
-                      styles.muscleTag,
-                      { backgroundColor: theme.primary.main + "18" },
-                    ]}
-                  >
-                    <Text
+                {routine.targetMuscles.map((m) => {
+                  const translatedMuscle = translateExerciseTerm(m, "targetMuscles");
+                  return (
+                    <View
+                      key={m}
                       style={[
-                        styles.muscleTagText,
-                        { color: theme.primary.main },
+                        styles.muscleTag,
+                        { backgroundColor: theme.primary.main + "18" },
                       ]}
                     >
-                      {m.charAt(0).toUpperCase() + m.slice(1)}
-                    </Text>
-                  </View>
-                ))}
+                      <Text
+                        style={[
+                          styles.muscleTagText,
+                          { color: theme.primary.main },
+                        ]}
+                      >
+                        {translatedMuscle.charAt(0).toUpperCase() + translatedMuscle.slice(1)}
+                      </Text>
+                    </View>
+                  );
+                })}
               </ScrollView>
             </View>
 
@@ -668,6 +672,7 @@ export default function ScheduleDetailPage() {
                 theme={theme}
                 isCompleted={isCompleted}
                 t={t}
+                i18n={i18n}
               />
             ))}
 

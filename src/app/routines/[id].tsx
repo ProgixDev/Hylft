@@ -14,7 +14,7 @@ import { useActiveWorkout } from "../../contexts/ActiveWorkoutContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { formatDisplayDate } from "../../utils/dateFormatter";
 import { getRoutineById } from "../../data/mockData";
-import { translateRoutineName } from "../../utils/exerciseTranslator";
+import { translateRoutineName, translateRoutineDescription, translateExerciseTerm, translateExerciseName, translateApiData } from "../../utils/exerciseTranslator";
 
 const DIFFICULTY_COLORS = {
   beginner: { bg: "rgba(34, 197, 94, 0.15)", text: "#22c55e" },
@@ -89,7 +89,7 @@ export default function RoutineDetail() {
           />
         </TouchableOpacity>
         <Text style={styles.headerTitle} numberOfLines={1}>
-          {i18n.language === "fr" ? translateRoutineName(routine.name) : routine.name}
+          {translateRoutineName(routine.name)}
         </Text>
         <View style={{ width: 40 }} />
       </View>
@@ -104,7 +104,7 @@ export default function RoutineDetail() {
           {/* Title Row */}
           <View style={styles.heroTitleRow}>
             <Text style={styles.heroName}>
-              {i18n.language === "fr" ? translateRoutineName(routine.name) : routine.name}
+              {translateRoutineName(routine.name)}
             </Text>
             <View
               style={[
@@ -115,13 +115,15 @@ export default function RoutineDetail() {
               <Text
                 style={[styles.difficultyText, { color: difficultyColor.text }]}
               >
-                {routine.difficulty}
+                {translateApiData(routine.difficulty)}
               </Text>
             </View>
           </View>
 
           {/* Description */}
-          <Text style={styles.heroDescription}>{routine.description}</Text>
+          <Text style={styles.heroDescription}>
+            {translateRoutineDescription(routine.description)}
+          </Text>
 
           <View style={styles.heroDivider} />
 
@@ -166,11 +168,13 @@ export default function RoutineDetail() {
 
         {/* Target Muscles */}
         <View>
-          <Text style={styles.sectionTitle}>Target Muscles</Text>
+          <Text style={styles.sectionTitle}>{t("routines.targetMuscles")}</Text>
           <View style={styles.musclesContainer}>
             {routine.targetMuscles.map((muscle, i) => (
               <View key={i} style={styles.muscleTag}>
-                <Text style={styles.muscleTagText}>{muscle}</Text>
+                <Text style={styles.muscleTagText}>
+                  {translateExerciseTerm(muscle, "targetMuscles")}
+                </Text>
               </View>
             ))}
           </View>
@@ -186,7 +190,9 @@ export default function RoutineDetail() {
               <View style={styles.exerciseIndexBadge}>
                 <Text style={styles.exerciseIndex}>{index + 1}</Text>
               </View>
-              <Text style={styles.exerciseName}>{exercise.name}</Text>
+              <Text style={styles.exerciseName}>
+                {translateExerciseName(exercise.name)}
+              </Text>
             </View>
 
             <View style={styles.exerciseDivider} />
@@ -195,19 +201,19 @@ export default function RoutineDetail() {
             <View style={styles.exerciseMetaRow}>
               <View style={styles.exerciseMeta}>
                 <Text style={styles.exerciseMetaValue}>{exercise.sets}</Text>
-                <Text style={styles.exerciseMetaLabel}>Sets</Text>
+                <Text style={styles.exerciseMetaLabel}>{t("createRoutine.sets")}</Text>
               </View>
               <View style={styles.exerciseMetaDivider} />
               <View style={styles.exerciseMeta}>
                 <Text style={styles.exerciseMetaValue}>{exercise.reps}</Text>
-                <Text style={styles.exerciseMetaLabel}>Reps</Text>
+                <Text style={styles.exerciseMetaLabel}>{t("createRoutine.reps")}</Text>
               </View>
               <View style={styles.exerciseMetaDivider} />
               <View style={styles.exerciseMeta}>
                 <Text style={styles.exerciseMetaValue}>
                   {REST_LABEL(exercise.restTime)}
                 </Text>
-                <Text style={styles.exerciseMetaLabel}>Rest</Text>
+                <Text style={styles.exerciseMetaLabel}>{t("createRoutine.rest")}</Text>
               </View>
             </View>
 
@@ -215,9 +221,9 @@ export default function RoutineDetail() {
             <View style={styles.setPreviewRow}>
               {Array.from({ length: exercise.sets }).map((_, si) => (
                 <View key={si} style={styles.setPreviewChip}>
-                  <Text style={styles.setPreviewLabel}>Set {si + 1}</Text>
+                  <Text style={styles.setPreviewLabel}>{t("createRoutine.sets")} {si + 1}</Text>
                   <Text style={styles.setPreviewValue}>
-                    {exercise.reps} reps
+                    {exercise.reps} {t("createRoutine.reps")}
                   </Text>
                 </View>
               ))}
@@ -231,7 +237,7 @@ export default function RoutineDetail() {
                   size={14}
                   color={theme.primary.main}
                 />
-                <Text style={styles.notesText}>{exercise.notes}</Text>
+                <Text style={styles.notesText}>{translateApiData(exercise.notes)}</Text>
               </View>
             )}
           </View>

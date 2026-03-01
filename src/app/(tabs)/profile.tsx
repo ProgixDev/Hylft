@@ -12,7 +12,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
-import { translateRoutineName } from "../../utils/exerciseTranslator";
+import { translateRoutineName, translateRoutineDescription, translateExerciseTerm, translateApiData } from "../../utils/exerciseTranslator";
 import {
   getPostsByUserId,
   getRoutinesByUserId,
@@ -446,10 +446,10 @@ export default function Profile() {
               <View style={styles.routineHeader}>
                 <View style={styles.routineInfo}>
                   <Text style={styles.routineName}>
-                    {i18n.language === "fr" ? translateRoutineName(routine.name) : routine.name}
+                    {translateRoutineName(routine.name)}
                   </Text>
                   <Text style={styles.routineDesc} numberOfLines={2}>
-                    {routine.description}
+                    {translateRoutineDescription(routine.description)}
                   </Text>
                 </View>
                 <View
@@ -459,7 +459,7 @@ export default function Profile() {
                   ]}
                 >
                   <Text style={[styles.difficultyText, { color: colors.text }]}>
-                    {routine.difficulty}
+                    {translateApiData(routine.difficulty)}
                   </Text>
                 </View>
               </View>
@@ -503,7 +503,9 @@ export default function Profile() {
                 <View style={styles.muscleTagsRow}>
                   {routine.targetMuscles.map((m) => (
                     <View key={m} style={styles.muscleTag}>
-                      <Text style={styles.muscleTagText}>{m}</Text>
+                      <Text style={styles.muscleTagText}>
+                        {i18n.language === "fr" ? translateExerciseTerm(m, "targetMuscles") : m}
+                      </Text>
                     </View>
                   ))}
                 </View>

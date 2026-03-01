@@ -77,6 +77,21 @@ export default function Notifications() {
     }
   }
 
+  function getTranslatedAction(type: string, action: string): string {
+    switch (action) {
+      case "liked your post":
+        return t("notifications.likedYourPost");
+      case "started following you":
+        return t("notifications.startedFollowingYou");
+      case "commented on your post":
+        return t("notifications.commentedOnYourPost");
+      case "mentioned you in a comment":
+        return t("notifications.mentionedYouInComment");
+      default:
+        return action;
+    }
+  }
+
   const renderNotification = ({ item }: { item: NotificationWithUser }) => (
     <TouchableOpacity
       style={[
@@ -92,7 +107,7 @@ export default function Notifications() {
       />
       <View style={styles.contentContainer}>
         <Text style={styles.username}>{item.user.username}</Text>
-        <Text style={styles.action}>{item.action}</Text>
+        <Text style={styles.action}>{getTranslatedAction(item.type, item.action)}</Text>
         <Text style={styles.timestamp}>{item.timestamp}</Text>
       </View>
       <View style={styles.iconContainer}>

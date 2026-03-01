@@ -9,9 +9,11 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import { Theme } from "../../../constants/themes";
 import { useActiveWorkout } from "../../../contexts/ActiveWorkoutContext";
 import { useTheme } from "../../../contexts/ThemeContext";
+import { translateExerciseName, translateExerciseTerm, translateApiData } from "../../../utils/exerciseTranslator";
 import {
   Difficulty,
   ExerciseDbExercise,
@@ -51,6 +53,7 @@ const DIFFICULTY_CONFIG: Record<
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function ExerciseDetailPage() {
+  const { t, i18n } = useTranslation();
   const router = useRouter();
   const { theme } = useTheme();
   const { exercise } = useLocalSearchParams<{ exercise: string }>();
@@ -83,11 +86,11 @@ export default function ExerciseDetailPage() {
               color={theme.foreground.white}
             />
           </TouchableOpacity>
-          <Text style={styles.title}>Exercise Details</Text>
+          <Text style={styles.title}>{t("exerciseDetail.title")}</Text>
           <View style={{ width: 40 }} />
         </View>
         <View style={styles.centered}>
-          <Text style={styles.emptyText}>Exercise not found</Text>
+          <Text style={styles.emptyText}>{t("exerciseDetail.notFound")}</Text>
         </View>
       </View>
     );
@@ -106,15 +109,21 @@ export default function ExerciseDetailPage() {
         ? exerciseData.allBodyParts
         : [exerciseData.bodyPart],
     ),
-  ];
+  ].map(bp => translateExerciseTerm(bp, "bodyParts"));
+  
   const uniqueEquipments = [
     ...new Set(
       exerciseData.allEquipments?.length
         ? exerciseData.allEquipments
         : [exerciseData.equipment],
     ),
-  ];
-  const secondaryMuscles = exerciseData.secondaryMuscles ?? [];
+  ].map(eq => translateExerciseTerm(eq, "equipment"));
+  
+  const secondaryMuscles = (exerciseData.secondaryMuscles ?? []).map(m => 
+    translateExerciseTerm(m, "secondaryMuscles")
+  );
+  
+  const targetMuscle = translateExerciseTerm(exerciseData.target || "", "targetMuscles");
 
   return (
     <View style={styles.container}>
@@ -157,9 +166,11 @@ export default function ExerciseDetailPage() {
 
         {/* Exercise name + tags */}
         <View style={styles.titleSection}>
-          <Text style={styles.exerciseName}>{exerciseData.name}</Text>
+          <Text style={styles.exerciseName}>
+            {translateExerciseName(exerciseData.name)}
+          </Text>
           <View style={styles.tagsRow}>
-            {exerciseData.target && (
+            {targetMuscle && (
               <View
                 style={[
                   styles.tag,
@@ -170,12 +181,12 @@ export default function ExerciseDetailPage() {
                 ]}
               >
                 <Text style={[styles.tagText, { color: theme.primary.main }]}>
-                  {exerciseData.target}
+                  {targetMuscle}
                 </Text>
               </View>
             )}
-            {uniqueBodyParts.map((bp) => (
-              <View key={bp} style={styles.tag}>
+            {uniqueBodyParts.map((bp, idx) => (
+              <View key={`${bp}-${idx}`} style={styles.tag}>
                 <Text style={styles.tagText}>{bp}</Text>
               </View>
             ))}
@@ -190,16 +201,16 @@ export default function ExerciseDetailPage() {
               size={20}
               color={theme.primary.main}
             />
-            <Text style={styles.statLabel}>Equipment</Text>
+            <Text style={styles.statLabel}>{t("exerciseDetail.equipment")}</Text>
             <Text style={styles.statValue} numberOfLines={2}>
               {uniqueEquipments.join(", ")}
             </Text>
           </View>
           <View style={styles.statCard}>
             <Ionicons name={diff.icon} size={20} color={diff.color} />
-            <Text style={styles.statLabel}>Difficulty</Text>
+            <Text style={styles.statLabel}>{t("exerciseDetail.difficulty")}</Text>
             <Text style={[styles.statValue, { color: diff.color }]}>
-              {diff.label}
+              {translateApiData(diff.label.toLowerCase())}
             </Text>
           </View>
           <View style={styles.statCard}>
@@ -208,7 +219,7 @@ export default function ExerciseDetailPage() {
               size={20}
               color={theme.primary.main}
             />
-            <Text style={styles.statLabel}>Body Part</Text>
+            <Text style={styles.statLabel}>{t("exerciseDetail.bodyPart")}</Text>
             <Text style={styles.statValue} numberOfLines={2}>
               {uniqueBodyParts.join(", ")}
             </Text>
@@ -219,9 +230,9 @@ export default function ExerciseDetailPage() {
               size={20}
               color={theme.primary.main}
             />
-            <Text style={styles.statLabel}>Target</Text>
+            <Text style={styles.statLabel}>{t("exerciseDetail.target")}</Text>
             <Text style={styles.statValue} numberOfLines={2}>
-              {exerciseData.target}
+              {targetMuscle}
             </Text>
           </View>
         </View>
@@ -229,7 +240,7 @@ export default function ExerciseDetailPage() {
         {/* Equipment */}
         {uniqueEquipments.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Equipment Needed</Text>
+            <Text style={styles.sectionTitle}>{t("exerciseDetail.equipmentNeeded")}</Text>
             <View style={styles.badgeList}>
               {uniqueEquipments.map((eq) => (
                 <View key={eq} style={styles.equipmentBadge}>
@@ -247,7 +258,7 @@ export default function ExerciseDetailPage() {
 
         {/* Primary muscle */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Primary Muscle</Text>
+          <Text style={styles.sectionTitle}>{t("exerciseDetail.primaryMuscle")}</Text>
           <View style={styles.badgeList}>
             <View style={styles.primaryMuscleBadge}>
               <View
@@ -259,7 +270,7 @@ export default function ExerciseDetailPage() {
               <Text
                 style={[styles.muscleText, { color: theme.foreground.white }]}
               >
-                {exerciseData.target}
+                {targetMuscle}
               </Text>
               <View
                 style={[
@@ -273,7 +284,7 @@ export default function ExerciseDetailPage() {
                     { color: theme.primary.main },
                   ]}
                 >
-                  primary
+                  {t("exerciseDetail.primary")}
                 </Text>
               </View>
             </View>
@@ -283,7 +294,7 @@ export default function ExerciseDetailPage() {
         {/* Secondary muscles */}
         {secondaryMuscles.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Secondary Muscles</Text>
+            <Text style={styles.sectionTitle}>{t("exerciseDetail.secondaryMuscles")}</Text>
             <View style={styles.badgeList}>
               {secondaryMuscles.map((m) => (
                 <View key={m} style={styles.muscleBadge}>
@@ -308,16 +319,15 @@ export default function ExerciseDetailPage() {
               size={18}
               color={theme.primary.main}
             />
-            <Text style={styles.sectionTitle}>How to perform</Text>
+            <Text style={styles.sectionTitle}>{t("exerciseDetail.howToPerform")}</Text>
           </View>
           <Text style={styles.description}>
-            Focus on your {exerciseData.target} throughout the movement. Keep
-            controlled form and a full range of motion.{" "}
+            {t("exerciseDetail.focusOn", { target: targetMuscle })}{" "}
             {diff.label === "Advanced"
-              ? "This is a demanding exercise — warm up thoroughly and use a spotter if needed."
+              ? t("exerciseDetail.advancedTip")
               : diff.label === "Beginner"
-                ? "Great exercise for beginners. Focus on form over weight."
-                : "Maintain moderate tempo and avoid locking joints at the top."}
+                ? t("exerciseDetail.beginnerTip")
+                : t("exerciseDetail.intermediateTip")}
           </Text>
         </View>
 
@@ -337,7 +347,7 @@ export default function ExerciseDetailPage() {
             color={theme.background.dark}
             style={{ marginRight: 8 }}
           />
-          <Text style={styles.addButtonText}>Add to Workout</Text>
+          <Text style={styles.addButtonText}>{t("exerciseDetail.addToWorkout")}</Text>
         </TouchableOpacity>
       </View>
     </View>

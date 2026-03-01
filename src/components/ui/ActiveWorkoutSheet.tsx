@@ -23,6 +23,7 @@ import {
 } from "react-native";
 import { useTranslation } from "react-i18next";
 import { Theme } from "../../constants/themes";
+import { translateExerciseName, translateExerciseTerm } from "../../utils/exerciseTranslator";
 import {
   ExerciseSet,
   useActiveWorkout,
@@ -350,14 +351,18 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
     // ── Exercise card ─────────────────────────────────────────────────────────
     const renderExercise = useCallback(
       (item: WorkoutExerciseEntry) => {
-        const muscles = item.muscles.map((m) => m.name_en || m.name).join(", ");
+        const translatedName = translateExerciseName(item.name);
+        const muscles = item.muscles.map((m) => {
+          const muscleName = m.name_en || m.name;
+          return translateExerciseTerm(muscleName, "targetMuscles");
+        }).join(", ");
 
         return (
           <View key={item.id} style={styles.exerciseCard}>
             {/* Header row */}
             <View style={styles.exerciseHeader}>
               <View style={styles.exerciseTitleBlock}>
-                <Text style={styles.exerciseName}>{item.name}</Text>
+                <Text style={styles.exerciseName}>{translatedName}</Text>
                 {muscles ? (
                   <Text style={styles.exerciseMuscles}>{muscles}</Text>
                 ) : null}

@@ -4,7 +4,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../../contexts/ThemeContext";
 import { Routine } from "../../data/mockData";
-import { translateRoutineName } from "../../utils/exerciseTranslator";
+import { translateRoutineName, translateRoutineDescription, translateExerciseTerm, translateApiData } from "../../utils/exerciseTranslator";
 
 type Props = {
   routine: Routine;
@@ -20,10 +20,10 @@ const RoutineCard = ({
   onStart,
   fullWidth = false,
 }: Props) => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const styles = createStyles(theme);
-  const translatedName = i18n.language === "fr" ? translateRoutineName(routine.name) : routine.name;
+  const translatedName = translateRoutineName(routine.name);
 
   const difficultyStyle = {
     beginner: styles.difficulty_beginner,
@@ -42,12 +42,12 @@ const RoutineCard = ({
           {translatedName}
         </Text>
         <View style={[styles.difficultyBadge, difficultyStyle]}>
-          <Text style={styles.difficultyText}>{routine.difficulty}</Text>
+          <Text style={styles.difficultyText}>{translateApiData(routine.difficulty)}</Text>
         </View>
       </View>
 
       <Text style={styles.description} numberOfLines={2}>
-        {routine.description}
+        {translateRoutineDescription(routine.description)}
       </Text>
 
       <View style={styles.statsRow}>
@@ -68,7 +68,9 @@ const RoutineCard = ({
       <View style={styles.musclesContainer}>
         {routine.targetMuscles.slice(0, 3).map((m, i) => (
           <View key={i} style={styles.muscleTag}>
-            <Text style={styles.muscleTagText}>{m}</Text>
+            <Text style={styles.muscleTagText}>
+              {translateExerciseTerm(m, "targetMuscles")}
+            </Text>
           </View>
         ))}
       </View>

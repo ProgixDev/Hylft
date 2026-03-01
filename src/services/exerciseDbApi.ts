@@ -162,35 +162,24 @@ function mapExercise(
   const bodyPart = ex.bodyParts?.[0] || "";
   const target = ex.targetMuscles?.[0] || "";
 
+  // Always use translateApiData - it will translate based on current language
   return {
     id: ex.exerciseId,
-    name: translate ? translateExerciseName(ex.name) : ex.name,
-    target: translate
-      ? translateExerciseTerm(target, "targetMuscles")
-      : target,
-    equipment: translate
-      ? translateExerciseTerm(equipment, "equipment")
-      : equipment,
-    bodyPart: translate
-      ? translateExerciseTerm(bodyPart, "bodyParts")
-      : bodyPart,
+    name: translateExerciseName(ex.name),
+    target: translateExerciseTerm(target, "targetMuscles"),
+    equipment: translateExerciseTerm(equipment, "equipment"),
+    bodyPart: translateExerciseTerm(bodyPart, "bodyParts"),
     gifUrl: ex.gifUrl,
-    secondaryMuscles: translate
-      ? (ex.secondaryMuscles ?? []).map((m) =>
-          translateExerciseTerm(m, "secondaryMuscles"),
-        )
-      : ex.secondaryMuscles ?? [],
+    secondaryMuscles: (ex.secondaryMuscles ?? []).map((m) =>
+      translateExerciseTerm(m, "secondaryMuscles"),
+    ),
     difficulty: getDifficulty(equipment),
-    allBodyParts: translate
-      ? (ex.bodyParts ?? []).map((bp) =>
-          translateExerciseTerm(bp, "bodyParts"),
-        )
-      : ex.bodyParts ?? [],
-    allEquipments: translate
-      ? (ex.equipments ?? []).map((eq) =>
-          translateExerciseTerm(eq, "equipment"),
-        )
-      : ex.equipments ?? [],
+    allBodyParts: (ex.bodyParts ?? []).map((bp) =>
+      translateExerciseTerm(bp, "bodyParts"),
+    ),
+    allEquipments: (ex.equipments ?? []).map((eq) =>
+      translateExerciseTerm(eq, "equipment"),
+    ),
   };
 }
 
@@ -353,11 +342,10 @@ export async function getAvailableBodyPartsExerciseDb(
       data: { name: string }[];
     }
     const result: ApiResponse = await response.json();
-    const bodyParts = translate
-      ? (result.data || []).map((item) =>
-          translateExerciseTerm(item.name, "bodyParts"),
-        )
-      : (result.data || []).map((item) => item.name);
+    // Always use translateApiData - it will translate based on current language
+    const bodyParts = (result.data || []).map((item) =>
+      translateExerciseTerm(item.name, "bodyParts"),
+    );
     return setCached(cacheKey, bodyParts);
   } catch (error) {
     console.error("ExerciseDb body parts list error:", error);
@@ -383,11 +371,10 @@ export async function getAvailableEquipmentsExerciseDb(
       data: { name: string }[];
     }
     const result: ApiResponse = await response.json();
-    const equipments = translate
-      ? (result.data || []).map((item) =>
-          translateExerciseTerm(item.name, "equipment"),
-        )
-      : (result.data || []).map((item) => item.name);
+    // Always use translateApiData - it will translate based on current language
+    const equipments = (result.data || []).map((item) =>
+      translateExerciseTerm(item.name, "equipment"),
+    );
     return setCached(cacheKey, equipments);
   } catch (error) {
     console.error("ExerciseDb equipments list error:", error);

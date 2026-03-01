@@ -17,6 +17,7 @@ import { Theme } from "../../constants/themes";
 import { useActiveWorkout } from "../../contexts/ActiveWorkoutContext";
 import { useCreateRoutine } from "../../contexts/CreateRoutineContext";
 import { useI18n } from "../../contexts/I18nContext";
+import { translateExerciseName, translateExerciseTerm } from "../../utils/exerciseTranslator";
 import { useTheme } from "../../contexts/ThemeContext";
 import {
   Difficulty,
@@ -299,10 +300,10 @@ export default function ExercisePicker() {
 
           <View style={styles.exerciseInfo}>
             <Text style={styles.exerciseName} numberOfLines={1}>
-              {item.name}
+              {translateExerciseName(item.name)}
             </Text>
             <Text style={styles.exerciseMeta} numberOfLines={1}>
-              {item.target} · {item.bodyPart}
+              {translateExerciseTerm(item.target, "targetMuscles")} · {translateExerciseTerm(item.bodyPart, "bodyParts")}
             </Text>
           </View>
 

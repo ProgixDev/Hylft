@@ -14,7 +14,7 @@ import { Theme } from "../../constants/themes";
 import { useActiveWorkout } from "../../contexts/ActiveWorkoutContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { addRoutine, getRoutinesByUserId } from "../../data/mockData";
-import { translateRoutineName, translateRoutineCategory } from "../../utils/exerciseTranslator";
+import { translateRoutineName, translateRoutineCategory, translateRoutineDescription, translateExerciseTerm, translateExerciseName, translateApiData } from "../../utils/exerciseTranslator";
 import {
     DIFFICULTY_META,
     getExploreRoutineById,
@@ -113,21 +113,23 @@ export default function ExploreRoutineDetail() {
           <View style={styles.badgeRow}>
             <View style={[styles.badge, { backgroundColor: diff.bg }]}>
               <Text style={[styles.badgeText, { color: diff.text }]}>
-                {diff.label}
+                {translateApiData(diff.label.toLowerCase())}
               </Text>
             </View>
             <View style={styles.categoryBadge}>
               <Text style={styles.categoryBadgeText}>
-                {i18n.language === "fr" ? translateRoutineCategory(routine.category) : routine.category}
+                {translateRoutineCategory(routine.category)}
               </Text>
             </View>
           </View>
 
           <Text style={styles.routineName}>
-            {i18n.language === "fr" ? translateRoutineName(routine.name) : routine.name}
+            {translateRoutineName(routine.name)}
           </Text>
           <Text style={styles.routineAuthor}>{t("routines.by")} {routine.author}</Text>
-          <Text style={styles.routineDescription}>{routine.description}</Text>
+          <Text style={styles.routineDescription}>
+            {translateRoutineDescription(routine.description)}
+          </Text>
 
           {/* Tags */}
           <View style={styles.tagsRow}>
@@ -184,11 +186,13 @@ export default function ExploreRoutineDetail() {
 
         {/* ── Target muscles ── */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Target Muscles</Text>
+          <Text style={styles.sectionTitle}>{t("routines.targetMuscles")}</Text>
           <View style={styles.musclesRow}>
             {routine.targetMuscles.map((m, i) => (
               <View key={i} style={styles.muscleTag}>
-                <Text style={styles.muscleTagText}>{m}</Text>
+                <Text style={styles.muscleTagText}>
+                  {translateExerciseTerm(m, "targetMuscles")}
+                </Text>
               </View>
             ))}
           </View>
@@ -204,7 +208,9 @@ export default function ExploreRoutineDetail() {
                   <Text style={styles.exerciseIndexText}>{idx + 1}</Text>
                 </View>
                 <View style={styles.exerciseInfo}>
-                  <Text style={styles.exerciseName}>{ex.name}</Text>
+                  <Text style={styles.exerciseName}>
+                    {translateExerciseName(ex.name)}
+                  </Text>
                   <Text style={styles.exerciseMeta}>
                     {ex.sets} {t("createRoutine.sets")} × {ex.reps} {t("createRoutine.reps")}
                     {ex.notes ? `  ·  ${ex.notes}` : ""}

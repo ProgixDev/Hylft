@@ -4,6 +4,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../../contexts/ThemeContext";
 import { formatShortDate } from "../../utils/dateFormatter";
+import { translateExerciseName, translateApiData } from "../../utils/exerciseTranslator";
 import { Workout } from "../../data/mockData";
 
 type Props = {
@@ -20,7 +21,7 @@ const WorkoutCard = ({
   onStart,
   fullWidth = false,
 }: Props) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { theme } = useTheme();
   const styles = createStyles(theme);
 
@@ -39,7 +40,7 @@ const WorkoutCard = ({
     >
       <View style={styles.header}>
         <View style={styles.titleBlock}>
-          <Text style={styles.name}>{workout.name}</Text>
+          <Text style={styles.name}>{translateApiData(workout.name)}</Text>
           <Text style={styles.date}>{formattedDate}</Text>
         </View>
         <View style={styles.durationBadge}>
@@ -63,7 +64,7 @@ const WorkoutCard = ({
         {workout.exercises.slice(0, 4).map((ex, i) => (
           <View key={i} style={styles.tag}>
             <Text style={styles.tagText} numberOfLines={1}>
-              {ex.name}
+              {translateExerciseName(ex.name)}
             </Text>
           </View>
         ))}

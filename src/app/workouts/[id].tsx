@@ -8,12 +8,15 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
 import { formatDate } from "../../utils/dateFormatter";
+import { translateExerciseName, translateApiData } from "../../utils/exerciseTranslator";
 import { getWorkoutById } from "../../data/mockData";
 
 export default function WorkoutDetail() {
+  const { t, i18n } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { theme } = useTheme();
   const styles = createStyles(theme);
@@ -57,7 +60,7 @@ export default function WorkoutDetail() {
           />
         </TouchableOpacity>
         <Text style={styles.headerTitle} numberOfLines={1}>
-          {workout.name}
+          {translateApiData(workout.name)}
         </Text>
         <View style={{ width: 40 }} />
       </View>
@@ -106,7 +109,7 @@ export default function WorkoutDetail() {
               color={theme.primary.main}
             />
             <Text style={styles.statCardValue}>{workout.exercises.length}</Text>
-            <Text style={styles.statCardLabel}>Exercises</Text>
+            <Text style={styles.statCardLabel}>{t("routines.exercises")}</Text>
           </View>
           <View style={styles.statCard}>
             <Ionicons
@@ -115,7 +118,7 @@ export default function WorkoutDetail() {
               color={theme.primary.main}
             />
             <Text style={styles.statCardValue}>{totalSets}</Text>
-            <Text style={styles.statCardLabel}>Sets</Text>
+            <Text style={styles.statCardLabel}>{t("createRoutine.sets")}</Text>
           </View>
           <View style={styles.statCard}>
             <Ionicons
@@ -129,7 +132,7 @@ export default function WorkoutDetail() {
         </View>
 
         {/* Exercises */}
-        <Text style={styles.sectionTitle}>Exercises</Text>
+        <Text style={styles.sectionTitle}>{t("routines.exercises")}</Text>
 
         {workout.exercises.map((exercise, index) => (
           <View key={exercise.id} style={styles.exerciseCard}>
@@ -138,7 +141,9 @@ export default function WorkoutDetail() {
               <View style={styles.exerciseIndexBadge}>
                 <Text style={styles.exerciseIndex}>{index + 1}</Text>
               </View>
-              <Text style={styles.exerciseName}>{exercise.name}</Text>
+              <Text style={styles.exerciseName}>
+                {translateExerciseName(exercise.name)}
+              </Text>
             </View>
 
             <View style={styles.exerciseDivider} />
@@ -147,12 +152,12 @@ export default function WorkoutDetail() {
             <View style={styles.exerciseMetaRow}>
               <View style={styles.exerciseMeta}>
                 <Text style={styles.exerciseMetaValue}>{exercise.sets}</Text>
-                <Text style={styles.exerciseMetaLabel}>Sets</Text>
+                <Text style={styles.exerciseMetaLabel}>{t("createRoutine.sets")}</Text>
               </View>
               <View style={styles.exerciseMetaDivider} />
               <View style={styles.exerciseMeta}>
                 <Text style={styles.exerciseMetaValue}>{exercise.reps}</Text>
-                <Text style={styles.exerciseMetaLabel}>Reps</Text>
+                <Text style={styles.exerciseMetaLabel}>{t("createRoutine.reps")}</Text>
               </View>
               {exercise.weight && (
                 <>
@@ -161,7 +166,7 @@ export default function WorkoutDetail() {
                     <Text style={styles.exerciseMetaValue}>
                       {exercise.weight}
                     </Text>
-                    <Text style={styles.exerciseMetaLabel}>Weight</Text>
+                    <Text style={styles.exerciseMetaLabel}>{t("post.weight")}</Text>
                   </View>
                 </>
               )}
@@ -172,7 +177,7 @@ export default function WorkoutDetail() {
                     <Text style={styles.exerciseMetaValue}>
                       {exercise.duration}
                     </Text>
-                    <Text style={styles.exerciseMetaLabel}>Duration</Text>
+                    <Text style={styles.exerciseMetaLabel}>{t("post.duration")}</Text>
                   </View>
                 </>
               )}
@@ -186,7 +191,7 @@ export default function WorkoutDetail() {
                     <Text style={styles.setNumberText}>{setIdx + 1}</Text>
                   </View>
                   <Text style={styles.setDetail}>
-                    {exercise.reps} reps
+                    {exercise.reps} {t("createRoutine.reps")}
                     {exercise.weight ? `  ·  ${exercise.weight}` : ""}
                   </Text>
                   <Ionicons
@@ -207,7 +212,7 @@ export default function WorkoutDetail() {
                   size={14}
                   color={theme.foreground.gray}
                 />
-                <Text style={styles.exerciseNote}>{exercise.notes}</Text>
+                <Text style={styles.exerciseNote}>{translateApiData(exercise.notes)}</Text>
               </View>
             )}
           </View>
