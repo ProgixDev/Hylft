@@ -24,7 +24,7 @@ const getDifficulties = (t: (key: string) => string) => [
 ] as const;
 
 export default function CreateRoutineScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { theme } = useTheme();
   const styles = createStyles(theme);
   const router = useRouter();

@@ -15,29 +15,48 @@ export interface ApiNinjasResponse {
   hasMore: boolean;
 }
 
+/** Language for API responses (e.g. names, instructions). */
+export type ApiNinjasLanguage = "en" | "fr";
+
 const API_NINJAS_BASE = "https://api.api-ninjas.com/v1";
 
 // Get your free API key from: https://api-ninjas.com
 const API_KEY = process.env.EXPO_PUBLIC_API_NINJAS_KEY || "";
 
+function buildHeaders(language?: ApiNinjasLanguage): Record<string, string> {
+  const headers: Record<string, string> = {
+    "X-Api-Key": API_KEY,
+  };
+  if (language && language !== "en") {
+    headers["Accept-Language"] = language === "fr" ? "fr" : language;
+  }
+  return headers;
+}
+
+function appendLanguageParam(url: string, language?: ApiNinjasLanguage): string {
+  if (!language || language === "en") return url;
+  const sep = url.includes("?") ? "&" : "?";
+  return `${url}${sep}lang=${encodeURIComponent(language)}`;
+}
+
 export async function fetchExercisesApiNinjas(options?: {
   muscle?: string;
   type?: string;
   offset?: number;
+  language?: ApiNinjasLanguage;
 }): Promise<ApiNinjasResponse> {
-  const { muscle, type, offset = 0 } = options || {};
+  const { muscle, type, offset = 0, language } = options || {};
 
   try {
     let url = `${API_NINJAS_BASE}/exercises?offset=${offset}`;
 
     if (muscle) url += `&muscle=${encodeURIComponent(muscle)}`;
     if (type) url += `&type=${encodeURIComponent(type)}`;
+    url = appendLanguageParam(url, language);
 
     const response = await fetch(url, {
       method: "GET",
-      headers: {
-        "X-Api-Key": API_KEY,
-      },
+      headers: buildHeaders(language),
     });
 
     if (!response.ok) throw new Error("Failed to fetch exercises");
@@ -59,19 +78,18 @@ export async function fetchExercisesApiNinjas(options?: {
 
 export async function searchExercisesApiNinjas(
   name: string,
+  options?: { language?: ApiNinjasLanguage },
 ): Promise<ApiNinjasExercise[]> {
   if (!name.trim()) return [];
 
   try {
-    const response = await fetch(
-      `${API_NINJAS_BASE}/exercises?name=${encodeURIComponent(name)}`,
-      {
-        method: "GET",
-        headers: {
-          "X-Api-Key": API_KEY,
-        },
-      },
-    );
+    let url = `${API_NINJAS_BASE}/exercises?name=${encodeURIComponent(name)}`;
+    url = appendLanguageParam(url, options?.language);
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: buildHeaders(options?.language),
+    });
 
     if (!response.ok) return [];
 
@@ -85,17 +103,16 @@ export async function searchExercisesApiNinjas(
 
 export async function getExercisesByMuscleApiNinjas(
   muscle: string,
+  options?: { language?: ApiNinjasLanguage },
 ): Promise<ApiNinjasExercise[]> {
   try {
-    const response = await fetch(
-      `${API_NINJAS_BASE}/exercises?muscle=${encodeURIComponent(muscle)}`,
-      {
-        method: "GET",
-        headers: {
-          "X-Api-Key": API_KEY,
-        },
-      },
-    );
+    let url = `${API_NINJAS_BASE}/exercises?muscle=${encodeURIComponent(muscle)}`;
+    url = appendLanguageParam(url, options?.language);
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: buildHeaders(options?.language),
+    });
 
     if (!response.ok) return [];
 
@@ -109,17 +126,16 @@ export async function getExercisesByMuscleApiNinjas(
 
 export async function getExercisesByTypeApiNinjas(
   type: string,
+  options?: { language?: ApiNinjasLanguage },
 ): Promise<ApiNinjasExercise[]> {
   try {
-    const response = await fetch(
-      `${API_NINJAS_BASE}/exercises?type=${encodeURIComponent(type)}`,
-      {
-        method: "GET",
-        headers: {
-          "X-Api-Key": API_KEY,
-        },
-      },
-    );
+    let url = `${API_NINJAS_BASE}/exercises?type=${encodeURIComponent(type)}`;
+    url = appendLanguageParam(url, options?.language);
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: buildHeaders(options?.language),
+    });
 
     if (!response.ok) return [];
 

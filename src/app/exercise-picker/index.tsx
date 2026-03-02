@@ -12,12 +12,12 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import ExerciseFilterSheet from "../../components/ui/ExerciseFilterSheet";
 import { Theme } from "../../constants/themes";
 import { useActiveWorkout } from "../../contexts/ActiveWorkoutContext";
 import { useCreateRoutine } from "../../contexts/CreateRoutineContext";
 import { useI18n } from "../../contexts/I18nContext";
-import { translateExerciseName, translateExerciseTerm } from "../../utils/exerciseTranslator";
 import { useTheme } from "../../contexts/ThemeContext";
 import {
   Difficulty,
@@ -29,6 +29,7 @@ import {
   searchExercisesByBodyPartExerciseDb,
   searchExercisesExerciseDb,
 } from "../../services/exerciseDbApi";
+import { translateExerciseName, translateExerciseTerm } from "../../utils/exerciseTranslator";
 
 const DIFFICULTY_COLORS: Record<Difficulty, string> = {
   beginner: "#4CAF50",
@@ -40,6 +41,7 @@ type FilterTab = "bodyPart" | "equipment" | "difficulty";
 
 export default function ExercisePicker() {
   const router = useRouter();
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const { language } = useI18n();
   const styles = createStyles(theme);
@@ -131,8 +133,9 @@ export default function ExercisePicker() {
     if (!isSearchMode && !hasActiveFilters) {
       loadExercises(true);
     }
+    // Re-fetch when language changes so exercise names use the correct locale
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [shouldTranslate]);
 
   // Client-side filter helper
   function applyClientFilters(items: ExerciseDbExercise[]) {
@@ -359,7 +362,7 @@ export default function ExercisePicker() {
               color={theme.foreground.white}
             />
           </TouchableOpacity>
-          <Text style={styles.title}>Add Exercise</Text>
+          <Text style={styles.title}>{t("workout.addExercise")}</Text>
           <View style={{ width: 40 }} />
         </View>
 
