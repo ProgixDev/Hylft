@@ -2205,6 +2205,14 @@
     "yoke carry": "Yoke Carry",
     "yoke walk": "Yoke Walk",
     "zercher carry": "Zercher Carry",
-    "zercher walk": "Zercher Walk"
+    "zercher walk": "Zercher Walk",
+    "push day - strength": "Push Day - Strength",
+    "pull day - hypertrophy": "Pull Day - Hypertrophy",
+    "leg day - volume": "Leg Day - Volume",
+    "upper body power": "Upper Body Power",
+    "heavy_compound_movements_for_chest_shoulders_and_triceps": "Heavy compound movements for chest, shoulders and triceps",
+    "back_and_biceps_focused_on_muscle_growth": "Back and biceps focused on muscle growth",
+    "high_volume_leg_workout_for_quad_and_hamstring_development": "High volume leg workout for quad and hamstring development",
+    "full_upper_body_strength_and_power_workout": "Full upper body strength and power workout"
   }
 }

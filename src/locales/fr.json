@@ -139,7 +139,7 @@
     "restDay": "Jour de repos",
     "scheduled": "Planifié",
     "viewPlan": "Voir le plan",
-    "startWorkout": "Démarrer l'entraînement",
+    "startWorkout": "Démarrer",
     "startNow": "Démarrer maintenant",
     "viewSummary": "Voir le résumé",
     "restAndRecover": "Repos et récupération",
@@ -312,7 +312,7 @@
     "changeToRestDay": "Changer en jour de repos",
     "changeDayToRest": "Changer ce jour en jour de repos ?",
     "setRestDay": "Définir jour de repos",
-    "startWorkout": "Démarrer l'entraînement",
+    "startWorkout": "Démarrer",
     "changeToRestInstead": "Changer en jour de repos à la place",
     "nothingPlanned": "Rien de prévu",
     "noWorkoutAssigned": "Aucun entraînement n'a été assigné à ce jour pour le moment.",
@@ -2205,6 +2205,10 @@
     "yoke carry": "Port avec joug",
     "yoke walk": "Marche avec joug",
     "zercher carry": "Port Zercher",
-    "zercher walk": "Marche Zercher"
+    "zercher walk": "Marche Zercher",
+    "heavy_compound_movements_for_chest_shoulders_and_triceps": "Mouvements composés lourds pour la poitrine, les épaules et les triceps",
+    "back_and_biceps_focused_on_muscle_growth": "Dos et biceps axés sur la croissance musculaire",
+    "high_volume_leg_workout_for_quad_and_hamstring_development": "Entraînement jambes haute volume pour le développement des quadriceps et ischio-jambiers",
+    "full_upper_body_strength_and_power_workout": "Entraînement complet de force et puissance du haut du corps"
   }
 }

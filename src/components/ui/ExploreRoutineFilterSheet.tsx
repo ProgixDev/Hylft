@@ -3,8 +3,8 @@ import BottomSheet, {
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
 import React, { Dispatch, forwardRef, SetStateAction, useMemo } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useTranslation } from "react-i18next";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
 import {
@@ -52,7 +52,7 @@ const ExploreRoutineFilterSheet = forwardRef<
     ref,
   ) => {
     const { theme } = useTheme();
-    const { i18n } = useTranslation();
+    const { t, i18n } = useTranslation();
     const styles = createStyles(theme);
     const snapPoints = useMemo(() => ["100%"], []);
 
@@ -83,10 +83,30 @@ const ExploreRoutineFilterSheet = forwardRef<
           return (
             <View style={styles.chipContainer}>
               {[
-                { label: i18n.language === "fr" ? t("filters.allLevels") : "All Levels", value: "All" },
-                { label: i18n.language === "fr" ? t("filters.beginner") : "Beginner", value: "beginner" },
-                { label: i18n.language === "fr" ? t("filters.intermediate") : "Intermediate", value: "intermediate" },
-                { label: i18n.language === "fr" ? t("filters.advanced") : "Advanced", value: "advanced" },
+                {
+                  label:
+                    i18n.language === "fr"
+                      ? t("filters.allLevels")
+                      : "All Levels",
+                  value: "All",
+                },
+                {
+                  label:
+                    i18n.language === "fr" ? t("filters.beginner") : "Beginner",
+                  value: "beginner",
+                },
+                {
+                  label:
+                    i18n.language === "fr"
+                      ? t("filters.intermediate")
+                      : "Intermediate",
+                  value: "intermediate",
+                },
+                {
+                  label:
+                    i18n.language === "fr" ? t("filters.advanced") : "Advanced",
+                  value: "advanced",
+                },
               ].map(({ label, value }) =>
                 renderChip(label, selectedDifficulty === value, () =>
                   onDifficultyChange(
@@ -100,13 +120,16 @@ const ExploreRoutineFilterSheet = forwardRef<
           return (
             <View style={styles.chipContainer}>
               {(["All", ...EXPLORE_CATEGORIES] as const).map((cat) => {
-                const displayLabel = cat === "All" 
-                  ? (i18n.language === "fr" ? t("filters.allCategories") : "All Categories")
-                  : (i18n.language === "fr" ? translateRoutineCategory(cat) : cat);
-                return renderChip(
-                  displayLabel,
-                  selectedCategory === cat,
-                  () => onCategoryChange(selectedCategory === cat ? null : cat),
+                const displayLabel =
+                  cat === "All"
+                    ? i18n.language === "fr"
+                      ? t("filters.allCategories")
+                      : "All Categories"
+                    : i18n.language === "fr"
+                      ? translateRoutineCategory(cat)
+                      : cat;
+                return renderChip(displayLabel, selectedCategory === cat, () =>
+                  onCategoryChange(selectedCategory === cat ? null : cat),
                 );
               })}
             </View>
@@ -281,6 +304,6 @@ const createStyles = (theme: Theme) =>
     },
   });
 
-ExploreRoutineFilterSheet.displayName = 'ExploreRoutineFilterSheet';
+ExploreRoutineFilterSheet.displayName = "ExploreRoutineFilterSheet";
 
 export default ExploreRoutineFilterSheet;

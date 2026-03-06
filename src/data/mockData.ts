@@ -1055,6 +1055,37 @@ let SCHEDULE: ScheduledDay[] = [
     routineId: "r1",
     status: "scheduled",
   },
+  { id: "sched-13", userId: "1", date: "2026-03-02", status: "rest" },
+  {
+    id: "sched-14",
+    userId: "1",
+    date: "2026-03-03",
+    routineId: "r2",
+    status: "scheduled",
+  },
+  {
+    id: "sched-15",
+    userId: "1",
+    date: "2026-03-04",
+    routineId: "r3",
+    status: "scheduled",
+  },
+  { id: "sched-16", userId: "1", date: "2026-03-05", status: "rest" },
+  {
+    id: "sched-17",
+    userId: "1",
+    date: "2026-03-06",
+    routineId: "r4",
+    status: "scheduled",
+  },
+  { id: "sched-18", userId: "1", date: "2026-03-07", status: "rest" },
+  {
+    id: "sched-19",
+    userId: "1",
+    date: "2026-03-08",
+    routineId: "r1",
+    status: "scheduled",
+  },
 ];
 
 export function getScheduleForDate(
