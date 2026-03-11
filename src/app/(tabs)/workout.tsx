@@ -1,16 +1,17 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
+  Image,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
-import { useTranslation } from "react-i18next";
 import RoutineCard from "../../components/ui/RoutineCard";
 import WorkoutCard from "../../components/ui/WorkoutCard";
 import { Theme } from "../../constants/themes";
@@ -23,6 +24,28 @@ import {
   Routine,
   Workout as WorkoutData,
 } from "../../data/mockData";
+
+const surfaceShadow = Platform.select({
+  ios: {
+    shadowColor: "#000000",
+    shadowOpacity: 0.2,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 10 },
+  },
+  android: { elevation: 8 },
+  default: {},
+});
+
+const controlShadow = Platform.select({
+  ios: {
+    shadowColor: "#000000",
+    shadowOpacity: 0.14,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+  },
+  android: { elevation: 4 },
+  default: {},
+});
 
 export default function Workout() {
   const { t } = useTranslation();
@@ -83,13 +106,20 @@ export default function Workout() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>{t("workout.title")}</Text>
-        <TouchableOpacity
-          style={styles.addButton}
+        <Image
+          source={theme.logo}
+          style={styles.headerLogo}
+          resizeMode="contain"
+        />
+        <Pressable
+          style={({ pressed }) => [
+            styles.addButton,
+            pressed && { opacity: 0.7, transform: [{ scale: 0.92 }] },
+          ]}
           onPress={() => setPlusModalVisible(true)}
         >
-          <Ionicons name="add-circle" size={32} color={theme.primary.main} />
-        </TouchableOpacity>
+          <Ionicons name="add" size={22} color={theme.foreground.white} />
+        </Pressable>
       </View>
 
       {/* Plus modal */}
@@ -104,35 +134,50 @@ export default function Workout() {
           onPress={() => setPlusModalVisible(false)}
         >
           <View style={styles.modalSheet}>
-            <TouchableOpacity
-              style={styles.modalOption}
+            <Pressable
+              style={({ pressed }) => [
+                styles.modalOption,
+                pressed && { backgroundColor: "rgba(255,255,255,0.04)" },
+              ]}
               onPress={() => {
                 handleStartEmptyWorkout();
                 setPlusModalVisible(false);
               }}
             >
-              <Text style={styles.modalOptionText}>{t("workout.startEmptyWorkout")}</Text>
-            </TouchableOpacity>
+              <Text style={styles.modalOptionText}>
+                {t("workout.startEmptyWorkout")}
+              </Text>
+            </Pressable>
 
             <View style={styles.modalDivider} />
 
-            <TouchableOpacity
-              style={styles.modalOption}
+            <Pressable
+              style={({ pressed }) => [
+                styles.modalOption,
+                pressed && { backgroundColor: "rgba(255,255,255,0.04)" },
+              ]}
               onPress={handleCreateRoutine}
             >
-              <Text style={styles.modalOptionText}>{t("workout.createRoutine")}</Text>
-            </TouchableOpacity>
+              <Text style={styles.modalOptionText}>
+                {t("workout.createRoutine")}
+              </Text>
+            </Pressable>
 
             <View style={styles.modalDivider} />
 
-            <TouchableOpacity
-              style={styles.modalOption}
+            <Pressable
+              style={({ pressed }) => [
+                styles.modalOption,
+                pressed && { backgroundColor: "rgba(255,255,255,0.04)" },
+              ]}
               onPress={() => {
                 setPlusModalVisible(false);
               }}
             >
-              <Text style={styles.modalOptionTextDanger}>{t("common.cancel")}</Text>
-            </TouchableOpacity>
+              <Text style={styles.modalOptionTextDanger}>
+                {t("common.cancel")}
+              </Text>
+            </Pressable>
           </View>
         </Pressable>
       </Modal>
@@ -147,8 +192,12 @@ export default function Workout() {
         {/* Quick Actions - new layout */}
         <View style={styles.quickActionsColumn}>
           {/* Row 1: full-width Explore */}
-          <TouchableOpacity
-            style={[styles.actionButton, styles.actionButtonFull]}
+          <Pressable
+            style={({ pressed }) => [
+              styles.actionButton,
+              styles.actionButtonFull,
+              pressed && { opacity: 0.88, transform: [{ scale: 0.98 }] },
+            ]}
             onPress={() => router.push("/explore-routines" as any)}
           >
             <View style={[styles.actionBgIcon, { right: -12, bottom: -20 }]}>
@@ -159,17 +208,22 @@ export default function Workout() {
               />
             </View>
             <View style={{ alignItems: "center", gap: 2 }}>
-              <Text style={styles.actionButtonText}>{t("workout.exploreRoutines")}</Text>
+              <Text style={styles.actionButtonText}>
+                {t("workout.exploreRoutines")}
+              </Text>
               <Text style={styles.actionButtonSub}>
                 {t("workout.browseCommunityTemplates")}
               </Text>
             </View>
-          </TouchableOpacity>
+          </Pressable>
 
           {/* Row 2: two buttons side-by-side */}
           <View style={styles.quickActionsRow}>
-            <TouchableOpacity
-              style={styles.actionButton}
+            <Pressable
+              style={({ pressed }) => [
+                styles.actionButton,
+                pressed && { opacity: 0.88, transform: [{ scale: 0.98 }] },
+              ]}
               onPress={handleStartEmptyWorkout}
             >
               <View style={[styles.actionBgIcon, { right: -14, bottom: -18 }]}>
@@ -179,11 +233,16 @@ export default function Workout() {
                   color={theme.primary.main}
                 />
               </View>
-              <Text style={styles.actionButtonText}>{t("workout.startEmptyWorkout")}</Text>
-            </TouchableOpacity>
+              <Text style={styles.actionButtonText}>
+                {t("workout.startEmptyWorkout")}
+              </Text>
+            </Pressable>
 
-            <TouchableOpacity
-              style={styles.actionButton}
+            <Pressable
+              style={({ pressed }) => [
+                styles.actionButton,
+                pressed && { opacity: 0.88, transform: [{ scale: 0.98 }] },
+              ]}
               onPress={handleCreateRoutine}
             >
               <View style={[styles.actionBgIcon, { right: -14, bottom: -18 }]}>
@@ -193,8 +252,10 @@ export default function Workout() {
                   color={theme.primary.main}
                 />
               </View>
-              <Text style={styles.actionButtonText}>{t("workout.createRoutine")}</Text>
-            </TouchableOpacity>
+              <Text style={styles.actionButtonText}>
+                {t("workout.createRoutine")}
+              </Text>
+            </Pressable>
           </View>
         </View>
 
@@ -207,9 +268,12 @@ export default function Workout() {
         >
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>{t("workout.myRoutines")}</Text>
-            <TouchableOpacity onPress={() => router.push("/routines" as any)}>
+            <Pressable
+              style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
+              onPress={() => router.push("/routines" as any)}
+            >
               <Text style={styles.seeAllText}>{t("common.seeAll")}</Text>
-            </TouchableOpacity>
+            </Pressable>
           </View>
 
           {routines.length === 0 ? (
@@ -245,10 +309,15 @@ export default function Workout() {
         {workouts.length > 0 && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>{t("workout.recentWorkouts")}</Text>
-              <TouchableOpacity onPress={() => router.push("/workouts" as any)}>
+              <Text style={styles.sectionTitle}>
+                {t("workout.recentWorkouts")}
+              </Text>
+              <Pressable
+                style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
+                onPress={() => router.push("/workouts" as any)}
+              >
                 <Text style={styles.seeAllText}>{t("common.seeAll")}</Text>
-              </TouchableOpacity>
+              </Pressable>
             </View>
 
             <View style={styles.workoutsList}>
@@ -302,20 +371,25 @@ const createStyles = (theme: Theme) =>
     },
     header: {
       flexDirection: "row",
-      justifyContent: "space-between",
       alignItems: "center",
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.background.darker,
+      justifyContent: "space-between",
+      paddingHorizontal: 20,
+      paddingBottom: 12,
     },
-    headerTitle: {
-      fontSize: 28,
-      fontWeight: "700",
-      color: theme.foreground.white,
+    headerLogo: {
+      height: 36,
+      width: 110,
     },
     addButton: {
-      padding: 4,
+      width: 44,
+      height: 44,
+      borderRadius: 14,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: theme.background.accent,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: "rgba(255,255,255,0.08)",
+      ...controlShadow,
     },
     content: {
       flex: 1,
@@ -334,14 +408,15 @@ const createStyles = (theme: Theme) =>
     actionButton: {
       flex: 1,
       backgroundColor: theme.background.darker,
-      borderRadius: 12,
-      paddingVertical: 18,
-      paddingHorizontal: 12,
+      borderRadius: 18,
+      paddingVertical: 22,
+      paddingHorizontal: 14,
       alignItems: "center",
       gap: 8,
-      borderWidth: 1,
-      borderColor: theme.background.darker,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: "rgba(255,255,255,0.08)",
       overflow: "hidden",
+      ...surfaceShadow,
     },
     actionBgIcon: {
       position: "absolute",
@@ -529,11 +604,12 @@ const createStyles = (theme: Theme) =>
       width: "100%",
       maxWidth: 480,
       backgroundColor: theme.background.darker,
-      borderRadius: 14,
+      borderRadius: 22,
       paddingVertical: 8,
       overflow: "hidden",
-      borderWidth: 1,
-      borderColor: theme.background.dark,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: "rgba(255,255,255,0.10)",
+      ...surfaceShadow,
     },
     modalOption: {
       paddingVertical: 16,

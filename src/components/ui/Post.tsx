@@ -1,15 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { memo, useState } from "react";
-import {
-  Image,
-  Share,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
 import { useTranslation } from "react-i18next";
+import { Image, Pressable, Share, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "../../contexts/ThemeContext";
 import ImageCarousel from "./ImageCarousel";
 
@@ -76,16 +69,21 @@ const Post = memo(
       <View style={styles.postContainer}>
         {/* Post Header */}
         <View style={styles.postHeader}>
-          <TouchableOpacity
+          <Pressable
             onPress={handleUserPress}
-            style={styles.userHeaderButton}
+            style={({ pressed }) => [
+              styles.userHeaderButton,
+              pressed && { opacity: 0.7 },
+            ]}
           >
-            <Image source={{ uri: post.user.avatar }} style={styles.avatar} />
+            <View style={styles.avatarWrapper}>
+              <Image source={{ uri: post.user.avatar }} style={styles.avatar} />
+            </View>
             <View style={styles.userInfo}>
               <Text style={styles.username}>{post.user.username}</Text>
               <Text style={styles.timestamp}>{post.timestamp}</Text>
             </View>
-          </TouchableOpacity>
+          </Pressable>
         </View>
 
         {/* Metrics Info - Above Image */}
@@ -131,60 +129,97 @@ const Post = memo(
         {/* Post Actions */}
         <View style={styles.actionsContainer}>
           <View style={styles.leftActions}>
-            <TouchableOpacity
+            <Pressable
               onPress={() => onLike(post.id)}
-              style={styles.actionButton}
+              style={({ pressed }) => [
+                styles.actionButton,
+                pressed && { opacity: 0.7, transform: [{ scale: 0.88 }] },
+              ]}
             >
               <Ionicons
                 name={post.isLiked ? "trophy" : "trophy-outline"}
-                size={28}
+                size={26}
                 color={
                   post.isLiked ? theme.primary.main : theme.foreground.white
                 }
               />
-            </TouchableOpacity>
-            <TouchableOpacity
+              {post.likes > 0 && (
+                <Text
+                  style={[
+                    styles.actionCount,
+                    post.isLiked && { color: theme.primary.main },
+                  ]}
+                >
+                  {post.likes.toLocaleString()}
+                </Text>
+              )}
+            </Pressable>
+            <Pressable
               onPress={handleComments}
-              style={styles.actionButton}
+              style={({ pressed }) => [
+                styles.actionButton,
+                pressed && { opacity: 0.7, transform: [{ scale: 0.88 }] },
+              ]}
             >
               <Ionicons
                 name="chatbubble-outline"
-                size={26}
+                size={24}
                 color={theme.foreground.white}
               />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={handleShare} style={styles.actionButton}>
+              {post.comments > 0 && (
+                <Text style={styles.actionCount}>{post.comments}</Text>
+              )}
+            </Pressable>
+            <Pressable
+              onPress={handleShare}
+              style={({ pressed }) => [
+                styles.actionButton,
+                pressed && { opacity: 0.7, transform: [{ scale: 0.88 }] },
+              ]}
+            >
               <Ionicons
                 name="share-outline"
-                size={26}
+                size={24}
                 color={theme.foreground.white}
               />
-            </TouchableOpacity>
+            </Pressable>
           </View>
-          <TouchableOpacity onPress={handleSave}>
+          <Pressable
+            onPress={handleSave}
+            style={({ pressed }) => [
+              styles.actionButton,
+              pressed && { opacity: 0.7, transform: [{ scale: 0.88 }] },
+            ]}
+          >
             <Ionicons
               name={isSaved ? "bookmark" : "bookmark-outline"}
-              size={26}
+              size={24}
               color={isSaved ? theme.primary.main : theme.foreground.white}
             />
-          </TouchableOpacity>
+          </Pressable>
         </View>
 
         {/* Post Info */}
         <View style={styles.postInfo}>
-          <Text style={styles.likes}>{post.likes.toLocaleString()} {t("post.likes")}</Text>
           <Text style={styles.caption}>
             <Text style={styles.username}>{post.user.username} </Text>
             {post.caption}
           </Text>
           {post.comments > 0 && (
-            <TouchableOpacity onPress={handleComments}>
+            <Pressable
+              onPress={handleComments}
+              style={({ pressed }) => pressed && { opacity: 0.7 }}
+            >
               <Text style={styles.viewComments}>
-                {t("post.viewAllComments").replace("{count}", String(post.comments))}
+                {t("post.viewAllComments").replace(
+                  "{count}",
+                  String(post.comments),
+                )}
               </Text>
-            </TouchableOpacity>
+            </Pressable>
           )}
         </View>
+        <View style={styles.divider} />
       </View>
     );
   },
@@ -203,24 +238,35 @@ Post.displayName = "Post";
 const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
   StyleSheet.create({
     postContainer: {
-      marginBottom: 16,
+      marginBottom: 0,
+    },
+    divider: {
+      height: 8,
+      backgroundColor: theme.background.dark,
     },
     postHeader: {
       flexDirection: "row",
       alignItems: "center",
       paddingHorizontal: 16,
-      paddingVertical: 12,
+      paddingVertical: 10,
     },
     userHeaderButton: {
       flexDirection: "row",
       alignItems: "center",
       flex: 1,
     },
+    avatarWrapper: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      padding: 2,
+      backgroundColor: theme.primary.main + "40",
+      marginRight: 10,
+    },
     avatar: {
-      width: 40,
-      height: 40,
+      width: "100%",
+      height: "100%",
       borderRadius: 20,
-      marginRight: 12,
     },
     userInfo: {
       flex: 1,
@@ -247,42 +293,30 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
-      paddingHorizontal: 12,
-      paddingVertical: 8,
+      paddingHorizontal: 8,
+      paddingVertical: 6,
     },
     leftActions: {
       flexDirection: "row",
-      gap: 12,
+      gap: 0,
     },
     actionButton: {
-      padding: 4,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 5,
+      paddingHorizontal: 10,
+      paddingVertical: 8,
+    },
+    actionCount: {
+      fontSize: 13,
+      fontWeight: "600",
+      color: theme.foreground.white,
     },
     metricsSection: {
       paddingHorizontal: 16,
       paddingVertical: 12,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.background.darker,
-    },
-    postInfo: {
-      paddingHorizontal: 16,
-      paddingBottom: 8,
-    },
-    metadataContainer: {
-      flexDirection: "row",
-      gap: 8,
-      marginBottom: 12,
-      flexWrap: "wrap",
-    },
-    metadataTag: {
-      backgroundColor: theme.primary.main,
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      borderRadius: 20,
-    },
-    metadataLabel: {
-      fontSize: 12,
-      fontWeight: "600",
-      color: theme.background.dark,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: "rgba(255,255,255,0.08)",
     },
     metricsContainer: {
       flexDirection: "row",
@@ -304,6 +338,28 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       fontSize: 14,
       fontWeight: "700",
       color: theme.foreground.white,
+    },
+    postInfo: {
+      paddingHorizontal: 16,
+      paddingTop: 2,
+      paddingBottom: 12,
+    },
+    metadataContainer: {
+      flexDirection: "row",
+      gap: 8,
+      marginBottom: 12,
+      flexWrap: "wrap",
+    },
+    metadataTag: {
+      backgroundColor: theme.primary.main,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 20,
+    },
+    metadataLabel: {
+      fontSize: 12,
+      fontWeight: "600",
+      color: theme.background.dark,
     },
     likes: {
       fontSize: 14,

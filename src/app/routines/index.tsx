@@ -1,24 +1,54 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
-import {
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
-} from "react-native";
 import { useTranslation } from "react-i18next";
+import {
+  Image,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import RoutineCard from "../../components/ui/RoutineCard";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getRoutinesByUserId, Routine } from "../../data/mockData";
+
+const surfaceShadow = Platform.select({
+  ios: {
+    shadowColor: "#000000",
+    shadowOpacity: 0.2,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 10 },
+  },
+  android: {
+    elevation: 8,
+  },
+  default: {},
+});
+
+const controlShadow = Platform.select({
+  ios: {
+    shadowColor: "#000000",
+    shadowOpacity: 0.14,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+  },
+  android: {
+    elevation: 4,
+  },
+  default: {},
+});
 
 export default function AllRoutines() {
   const { t } = useTranslation();
   const { theme } = useTheme();
   const styles = createStyles(theme);
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [routines, setRoutines] = useState<Routine[]>([]);
 
   const loadData = useCallback(() => {
@@ -36,23 +66,34 @@ export default function AllRoutines() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
+        <Pressable
+          style={({ pressed }) => [
+            styles.backButton,
+            pressed && styles.backButtonPressed,
+          ]}
           onPress={() => router.back()}
+          hitSlop={8}
         >
           <Ionicons
             name="arrow-back"
             size={24}
             color={theme.foreground.white}
           />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t("routines.allRoutines")}</Text>
-        <View style={{ width: 40 }} />
+        </Pressable>
+        <Image
+          source={theme.logo}
+          style={styles.headerLogo}
+          resizeMode="contain"
+        />
+        <View style={{ width: 44 }} />
       </View>
 
       <ScrollView
         style={styles.content}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: 40 + insets.bottom },
+        ]}
         showsVerticalScrollIndicator={false}
       >
         {routines.length === 0 ? (
@@ -94,38 +135,56 @@ const createStyles = (theme: Theme) =>
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.background.darker,
+      paddingHorizontal: 20,
+      paddingTop: 10,
+      paddingBottom: 8,
     },
     backButton: {
-      padding: 8,
-      marginLeft: -8,
+      width: 44,
+      height: 44,
+      borderRadius: 14,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: theme.background.accent,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: "rgba(255,255,255,0.08)",
+      ...controlShadow,
     },
-    headerTitle: {
-      fontSize: 20,
-      fontWeight: "700",
-      color: theme.foreground.white,
+    backButtonPressed: {
+      opacity: 0.9,
+      transform: [{ scale: 0.96 }],
+    },
+    headerLogo: {
+      height: 26,
+      width: 80,
     },
     content: {
       flex: 1,
     },
     scrollContent: {
-      padding: 16,
-      gap: 16,
+      paddingHorizontal: 20,
+      paddingTop: 12,
       paddingBottom: 40,
     },
     emptyState: {
       alignItems: "center",
       justifyContent: "center",
-      paddingVertical: 60,
+      marginTop: 60,
+      marginHorizontal: 20,
+      borderRadius: 26,
+      paddingVertical: 48,
+      paddingHorizontal: 24,
+      backgroundColor: theme.background.accent,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: "rgba(255,255,255,0.07)",
+      ...surfaceShadow,
     },
     emptyText: {
       fontSize: 16,
       color: theme.foreground.gray,
       textAlign: "center",
-      marginTop: 16,
+      marginTop: 12,
+      lineHeight: 22,
     },
     routineCard: {
       width: "100%",

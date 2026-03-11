@@ -870,7 +870,7 @@ export const ROUTINES: Routine[] = [
     name: "Leg Day - Volume",
     description: "High volume leg workout for quad and hamstring development",
     estimatedDuration: 120,
-    targetMuscles: ["quads", "hamstrings", "glutes", "calves"],
+    targetMuscles: ["quads", "hamstrings", "glutes"],
     difficulty: "advanced",
     lastUsed: "2024-02-10",
     timesCompleted: 18,
@@ -982,111 +982,87 @@ export interface ScheduledDay {
   status: "completed" | "scheduled" | "rest";
 }
 
-// Dates are relative to today = 2026-02-24
-let SCHEDULE: ScheduledDay[] = [
-  // Past week (completed or rest)
-  {
-    id: "sched-1",
-    userId: "1",
-    date: "2026-02-18",
-    routineId: "r3",
-    status: "completed",
-    notes: "Felt strong, PR on squats!",
-  },
-  { id: "sched-2", userId: "1", date: "2026-02-19", status: "rest" },
-  {
-    id: "sched-3",
-    userId: "1",
-    date: "2026-02-20",
-    routineId: "r2",
-    status: "completed",
-  },
-  {
-    id: "sched-4",
-    userId: "1",
-    date: "2026-02-21",
-    routineId: "r4",
-    status: "completed",
-    notes: "Great upper body session",
-  },
-  { id: "sched-5", userId: "1", date: "2026-02-22", status: "rest" },
-  // Yesterday
-  {
-    id: "sched-6",
-    userId: "1",
-    date: "2026-02-23",
-    routineId: "r2",
-    status: "completed",
-    notes: "Back and biceps on point 💪",
-  },
-  // Today
-  {
-    id: "sched-7",
-    userId: "1",
-    date: "2026-02-24",
-    routineId: "r1",
-    status: "scheduled",
-    notes: "Heavy chest day — go for PR on bench",
-  },
-  // Tomorrow
-  { id: "sched-8", userId: "1", date: "2026-02-25", status: "rest" },
-  // Day after tomorrow
-  {
-    id: "sched-9",
-    userId: "1",
-    date: "2026-02-26",
-    routineId: "r3",
-    status: "scheduled",
-    notes: "Leg day — focus on depth",
-  },
-  // Further future
-  {
-    id: "sched-10",
-    userId: "1",
-    date: "2026-02-27",
-    routineId: "r4",
-    status: "scheduled",
-  },
-  { id: "sched-11", userId: "1", date: "2026-02-28", status: "rest" },
-  {
-    id: "sched-12",
-    userId: "1",
-    date: "2026-03-01",
-    routineId: "r1",
-    status: "scheduled",
-  },
-  { id: "sched-13", userId: "1", date: "2026-03-02", status: "rest" },
-  {
-    id: "sched-14",
-    userId: "1",
-    date: "2026-03-03",
-    routineId: "r2",
-    status: "scheduled",
-  },
-  {
-    id: "sched-15",
-    userId: "1",
-    date: "2026-03-04",
-    routineId: "r3",
-    status: "scheduled",
-  },
-  { id: "sched-16", userId: "1", date: "2026-03-05", status: "rest" },
-  {
-    id: "sched-17",
-    userId: "1",
-    date: "2026-03-06",
-    routineId: "r4",
-    status: "scheduled",
-  },
-  { id: "sched-18", userId: "1", date: "2026-03-07", status: "rest" },
-  {
-    id: "sched-19",
-    userId: "1",
-    date: "2026-03-08",
-    routineId: "r1",
-    status: "scheduled",
-  },
+const SCHEDULE_ROUTINE_IDS = ["r1", "r2", "r3", "r4"] as const;
+const SCHEDULE_NOTES = [
+  "Push for good form today.",
+  "Keep rests tight between sets.",
+  "Focus on control and tempo.",
+  "Light mobility after the session.",
+  "Try to beat last week's volume.",
+  "Recovery matters as much as intensity.",
 ];
+
+function formatScheduleDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function getDateWithOffset(baseDate: Date, offset: number): Date {
+  const date = new Date(baseDate);
+  date.setDate(baseDate.getDate() + offset);
+  return date;
+}
+
+function getSeededValue(seed: string): number {
+  let hash = 0;
+  for (let index = 0; index < seed.length; index += 1) {
+    hash = (hash * 31 + seed.charCodeAt(index)) >>> 0;
+  }
+  return (hash % 1000) / 1000;
+}
+
+function buildScheduledDay(
+  offset: number,
+  baseDate: Date,
+  userId: string,
+): ScheduledDay {
+  const date = getDateWithOffset(baseDate, offset);
+  const isoDate = formatScheduleDate(date);
+  const seed = getSeededValue(`${userId}-${isoDate}`);
+  const routineId =
+    SCHEDULE_ROUTINE_IDS[Math.floor(seed * SCHEDULE_ROUTINE_IDS.length)];
+  const note = SCHEDULE_NOTES[Math.floor(seed * SCHEDULE_NOTES.length)];
+
+  let status: ScheduledDay["status"];
+  if (offset === 0) {
+    status = "scheduled";
+  } else if (offset === 2) {
+    status = "scheduled";
+  } else if (offset === 1) {
+    status = seed < 0.4 ? "rest" : "scheduled";
+  } else if (offset === -1) {
+    status = seed < 0.35 ? "rest" : "completed";
+  } else if (offset < 0) {
+    status = seed < 0.3 ? "rest" : "completed";
+  } else {
+    status = seed < 0.33 ? "rest" : "scheduled";
+  }
+
+  return {
+    id: `sched-${userId}-${isoDate}`,
+    userId,
+    date: isoDate,
+    status,
+    routineId: status === "rest" ? undefined : routineId,
+    notes: seed < 0.55 ? note : undefined,
+  };
+}
+
+function createMockSchedule(userId: string = "1"): ScheduledDay[] {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const schedule: ScheduledDay[] = [];
+  for (let offset = -14; offset <= 21; offset += 1) {
+    schedule.push(buildScheduledDay(offset, today, userId));
+  }
+
+  return schedule;
+}
+
+let SCHEDULE: ScheduledDay[] = createMockSchedule();
 
 export function getScheduleForDate(
   date: string,

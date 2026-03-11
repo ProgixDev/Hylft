@@ -1,20 +1,27 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import {
+  Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
-import { useTranslation } from "react-i18next";
 import { Theme } from "../../constants/themes";
 import { useActiveWorkout } from "../../contexts/ActiveWorkoutContext";
 import { useTheme } from "../../contexts/ThemeContext";
-import { formatDisplayDate } from "../../utils/dateFormatter";
 import { getRoutineById } from "../../data/mockData";
-import { translateRoutineName, translateRoutineDescription, translateExerciseTerm, translateExerciseName, translateApiData } from "../../utils/exerciseTranslator";
+import { formatDisplayDate } from "../../utils/dateFormatter";
+import {
+  translateApiData,
+  translateExerciseName,
+  translateExerciseTerm,
+  translateRoutineDescription,
+  translateRoutineName,
+} from "../../utils/exerciseTranslator";
 
 const DIFFICULTY_COLORS = {
   beginner: { bg: "rgba(34, 197, 94, 0.15)", text: "#22c55e" },
@@ -28,6 +35,26 @@ const REST_LABEL = (seconds: number) => {
   const s = seconds % 60;
   return s === 0 ? `${m}m` : `${m}m ${s}s`;
 };
+
+const surfaceShadow = Platform.select({
+  ios: {
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.28,
+    shadowRadius: 18,
+  },
+  android: { elevation: 8 },
+});
+
+const controlShadow = Platform.select({
+  ios: {
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.18,
+    shadowRadius: 12,
+  },
+  android: { elevation: 4 },
+});
 
 export default function RoutineDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -48,12 +75,15 @@ export default function RoutineDetail() {
           color={theme.foreground.gray}
         />
         <Text style={styles.notFoundText}>{t("routines.routineNotFound")}</Text>
-        <TouchableOpacity
-          style={styles.backFallback}
+        <Pressable
+          style={({ pressed }) => [
+            styles.backFallback,
+            pressed && { opacity: 0.8, transform: [{ scale: 0.97 }] },
+          ]}
           onPress={() => router.back()}
         >
           <Text style={styles.backFallbackText}>{t("routines.goBack")}</Text>
-        </TouchableOpacity>
+        </Pressable>
       </View>
     );
   }
@@ -77,21 +107,24 @@ export default function RoutineDetail() {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
+      <View style={[styles.header]}>
+        <Pressable
+          style={({ pressed }) => [
+            styles.backButton,
+            pressed && { opacity: 0.7, transform: [{ scale: 0.93 }] },
+          ]}
           onPress={() => router.back()}
         >
           <Ionicons
-            name="arrow-back"
-            size={24}
+            name="chevron-back"
+            size={22}
             color={theme.foreground.white}
           />
-        </TouchableOpacity>
+        </Pressable>
         <Text style={styles.headerTitle} numberOfLines={1}>
           {translateRoutineName(routine.name)}
         </Text>
-        <View style={{ width: 40 }} />
+        <View style={{ width: 44 }} />
       </View>
 
       <ScrollView
@@ -101,6 +134,7 @@ export default function RoutineDetail() {
       >
         {/* Hero Card */}
         <View style={styles.heroCard}>
+          <View style={styles.heroGlow} pointerEvents="none" />
           {/* Title Row */}
           <View style={styles.heroTitleRow}>
             <Text style={styles.heroName}>
@@ -160,7 +194,11 @@ export default function RoutineDetail() {
               />
               <Text style={styles.lastUsedText}>
                 {t("routines.lastUsed")}{" "}
-                {formatDisplayDate(routine.lastUsed, { month: "short", day: "numeric", year: "numeric" })}
+                {formatDisplayDate(routine.lastUsed, {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })}
               </Text>
             </View>
           )}
@@ -201,19 +239,25 @@ export default function RoutineDetail() {
             <View style={styles.exerciseMetaRow}>
               <View style={styles.exerciseMeta}>
                 <Text style={styles.exerciseMetaValue}>{exercise.sets}</Text>
-                <Text style={styles.exerciseMetaLabel}>{t("createRoutine.sets")}</Text>
+                <Text style={styles.exerciseMetaLabel}>
+                  {t("createRoutine.sets")}
+                </Text>
               </View>
               <View style={styles.exerciseMetaDivider} />
               <View style={styles.exerciseMeta}>
                 <Text style={styles.exerciseMetaValue}>{exercise.reps}</Text>
-                <Text style={styles.exerciseMetaLabel}>{t("createRoutine.reps")}</Text>
+                <Text style={styles.exerciseMetaLabel}>
+                  {t("createRoutine.reps")}
+                </Text>
               </View>
               <View style={styles.exerciseMetaDivider} />
               <View style={styles.exerciseMeta}>
                 <Text style={styles.exerciseMetaValue}>
                   {REST_LABEL(exercise.restTime)}
                 </Text>
-                <Text style={styles.exerciseMetaLabel}>{t("createRoutine.rest")}</Text>
+                <Text style={styles.exerciseMetaLabel}>
+                  {t("createRoutine.rest")}
+                </Text>
               </View>
             </View>
 
@@ -221,7 +265,9 @@ export default function RoutineDetail() {
             <View style={styles.setPreviewRow}>
               {Array.from({ length: exercise.sets }).map((_, si) => (
                 <View key={si} style={styles.setPreviewChip}>
-                  <Text style={styles.setPreviewLabel}>{t("createRoutine.sets")} {si + 1}</Text>
+                  <Text style={styles.setPreviewLabel}>
+                    {t("createRoutine.sets")} {si + 1}
+                  </Text>
                   <Text style={styles.setPreviewValue}>
                     {exercise.reps} {t("createRoutine.reps")}
                   </Text>
@@ -237,7 +283,9 @@ export default function RoutineDetail() {
                   size={14}
                   color={theme.primary.main}
                 />
-                <Text style={styles.notesText}>{translateApiData(exercise.notes)}</Text>
+                <Text style={styles.notesText}>
+                  {translateApiData(exercise.notes)}
+                </Text>
               </View>
             )}
           </View>
@@ -245,15 +293,19 @@ export default function RoutineDetail() {
       </ScrollView>
 
       {/* Sticky Start Button */}
-      <View style={styles.stickyBar}>
-        <TouchableOpacity
-          style={styles.startButton}
+      <View style={[styles.stickyBar]}>
+        <Pressable
+          style={({ pressed }) => [
+            styles.startButton,
+            pressed && { opacity: 0.88, transform: [{ scale: 0.98 }] },
+          ]}
           onPress={handleStartRoutine}
-          activeOpacity={0.85}
         >
           <Ionicons name="play" size={18} color={theme.background.dark} />
-          <Text style={styles.startButtonText}>{t("routines.startRoutine")}</Text>
-        </TouchableOpacity>
+          <Text style={styles.startButtonText}>
+            {t("routines.startRoutine")}
+          </Text>
+        </Pressable>
       </View>
     </View>
   );
@@ -275,11 +327,12 @@ const createStyles = (theme: Theme) =>
       marginTop: 16,
     },
     backFallback: {
-      marginTop: 12,
-      paddingVertical: 10,
-      paddingHorizontal: 24,
+      marginTop: 16,
+      paddingVertical: 12,
+      paddingHorizontal: 28,
       backgroundColor: theme.primary.main,
-      borderRadius: 10,
+      borderRadius: 14,
+      ...controlShadow,
     },
     backFallbackText: {
       color: theme.background.dark,
@@ -289,19 +342,23 @@ const createStyles = (theme: Theme) =>
     // Header
     header: {
       flexDirection: "row",
-      justifyContent: "space-between",
       alignItems: "center",
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.background.darker,
+      paddingHorizontal: 20,
+      paddingBottom: 12,
     },
     backButton: {
-      padding: 8,
-      marginLeft: -8,
+      width: 44,
+      height: 44,
+      borderRadius: 14,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: theme.background.darker,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: "rgba(255,255,255,0.10)",
+      ...controlShadow,
     },
     headerTitle: {
-      fontSize: 18,
+      fontSize: 17,
       fontWeight: "700",
       color: theme.foreground.white,
       flex: 1,
@@ -312,15 +369,29 @@ const createStyles = (theme: Theme) =>
       flex: 1,
     },
     scrollContent: {
-      padding: 16,
-      paddingBottom: 100, // space for sticky bar
+      paddingHorizontal: 20,
+      paddingTop: 16,
+      paddingBottom: 120,
       gap: 16,
     },
     // Hero Card
     heroCard: {
       backgroundColor: theme.background.darker,
-      borderRadius: 18,
-      padding: 18,
+      borderRadius: 24,
+      padding: 20,
+      overflow: "hidden",
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: "rgba(255,255,255,0.07)",
+      ...surfaceShadow,
+    },
+    heroGlow: {
+      position: "absolute",
+      top: -40,
+      right: -30,
+      width: 160,
+      height: 160,
+      borderRadius: 80,
+      backgroundColor: theme.primary.main + "12",
     },
     heroTitleRow: {
       flexDirection: "row",
@@ -352,8 +423,8 @@ const createStyles = (theme: Theme) =>
       marginBottom: 16,
     },
     heroDivider: {
-      height: 1,
-      backgroundColor: theme.background.dark,
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: "rgba(255,255,255,0.08)",
       marginBottom: 16,
     },
     statsRow: {
@@ -375,9 +446,9 @@ const createStyles = (theme: Theme) =>
       marginTop: 2,
     },
     statDivider: {
-      width: 1,
+      width: StyleSheet.hairlineWidth,
       height: 28,
-      backgroundColor: theme.background.dark,
+      backgroundColor: "rgba(255,255,255,0.10)",
     },
     lastUsedRow: {
       flexDirection: "row",
@@ -404,9 +475,11 @@ const createStyles = (theme: Theme) =>
     },
     muscleTag: {
       backgroundColor: theme.background.darker,
-      paddingHorizontal: 12,
-      paddingVertical: 7,
-      borderRadius: 20,
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      borderRadius: 22,
+      borderWidth: 1,
+      borderColor: theme.primary.main + "30",
     },
     muscleTagText: {
       color: theme.primary.main,
@@ -417,8 +490,11 @@ const createStyles = (theme: Theme) =>
     // Exercise Cards
     exerciseCard: {
       backgroundColor: theme.background.darker,
-      borderRadius: 16,
-      padding: 16,
+      borderRadius: 20,
+      padding: 18,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: "rgba(255,255,255,0.07)",
+      ...surfaceShadow,
     },
     exerciseHeader: {
       flexDirection: "row",
@@ -446,8 +522,8 @@ const createStyles = (theme: Theme) =>
       flex: 1,
     },
     exerciseDivider: {
-      height: 1,
-      backgroundColor: theme.background.dark,
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: "rgba(255,255,255,0.08)",
       marginBottom: 12,
     },
     exerciseMetaRow: {
@@ -470,9 +546,9 @@ const createStyles = (theme: Theme) =>
       marginTop: 2,
     },
     exerciseMetaDivider: {
-      width: 1,
+      width: StyleSheet.hairlineWidth,
       height: 28,
-      backgroundColor: theme.background.dark,
+      backgroundColor: "rgba(255,255,255,0.10)",
     },
     // Set Preview
     setPreviewRow: {
@@ -482,10 +558,12 @@ const createStyles = (theme: Theme) =>
     },
     setPreviewChip: {
       backgroundColor: theme.background.dark,
-      paddingVertical: 6,
-      paddingHorizontal: 10,
-      borderRadius: 8,
+      paddingVertical: 7,
+      paddingHorizontal: 12,
+      borderRadius: 10,
       alignItems: "center",
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: "rgba(255,255,255,0.07)",
     },
     setPreviewLabel: {
       color: theme.foreground.gray,
@@ -501,11 +579,13 @@ const createStyles = (theme: Theme) =>
     notesContainer: {
       flexDirection: "row",
       alignItems: "flex-start",
-      gap: 7,
-      marginTop: 10,
-      backgroundColor: theme.background.dark,
-      padding: 10,
-      borderRadius: 8,
+      gap: 8,
+      marginTop: 12,
+      backgroundColor: theme.primary.main + "10",
+      padding: 12,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: theme.primary.main + "20",
     },
     notesText: {
       color: theme.foreground.gray,
@@ -515,15 +595,22 @@ const createStyles = (theme: Theme) =>
     },
     // Sticky Bar
     stickyBar: {
-      paddingHorizontal: 16,
-      paddingVertical: 14,
-      borderTopWidth: 1,
-      borderTopColor: theme.background.darker,
+      paddingHorizontal: 20,
+      paddingTop: 14,
       backgroundColor: theme.background.dark,
+      ...Platform.select({
+        ios: {
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: -4 },
+          shadowOpacity: 0.15,
+          shadowRadius: 12,
+        },
+        android: { elevation: 8 },
+      }),
     },
     startButton: {
       backgroundColor: theme.primary.main,
-      borderRadius: 14,
+      borderRadius: 16,
       paddingVertical: 16,
       flexDirection: "row",
       alignItems: "center",

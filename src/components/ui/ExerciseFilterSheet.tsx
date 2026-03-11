@@ -1,10 +1,7 @@
-import BottomSheet, {
-  BottomSheetScrollView,
-  BottomSheetView,
-} from "@gorhom/bottom-sheet";
+import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import React, { Dispatch, forwardRef, SetStateAction, useMemo } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useTranslation } from "react-i18next";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
 import { Difficulty } from "../../services/exerciseDbApi";
@@ -61,11 +58,14 @@ const ExerciseFilterSheet = forwardRef<BottomSheet, ExerciseFilterSheetProps>(
       selected: boolean,
       onPress: () => void,
     ) => (
-      <TouchableOpacity
+      <Pressable
         key={label}
-        style={[styles.chip, selected && styles.chipActive]}
+        style={({ pressed }) => [
+          styles.chip,
+          selected && styles.chipActive,
+          pressed && { opacity: 0.75 },
+        ]}
         onPress={onPress}
-        activeOpacity={0.8}
       >
         <Text
           numberOfLines={1}
@@ -74,7 +74,7 @@ const ExerciseFilterSheet = forwardRef<BottomSheet, ExerciseFilterSheetProps>(
         >
           {label.charAt(0).toUpperCase() + label.slice(1)}
         </Text>
-      </TouchableOpacity>
+      </Pressable>
     );
 
     const renderTabContent = () => {
@@ -89,7 +89,7 @@ const ExerciseFilterSheet = forwardRef<BottomSheet, ExerciseFilterSheetProps>(
               ].map(({ label, value }) =>
                 renderChip(label, selectedDifficulty === value, () =>
                   onDifficultyChange(
-                    selectedDifficulty === value ? null : value,
+                    selectedDifficulty === value ? null : (value as Difficulty),
                   ),
                 ),
               )}
@@ -140,23 +140,33 @@ const ExerciseFilterSheet = forwardRef<BottomSheet, ExerciseFilterSheetProps>(
         backgroundStyle={styles.bottomSheetBackground}
         handleIndicatorStyle={styles.handleIndicator}
       >
-        <BottomSheetView style={styles.container}>
+        <BottomSheetScrollView style={styles.container}>
           {/* Header */}
           <View style={styles.header}>
             <Text style={styles.title}>{t("filters.filterExercises")}</Text>
             {hasActiveFilters && (
-              <TouchableOpacity style={styles.clearButton} onPress={onClearAll}>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.clearButton,
+                  pressed && { opacity: 0.7 },
+                ]}
+                onPress={onClearAll}
+              >
                 <Text style={styles.clearButtonText}>{t("filters.reset")}</Text>
-              </TouchableOpacity>
+              </Pressable>
             )}
           </View>
 
           {/* Tabs */}
           <View style={styles.tabsContainer}>
             {(["bodyPart", "equipment", "difficulty"] as const).map((tab) => (
-              <TouchableOpacity
+              <Pressable
                 key={tab}
-                style={[styles.tab, activeTab === tab && styles.tabActive]}
+                style={({ pressed }) => [
+                  styles.tab,
+                  activeTab === tab && styles.tabActive,
+                  pressed && { opacity: 0.75 },
+                ]}
                 onPress={() => onTabChange(tab)}
               >
                 <Text
@@ -167,17 +177,15 @@ const ExerciseFilterSheet = forwardRef<BottomSheet, ExerciseFilterSheetProps>(
                 >
                   {getTabLabel(tab)}
                 </Text>
-              </TouchableOpacity>
+              </Pressable>
             ))}
           </View>
 
-          <BottomSheetScrollView
-            contentContainerStyle={styles.scrollViewContent}
-          >
+          <View style={styles.scrollViewContent}>
             {renderTabContent()}
             <View style={styles.footerSpacer} />
-          </BottomSheetScrollView>
-        </BottomSheetView>
+          </View>
+        </BottomSheetScrollView>
       </BottomSheet>
     );
   },
@@ -222,17 +230,17 @@ const createStyles = (theme: Theme) =>
     },
     tabsContainer: {
       flexDirection: "row",
-      paddingHorizontal: 18,
+      paddingHorizontal: 4,
       paddingVertical: 8,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.background.accent,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: "rgba(255,255,255,0.08)",
       gap: 8,
     },
     tab: {
       flex: 1,
-      paddingVertical: 6,
+      paddingVertical: 8,
       paddingHorizontal: 8,
-      borderRadius: 8,
+      borderRadius: 12,
       backgroundColor: theme.background.accent,
       alignItems: "center",
     },
@@ -263,11 +271,11 @@ const createStyles = (theme: Theme) =>
       alignItems: "center",
       justifyContent: "center",
       paddingHorizontal: 10,
-      paddingVertical: 6,
-      borderRadius: 12,
+      paddingVertical: 10,
+      borderRadius: 14,
       backgroundColor: theme.background.accent,
-      borderWidth: 1,
-      borderColor: theme.background.accent,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: "rgba(255,255,255,0.08)",
       marginBottom: 8,
     },
     chipActive: {
@@ -289,6 +297,6 @@ const createStyles = (theme: Theme) =>
     },
   });
 
-ExerciseFilterSheet.displayName = 'ExerciseFilterSheet';
+ExerciseFilterSheet.displayName = "ExerciseFilterSheet";
 
 export default ExerciseFilterSheet;

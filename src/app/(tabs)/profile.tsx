@@ -1,18 +1,19 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Image,
+  Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
-import { useTranslation } from "react-i18next";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
-import { translateRoutineName, translateRoutineDescription, translateExerciseTerm, translateApiData } from "../../utils/exerciseTranslator";
 import {
   getPostsByUserId,
   getRoutinesByUserId,
@@ -23,9 +24,41 @@ import {
   User,
   Workout,
 } from "../../data/mockData";
+import {
+  translateApiData,
+  translateExerciseTerm,
+  translateRoutineDescription,
+  translateRoutineName,
+} from "../../utils/exerciseTranslator";
 
 // The currently authenticated user
 const MY_USER_ID = "1";
+
+const surfaceShadow = Platform.select({
+  ios: {
+    shadowColor: "#000000",
+    shadowOpacity: 0.2,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 10 },
+  },
+  android: {
+    elevation: 8,
+  },
+  default: {},
+});
+
+const controlShadow = Platform.select({
+  ios: {
+    shadowColor: "#000000",
+    shadowOpacity: 0.14,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+  },
+  android: {
+    elevation: 4,
+  },
+  default: {},
+});
 
 function createStyles(theme: Theme) {
   return StyleSheet.create({
@@ -33,171 +66,263 @@ function createStyles(theme: Theme) {
       flex: 1,
       backgroundColor: theme.background.dark,
     },
-    // ── Header ──────────────────────────────────────
     header: {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.background.accent,
+      paddingHorizontal: 20,
+      paddingTop: 10,
+      paddingBottom: 6,
     },
     headerTitle: {
-      fontSize: 20,
+      fontSize: 18,
       fontWeight: "700",
       color: theme.foreground.white,
+      letterSpacing: -0.3,
     },
-    headerActions: {
-      flexDirection: "row",
-      gap: 4,
+    headerLogo: {
+      height: 36,
+      width: 110,
     },
     iconBtn: {
-      padding: 8,
+      width: 44,
+      height: 44,
+      borderRadius: 14,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: theme.background.accent,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: "rgba(255,255,255,0.08)",
+      ...controlShadow,
     },
-    // ── Profile hero ─────────────────────────────────
+    iconBtnPressed: {
+      opacity: 0.9,
+      transform: [{ scale: 0.96 }],
+    },
+    heroCard: {
+      marginHorizontal: 20,
+      marginTop: 6,
+      borderRadius: 30,
+      paddingHorizontal: 20,
+      paddingTop: 24,
+      paddingBottom: 22,
+      backgroundColor: theme.background.accent,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: "rgba(255,255,255,0.08)",
+      overflow: "hidden",
+      ...surfaceShadow,
+    },
+    heroGlow: {
+      position: "absolute",
+      width: 180,
+      height: 180,
+      borderRadius: 90,
+      backgroundColor: theme.primary.main,
+      opacity: 0.12,
+      top: -72,
+      right: -28,
+    },
     hero: {
       alignItems: "center",
-      paddingTop: 28,
-      paddingBottom: 20,
-      paddingHorizontal: 16,
     },
-    avatarWrapper: {
+    avatarButton: {
       position: "relative",
-      marginBottom: 14,
+      marginBottom: 16,
+      borderRadius: 60,
+    },
+    avatarButtonPressed: {
+      opacity: 0.92,
+      transform: [{ scale: 0.97 }],
+    },
+    avatarFrame: {
+      padding: 4,
+      borderRadius: 60,
+      backgroundColor: "rgba(255,255,255,0.06)",
     },
     avatar: {
-      width: 96,
-      height: 96,
-      borderRadius: 48,
-      borderWidth: 3,
+      width: 108,
+      height: 108,
+      borderRadius: 54,
+      borderWidth: 2,
       borderColor: theme.primary.main,
+      backgroundColor: theme.background.darker,
     },
     avatarEditBadge: {
       position: "absolute",
-      bottom: 2,
-      right: 2,
-      width: 28,
-      height: 28,
-      borderRadius: 14,
-      backgroundColor: theme.primary.main,
+      bottom: 4,
+      right: 4,
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: theme.foreground.white,
       alignItems: "center",
       justifyContent: "center",
+      ...controlShadow,
     },
     username: {
-      fontSize: 20,
+      fontSize: 24,
       fontWeight: "700",
       color: theme.foreground.white,
       marginBottom: 6,
+      letterSpacing: -0.4,
     },
     bio: {
       fontSize: 14,
       color: theme.foreground.gray,
       textAlign: "center",
       lineHeight: 20,
-      paddingHorizontal: 20,
-      marginBottom: 18,
+      paddingHorizontal: 12,
+      marginBottom: 20,
     },
-    // ── Social stats ─────────────────────────────────
+    heroActions: {
+      flexDirection: "row",
+      justifyContent: "center",
+    },
+    primaryAction: {
+      minHeight: 46,
+      borderRadius: 16,
+      paddingHorizontal: 20,
+      backgroundColor: theme.primary.main,
+      alignItems: "center",
+      justifyContent: "center",
+      flexDirection: "row",
+      gap: 8,
+      ...controlShadow,
+    },
+    primaryActionPressed: {
+      opacity: 0.94,
+      transform: [{ scale: 0.98 }],
+    },
+    primaryActionText: {
+      fontSize: 15,
+      fontWeight: "700",
+      color: theme.background.dark,
+    },
     statsRow: {
       flexDirection: "row",
-      borderTopWidth: 1,
-      borderBottomWidth: 1,
-      borderColor: theme.background.accent,
-      marginHorizontal: 0,
+      gap: 10,
+      marginHorizontal: 20,
+      marginTop: 16,
     },
     statBox: {
       flex: 1,
+      minHeight: 82,
       alignItems: "center",
-      paddingVertical: 16,
+      justifyContent: "center",
+      paddingHorizontal: 8,
+      paddingVertical: 14,
+      backgroundColor: theme.background.darker,
+      borderRadius: 22,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: "rgba(255,255,255,0.07)",
+      ...surfaceShadow,
     },
-    statDivider: {
-      width: 1,
-      backgroundColor: theme.background.accent,
-      alignSelf: "stretch",
+    statBoxPressed: {
+      opacity: 0.92,
+      transform: [{ scale: 0.98 }],
     },
     statNumber: {
       fontSize: 18,
       fontWeight: "700",
       color: theme.foreground.white,
+      letterSpacing: -0.3,
     },
     statLabel: {
       fontSize: 12,
       color: theme.foreground.gray,
-      marginTop: 3,
-    },
-    // ── Fitness stats strip ──────────────────────────
-    fitnessStrip: {
-      flexDirection: "row",
-      marginHorizontal: 16,
-      marginTop: 20,
-      marginBottom: 4,
-      borderRadius: 12,
-      backgroundColor: theme.background.accent,
-      overflow: "hidden",
-    },
-    fitnessCard: {
-      flex: 1,
-      alignItems: "center",
-      paddingVertical: 14,
-      paddingHorizontal: 4,
-    },
-    fitnessDivider: {
-      width: 1,
-      backgroundColor: theme.background.darker,
-      alignSelf: "stretch",
-    },
-    fitnessIcon: {
-      marginBottom: 4,
-    },
-    fitnessValue: {
-      fontSize: 16,
-      fontWeight: "700",
-      color: theme.primary.main,
-    },
-    fitnessLabel: {
-      fontSize: 10,
-      color: theme.foreground.gray,
-      marginTop: 2,
+      marginTop: 4,
       textAlign: "center",
     },
-    // ── Tab switcher ─────────────────────────────────
-    tabBar: {
+    fitnessBar: {
       flexDirection: "row",
       marginTop: 20,
-      borderBottomWidth: 1,
-      borderColor: theme.background.accent,
+      paddingTop: 16,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: "rgba(255,255,255,0.08)",
+      alignItems: "center",
+    },
+    fitnessStatItem: {
+      flex: 1,
+      alignItems: "center",
+      gap: 5,
+      paddingVertical: 2,
+    },
+    fitnessIconBadge: {
+      width: 32,
+      height: 32,
+      borderRadius: 10,
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 2,
+    },
+    fitnessStatDivider: {
+      width: StyleSheet.hairlineWidth,
+      height: 40,
+      backgroundColor: "rgba(255,255,255,0.08)",
+    },
+    fitnessValue: {
+      fontSize: 18,
+      fontWeight: "800",
+      letterSpacing: -0.4,
+    },
+    fitnessLabel: {
+      fontSize: 9,
+      color: theme.foreground.gray,
+      textTransform: "uppercase",
+      letterSpacing: 0.5,
+      textAlign: "center",
+    },
+    tabBar: {
+      flexDirection: "row",
+      marginHorizontal: 20,
+      marginTop: 20,
+      padding: 4,
+      borderRadius: 18,
+      backgroundColor: theme.background.accent,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: "rgba(255,255,255,0.07)",
     },
     tab: {
       flex: 1,
       alignItems: "center",
-      paddingVertical: 12,
-      borderBottomWidth: 2,
-      borderBottomColor: "transparent",
+      justifyContent: "center",
+      minHeight: 40,
+      borderRadius: 14,
     },
     tabActive: {
-      borderBottomColor: theme.primary.main,
+      backgroundColor: theme.background.darker,
+      ...controlShadow,
+    },
+    tabPressed: {
+      opacity: 0.92,
     },
     tabText: {
       fontSize: 13,
       fontWeight: "600",
       color: theme.foreground.gray,
+      letterSpacing: 0.1,
     },
     tabTextActive: {
-      color: theme.primary.main,
+      color: theme.foreground.white,
     },
-    // ── Posts grid ───────────────────────────────────
     postsGrid: {
       flexDirection: "row",
       flexWrap: "wrap",
-      gap: 3,
-      padding: 3,
+      gap: 4,
+      paddingHorizontal: 20,
+      paddingTop: 18,
     },
     gridItem: {
-      width: "32.5%",
+      width: "32%",
       aspectRatio: 1,
-      borderRadius: 6,
+      borderRadius: 16,
       overflow: "hidden",
+      marginBottom: 4,
+      backgroundColor: theme.background.accent,
+    },
+    gridItemPressed: {
+      opacity: 0.94,
+      transform: [{ scale: 0.98 }],
     },
     gridImage: {
       width: "100%",
@@ -205,16 +330,27 @@ function createStyles(theme: Theme) {
     },
     multipleIndicator: {
       position: "absolute",
-      top: 6,
-      right: 6,
+      top: 8,
+      right: 8,
+      borderRadius: 999,
+      backgroundColor: "rgba(11,13,14,0.72)",
+      paddingHorizontal: 6,
+      paddingVertical: 4,
     },
-    // ── Empty states ─────────────────────────────────
     emptyState: {
       alignItems: "center",
-      paddingVertical: 60,
+      marginHorizontal: 20,
+      marginTop: 18,
+      borderRadius: 26,
+      paddingVertical: 48,
+      paddingHorizontal: 24,
+      backgroundColor: theme.background.accent,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: "rgba(255,255,255,0.07)",
+      ...surfaceShadow,
     },
     emptyText: {
-      fontSize: 16,
+      fontSize: 18,
       fontWeight: "600",
       color: theme.foreground.white,
       marginTop: 14,
@@ -224,55 +360,81 @@ function createStyles(theme: Theme) {
       fontSize: 13,
       color: theme.foreground.gray,
       textAlign: "center",
-      paddingHorizontal: 32,
+      lineHeight: 19,
     },
-    // ── Routines list ─────────────────────────────────
     routinesList: {
-      padding: 16,
-      gap: 12,
+      paddingHorizontal: 20,
+      paddingTop: 18,
+      paddingBottom: 4,
     },
     routineCard: {
       backgroundColor: theme.background.accent,
-      borderRadius: 12,
-      padding: 16,
+      borderRadius: 26,
+      padding: 18,
+      marginBottom: 12,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: "rgba(255,255,255,0.08)",
+      ...surfaceShadow,
+    },
+    routineCardPressed: {
+      opacity: 0.94,
+      transform: [{ scale: 0.985 }],
     },
     routineHeader: {
       flexDirection: "row",
       alignItems: "flex-start",
-      marginBottom: 10,
+      marginBottom: 12,
     },
     routineInfo: {
       flex: 1,
+      paddingRight: 12,
+    },
+    routineHeaderRight: {
+      alignItems: "flex-end",
+      gap: 10,
     },
     routineName: {
-      fontSize: 15,
+      fontSize: 16,
       fontWeight: "700",
       color: theme.foreground.white,
-      marginBottom: 3,
+      marginBottom: 5,
+      letterSpacing: -0.3,
     },
     routineDesc: {
-      fontSize: 12,
+      fontSize: 13,
       color: theme.foreground.gray,
-      lineHeight: 17,
+      lineHeight: 19,
     },
     difficultyBadge: {
       paddingHorizontal: 10,
-      paddingVertical: 4,
+      paddingVertical: 5,
       borderRadius: 20,
-      marginLeft: 10,
     },
     difficultyText: {
       fontSize: 11,
-      fontWeight: "600",
+      fontWeight: "700",
+    },
+    routineChevron: {
+      width: 30,
+      height: 30,
+      borderRadius: 15,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: theme.background.darker,
     },
     routineMeta: {
       flexDirection: "row",
+      flexWrap: "wrap",
       gap: 16,
     },
     routineMetaItem: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 5,
+      gap: 6,
+      paddingHorizontal: 10,
+      paddingVertical: 7,
+      borderRadius: 999,
+      backgroundColor: theme.background.darker,
     },
     routineMetaText: {
       fontSize: 12,
@@ -286,9 +448,9 @@ function createStyles(theme: Theme) {
     },
     muscleTag: {
       paddingHorizontal: 10,
-      paddingVertical: 4,
-      borderRadius: 20,
-      backgroundColor: theme.background.darker,
+      paddingVertical: 6,
+      borderRadius: 999,
+      backgroundColor: "rgba(255,255,255,0.05)",
     },
     muscleTagText: {
       fontSize: 11,
@@ -335,6 +497,7 @@ export default function Profile() {
   const { t, i18n } = useTranslation();
   const { theme } = useTheme();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const styles = createStyles(theme);
 
   const [activeTab, setActiveTab] = useState<"posts" | "routines">("posts");
@@ -363,8 +526,37 @@ export default function Profile() {
   if (!user) return null;
 
   const totalVolume = calcTotalVolume(workouts);
+  const goToEditProfile = () => router.push("/settings/edit-profile" as any);
 
-  // ── render helpers ──────────────────────────────────────────────────────────
+  const renderSocialStat = (
+    value: string,
+    label: string,
+    onPress?: () => void,
+  ) => {
+    const content = (
+      <>
+        <Text style={styles.statNumber}>{value}</Text>
+        <Text style={styles.statLabel}>{label}</Text>
+      </>
+    );
+
+    if (!onPress) {
+      return <View style={styles.statBox}>{content}</View>;
+    }
+
+    return (
+      <Pressable
+        style={({ pressed }) => [
+          styles.statBox,
+          pressed && styles.statBoxPressed,
+        ]}
+        onPress={onPress}
+        hitSlop={8}
+      >
+        {content}
+      </Pressable>
+    );
+  };
 
   const renderPostsGrid = () => {
     if (posts.length === 0) {
@@ -385,15 +577,18 @@ export default function Profile() {
     return (
       <View style={styles.postsGrid}>
         {posts.map((post, index) => (
-          <TouchableOpacity
+          <Pressable
             key={post.id}
-            style={styles.gridItem}
-            activeOpacity={0.85}
+            style={({ pressed }) => [
+              styles.gridItem,
+              pressed && styles.gridItemPressed,
+            ]}
             onPress={() =>
               router.navigate(
                 `/user/posts?userId=${MY_USER_ID}&postIndex=${index}` as any,
               )
             }
+            hitSlop={4}
           >
             <Image
               source={{ uri: post.images[0] }}
@@ -409,7 +604,7 @@ export default function Profile() {
                 />
               </View>
             )}
-          </TouchableOpacity>
+          </Pressable>
         ))}
       </View>
     );
@@ -436,13 +631,15 @@ export default function Profile() {
         {routines.map((routine) => {
           const colors = difficultyColor(routine.difficulty, theme);
           return (
-            <TouchableOpacity
+            <Pressable
               key={routine.id}
-              style={styles.routineCard}
-              activeOpacity={0.8}
+              style={({ pressed }) => [
+                styles.routineCard,
+                pressed && styles.routineCardPressed,
+              ]}
               onPress={() => router.navigate(`/routines/${routine.id}` as any)}
+              hitSlop={6}
             >
-              {/* name + difficulty */}
               <View style={styles.routineHeader}>
                 <View style={styles.routineInfo}>
                   <Text style={styles.routineName}>
@@ -452,19 +649,29 @@ export default function Profile() {
                     {translateRoutineDescription(routine.description)}
                   </Text>
                 </View>
-                <View
-                  style={[
-                    styles.difficultyBadge,
-                    { backgroundColor: colors.bg },
-                  ]}
-                >
-                  <Text style={[styles.difficultyText, { color: colors.text }]}>
-                    {translateApiData(routine.difficulty)}
-                  </Text>
+                <View style={styles.routineHeaderRight}>
+                  <View
+                    style={[
+                      styles.difficultyBadge,
+                      { backgroundColor: colors.bg },
+                    ]}
+                  >
+                    <Text
+                      style={[styles.difficultyText, { color: colors.text }]}
+                    >
+                      {translateApiData(routine.difficulty)}
+                    </Text>
+                  </View>
+                  <View style={styles.routineChevron}>
+                    <Ionicons
+                      name="chevron-forward"
+                      size={16}
+                      color={theme.foreground.gray}
+                    />
+                  </View>
                 </View>
               </View>
 
-              {/* meta row */}
               <View style={styles.routineMeta}>
                 <View style={styles.routineMetaItem}>
                   <Ionicons
@@ -504,138 +711,173 @@ export default function Profile() {
                   {routine.targetMuscles.map((m) => (
                     <View key={m} style={styles.muscleTag}>
                       <Text style={styles.muscleTagText}>
-                        {i18n.language === "fr" ? translateExerciseTerm(m, "targetMuscles") : m}
+                        {i18n.language === "fr"
+                          ? translateExerciseTerm(m, "targetMuscles")
+                          : m}
                       </Text>
                     </View>
                   ))}
                 </View>
               )}
-            </TouchableOpacity>
+            </Pressable>
           );
         })}
       </View>
     );
   };
 
-  // ── JSX ─────────────────────────────────────────────────────────────────────
-
   return (
     <View style={styles.container}>
-      {/* ── Header ── */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>{user.username}</Text>
-        <View style={styles.headerActions}>
-          <TouchableOpacity
-            style={styles.iconBtn}
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
+          paddingTop: 6,
+          paddingBottom: 36 + insets.bottom,
+        }}
+      >
+        <View style={styles.header}>
+          <Image
+            source={theme.logo}
+            style={styles.headerLogo}
+            resizeMode="contain"
+          />
+          <Pressable
+            style={({ pressed }) => [
+              styles.iconBtn,
+              pressed && styles.iconBtnPressed,
+            ]}
             onPress={() => router.push("/settings" as any)}
+            hitSlop={8}
           >
             <Ionicons
               name="settings-outline"
               size={24}
               color={theme.foreground.white}
             />
-          </TouchableOpacity>
+          </Pressable>
         </View>
-      </View>
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 32 }}
-      >
-        {/* ── Hero ── */}
-        <View style={styles.hero}>
-          <TouchableOpacity activeOpacity={0.9} style={styles.avatarWrapper}>
-            <Image source={{ uri: user.avatar }} style={styles.avatar} />
-            <View style={styles.avatarEditBadge}>
-              <Ionicons name="camera" size={14} color={theme.background.dark} />
+        <View style={styles.heroCard}>
+          <View style={styles.heroGlow} />
+          <View style={styles.hero}>
+            <Pressable
+              style={({ pressed }) => [
+                styles.avatarButton,
+                pressed && styles.avatarButtonPressed,
+              ]}
+              onPress={goToEditProfile}
+              hitSlop={8}
+            >
+              <View style={styles.avatarFrame}>
+                <Image source={{ uri: user.avatar }} style={styles.avatar} />
+              </View>
+              <View style={styles.avatarEditBadge}>
+                <Ionicons
+                  name="camera"
+                  size={16}
+                  color={theme.background.dark}
+                />
+              </View>
+            </Pressable>
+            <Text style={styles.username}>{user.username}</Text>
+            <Text style={styles.bio}>{user.bio}</Text>
+            <View style={styles.heroActions}>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.primaryAction,
+                  pressed && styles.primaryActionPressed,
+                ]}
+                onPress={goToEditProfile}
+                hitSlop={8}
+              >
+                <Ionicons
+                  name="create-outline"
+                  size={16}
+                  color={theme.background.dark}
+                />
+                <Text style={styles.primaryActionText}>
+                  {t("settings.editProfile")}
+                </Text>
+              </Pressable>
             </View>
-          </TouchableOpacity>
-          <Text style={styles.username}>{user.username}</Text>
-          <Text style={styles.bio}>{user.bio}</Text>
+          </View>
+
+          {/* ── Fitness stat bar ── */}
+          <View style={styles.fitnessBar}>
+            <View style={styles.fitnessStatItem}>
+              <View
+                style={[
+                  styles.fitnessIconBadge,
+                  { backgroundColor: "rgba(255,107,53,0.18)" },
+                ]}
+              >
+                <Ionicons name="flame-outline" size={14} color="#FF6B35" />
+              </View>
+              <Text style={[styles.fitnessValue, { color: "#FF6B35" }]}>
+                {workouts.length}
+              </Text>
+              <Text style={styles.fitnessLabel}>{t("profile.workouts")}</Text>
+            </View>
+            <View style={styles.fitnessStatItem}>
+              <View
+                style={[
+                  styles.fitnessIconBadge,
+                  { backgroundColor: theme.primary.main + "22" },
+                ]}
+              >
+                <Ionicons
+                  name="barbell-outline"
+                  size={14}
+                  color={theme.primary.main}
+                />
+              </View>
+              <Text
+                style={[styles.fitnessValue, { color: theme.primary.main }]}
+              >
+                {totalVolume} kg
+              </Text>
+              <Text style={styles.fitnessLabel}>
+                {t("profile.totalVolume")}
+              </Text>
+            </View>
+            <View style={styles.fitnessStatItem}>
+              <View
+                style={[
+                  styles.fitnessIconBadge,
+                  { backgroundColor: "rgba(245,166,35,0.18)" },
+                ]}
+              >
+                <Ionicons name="trophy-outline" size={14} color="#F5A623" />
+              </View>
+              <Text style={[styles.fitnessValue, { color: "#F5A623" }]}>7</Text>
+              <Text style={styles.fitnessLabel}>{t("profile.dayStreak")}</Text>
+            </View>
+          </View>
         </View>
 
-        {/* ── Social stats ── */}
         <View style={styles.statsRow}>
-          <View style={styles.statBox}>
-            <Text style={styles.statNumber}>{user.postsCount}</Text>
-            <Text style={styles.statLabel}>{t("profile.posts")}</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <TouchableOpacity
-            style={styles.statBox}
-            activeOpacity={0.7}
-            onPress={() =>
-              router.push(`/user/follows/${user.id}?type=followers` as any)
-            }
-          >
-            <Text style={styles.statNumber}>{formatCount(user.followers)}</Text>
-            <Text style={styles.statLabel}>{t("profile.followers")}</Text>
-          </TouchableOpacity>
-          <View style={styles.statDivider} />
-          <TouchableOpacity
-            style={styles.statBox}
-            activeOpacity={0.7}
-            onPress={() =>
-              router.push(`/user/follows/${user.id}?type=following` as any)
-            }
-          >
-            <Text style={styles.statNumber}>{formatCount(user.following)}</Text>
-            <Text style={styles.statLabel}>{t("profile.following")}</Text>
-          </TouchableOpacity>
+          {renderSocialStat(formatCount(user.postsCount), t("profile.posts"))}
+          {renderSocialStat(
+            formatCount(user.followers),
+            t("profile.followers"),
+            () => router.push(`/user/follows/${user.id}?type=followers` as any),
+          )}
+          {renderSocialStat(
+            formatCount(user.following),
+            t("profile.following"),
+            () => router.push(`/user/follows/${user.id}?type=following` as any),
+          )}
         </View>
 
-        {/* ── Fitness stats strip ── */}
-        <View style={styles.fitnessStrip}>
-          <View style={styles.fitnessCard}>
-            <Ionicons
-              name="flame-outline"
-              size={20}
-              color={theme.primary.main}
-              style={styles.fitnessIcon}
-            />
-            <Text style={styles.fitnessValue}>{workouts.length}</Text>
-            <Text style={styles.fitnessLabel}>{t("profile.workouts")}</Text>
-          </View>
-          <View style={styles.fitnessDivider} />
-          <View style={styles.fitnessCard}>
-            <Ionicons
-              name="barbell-outline"
-              size={20}
-              color={theme.primary.main}
-              style={styles.fitnessIcon}
-            />
-            <Text style={styles.fitnessValue}>{totalVolume} kg</Text>
-            <Text style={styles.fitnessLabel}>{t("profile.totalVolume")}</Text>
-          </View>
-          <View style={styles.fitnessDivider} />
-          <View style={styles.fitnessCard}>
-            <Ionicons
-              name="calendar-outline"
-              size={20}
-              color={theme.primary.main}
-              style={styles.fitnessIcon}
-            />
-            <Text style={styles.fitnessValue}>{routines.length}</Text>
-            <Text style={styles.fitnessLabel}>{t("profile.routines")}</Text>
-          </View>
-          <View style={styles.fitnessDivider} />
-          <View style={styles.fitnessCard}>
-            <Ionicons
-              name="trophy-outline"
-              size={20}
-              color={theme.primary.main}
-              style={styles.fitnessIcon}
-            />
-            <Text style={styles.fitnessValue}>7</Text>
-            <Text style={styles.fitnessLabel}>{t("profile.dayStreak")}</Text>
-          </View>
-        </View>
-
-        {/* ── Tab bar ── */}
         <View style={styles.tabBar}>
-          <TouchableOpacity
-            style={[styles.tab, activeTab === "posts" && styles.tabActive]}
+          <Pressable
+            style={({ pressed }) => [
+              styles.tab,
+              activeTab === "posts" && styles.tabActive,
+              pressed && styles.tabPressed,
+            ]}
             onPress={() => setActiveTab("posts")}
+            hitSlop={4}
           >
             <Text
               style={[
@@ -645,10 +887,15 @@ export default function Profile() {
             >
               {t("profile.posts")}
             </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.tab, activeTab === "routines" && styles.tabActive]}
+          </Pressable>
+          <Pressable
+            style={({ pressed }) => [
+              styles.tab,
+              activeTab === "routines" && styles.tabActive,
+              pressed && styles.tabPressed,
+            ]}
             onPress={() => setActiveTab("routines")}
+            hitSlop={4}
           >
             <Text
               style={[
@@ -658,10 +905,9 @@ export default function Profile() {
             >
               {t("profile.routines")}
             </Text>
-          </TouchableOpacity>
+          </Pressable>
         </View>
 
-        {/* ── Tab content ── */}
         {activeTab === "posts" ? renderPostsGrid() : renderRoutinesList()}
       </ScrollView>
     </View>

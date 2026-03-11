@@ -4,15 +4,38 @@ import React, { useCallback, useState } from "react";
 import {
   FlatList,
   Image,
+  Platform,
+  Pressable,
   RefreshControl,
   StyleSheet,
-  TouchableOpacity,
   View,
 } from "react-native";
 import Post, { PostData } from "../../components/ui/Post";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getPostsWithUserData } from "../../data/mockData";
+
+const surfaceShadow = Platform.select({
+  ios: {
+    shadowColor: "#000000",
+    shadowOpacity: 0.2,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 10 },
+  },
+  android: { elevation: 8 },
+  default: {},
+});
+
+const controlShadow = Platform.select({
+  ios: {
+    shadowColor: "#000000",
+    shadowOpacity: 0.14,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+  },
+  android: { elevation: 4 },
+  default: {},
+});
 
 function createStyles(theme: Theme) {
   return StyleSheet.create({
@@ -24,32 +47,39 @@ function createStyles(theme: Theme) {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.background.darker,
+      paddingHorizontal: 20,
+      paddingBottom: 12,
     },
     logo: {
-      width: 120,
-      height: 40,
+      height: 36,
+      width: 110,
     },
     headerIcons: {
       flexDirection: "row",
-      gap: 12,
+      gap: 10,
       alignItems: "center",
     },
     iconButton: {
-      padding: 8,
-      position: "relative",
+      width: 44,
+      height: 44,
+      borderRadius: 14,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: theme.background.accent,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: "rgba(255,255,255,0.08)",
+      ...controlShadow,
     },
     notificationBadge: {
       position: "absolute",
-      top: 8,
-      right: 8,
-      width: 10,
-      height: 10,
-      borderRadius: 5,
+      top: 9,
+      right: 9,
+      width: 8,
+      height: 8,
+      borderRadius: 4,
       backgroundColor: theme.primary.main,
+      borderWidth: 1.5,
+      borderColor: theme.background.darker,
     },
   });
 }
@@ -119,23 +149,29 @@ export default function Home() {
       <View style={styles.header}>
         <Image source={theme.logo} style={styles.logo} resizeMode="contain" />
         <View style={styles.headerIcons}>
-          <TouchableOpacity
-            style={styles.iconButton}
+          <Pressable
+            style={({ pressed }) => [
+              styles.iconButton,
+              pressed && { opacity: 0.7, transform: [{ scale: 0.92 }] },
+            ]}
             onPress={() => router.navigate("/search" as any)}
           >
-            <Ionicons name="search" size={24} color={theme.foreground.gray} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.iconButton}
+            <Ionicons name="search" size={20} color={theme.foreground.white} />
+          </Pressable>
+          <Pressable
+            style={({ pressed }) => [
+              styles.iconButton,
+              pressed && { opacity: 0.7, transform: [{ scale: 0.92 }] },
+            ]}
             onPress={() => router.navigate("/notifications" as any)}
           >
             <Ionicons
               name="notifications-outline"
-              size={24}
-              color={theme.foreground.gray}
+              size={20}
+              color={theme.foreground.white}
             />
             {unreadCount > 0 && <View style={styles.notificationBadge} />}
-          </TouchableOpacity>
+          </Pressable>
         </View>
       </View>
 

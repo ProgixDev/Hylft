@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import React from "react";
-import { Platform, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Platform, Pressable, StyleSheet, View } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -111,13 +111,12 @@ function TabButton({
   }));
 
   return (
-    <TouchableOpacity
+    <Pressable
       accessibilityRole="button"
       accessibilityState={isFocused ? { selected: true } : {}}
       onPress={onPress}
       onLongPress={onLongPress}
-      style={styles.tabButton}
-      activeOpacity={0.7}
+      style={({ pressed }) => [styles.tabButton, pressed && { opacity: 0.6 }]}
     >
       <Animated.View style={[styles.iconContainer, animatedIconStyle]}>
         <Ionicons
@@ -126,7 +125,7 @@ function TabButton({
           color={isFocused ? theme.primary.main : theme.foreground.gray}
         />
       </Animated.View>
-    </TouchableOpacity>
+    </Pressable>
   );
 }
 
@@ -134,24 +133,26 @@ function createStyles(theme: any) {
   return StyleSheet.create({
     container: {
       position: "absolute",
-      bottom: 16,
+      bottom: Platform.OS === "ios" ? 20 : 16,
       left: 16,
       right: 16,
       flexDirection: "row",
       backgroundColor: theme.background.darker,
-      borderTopWidth: 1,
-      borderTopColor: theme.background.accent,
-      borderRadius: 24,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: "rgba(255,255,255,0.08)",
+      borderRadius: 26,
       overflow: "hidden",
-      paddingTop: 8,
+      paddingTop: 10,
       zIndex: 50,
-      shadowColor: "#000",
-      shadowOffset: {
-        width: 0,
-        height: -2,
-      },
-      shadowOpacity: 0.35,
-      shadowRadius: 8,
+      ...Platform.select({
+        ios: {
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: -6 },
+          shadowOpacity: 0.35,
+          shadowRadius: 16,
+        },
+        android: { elevation: 10 },
+      }),
     },
     tabButton: {
       flex: 1,
