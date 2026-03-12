@@ -11,6 +11,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Alert,
   Modal,
@@ -21,9 +22,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useTranslation } from "react-i18next";
 import { Theme } from "../../constants/themes";
-import { translateExerciseName, translateExerciseTerm } from "../../utils/exerciseTranslator";
 import {
   ExerciseSet,
   useActiveWorkout,
@@ -31,6 +30,10 @@ import {
 } from "../../contexts/ActiveWorkoutContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { formatDisplayDate, formatTime } from "../../utils/dateFormatter";
+import {
+  translateExerciseName,
+  translateExerciseTerm,
+} from "../../utils/exerciseTranslator";
 
 const REST_TARGET = 90; // seconds
 
@@ -119,6 +122,17 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
     const [saveModalVisible, setSaveModalVisible] = useState(false);
     const [tempWorkoutName, setTempWorkoutName] = useState("");
 
+    // ── Workout summary (shown after saving) ──────────────────────────────
+    interface WorkoutSummary {
+      name: string;
+      durationMins: number;
+      totalKg: number;
+      totalSets: number;
+      totalExercises: number;
+    }
+    const [summaryVisible, setSummaryVisible] = useState(false);
+    const [summary, setSummary] = useState<WorkoutSummary | null>(null);
+
     const handleDiscard = useCallback(() => {
       Alert.alert(
         t("workout.discardWorkout"),
@@ -145,6 +159,22 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
     const handleConfirmSave = useCallback(() => {
       if (!activeWorkout) return;
 
+      const durationMins = Math.max(0, Math.round(activeWorkout.duration / 60));
+
+      // Calculate total volume from all sets that have data entered
+      let totalKg = 0;
+      let totalSets = 0;
+      activeWorkout.exercises.forEach((ex) => {
+        ex.sets.forEach((s) => {
+          const reps = parseFloat(s.reps) || 0;
+          const kg = parseFloat(s.kg) || 0;
+          if (reps > 0) {
+            totalSets += 1;
+            totalKg += kg * reps;
+          }
+        });
+      });
+
       // Map active workout -> mockData.Workout
       const toSave = {
         id: `w-${Date.now()}`,
@@ -153,7 +183,7 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
         date: new Date().toISOString().split("T")[0],
         startTime: formatTime(new Date()),
         endTime: formatTime(new Date()),
-        duration: Math.max(0, Math.round(activeWorkout.duration / 60)),
+        duration: durationMins,
         caloriesBurned: 0,
         exercises: activeWorkout.exercises.map((ex) => ({
           id: ex.id,
@@ -165,7 +195,7 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
         notes: undefined,
       };
 
-      // Persist in-memory and close
+      // Persist in-memory
       try {
         // lazy-import to avoid circulars
         // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -175,17 +205,45 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
         console.warn("addWorkout failed:", err);
       }
 
+      // Show summary modal
+      setSummary({
+        name: tempWorkoutName,
+        durationMins,
+        totalKg: Math.round(totalKg * 10) / 10,
+        totalSets,
+        totalExercises: activeWorkout.exercises.length,
+      });
       setSaveModalVisible(false);
-      Alert.alert("Save Workout", "Workout saved successfully!", [
-        {
-          text: "OK",
-          onPress: () => {
-            discardWorkout();
-            setIsExpanded(false);
-          },
+      setSummaryVisible(true);
+    }, [activeWorkout, tempWorkoutName]);
+
+    const handleGoToShareScreen = useCallback(() => {
+      if (!summary) return;
+      const { name, durationMins, totalKg, totalSets, totalExercises } =
+        summary;
+      // Close sheet first, then navigate
+      setSummaryVisible(false);
+      setSummary(null);
+      discardWorkout();
+      setIsExpanded(false);
+      router.navigate({
+        pathname: "/share-workout",
+        params: {
+          name,
+          kg: String(totalKg),
+          mins: String(durationMins),
+          sets: String(totalSets),
+          exercises: String(totalExercises),
         },
-      ]);
-    }, [activeWorkout, discardWorkout, setIsExpanded, tempWorkoutName]);
+      } as any);
+    }, [summary, discardWorkout, setIsExpanded, router]);
+
+    const handleCloseSummary = useCallback(() => {
+      setSummaryVisible(false);
+      setSummary(null);
+      discardWorkout();
+      setIsExpanded(false);
+    }, [discardWorkout, setIsExpanded]);
 
     const snapPoints = ["100%"];
     // ── Rest timer ────────────────────────────────────────────────────────────
@@ -352,10 +410,12 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
     const renderExercise = useCallback(
       (item: WorkoutExerciseEntry) => {
         const translatedName = translateExerciseName(item.name);
-        const muscles = item.muscles.map((m) => {
-          const muscleName = m.name_en || m.name;
-          return translateExerciseTerm(muscleName, "targetMuscles");
-        }).join(", ");
+        const muscles = item.muscles
+          .map((m) => {
+            const muscleName = m.name_en || m.name;
+            return translateExerciseTerm(muscleName, "targetMuscles");
+          })
+          .join(", ");
 
         return (
           <View key={item.id} style={styles.exerciseCard}>
@@ -505,7 +565,9 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
                   size={18}
                   color={theme.primary.main}
                 />
-                <Text style={styles.timerLabel}>{t("scheduleDetail.rest")}</Text>
+                <Text style={styles.timerLabel}>
+                  {t("scheduleDetail.rest")}
+                </Text>
                 <Text style={styles.timerValue}>
                   {formatTimer(restElapsed)}
                 </Text>
@@ -562,7 +624,9 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
                 size={24}
                 color={theme.background.dark}
               />
-              <Text style={styles.addExerciseButtonText}>{t("workout.addExercise")}</Text>
+              <Text style={styles.addExerciseButtonText}>
+                {t("workout.addExercise")}
+              </Text>
             </TouchableOpacity>
           </BottomSheetScrollView>
         </BottomSheet>
@@ -579,7 +643,9 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
             onPress={() => setSaveModalVisible(false)}
           >
             <View style={styles.saveModalContent}>
-              <Text style={styles.saveModalTitle}>{t("workout.saveWorkout")}</Text>
+              <Text style={styles.saveModalTitle}>
+                {t("workout.saveWorkout")}
+              </Text>
               <TextInput
                 style={styles.saveModalInput}
                 value={tempWorkoutName}
@@ -594,13 +660,17 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
                   style={[styles.saveModalButton, styles.cancelButton]}
                   onPress={() => setSaveModalVisible(false)}
                 >
-                  <Text style={styles.cancelButtonText}>{t("common.cancel")}</Text>
+                  <Text style={styles.cancelButtonText}>
+                    {t("common.cancel")}
+                  </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.saveModalButton, styles.confirmButton]}
                   onPress={handleConfirmSave}
                 >
-                  <Text style={styles.confirmButtonText}>{t("common.save")}</Text>
+                  <Text style={styles.confirmButtonText}>
+                    {t("common.save")}
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -616,6 +686,96 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
           onRemove={handleMenuRemove}
           theme={theme}
         />
+
+        {/* ── Workout summary modal ─────────────────────────────────────── */}
+        <Modal
+          transparent
+          visible={summaryVisible}
+          animationType="fade"
+          onRequestClose={handleCloseSummary}
+        >
+          <Pressable style={styles.modalOverlay} onPress={handleCloseSummary}>
+            <Pressable style={styles.summaryContent} onPress={() => {}}>
+              {/* Trophy icon */}
+              <View style={styles.summaryIconWrap}>
+                <Text style={styles.summaryEmoji}>🏆</Text>
+              </View>
+
+              <Text style={styles.summaryTitle}>
+                {t("workout.workoutSummaryTitle")}
+              </Text>
+              <Text style={styles.summarySubtitle}>{summary?.name}</Text>
+              <Text style={styles.summaryHint}>
+                {t("workout.workoutSummarySubtitle")}
+              </Text>
+
+              {/* Stats row */}
+              <View style={styles.summaryStats}>
+                <View style={styles.summaryStatCard}>
+                  <Ionicons
+                    name="time-outline"
+                    size={22}
+                    color={theme.primary.main}
+                  />
+                  <Text style={styles.summaryStatValue}>
+                    {summary?.durationMins ?? 0}
+                  </Text>
+                  <Text style={styles.summaryStatLabel}>
+                    {t("workout.workoutDuration")} (min)
+                  </Text>
+                </View>
+                <View style={styles.summaryStatCard}>
+                  <Ionicons
+                    name="barbell-outline"
+                    size={22}
+                    color={theme.primary.main}
+                  />
+                  <Text style={styles.summaryStatValue}>
+                    {summary?.totalKg.toLocaleString() ?? 0}
+                  </Text>
+                  <Text style={styles.summaryStatLabel}>
+                    {t("workout.totalLifted")} (kg)
+                  </Text>
+                </View>
+                <View style={styles.summaryStatCard}>
+                  <Ionicons
+                    name="repeat-outline"
+                    size={22}
+                    color={theme.primary.main}
+                  />
+                  <Text style={styles.summaryStatValue}>
+                    {summary?.totalSets ?? 0}
+                  </Text>
+                  <Text style={styles.summaryStatLabel}>
+                    {t("workout.setsCompleted")}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Action buttons */}
+              <TouchableOpacity
+                style={styles.shareBtn}
+                onPress={handleGoToShareScreen}
+              >
+                <Ionicons
+                  name="share-social-outline"
+                  size={20}
+                  color={theme.background.dark}
+                />
+                <Text style={styles.shareBtnText}>
+                  {t("workout.shareWorkout")}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.closeBtn}
+                onPress={handleCloseSummary}
+              >
+                <Text style={styles.closeBtnText}>{t("workout.close")}</Text>
+              </TouchableOpacity>
+            </Pressable>
+          </Pressable>
+        </Modal>
       </>
     );
   },
@@ -875,6 +1035,96 @@ const createStyles = (theme: Theme) =>
       fontSize: 16,
       fontWeight: "600",
       color: theme.foreground.white,
+    },
+    // Workout summary modal
+    summaryContent: {
+      backgroundColor: theme.background.darker,
+      borderRadius: 24,
+      padding: 28,
+      width: "100%",
+      maxWidth: 400,
+      gap: 12,
+      alignItems: "center",
+    },
+    summaryIconWrap: {
+      width: 72,
+      height: 72,
+      borderRadius: 36,
+      backgroundColor: theme.primary.main + "22",
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 4,
+    },
+    summaryEmoji: { fontSize: 36 },
+    summaryTitle: {
+      fontSize: 22,
+      fontWeight: "800",
+      color: theme.foreground.white,
+      textAlign: "center",
+    },
+    summarySubtitle: {
+      fontSize: 16,
+      fontWeight: "600",
+      color: theme.primary.main,
+      textAlign: "center",
+    },
+    summaryHint: {
+      fontSize: 13,
+      color: theme.foreground.gray,
+      textAlign: "center",
+      marginBottom: 4,
+    },
+    summaryStats: {
+      flexDirection: "row",
+      gap: 10,
+      width: "100%",
+      marginTop: 4,
+      marginBottom: 8,
+    },
+    summaryStatCard: {
+      flex: 1,
+      backgroundColor: theme.background.dark,
+      borderRadius: 14,
+      paddingVertical: 14,
+      alignItems: "center",
+      gap: 4,
+    },
+    summaryStatValue: {
+      fontSize: 18,
+      fontWeight: "700",
+      color: theme.foreground.white,
+    },
+    summaryStatLabel: {
+      fontSize: 10,
+      fontWeight: "600",
+      color: theme.foreground.gray,
+      textTransform: "uppercase",
+      textAlign: "center",
+    },
+    shareBtn: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 10,
+      backgroundColor: theme.primary.main,
+      paddingVertical: 14,
+      borderRadius: 14,
+      width: "100%",
+    },
+    shareBtnText: {
+      fontSize: 16,
+      fontWeight: "700",
+      color: theme.background.dark,
+    },
+    closeBtn: {
+      paddingVertical: 12,
+      width: "100%",
+      alignItems: "center",
+    },
+    closeBtnText: {
+      fontSize: 15,
+      fontWeight: "600",
+      color: theme.foreground.gray,
     },
   });
 

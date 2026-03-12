@@ -1220,6 +1220,34 @@ export function getWorkoutsByUserId(userId: string): Workout[] {
 }
 
 /**
+ * Simple listener API - notify when posts mutate (in-memory)
+ */
+let _postsListeners: (() => void)[] = [];
+export function addPostsListener(fn: () => void) {
+  _postsListeners.push(fn);
+  return () => {
+    _postsListeners = _postsListeners.filter((f) => f !== fn);
+  };
+}
+function _notifyPosts() {
+  _postsListeners.forEach((f) => {
+    try {
+      f();
+    } catch {
+      /* ignore */
+    }
+  });
+}
+
+/**
+ * Add a new post (in-memory)
+ */
+export function addPost(post: Post): void {
+  POSTS.unshift(post);
+  _notifyPosts();
+}
+
+/**
  * Simple listener API - notify when workouts mutates (in-memory)
  */
 let _workoutsListeners: (() => void)[] = [];

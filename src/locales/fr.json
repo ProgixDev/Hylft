@@ -79,7 +79,29 @@
     "enterWorkoutName": "Entrez le nom de l'entraînement",
     "discardWorkout": "Abandonner l'entraînement",
     "discardWorkoutConfirm": "Êtes-vous sûr de vouloir abandonner cet entraînement ? Cette action est irréversible.",
-    "discard": "Abandonner"
+    "discard": "Abandonner",
+    "workoutSummaryTitle": "Entraînement terminé ! 🎉",
+    "workoutSummarySubtitle": "Bravo ! Voici le résumé de votre séance.",
+    "totalLifted": "Total soulevé",
+    "workoutDuration": "Durée",
+    "setsCompleted": "Séries",
+    "exercisesDone": "Exercices",
+    "shareWorkout": "Publier sur le fil",
+    "close": "Fermer",
+    "postCaption": "🏋️ Je viens de terminer {{name}} ! 💪 Soulevé {{volume}} kg en {{duration}} min · {{exercises}} exercices · {{sets}} séries"
+  },
+  "shareWorkout": {
+    "title": "Nouveau post",
+    "post": "Publier",
+    "justNow": "À l'instant",
+    "captionPlaceholder": "Qu'avez-vous en tête ?",
+    "photos": "Photos",
+    "addPhoto": "Ajouter",
+    "workoutStats": "Stats d'entraînement",
+    "tapToToggle": "Appuyer pour masquer",
+    "sets": "séries",
+    "permissionDeniedTitle": "Permission requise",
+    "permissionDeniedBody": "Veuillez autoriser l'accès aux photos dans les paramètres."
   },
   "settings": {
     "title": "Paramètres",

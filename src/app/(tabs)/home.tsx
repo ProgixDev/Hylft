@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   FlatList,
   Image,
@@ -13,7 +13,7 @@ import {
 import Post, { PostData } from "../../components/ui/Post";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
-import { getPostsWithUserData } from "../../data/mockData";
+import { addPostsListener, getPostsWithUserData } from "../../data/mockData";
 
 const surfaceShadow = Platform.select({
   ios: {
@@ -115,6 +115,34 @@ export default function Home() {
   );
 
   const styles = createStyles(theme);
+
+  // Refresh feed whenever a new post is added (e.g. after a workout)
+  useEffect(() => {
+    const unsub = addPostsListener(() => {
+      setPosts(
+        getPostsWithUserData().map((post) => ({
+          id: post.id,
+          user: {
+            id: post.user.id,
+            username: post.user.username,
+            avatar: post.user.avatar,
+            bio: post.user.bio,
+          },
+          images: post.images,
+          likes: post.likes,
+          caption: post.caption,
+          comments: post.comments,
+          timestamp: post.timestamp,
+          isLiked: post.isLiked,
+          weight: post.weight,
+          reps: post.reps,
+          sets: post.sets,
+          duration: post.duration,
+        })) as PostData[],
+      );
+    });
+    return unsub;
+  }, []);
 
   const handleLike = useCallback((postId: string) => {
     setPosts((prevPosts) =>

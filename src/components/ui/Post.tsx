@@ -118,13 +118,26 @@ const Post = memo(
           </View>
         )}
 
-        {/* Post Images */}
-        <ImageCarousel
-          images={post.images}
-          style={styles.postImage}
-          onLike={() => onLike(post.id)}
-          isLiked={post.isLiked}
-        />
+        {/* Post Images — or workout banner when no images */}
+        {post.images.length > 0 ? (
+          <ImageCarousel
+            images={post.images}
+            style={styles.postImage}
+            onLike={() => onLike(post.id)}
+            isLiked={post.isLiked}
+          />
+        ) : (
+          <View style={styles.workoutBanner}>
+            <View style={styles.workoutBannerIcon}>
+              <Ionicons
+                name="barbell-outline"
+                size={40}
+                color={theme.primary.main}
+              />
+            </View>
+            <Text style={styles.workoutBannerTitle}>Workout Complete! 🏆</Text>
+          </View>
+        )}
 
         {/* Post Actions */}
         <View style={styles.actionsContainer}>
@@ -239,6 +252,29 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
   StyleSheet.create({
     postContainer: {
       marginBottom: 0,
+    },
+    workoutBanner: {
+      marginHorizontal: 16,
+      borderRadius: 16,
+      backgroundColor: theme.background.darker,
+      borderWidth: 1,
+      borderColor: theme.primary.main + "33",
+      paddingVertical: 32,
+      alignItems: "center",
+      gap: 10,
+    },
+    workoutBannerIcon: {
+      width: 72,
+      height: 72,
+      borderRadius: 36,
+      backgroundColor: theme.primary.main + "20",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    workoutBannerTitle: {
+      fontSize: 18,
+      fontWeight: "700",
+      color: theme.foreground.white,
     },
     divider: {
       height: 8,

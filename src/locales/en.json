@@ -79,7 +79,29 @@
     "enterWorkoutName": "Enter workout name",
     "discardWorkout": "Discard Workout",
     "discardWorkoutConfirm": "Are you sure you want to discard this workout? This cannot be undone.",
-    "discard": "Discard"
+    "discard": "Discard",
+    "workoutSummaryTitle": "Workout Complete! 🎉",
+    "workoutSummarySubtitle": "Great work! Here's your session summary.",
+    "totalLifted": "Total Lifted",
+    "workoutDuration": "Duration",
+    "setsCompleted": "Sets Done",
+    "exercisesDone": "Exercises",
+    "shareWorkout": "Post to Feed",
+    "close": "Close",
+    "postCaption": "🏋️ Just finished {{name}}! 💪 Lifted {{volume}} kg in {{duration}} min · {{exercises}} exercises · {{sets}} sets"
+  },
+  "shareWorkout": {
+    "title": "New Post",
+    "post": "Post",
+    "justNow": "Just now",
+    "captionPlaceholder": "What's on your mind?",
+    "photos": "Photos",
+    "addPhoto": "Add Photo",
+    "workoutStats": "Workout Stats",
+    "tapToToggle": "Tap to hide",
+    "sets": "sets",
+    "permissionDeniedTitle": "Permission Required",
+    "permissionDeniedBody": "Please allow photo access in your device settings."
   },
   "settings": {
     "title": "Settings",
