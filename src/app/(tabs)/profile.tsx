@@ -182,7 +182,7 @@ function createStyles(theme: Theme) {
     },
     primaryAction: {
       minHeight: 46,
-      borderRadius: 16,
+      borderRadius: 23,
       paddingHorizontal: 20,
       backgroundColor: theme.primary.main,
       alignItems: "center",

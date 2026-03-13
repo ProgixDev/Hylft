@@ -333,13 +333,13 @@ const createStyles = (theme: Theme) =>
       paddingVertical: 12,
       paddingHorizontal: 28,
       backgroundColor: theme.primary.main,
-      borderRadius: 14,
+      borderRadius: 22,
       ...controlShadow,
     },
     backFallbackText: {
       color: theme.background.dark,
       fontFamily: FONTS.bold,
-      fontSize: 14,
+      fontSize: 15,
     },
     // Header
     header: {
@@ -612,7 +612,7 @@ const createStyles = (theme: Theme) =>
     },
     startButton: {
       backgroundColor: theme.primary.main,
-      borderRadius: 16,
+      borderRadius: 26,
       paddingVertical: 16,
       flexDirection: "row",
       alignItems: "center",
@@ -621,7 +621,7 @@ const createStyles = (theme: Theme) =>
     },
     startButtonText: {
       color: theme.background.dark,
-      fontSize: 16,
+      fontSize: 17,
       fontFamily: FONTS.extraBold,
     },
   });

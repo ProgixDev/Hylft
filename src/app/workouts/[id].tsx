@@ -254,12 +254,12 @@ const createStyles = (theme: Theme) =>
       paddingVertical: 10,
       paddingHorizontal: 24,
       backgroundColor: theme.primary.main,
-      borderRadius: 10,
+      borderRadius: 22,
     },
     backFallbackText: {
       color: theme.background.dark,
       fontFamily: FONTS.bold,
-      fontSize: 14,
+      fontSize: 15,
     },
     header: {
       flexDirection: "row",

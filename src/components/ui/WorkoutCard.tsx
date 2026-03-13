@@ -191,7 +191,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       marginTop: 12,
       backgroundColor: theme.primary.main,
       paddingVertical: 12,
-      borderRadius: 12,
+      borderRadius: 22,
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
@@ -199,7 +199,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     startButtonText: {
       color: theme.background.dark,
-      fontSize: 14,
+      fontSize: 15,
       fontFamily: FONTS.bold,
     },
   });

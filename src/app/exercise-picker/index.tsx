@@ -629,7 +629,7 @@ const createStyles = (theme: Theme) =>
       backgroundColor: theme.primary.main,
       paddingVertical: 12,
       paddingHorizontal: 20,
-      borderRadius: 12,
+      borderRadius: 22,
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
@@ -639,7 +639,7 @@ const createStyles = (theme: Theme) =>
       elevation: 4,
     },
     addSelectedText: {
-      fontSize: 16,
+      fontSize: 15,
       fontFamily: FONTS.bold,
       color: theme.background.dark,
     },

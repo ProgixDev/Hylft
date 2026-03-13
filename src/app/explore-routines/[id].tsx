@@ -512,7 +512,7 @@ const createStyles = (theme: Theme) =>
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
-      borderRadius: 12,
+      borderRadius: 22,
       paddingVertical: 14,
       gap: 8,
     },
@@ -526,7 +526,7 @@ const createStyles = (theme: Theme) =>
       backgroundColor: theme.primary.main + "12",
     },
     ctaSecondaryText: {
-      fontSize: 14,
+      fontSize: 15,
       fontFamily: FONTS.bold,
       color: theme.foreground.white,
     },
@@ -534,7 +534,7 @@ const createStyles = (theme: Theme) =>
       backgroundColor: theme.primary.main,
     },
     ctaPrimaryText: {
-      fontSize: 14,
+      fontSize: 15,
       fontFamily: FONTS.bold,
       color: theme.background.dark,
     },

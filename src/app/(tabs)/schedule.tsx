@@ -1094,7 +1094,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 6,
     paddingVertical: 14,
-    borderRadius: 16,
+    borderRadius: 22,
   },
   detailBtnText: {
     fontSize: 15,
@@ -1107,7 +1107,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 6,
     paddingVertical: 14,
-    borderRadius: 16,
+    borderRadius: 22,
   },
   startBtnText: {
     fontSize: 15,

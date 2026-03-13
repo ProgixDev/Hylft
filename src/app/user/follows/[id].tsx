@@ -99,7 +99,7 @@ function createStyles(theme: Theme) {
     followBtn: {
       paddingHorizontal: 20,
       paddingVertical: 8,
-      borderRadius: 20,
+      borderRadius: 16,
       borderWidth: 1,
       borderColor: theme.primary.main,
     },

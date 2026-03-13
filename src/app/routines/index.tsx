@@ -285,14 +285,14 @@ const createStyles = (theme: Theme) =>
     startRoutineButton: {
       backgroundColor: theme.primary.main,
       paddingVertical: 12,
-      borderRadius: 12,
+      borderRadius: 22,
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
       gap: 8,
     },
     startRoutineButtonText: {
-      fontSize: 14,
+      fontSize: 15,
       fontFamily: FONTS.bold,
       color: theme.background.dark,
     },

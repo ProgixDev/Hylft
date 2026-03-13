@@ -1024,10 +1024,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 8,
     paddingVertical: 15,
-    borderRadius: 14,
+    borderRadius: 26,
   },
   primaryBtnText: {
-    fontSize: 16,
+    fontSize: 17,
     fontFamily: FONTS.bold,
     color: "#0B0D0E",
   },
@@ -1038,11 +1038,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 8,
     paddingVertical: 15,
-    borderRadius: 14,
+    borderRadius: 26,
     borderWidth: 1.5,
   },
   secondaryBtnText: {
-    fontSize: 14,
+    fontSize: 15,
     fontFamily: FONTS.semiBold,
   },
   restDayLink: {

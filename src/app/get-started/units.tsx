@@ -223,17 +223,5 @@ function createStyles(theme: Theme) {
     optionTextSelected: {
       color: theme.primary.main,
     },
-    continueButton: {
-      backgroundColor: theme.primary.main,
-      paddingVertical: 18,
-      borderRadius: 12,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    continueButtonText: {
-      color: theme.background.dark,
-      fontSize: 18,
-      fontFamily: FONTS.bold,
-    },
   });
 }

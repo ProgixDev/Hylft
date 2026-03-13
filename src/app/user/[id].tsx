@@ -254,7 +254,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     followButton: {
       marginHorizontal: 16,
       paddingVertical: 12,
-      borderRadius: 8,
+      borderRadius: 22,
       backgroundColor: theme.primary.main,
       alignItems: "center",
       marginBottom: 24,
@@ -265,7 +265,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       borderColor: theme.primary.main,
     },
     followButtonText: {
-      fontSize: 14,
+      fontSize: 15,
       fontFamily: FONTS.semiBold,
       color: theme.background.dark,
     },

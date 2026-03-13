@@ -82,22 +82,6 @@ function createStyles(theme: Theme) {
       fontSize: 14,
       fontFamily: FONTS.semiBold,
     },
-    signInButton: {
-      backgroundColor: theme.primary.main,
-      paddingVertical: 18,
-      borderRadius: 12,
-      alignItems: "center",
-      justifyContent: "center",
-      marginBottom: 24,
-    },
-    disabledButton: {
-      opacity: 0.5,
-    },
-    signInButtonText: {
-      color: theme.background.dark,
-      fontSize: 16,
-      fontFamily: FONTS.semiBold,
-    },
     dividerContainer: {
       flexDirection: "row",
       alignItems: "center",

@@ -71,21 +71,6 @@ function createStyles(theme: Theme) {
     genderTextSelected: {
       color: theme.primary.main,
     },
-    continueButton: {
-      backgroundColor: theme.primary.main,
-      paddingVertical: 18,
-      borderRadius: 12,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    continueButtonDisabled: {
-      opacity: 0.5,
-    },
-    continueButtonText: {
-      color: theme.background.dark,
-      fontSize: 18,
-      fontFamily: FONTS.bold,
-    },
   });
 }
 

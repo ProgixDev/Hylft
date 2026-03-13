@@ -250,19 +250,6 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       right: 0,
       paddingHorizontal: 32,
     },
-    primaryButton: {
-      backgroundColor: theme.primary.main,
-      paddingVertical: 18,
-      borderRadius: 12,
-      alignItems: "center",
-      justifyContent: "center",
-      marginBottom: 16,
-    },
-    primaryButtonText: {
-      color: theme.background.dark,
-      fontSize: 18,
-      fontFamily: FONTS.bold,
-    },
     skipButton: {
       paddingVertical: 12,
       alignItems: "center",

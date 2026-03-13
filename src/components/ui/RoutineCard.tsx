@@ -191,7 +191,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       backgroundColor: theme.primary.main,
       paddingVertical: 10,
       paddingHorizontal: 14,
-      borderRadius: 10,
+      borderRadius: 18,
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",

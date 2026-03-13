@@ -50,11 +50,11 @@ function createStyles(theme: Theme) {
     saveBtn: {
       paddingHorizontal: 18,
       paddingVertical: 8,
-      borderRadius: 20,
+      borderRadius: 22,
       backgroundColor: theme.primary.main,
     },
     saveBtnText: {
-      fontSize: 14,
+      fontSize: 15,
       fontFamily: FONTS.bold,
       color: theme.background.dark,
     },

@@ -193,18 +193,6 @@ const createStyles = (theme: Theme) =>
     buttonsContainer: {
       gap: 12,
     },
-    acceptButton: {
-      backgroundColor: theme.primary.main,
-      paddingVertical: 18,
-      borderRadius: 12,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    acceptButtonText: {
-      color: theme.background.dark,
-      fontSize: 18,
-      fontFamily: FONTS.bold,
-    },
     declineButton: {
       paddingVertical: 18,
       alignItems: "center",

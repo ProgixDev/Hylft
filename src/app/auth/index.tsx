@@ -67,37 +67,6 @@ function createStyles(theme: Theme) {
       textAlign: "center",
       marginBottom: 32,
     },
-    googleButton: {
-      backgroundColor: theme.primary.main,
-      paddingVertical: 18,
-      borderRadius: 12,
-      alignItems: "center",
-      justifyContent: "center",
-      marginBottom: 16,
-      flexDirection: "row",
-    },
-    googleButtonText: {
-      color: theme.background.dark,
-      fontSize: 16,
-      fontFamily: FONTS.semiBold,
-    },
-    emailButton: {
-      backgroundColor: theme.foreground.white,
-      paddingVertical: 18,
-      borderRadius: 12,
-      alignItems: "center",
-      justifyContent: "center",
-      marginBottom: 24,
-      flexDirection: "row",
-    },
-    emailButtonText: {
-      color: theme.background.dark,
-      fontSize: 16,
-      fontFamily: FONTS.semiBold,
-    },
-    buttonIcon: {
-      marginRight: 12,
-    },
     signInContainer: {
       flexDirection: "row",
       justifyContent: "center",

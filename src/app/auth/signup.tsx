@@ -73,23 +73,6 @@ function createStyles(theme: Theme) {
       borderWidth: 1,
       borderColor: theme.background.accent,
     },
-    signUpButton: {
-      backgroundColor: theme.primary.main,
-      paddingVertical: 18,
-      borderRadius: 12,
-      alignItems: "center",
-      justifyContent: "center",
-      marginBottom: 24,
-      marginTop: 8,
-    },
-    disabledButton: {
-      opacity: 0.5,
-    },
-    signUpButtonText: {
-      color: theme.background.dark,
-      fontSize: 16,
-      fontFamily: FONTS.semiBold,
-    },
     dividerContainer: {
       flexDirection: "row",
       alignItems: "center",

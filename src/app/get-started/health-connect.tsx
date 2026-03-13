@@ -190,18 +190,6 @@ const createStyles = (theme: Theme) =>
     buttonsContainer: {
       gap: 12,
     },
-    enableButton: {
-      backgroundColor: theme.primary.main,
-      paddingVertical: 18,
-      borderRadius: 12,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    enableButtonText: {
-      color: theme.background.dark,
-      fontSize: 18,
-      fontFamily: FONTS.bold,
-    },
     notNowButton: {
       paddingVertical: 18,
       alignItems: "center",

@@ -354,10 +354,10 @@ const createStyles = (theme: Theme) =>
       backgroundColor: theme.primary.main,
       paddingHorizontal: 16,
       paddingVertical: 7,
-      borderRadius: 8,
+      borderRadius: 16,
     },
     saveBtnText: {
-      fontSize: 14,
+      fontSize: 13,
       fontFamily: FONTS.bold,
       color: theme.background.dark,
     },
@@ -427,7 +427,7 @@ const createStyles = (theme: Theme) =>
       backgroundColor: theme.primary.main,
       paddingHorizontal: 12,
       paddingVertical: 6,
-      borderRadius: 8,
+      borderRadius: 16,
     },
     addExBtnText: {
       fontSize: 13,

@@ -359,13 +359,13 @@ const createStyles = (theme: Theme) =>
       backgroundColor: theme.primary.main,
       paddingHorizontal: 18,
       paddingVertical: 8,
-      borderRadius: 20,
+      borderRadius: 16,
     },
     postBtnDisabled: {
       backgroundColor: theme.background.darker,
     },
     postBtnText: {
-      fontSize: 14,
+      fontSize: 13,
       fontFamily: FONTS.bold,
       color: theme.background.dark,
     },
@@ -490,7 +490,7 @@ const createStyles = (theme: Theme) =>
     bottomPostBtn: {
       backgroundColor: theme.primary.main,
       paddingVertical: 16,
-      borderRadius: 16,
+      borderRadius: 26,
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
@@ -498,7 +498,7 @@ const createStyles = (theme: Theme) =>
       marginTop: 8,
     },
     bottomPostBtnText: {
-      fontSize: 16,
+      fontSize: 17,
       fontFamily: FONTS.bold,
       color: theme.background.dark,
     },

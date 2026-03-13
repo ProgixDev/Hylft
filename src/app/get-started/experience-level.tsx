@@ -297,20 +297,5 @@ function createStyles(theme: Theme) {
       height: 10,
       borderRadius: 5,
     },
-    continueButton: {
-      backgroundColor: theme.primary.main,
-      paddingVertical: 18,
-      borderRadius: 12,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    continueButtonDisabled: {
-      opacity: 0.4,
-    },
-    continueButtonText: {
-      color: theme.background.dark,
-      fontSize: 18,
-      fontFamily: FONTS.bold,
-    },
   });
 }

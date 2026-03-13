@@ -260,7 +260,7 @@ const createStyles = (theme: Theme) =>
       flexDirection: "row",
       alignItems: "center",
       backgroundColor: theme.background.darker,
-      borderRadius: 10,
+      borderRadius: 20,
       paddingHorizontal: 16,
       paddingVertical: 10,
       borderWidth: 1,
@@ -268,7 +268,7 @@ const createStyles = (theme: Theme) =>
       gap: 8,
     },
     filterButtonText: {
-      fontSize: 14,
+      fontSize: 15,
       fontFamily: FONTS.semiBold,
       color: theme.foreground.white,
     },
