@@ -94,7 +94,7 @@ export default function FitnessGoal() {
       >
         <View style={styles.stepRow}>
           <Text style={[styles.stepText, { color: theme.primary.main }]}>
-            STEP 3 OF 10
+            STEP 2 OF 13
           </Text>
           <View style={styles.progressBar}>
             <View
@@ -102,7 +102,7 @@ export default function FitnessGoal() {
                 styles.progressFill,
                 {
                   backgroundColor: theme.primary.main,
-                  width: `${(3 / 10) * 100}%`,
+                  width: `${(2 / 13) * 100}%`,
                 },
               ]}
             />

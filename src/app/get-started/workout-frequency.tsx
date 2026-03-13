@@ -82,7 +82,7 @@ export default function WorkoutFrequency() {
       >
         <View style={styles.stepRow}>
           <Text style={[styles.stepText, { color: theme.primary.main }]}>
-            STEP 6 OF 10
+            STEP 9 OF 13
           </Text>
           <View style={styles.progressBar}>
             <View
@@ -90,7 +90,7 @@ export default function WorkoutFrequency() {
                 styles.progressFill,
                 {
                   backgroundColor: theme.primary.main,
-                  width: `${(6 / 10) * 100}%`,
+                  width: `${(9 / 13) * 100}%`,
                 },
               ]}
             />

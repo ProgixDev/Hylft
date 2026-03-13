@@ -60,7 +60,7 @@ export default function ExperienceLevel() {
   const handleContinue = async () => {
     if (!selected) return;
     await AsyncStorage.setItem("@hylift_experience_level", selected);
-    router.navigate("/get-started/body-metrics");
+    router.navigate("/get-started/age");
   };
 
   return (
@@ -68,7 +68,7 @@ export default function ExperienceLevel() {
       <View style={{ flex: 1 }}>
         <View style={styles.stepRow}>
           <Text style={[styles.stepText, { color: theme.primary.main }]}>
-            STEP 4 OF 10
+            STEP 3 OF 13
           </Text>
           <View style={styles.progressBar}>
             <View
@@ -76,7 +76,7 @@ export default function ExperienceLevel() {
                 styles.progressFill,
                 {
                   backgroundColor: theme.primary.main,
-                  width: `${(4 / 10) * 100}%`,
+                  width: `${(3 / 13) * 100}%`,
                 },
               ]}
             />

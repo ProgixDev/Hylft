@@ -42,7 +42,7 @@ export default function UnitsSelection() {
 
   const handleContinue = () => {
     // TODO: Save unit preferences
-    router.navigate("/get-started/gender");
+    router.navigate("/get-started/fitness-goal");
   };
 
   const renderOptionGroup = (
@@ -87,7 +87,7 @@ export default function UnitsSelection() {
       >
         <View style={styles.stepRow}>
           <Text style={[styles.stepText, { color: theme.primary.main }]}>
-            STEP 1 OF 10
+            STEP 1 OF 13
           </Text>
           <View style={styles.progressBar}>
             <View
@@ -95,7 +95,7 @@ export default function UnitsSelection() {
                 styles.progressFill,
                 {
                   backgroundColor: theme.primary.main,
-                  width: `${(1 / 10) * 100}%`,
+                  width: `${(1 / 13) * 100}%`,
                 },
               ]}
             />

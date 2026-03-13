@@ -97,7 +97,7 @@ export default function GenderSelection() {
     if (!selectedGender) return;
     // Save gender preference and set theme
     setTheme(selectedGender as "male" | "female");
-    router.navigate("/get-started/fitness-goal");
+    router.navigate("/get-started/workout-frequency");
   };
 
   const styles = createStyles(theme);
@@ -107,7 +107,7 @@ export default function GenderSelection() {
       <View style={styles.content}>
         <View style={styles.stepRow}>
           <Text style={[styles.stepText, { color: theme.primary.main }]}>
-            STEP 2 OF 10
+            STEP 8 OF 13
           </Text>
           <View style={styles.progressBar}>
             <View
@@ -115,7 +115,7 @@ export default function GenderSelection() {
                 styles.progressFill,
                 {
                   backgroundColor: theme.primary.main,
-                  width: `${(2 / 10) * 100}%`,
+                  width: `${(8 / 13) * 100}%`,
                 },
               ]}
             />

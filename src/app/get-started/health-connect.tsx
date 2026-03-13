@@ -36,7 +36,7 @@ export default function HealthConnect() {
       >
         <View style={styles.stepRow}>
           <Text style={[styles.stepText, { color: theme.primary.main }]}>
-            STEP 8 OF 10
+            STEP 11 OF 13
           </Text>
           <View style={styles.progressBar}>
             <View
@@ -44,7 +44,7 @@ export default function HealthConnect() {
                 styles.progressFill,
                 {
                   backgroundColor: theme.primary.main,
-                  width: `${(8 / 10) * 100}%`,
+                  width: `${(11 / 13) * 100}%`,
                 },
               ]}
             />

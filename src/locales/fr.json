@@ -44,7 +44,27 @@
     "page3Title": "Commencez Votre",
     "page3TitleBold": "Parcours Fitness",
     "page3Subtitle": "\"Entraînements personnalisés rien que pour vous\"",
-    "page3Button": "Suivant"
+    "page3Button": "Suivant",
+    "age": {
+      "title": "Quel âge avez-vous ?",
+      "subtitle": "Cela nous aide à personnaliser votre programme fitness",
+      "unit": "ans"
+    },
+    "height": {
+      "title": "Quelle est votre taille ?",
+      "subtitle": "Utilisé pour calculer vos métriques corporelles",
+      "unit": "cm"
+    },
+    "weight": {
+      "title": "Quel est votre poids actuel ?",
+      "subtitle": "Nous suivrons votre progression à partir d'ici",
+      "unit": "kg"
+    },
+    "targetWeight": {
+      "title": "Quel est votre poids cible ?",
+      "subtitle": "C'est optionnel — vous pouvez toujours le modifier plus tard",
+      "unit": "kg"
+    }
   },
   "tabs": {
     "schedule": "Calendrier",

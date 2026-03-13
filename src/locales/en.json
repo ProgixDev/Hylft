@@ -44,7 +44,27 @@
     "page3Title": "Start Your Fitness",
     "page3TitleBold": "Journey",
     "page3Subtitle": "\"Personalized workouts just for you\"",
-    "page3Button": "Next"
+    "page3Button": "Next",
+    "age": {
+      "title": "How old are you?",
+      "subtitle": "This helps us personalize your fitness plan",
+      "unit": "years"
+    },
+    "height": {
+      "title": "What's your height?",
+      "subtitle": "Used to calculate your body metrics",
+      "unit": "cm"
+    },
+    "weight": {
+      "title": "What's your current weight?",
+      "subtitle": "We'll track your progress from here",
+      "unit": "kg"
+    },
+    "targetWeight": {
+      "title": "What's your target weight?",
+      "subtitle": "This is optional — you can always change it later",
+      "unit": "kg"
+    }
   },
   "tabs": {
     "schedule": "Schedule",

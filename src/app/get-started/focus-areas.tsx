@@ -64,7 +64,7 @@ export default function FocusAreas() {
       >
         <View style={styles.stepRow}>
           <Text style={[styles.stepText, { color: theme.primary.main }]}>
-            STEP 7 OF 10
+            STEP 10 OF 13
           </Text>
           <View style={styles.progressBar}>
             <View
@@ -72,7 +72,7 @@ export default function FocusAreas() {
                 styles.progressFill,
                 {
                   backgroundColor: theme.primary.main,
-                  width: `${(7 / 10) * 100}%`,
+                  width: `${(10 / 13) * 100}%`,
                 },
               ]}
             />
