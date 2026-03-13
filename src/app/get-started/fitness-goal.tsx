@@ -12,6 +12,8 @@ import {
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
 
+import { FONTS } from "../../constants/fonts";
+
 interface GoalOption {
   id: string;
   icon: keyof typeof Ionicons.glyphMap;
@@ -230,7 +232,7 @@ function createStyles(theme: Theme) {
     },
     stepText: {
       fontSize: 11,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       letterSpacing: 1.2,
       marginBottom: 8,
     },
@@ -245,7 +247,7 @@ function createStyles(theme: Theme) {
     },
     title: {
       fontSize: 30,
-      fontWeight: "bold",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
       marginBottom: 8,
     },
@@ -296,7 +298,7 @@ function createStyles(theme: Theme) {
     },
     goalLabel: {
       fontSize: 16,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       marginBottom: 4,
     },
     goalDesc: {
@@ -321,7 +323,7 @@ function createStyles(theme: Theme) {
     continueButtonText: {
       color: theme.background.dark,
       fontSize: 18,
-      fontWeight: "bold",
+      fontFamily: FONTS.bold,
     },
   });
 }

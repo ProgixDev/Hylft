@@ -5,6 +5,8 @@ import { Theme } from "../../constants/themes";
 import { useActiveWorkout } from "../../contexts/ActiveWorkoutContext";
 import { useTheme } from "../../contexts/ThemeContext";
 
+import { FONTS } from "../../constants/fonts";
+
 interface MiniWorkoutPlayerProps {
   onExpand?: () => void;
 }
@@ -116,7 +118,7 @@ const createStyles = (theme: Theme) =>
     },
     title: {
       fontSize: 14,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
       marginBottom: 4,
     },
@@ -133,7 +135,7 @@ const createStyles = (theme: Theme) =>
     stat: {
       fontSize: 12,
       color: theme.foreground.gray,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
     },
     statSeparator: {
       fontSize: 12,

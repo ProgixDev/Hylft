@@ -15,6 +15,8 @@ import { useTranslation } from "react-i18next";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
 
+import { FONTS } from "../../constants/fonts";
+
 const FAQ_DATA = [
   {
     category: "Getting Started",
@@ -104,7 +106,7 @@ function createStyles(theme: Theme) {
     backBtn: { padding: 6, marginRight: 8 },
     headerTitle: {
       fontSize: 20,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
     },
     searchContainer: {
@@ -132,7 +134,7 @@ function createStyles(theme: Theme) {
     },
     categoryTitle: {
       fontSize: 14,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.gray,
       textTransform: "uppercase",
       letterSpacing: 0.6,
@@ -154,7 +156,7 @@ function createStyles(theme: Theme) {
     faqQText: {
       flex: 1,
       fontSize: 15,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.white,
       lineHeight: 21,
     },
@@ -188,7 +190,7 @@ function createStyles(theme: Theme) {
     },
     contactTitle: {
       fontSize: 16,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
       marginTop: 12,
       marginBottom: 6,
@@ -208,7 +210,7 @@ function createStyles(theme: Theme) {
     },
     contactBtnText: {
       fontSize: 14,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.background.dark,
     },
   });

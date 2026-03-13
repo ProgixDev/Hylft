@@ -17,6 +17,8 @@ import { useCreateRoutine } from "../../contexts/CreateRoutineContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { addRoutine, RoutineExercise } from "../../data/mockData";
 
+import { FONTS } from "../../constants/fonts";
+
 const getDifficulties = (t: (key: string) => string) => [
   { value: "beginner", label: t("createRoutine.beginner"), color: "#22c55e" },
   { value: "intermediate", label: t("createRoutine.intermediate"), color: "#f59e0b" },
@@ -345,7 +347,7 @@ const createStyles = (theme: Theme) =>
     headerBtn: { padding: 4 },
     headerTitle: {
       fontSize: 18,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
     },
     saveBtn: {
@@ -356,7 +358,7 @@ const createStyles = (theme: Theme) =>
     },
     saveBtnText: {
       fontSize: 14,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.background.dark,
     },
     content: { flex: 1 },
@@ -366,7 +368,7 @@ const createStyles = (theme: Theme) =>
     },
     label: {
       fontSize: 12,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.gray,
       textTransform: "uppercase",
       letterSpacing: 0.8,
@@ -409,7 +411,7 @@ const createStyles = (theme: Theme) =>
     },
     difficultyBtnText: {
       fontSize: 13,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.gray,
     },
     exercisesHeader: {
@@ -429,7 +431,7 @@ const createStyles = (theme: Theme) =>
     },
     addExBtnText: {
       fontSize: 13,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.background.dark,
     },
     emptyEx: {
@@ -472,12 +474,12 @@ const createStyles = (theme: Theme) =>
     },
     exerciseIndexText: {
       fontSize: 12,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.primary.main,
     },
     exerciseName: {
       fontSize: 15,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.white,
       flex: 1,
     },
@@ -489,7 +491,7 @@ const createStyles = (theme: Theme) =>
     field: { flex: 1 },
     fieldLabel: {
       fontSize: 11,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.gray,
       marginBottom: 4,
     },
@@ -499,7 +501,7 @@ const createStyles = (theme: Theme) =>
       paddingHorizontal: 10,
       paddingVertical: 8,
       fontSize: 14,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.white,
       textAlign: "center",
       borderWidth: 1,
@@ -530,7 +532,7 @@ const createStyles = (theme: Theme) =>
     },
     muscleChipText: {
       fontSize: 12,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.primary.main,
       textTransform: "capitalize",
     },

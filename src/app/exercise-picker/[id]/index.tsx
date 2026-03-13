@@ -19,6 +19,8 @@ import {
   ExerciseDbExercise,
 } from "../../../services/exerciseDbApi";
 
+import { FONTS } from "../../../constants/fonts";
+
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const DIFFICULTY_CONFIG: Record<
@@ -368,7 +370,7 @@ const createStyles = (theme: Theme) =>
       backgroundColor: theme.background.darker,
     },
     headerBack: { padding: 4 },
-    title: { fontSize: 18, fontWeight: "600", color: theme.foreground.white },
+    title: { fontSize: 18, fontFamily: FONTS.semiBold, color: theme.foreground.white },
     content: { flex: 1, paddingHorizontal: 16, paddingTop: 20 },
     centered: { flex: 1, justifyContent: "center", alignItems: "center" },
     emptyText: { fontSize: 16, color: theme.foreground.gray, marginTop: 12 },
@@ -393,7 +395,7 @@ const createStyles = (theme: Theme) =>
     titleSection: { marginBottom: 20 },
     exerciseName: {
       fontSize: 26,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
       marginBottom: 12,
       textTransform: "capitalize",
@@ -409,7 +411,7 @@ const createStyles = (theme: Theme) =>
     },
     tagText: {
       fontSize: 12,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.gray,
       textTransform: "capitalize",
     },
@@ -432,19 +434,19 @@ const createStyles = (theme: Theme) =>
     statLabel: {
       fontSize: 11,
       color: theme.foreground.gray,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
     },
     statValue: {
       fontSize: 13,
       color: theme.foreground.white,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       textTransform: "capitalize",
     },
     // Sections
     section: { marginBottom: 24 },
     sectionTitle: {
       fontSize: 15,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
       marginBottom: 12,
     },
@@ -497,7 +499,7 @@ const createStyles = (theme: Theme) =>
       paddingVertical: 3,
       borderRadius: 10,
     },
-    primaryBadgePillText: { fontSize: 10, fontWeight: "700" },
+    primaryBadgePillText: { fontSize: 10, fontFamily: FONTS.bold },
     // Tips
     tipsCard: {
       backgroundColor: theme.background.darker,
@@ -529,7 +531,7 @@ const createStyles = (theme: Theme) =>
     },
     addButtonText: {
       fontSize: 16,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.background.dark,
     },
   });

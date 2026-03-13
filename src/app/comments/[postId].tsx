@@ -22,6 +22,8 @@ import {
   getUserById,
 } from "../../data/mockData";
 
+import { FONTS } from "../../constants/fonts";
+
 interface CommentWithUser extends Comment {
   user: {
     id: string;
@@ -428,7 +430,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     headerTitle: {
       fontSize: 18,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.white,
     },
     headerRight: {
@@ -453,7 +455,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     postUsername: {
       fontSize: 15,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.white,
       marginBottom: 4,
     },
@@ -499,7 +501,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     username: {
       fontSize: 14,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.white,
       marginBottom: 2,
     },
@@ -520,12 +522,12 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     likes: {
       fontSize: 12,
       color: theme.foreground.gray,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
     },
     replyButton: {
       fontSize: 12,
       color: theme.foreground.gray,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
     },
     likeButton: {
       padding: 4,
@@ -561,7 +563,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     postButton: {
       fontSize: 16,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       marginLeft: 12,
       paddingVertical: 8,
       textAlignVertical: "center",
@@ -632,7 +634,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     viewMoreRepliesText: {
       fontSize: 13,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.gray,
     },
   });

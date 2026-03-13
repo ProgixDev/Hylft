@@ -5,6 +5,8 @@ import { StyleSheet, Text, View } from "react-native";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
 
+import { FONTS } from "../../constants/fonts";
+
 export default function Ready() {
   const router = useRouter();
   const { theme } = useTheme();
@@ -56,7 +58,7 @@ const createStyles = (theme: Theme) =>
     },
     title: {
       fontSize: 40,
-      fontWeight: "bold",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
       textAlign: "center",
       marginBottom: 16,

@@ -15,6 +15,8 @@ import {
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
 
+import { FONTS } from "../../constants/fonts";
+
 function createStyles(theme: Theme) {
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: theme.background.dark },
@@ -29,14 +31,14 @@ function createStyles(theme: Theme) {
     backBtn: { padding: 6, marginRight: 8 },
     headerTitle: {
       fontSize: 20,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
     },
     form: { paddingHorizontal: 16, paddingTop: 16, gap: 4 },
     fieldGroup: { marginTop: 20 },
     fieldLabel: {
       fontSize: 12,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.gray,
       marginBottom: 8,
       textTransform: "uppercase",
@@ -73,7 +75,7 @@ function createStyles(theme: Theme) {
       overflow: "hidden",
     },
     strengthFill: { height: "100%", borderRadius: 2 },
-    strengthLabel: { fontSize: 12, marginTop: 4, fontWeight: "600" },
+    strengthLabel: { fontSize: 12, marginTop: 4, fontFamily: FONTS.semiBold },
     divider: {
       height: 1,
       backgroundColor: theme.background.accent,
@@ -99,7 +101,7 @@ function createStyles(theme: Theme) {
     submitBtnDisabled: { opacity: 0.4 },
     submitBtnText: {
       fontSize: 16,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.background.dark,
     },
   });

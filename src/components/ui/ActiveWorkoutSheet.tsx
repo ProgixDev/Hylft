@@ -35,6 +35,8 @@ import {
   translateExerciseTerm,
 } from "../../utils/exerciseTranslator";
 
+import { FONTS } from "../../constants/fonts";
+
 const REST_TARGET = 90; // seconds
 
 // ─── Exercise options menu modal ──────────────────────────────────────────────
@@ -796,7 +798,7 @@ const createStyles = (theme: Theme) =>
       paddingTop: 4,
       paddingBottom: 16,
     },
-    title: { fontSize: 24, fontWeight: "700", color: theme.foreground.white },
+    title: { fontSize: 24, fontFamily: FONTS.bold, color: theme.foreground.white },
     headerButtons: { flexDirection: "row", gap: 4 },
     headerButton: { padding: 8 },
     scrollContent: { paddingHorizontal: 20, paddingBottom: 40, gap: 16 },
@@ -812,12 +814,12 @@ const createStyles = (theme: Theme) =>
     },
     statValue: {
       fontSize: 18,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
     },
     statLabel: {
       fontSize: 11,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.gray,
       textTransform: "uppercase",
     },
@@ -833,12 +835,12 @@ const createStyles = (theme: Theme) =>
     },
     timerLabel: {
       fontSize: 14,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.white,
     },
     timerValue: {
       fontSize: 18,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.primary.main,
       minWidth: 42,
     },
@@ -871,7 +873,7 @@ const createStyles = (theme: Theme) =>
     exerciseTitleBlock: { flex: 1, gap: 2 },
     exerciseName: {
       fontSize: 16,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
     },
     exerciseMuscles: { fontSize: 12, color: theme.foreground.gray },
@@ -884,7 +886,7 @@ const createStyles = (theme: Theme) =>
     },
     setHeaderLabel: {
       fontSize: 10,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.gray,
       textTransform: "uppercase",
     },
@@ -895,7 +897,7 @@ const createStyles = (theme: Theme) =>
     setNumberCell: { width: 30, alignItems: "center" },
     setNumberText: {
       fontSize: 14,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.gray,
       textAlign: "center",
       width: 30,
@@ -913,7 +915,7 @@ const createStyles = (theme: Theme) =>
       backgroundColor: theme.background.dark,
       color: theme.foreground.white,
       fontSize: 14,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       textAlign: "center",
       marginHorizontal: 4,
     },
@@ -933,7 +935,7 @@ const createStyles = (theme: Theme) =>
     },
     addSetText: {
       fontSize: 13,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.primary.main,
     },
     // Empty state
@@ -953,7 +955,7 @@ const createStyles = (theme: Theme) =>
     },
     emptyTitle: {
       fontSize: 22,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
       marginBottom: 8,
     },
@@ -976,7 +978,7 @@ const createStyles = (theme: Theme) =>
     },
     addExerciseButtonText: {
       fontSize: 16,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.background.dark,
     },
     // Save modal
@@ -997,7 +999,7 @@ const createStyles = (theme: Theme) =>
     },
     saveModalTitle: {
       fontSize: 20,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
       textAlign: "center",
     },
@@ -1028,12 +1030,12 @@ const createStyles = (theme: Theme) =>
     },
     cancelButtonText: {
       fontSize: 16,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.gray,
     },
     confirmButtonText: {
       fontSize: 16,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.white,
     },
     // Workout summary modal
@@ -1058,13 +1060,13 @@ const createStyles = (theme: Theme) =>
     summaryEmoji: { fontSize: 36 },
     summaryTitle: {
       fontSize: 22,
-      fontWeight: "800",
+      fontFamily: FONTS.extraBold,
       color: theme.foreground.white,
       textAlign: "center",
     },
     summarySubtitle: {
       fontSize: 16,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.primary.main,
       textAlign: "center",
     },
@@ -1091,12 +1093,12 @@ const createStyles = (theme: Theme) =>
     },
     summaryStatValue: {
       fontSize: 18,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
     },
     summaryStatLabel: {
       fontSize: 10,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.gray,
       textTransform: "uppercase",
       textAlign: "center",
@@ -1113,7 +1115,7 @@ const createStyles = (theme: Theme) =>
     },
     shareBtnText: {
       fontSize: 16,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.background.dark,
     },
     closeBtn: {
@@ -1123,7 +1125,7 @@ const createStyles = (theme: Theme) =>
     },
     closeBtnText: {
       fontSize: 15,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.gray,
     },
   });
@@ -1161,7 +1163,7 @@ const menuStyles = (theme: Theme) =>
     },
     optionText: {
       fontSize: 16,
-      fontWeight: "500",
+      fontFamily: FONTS.medium,
       color: theme.foreground.white,
     },
     divider: {

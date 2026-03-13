@@ -11,6 +11,8 @@ import {
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
 
+import { FONTS } from "../../constants/fonts";
+
 const LAST_UPDATED = "January 1, 2026";
 
 const SECTIONS = [
@@ -70,7 +72,7 @@ function createStyles(theme: Theme) {
     backBtn: { padding: 6, marginRight: 8 },
     headerTitle: {
       fontSize: 20,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
     },
     metaBanner: {
@@ -83,7 +85,7 @@ function createStyles(theme: Theme) {
       gap: 10,
     },
     metaText: { fontSize: 13, color: theme.foreground.gray },
-    metaBold: { fontWeight: "600", color: theme.foreground.white },
+    metaBold: { fontFamily: FONTS.semiBold, color: theme.foreground.white },
     sectionCard: {
       marginHorizontal: 16,
       marginBottom: 10,
@@ -101,7 +103,7 @@ function createStyles(theme: Theme) {
     sectionTitle: {
       flex: 1,
       fontSize: 15,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
     },
     sectionBody: {

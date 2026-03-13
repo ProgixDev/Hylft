@@ -1,7 +1,15 @@
+import {
+  Poppins_400Regular,
+  Poppins_500Medium,
+  Poppins_600SemiBold,
+  Poppins_700Bold,
+  Poppins_800ExtraBold,
+  useFonts,
+} from "@expo-google-fonts/poppins";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import React from "react";
+import React, { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
@@ -10,7 +18,9 @@ import { CreateRoutineProvider } from "../contexts/CreateRoutineContext";
 import { I18nProvider, useI18n } from "../contexts/I18nContext";
 import { ThemeProvider } from "../contexts/ThemeContext";
 
-SplashScreen.preventAutoHideAsync();
+SplashScreen.preventAutoHideAsync().catch(() => {
+  // Ignore errors if splash screen was already prevented.
+});
 
 function AppContent() {
   const { isLoading } = useI18n();
@@ -66,8 +76,34 @@ function AppContent() {
 }
 
 export default function RootLayout() {
+  const [fontsLoaded, fontError] = useFonts({
+    Poppins_400Regular,
+    Poppins_500Medium,
+    Poppins_600SemiBold,
+    Poppins_700Bold,
+    Poppins_800ExtraBold,
+  });
+
+  useEffect(() => {
+    if (fontError) {
+      throw fontError;
+    }
+  }, [fontError]);
+
+  useEffect(() => {
+    if (fontsLoaded) {
+      SplashScreen.hideAsync().catch(() => {
+        // Ignore errors if splash screen was already hidden.
+      });
+    }
+  }, [fontsLoaded]);
+
+  if (!fontsLoaded) {
+    return null;
+  }
+
   return (
-    <View style={{ flex: 1 }} onLayout={() => SplashScreen.hideAsync()}>
+    <View style={{ flex: 1 }}>
       <GestureHandlerRootView style={{ flex: 1 }}>
         <I18nProvider>
           <ThemeProvider>

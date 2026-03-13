@@ -14,6 +14,8 @@ import { useTranslation } from "react-i18next";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
 
+import { FONTS } from "../../constants/fonts";
+
 function createStyles(theme: Theme) {
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: theme.background.dark },
@@ -28,7 +30,7 @@ function createStyles(theme: Theme) {
     backBtn: { padding: 6, marginRight: 8 },
     headerTitle: {
       fontSize: 20,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
     },
     hero: {
@@ -41,7 +43,7 @@ function createStyles(theme: Theme) {
     logo: { width: 80, height: 80, borderRadius: 20, marginBottom: 16 },
     appName: {
       fontSize: 28,
-      fontWeight: "800",
+      fontFamily: FONTS.extraBold,
       color: theme.foreground.white,
       marginBottom: 4,
     },
@@ -58,11 +60,11 @@ function createStyles(theme: Theme) {
       borderRadius: 20,
       backgroundColor: theme.background.accent,
     },
-    versionText: { fontSize: 13, color: theme.primary.main, fontWeight: "600" },
+    versionText: { fontSize: 13, color: theme.primary.main, fontFamily: FONTS.semiBold },
     section: { marginTop: 28, marginHorizontal: 16 },
     sectionTitle: {
       fontSize: 12,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.gray,
       textTransform: "uppercase",
       letterSpacing: 0.8,
@@ -98,7 +100,7 @@ function createStyles(theme: Theme) {
     rowLabel: {
       flex: 1,
       fontSize: 15,
-      fontWeight: "500",
+      fontFamily: FONTS.medium,
       color: theme.foreground.white,
     },
     rowValue: { fontSize: 14, color: theme.foreground.gray },
@@ -118,7 +120,7 @@ function createStyles(theme: Theme) {
     },
     statValue: {
       fontSize: 22,
-      fontWeight: "800",
+      fontFamily: FONTS.extraBold,
       color: theme.primary.main,
       marginBottom: 4,
     },

@@ -6,6 +6,8 @@ import { Image, Pressable, Share, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "../../contexts/ThemeContext";
 import ImageCarousel from "./ImageCarousel";
 
+import { FONTS } from "../../constants/fonts";
+
 export type PostData = {
   id: string;
   user: {
@@ -273,7 +275,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     workoutBannerTitle: {
       fontSize: 18,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
     },
     divider: {
@@ -309,7 +311,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     username: {
       fontSize: 15,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.white,
     },
     timestamp: {
@@ -345,7 +347,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     actionCount: {
       fontSize: 13,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.white,
     },
     metricsSection: {
@@ -372,7 +374,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     metricValue: {
       fontSize: 14,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
     },
     postInfo: {
@@ -394,12 +396,12 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     metadataLabel: {
       fontSize: 12,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.background.dark,
     },
     likes: {
       fontSize: 14,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.white,
       marginBottom: 8,
     },

@@ -16,6 +16,8 @@ import { Theme, ThemeType } from "../../constants/themes";
 import { useI18n } from "../../contexts/I18nContext";
 import { useTheme } from "../../contexts/ThemeContext";
 
+import { FONTS } from "../../constants/fonts";
+
 // ─── Storage keys ─────────────────────────────────────────────────────────────
 const KEYS = {
   weightUnit: "@hylift_weight_unit",
@@ -50,7 +52,7 @@ function createStyles(theme: Theme) {
     },
     headerTitle: {
       fontSize: 20,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
     },
     // section
@@ -61,7 +63,7 @@ function createStyles(theme: Theme) {
     },
     sectionLabel: {
       fontSize: 12,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       letterSpacing: 0.8,
       textTransform: "uppercase",
       color: theme.foreground.gray,
@@ -96,7 +98,7 @@ function createStyles(theme: Theme) {
     },
     rowTitle: {
       fontSize: 15,
-      fontWeight: "500",
+      fontFamily: FONTS.medium,
       color: theme.foreground.white,
     },
     rowSubtitle: {
@@ -131,7 +133,7 @@ function createStyles(theme: Theme) {
     },
     segBtnText: {
       fontSize: 13,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.gray,
     },
     segBtnTextActive: {
@@ -152,7 +154,7 @@ function createStyles(theme: Theme) {
     },
     dangerText: {
       fontSize: 15,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       marginLeft: 12,
     },
     // version

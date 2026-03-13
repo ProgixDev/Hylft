@@ -14,6 +14,8 @@ import { useTranslation } from "react-i18next";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
 
+import { FONTS } from "../../constants/fonts";
+
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 const BACKGROUND_IMAGES = [
@@ -59,7 +61,7 @@ function createStyles(theme: Theme) {
     },
     title: {
       fontSize: 28,
-      fontWeight: "bold",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
       textAlign: "center",
       marginBottom: 32,
@@ -76,7 +78,7 @@ function createStyles(theme: Theme) {
     googleButtonText: {
       color: theme.background.dark,
       fontSize: 16,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
     },
     emailButton: {
       backgroundColor: theme.foreground.white,
@@ -90,7 +92,7 @@ function createStyles(theme: Theme) {
     emailButtonText: {
       color: theme.background.dark,
       fontSize: 16,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
     },
     buttonIcon: {
       marginRight: 12,
@@ -107,7 +109,7 @@ function createStyles(theme: Theme) {
     signInLink: {
       color: theme.primary.main,
       fontSize: 14,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
     },
   });
 }

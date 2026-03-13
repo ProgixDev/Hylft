@@ -25,6 +25,8 @@ import {
   Workout as WorkoutData,
 } from "../../data/mockData";
 
+import { FONTS } from "../../constants/fonts";
+
 const surfaceShadow = Platform.select({
   ios: {
     shadowColor: "#000000",
@@ -442,7 +444,7 @@ const createStyles = (theme: Theme) =>
     },
     actionButtonText: {
       fontSize: 13,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.white,
       textAlign: "center",
     },
@@ -464,12 +466,12 @@ const createStyles = (theme: Theme) =>
     },
     sectionTitle: {
       fontSize: 20,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
     },
     seeAllText: {
       fontSize: 14,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.primary.main,
     },
     // Empty States
@@ -506,7 +508,7 @@ const createStyles = (theme: Theme) =>
     },
     routineName: {
       fontSize: 18,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
       flex: 1,
       marginRight: 8,
@@ -527,7 +529,7 @@ const createStyles = (theme: Theme) =>
     },
     difficultyText: {
       fontSize: 10,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.white,
       textTransform: "uppercase",
     },
@@ -567,7 +569,7 @@ const createStyles = (theme: Theme) =>
     },
     muscleTagText: {
       fontSize: 11,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.primary.main,
       textTransform: "capitalize",
     },
@@ -589,7 +591,7 @@ const createStyles = (theme: Theme) =>
     },
     startRoutineButtonText: {
       fontSize: 14,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.background.dark,
     },
     // Plus modal
@@ -619,13 +621,13 @@ const createStyles = (theme: Theme) =>
     },
     modalOptionText: {
       fontSize: 16,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
     },
     modalDivider: { height: 1, backgroundColor: theme.background.dark },
     modalOptionTextDanger: {
       fontSize: 16,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: "#ef4444",
     },
     // Workouts List
@@ -653,7 +655,7 @@ const createStyles = (theme: Theme) =>
     },
     workoutName: {
       fontSize: 18,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
       marginBottom: 4,
     },
@@ -673,7 +675,7 @@ const createStyles = (theme: Theme) =>
     },
     workoutDurationText: {
       fontSize: 13,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.primary.main,
     },
     workoutStatsRow: {
@@ -695,7 +697,7 @@ const createStyles = (theme: Theme) =>
     },
     workoutStatText: {
       fontSize: 13,
-      fontWeight: "500",
+      fontFamily: FONTS.medium,
       color: theme.foreground.gray,
     },
     workoutExercisesTags: {
@@ -712,7 +714,7 @@ const createStyles = (theme: Theme) =>
     workoutExerciseTagText: {
       fontSize: 12,
       color: theme.foreground.white,
-      fontWeight: "500",
+      fontFamily: FONTS.medium,
     },
     workoutExerciseMoreTag: {
       backgroundColor: theme.background.dark,
@@ -724,6 +726,6 @@ const createStyles = (theme: Theme) =>
     workoutExerciseMoreText: {
       fontSize: 12,
       color: theme.foreground.gray,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
     },
   });

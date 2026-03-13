@@ -13,6 +13,8 @@ import { useTranslation } from "react-i18next";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getUserProfile } from "../../data/mockData";
 
+import { FONTS } from "../../constants/fonts";
+
 export default function UserProfile() {
   const { t } = useTranslation();
   const router = useRouter();
@@ -185,7 +187,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     headerTitle: {
       fontSize: 20,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
     },
     spacer: {
@@ -219,7 +221,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     username: {
       fontSize: 18,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
     },
     lockIcon: {
@@ -241,7 +243,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     statNumber: {
       fontSize: 18,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
     },
     statLabel: {
@@ -264,7 +266,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     followButtonText: {
       fontSize: 14,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.background.dark,
     },
     followingButtonText: {
@@ -276,7 +278,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     privateTitle: {
       fontSize: 18,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.white,
       marginTop: 16,
       marginBottom: 8,
@@ -293,7 +295,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     emptyTitle: {
       fontSize: 18,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.white,
       marginTop: 16,
       marginBottom: 8,
@@ -309,7 +311,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     postsTitle: {
       fontSize: 16,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
       marginBottom: 12,
     },
@@ -364,7 +366,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     statText: {
       fontSize: 14,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.white,
     },
   });

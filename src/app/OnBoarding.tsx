@@ -15,6 +15,8 @@ import { useTranslation } from "react-i18next";
 import { useTheme } from "../contexts/ThemeContext";
 import { auth } from "../utils/auth";
 
+import { FONTS } from "../constants/fonts";
+
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 interface OnboardingPage {
@@ -218,7 +220,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     title: {
       fontSize: 32,
-      fontWeight: "normal",
+      fontFamily: FONTS.regular,
       color: theme.foreground.white,
       marginBottom: 16,
       lineHeight: 30,
@@ -230,7 +232,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     titleBold: {
       fontSize: 54,
-      fontWeight: "bold",
+      fontFamily: FONTS.bold,
       color: theme.primary.main,
       lineHeight: 65,
     },
@@ -258,7 +260,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     primaryButtonText: {
       color: theme.background.dark,
       fontSize: 18,
-      fontWeight: "bold",
+      fontFamily: FONTS.bold,
     },
     skipButton: {
       paddingVertical: 12,
@@ -268,7 +270,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     skipButtonText: {
       color: theme.foreground.gray,
       fontSize: 16,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
     },
   });
 

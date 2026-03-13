@@ -24,6 +24,8 @@ import {
   updateScheduleDay,
 } from "../../data/mockData";
 
+import { FONTS } from "../../constants/fonts";
+
 const MY_USER_ID = "1";
 
 function getDayLabel(dateStr: string, t: (key: string) => string): string {
@@ -778,7 +780,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 20,
-    fontWeight: "700",
+    fontFamily: FONTS.bold,
   },
   headerDate: {
     fontSize: 12,
@@ -808,7 +810,7 @@ const styles = StyleSheet.create({
   },
   statusTitle: {
     fontSize: 14,
-    fontWeight: "700",
+    fontFamily: FONTS.bold,
   },
   statusNotes: {
     fontSize: 12,
@@ -830,7 +832,7 @@ const styles = StyleSheet.create({
   },
   restTitle: {
     fontSize: 22,
-    fontWeight: "700",
+    fontFamily: FONTS.bold,
     marginBottom: 10,
   },
   restBody: {
@@ -869,7 +871,7 @@ const styles = StyleSheet.create({
   },
   routineName: {
     fontSize: 20,
-    fontWeight: "700",
+    fontFamily: FONTS.bold,
   },
   routineDesc: {
     fontSize: 13,
@@ -885,7 +887,7 @@ const styles = StyleSheet.create({
   },
   diffText: {
     fontSize: 10,
-    fontWeight: "700",
+    fontFamily: FONTS.bold,
   },
   routineStats: {
     flexDirection: "row",
@@ -900,7 +902,7 @@ const styles = StyleSheet.create({
   },
   routineStatVal: {
     fontSize: 16,
-    fontWeight: "700",
+    fontFamily: FONTS.bold,
   },
   routineStatLabel: {
     fontSize: 9,
@@ -922,11 +924,11 @@ const styles = StyleSheet.create({
   },
   muscleTagText: {
     fontSize: 11,
-    fontWeight: "600",
+    fontFamily: FONTS.semiBold,
   },
   sectionTitle: {
     fontSize: 10,
-    fontWeight: "700",
+    fontFamily: FONTS.bold,
     letterSpacing: 1.5,
     marginBottom: 10,
   },
@@ -952,11 +954,11 @@ const styles = StyleSheet.create({
   },
   exIndexText: {
     fontSize: 12,
-    fontWeight: "700",
+    fontFamily: FONTS.bold,
   },
   exCardName: {
     fontSize: 14,
-    fontWeight: "600",
+    fontFamily: FONTS.semiBold,
     marginBottom: 4,
   },
   exMetaRow: {
@@ -1003,7 +1005,7 @@ const styles = StyleSheet.create({
   },
   setNumText: {
     fontSize: 11,
-    fontWeight: "600",
+    fontFamily: FONTS.semiBold,
   },
   setRepsText: {
     flex: 1,
@@ -1026,7 +1028,7 @@ const styles = StyleSheet.create({
   },
   primaryBtnText: {
     fontSize: 16,
-    fontWeight: "700",
+    fontFamily: FONTS.bold,
     color: "#0B0D0E",
   },
   secondaryBtn: {
@@ -1041,7 +1043,7 @@ const styles = StyleSheet.create({
   },
   secondaryBtnText: {
     fontSize: 14,
-    fontWeight: "600",
+    fontFamily: FONTS.semiBold,
   },
   restDayLink: {
     alignItems: "center",
@@ -1060,7 +1062,7 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 20,
-    fontWeight: "700",
+    fontFamily: FONTS.bold,
   },
   emptyBody: {
     fontSize: 14,

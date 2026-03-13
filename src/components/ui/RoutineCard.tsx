@@ -6,6 +6,8 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { Routine } from "../../data/mockData";
 import { translateRoutineName, translateRoutineDescription, translateExerciseTerm, translateApiData } from "../../utils/exerciseTranslator";
 
+import { FONTS } from "../../constants/fonts";
+
 type Props = {
   routine: Routine;
   onPress?: () => void;
@@ -115,7 +117,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     name: {
       fontSize: 18,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
       flex: 1,
       marginRight: 8,
@@ -136,7 +138,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     difficultyText: {
       fontSize: 10,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.white,
       textTransform: "uppercase",
     },
@@ -158,7 +160,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     statValue: {
       color: theme.foreground.white,
       fontSize: 14,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       marginBottom: 2,
     },
     statLabel: {
@@ -181,7 +183,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     muscleTagText: {
       fontSize: 11,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.primary.main,
       textTransform: "capitalize",
     },
@@ -197,7 +199,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     startButtonText: {
       fontSize: 13,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.background.dark,
     },
   });

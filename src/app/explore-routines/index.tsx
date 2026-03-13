@@ -21,6 +21,8 @@ import {
 } from "../../services/exploreService";
 import { buildActiveWorkoutFromRoutine } from "../../utils/workoutBuilder";
 
+import { FONTS } from "../../constants/fonts";
+
 type DifficultyFilter = "All" | "beginner" | "intermediate" | "advanced";
 type FilterTab = "difficulty" | "category";
 
@@ -214,7 +216,7 @@ const createStyles = (theme: Theme) =>
     },
     headerTitle: {
       fontSize: 20,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
     },
     // Search
@@ -267,7 +269,7 @@ const createStyles = (theme: Theme) =>
     },
     filterButtonText: {
       fontSize: 14,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.white,
     },
     filterBadge: {
@@ -281,7 +283,7 @@ const createStyles = (theme: Theme) =>
     },
     filterBadgeText: {
       fontSize: 11,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.background.dark,
     },
     // Results
@@ -301,7 +303,7 @@ const createStyles = (theme: Theme) =>
     },
     emptyTitle: {
       fontSize: 18,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
     },
     emptySubtitle: {

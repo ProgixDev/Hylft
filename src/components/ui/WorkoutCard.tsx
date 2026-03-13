@@ -7,6 +7,8 @@ import { formatShortDate } from "../../utils/dateFormatter";
 import { translateExerciseName, translateApiData } from "../../utils/exerciseTranslator";
 import { Workout } from "../../data/mockData";
 
+import { FONTS } from "../../constants/fonts";
+
 type Props = {
   workout: Workout;
   onPress?: () => void;
@@ -113,7 +115,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     name: {
       fontSize: 18,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
       marginBottom: 4,
     },
@@ -133,7 +135,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     durationText: {
       fontSize: 13,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.primary.main,
     },
     statsRow: {
@@ -149,7 +151,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     statValue: {
       color: theme.foreground.white,
       fontSize: 16,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
     },
     statLabel: {
       color: theme.foreground.gray,
@@ -182,7 +184,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     moreText: {
       fontSize: 12,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.gray,
     },
     startButton: {
@@ -198,7 +200,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     startButtonText: {
       color: theme.background.dark,
       fontSize: 14,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
     },
   });
 

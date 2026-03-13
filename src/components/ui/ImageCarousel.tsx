@@ -12,6 +12,8 @@ import {
 import { useTheme } from "../../contexts/ThemeContext";
 import LikeableImage from "./LikeableImage";
 
+import { FONTS } from "../../constants/fonts";
+
 type ImageCarouselProps = {
   images: string[];
   onLike: () => void;
@@ -129,7 +131,7 @@ const styles = StyleSheet.create({
   counterText: {
     color: "#FFFFFF",
     fontSize: 12,
-    fontWeight: "600",
+    fontFamily: FONTS.semiBold,
   },
 });
 

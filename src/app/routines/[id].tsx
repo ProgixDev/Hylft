@@ -23,6 +23,8 @@ import {
   translateRoutineName,
 } from "../../utils/exerciseTranslator";
 
+import { FONTS } from "../../constants/fonts";
+
 const DIFFICULTY_COLORS = {
   beginner: { bg: "rgba(34, 197, 94, 0.15)", text: "#22c55e" },
   intermediate: { bg: "rgba(245, 158, 11, 0.15)", text: "#f59e0b" },
@@ -336,7 +338,7 @@ const createStyles = (theme: Theme) =>
     },
     backFallbackText: {
       color: theme.background.dark,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       fontSize: 14,
     },
     // Header
@@ -359,7 +361,7 @@ const createStyles = (theme: Theme) =>
     },
     headerTitle: {
       fontSize: 17,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
       flex: 1,
       textAlign: "center",
@@ -401,7 +403,7 @@ const createStyles = (theme: Theme) =>
     },
     heroName: {
       fontSize: 22,
-      fontWeight: "800",
+      fontFamily: FONTS.extraBold,
       color: theme.foreground.white,
       flex: 1,
     },
@@ -412,7 +414,7 @@ const createStyles = (theme: Theme) =>
     },
     difficultyText: {
       fontSize: 11,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       textTransform: "uppercase",
       letterSpacing: 0.5,
     },
@@ -438,7 +440,7 @@ const createStyles = (theme: Theme) =>
     statValue: {
       color: theme.foreground.white,
       fontSize: 18,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
     },
     statLabel: {
       color: theme.foreground.gray,
@@ -463,7 +465,7 @@ const createStyles = (theme: Theme) =>
     // Section Title
     sectionTitle: {
       fontSize: 18,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
     },
     // Muscles
@@ -484,7 +486,7 @@ const createStyles = (theme: Theme) =>
     muscleTagText: {
       color: theme.primary.main,
       fontSize: 13,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       textTransform: "capitalize",
     },
     // Exercise Cards
@@ -513,12 +515,12 @@ const createStyles = (theme: Theme) =>
     exerciseIndex: {
       color: theme.primary.main,
       fontSize: 13,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
     },
     exerciseName: {
       color: theme.foreground.white,
       fontSize: 16,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       flex: 1,
     },
     exerciseDivider: {
@@ -538,7 +540,7 @@ const createStyles = (theme: Theme) =>
     exerciseMetaValue: {
       color: theme.foreground.white,
       fontSize: 18,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
     },
     exerciseMetaLabel: {
       color: theme.foreground.gray,
@@ -573,7 +575,7 @@ const createStyles = (theme: Theme) =>
     setPreviewValue: {
       color: theme.foreground.white,
       fontSize: 12,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
     },
     // Exercise Notes
     notesContainer: {
@@ -620,6 +622,6 @@ const createStyles = (theme: Theme) =>
     startButtonText: {
       color: theme.background.dark,
       fontSize: 16,
-      fontWeight: "800",
+      fontFamily: FONTS.extraBold,
     },
   });

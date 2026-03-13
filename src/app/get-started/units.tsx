@@ -10,6 +10,8 @@ import {
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
 
+import { FONTS } from "../../constants/fonts";
+
 type UnitOption = {
   label: string;
   value: string;
@@ -155,7 +157,7 @@ function createStyles(theme: Theme) {
     },
     stepText: {
       fontSize: 11,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       letterSpacing: 1.2,
       marginBottom: 8,
     },
@@ -173,7 +175,7 @@ function createStyles(theme: Theme) {
     },
     title: {
       fontSize: 32,
-      fontWeight: "bold",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
       marginVertical: 8,
     },
@@ -190,7 +192,7 @@ function createStyles(theme: Theme) {
     },
     optionTitle: {
       fontSize: 18,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.white,
       marginBottom: 4,
     },
@@ -214,7 +216,7 @@ function createStyles(theme: Theme) {
     },
     optionText: {
       fontSize: 16,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.gray,
     },
     optionTextSelected: {
@@ -230,7 +232,7 @@ function createStyles(theme: Theme) {
     continueButtonText: {
       color: theme.background.dark,
       fontSize: 18,
-      fontWeight: "bold",
+      fontFamily: FONTS.bold,
     },
   });
 }

@@ -13,6 +13,8 @@ import { useTranslation } from "react-i18next";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getNotificationsWithUserData } from "../../data/mockData";
 
+import { FONTS } from "../../constants/fonts";
+
 interface NotificationWithUser {
   id: string;
   type: "like" | "follow" | "comment" | "mention";
@@ -176,7 +178,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     headerTitle: {
       fontSize: 24,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
     },
     spacer: {
@@ -192,7 +194,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     unreadText: {
       fontSize: 14,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.background.dark,
     },
     listContent: {
@@ -220,7 +222,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     avatar: {
       fontSize: 22,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.background.dark,
     },
     contentContainer: {
@@ -234,7 +236,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     username: {
       fontSize: 14,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.white,
       marginBottom: 4,
     },

@@ -4,6 +4,8 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
 
+import { FONTS } from "../../constants/fonts";
+
 function createStyles(theme: Theme) {
   return StyleSheet.create({
     container: {
@@ -17,7 +19,7 @@ function createStyles(theme: Theme) {
     },
     title: {
       fontSize: 32,
-      fontWeight: "bold",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
       marginVertical: 8,
     },
@@ -32,7 +34,7 @@ function createStyles(theme: Theme) {
     },
     stepText: {
       fontSize: 11,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       letterSpacing: 1.2,
       marginBottom: 8,
     },
@@ -62,7 +64,7 @@ function createStyles(theme: Theme) {
     },
     genderText: {
       fontSize: 20,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.gray,
     },
     genderTextSelected: {
@@ -81,7 +83,7 @@ function createStyles(theme: Theme) {
     continueButtonText: {
       color: theme.background.dark,
       fontSize: 18,
-      fontWeight: "bold",
+      fontFamily: FONTS.bold,
     },
   });
 }

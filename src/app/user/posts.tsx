@@ -14,6 +14,8 @@ import ImageCarousel from "../../components/ui/ImageCarousel";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getPostsByUserId, getUserById } from "../../data/mockData";
 
+import { FONTS } from "../../constants/fonts";
+
 interface UserPost {
   id: string;
   images: string[];
@@ -243,7 +245,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     headerTitle: {
       fontSize: 20,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
     },
     spacer: {
@@ -269,7 +271,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     username: {
       fontSize: 14,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.white,
     },
     metricsContainer: {
@@ -290,7 +292,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     metricText: {
       fontSize: 12,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.white,
     },
     postImage: {
@@ -317,7 +319,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     likes: {
       fontSize: 14,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.white,
       marginBottom: 8,
     },
@@ -327,7 +329,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     captionUsername: {
       fontSize: 14,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.white,
     },
     caption: {

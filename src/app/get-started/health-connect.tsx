@@ -11,6 +11,8 @@ import {
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
 
+import { FONTS } from "../../constants/fonts";
+
 export default function HealthConnect() {
   const router = useRouter();
   const { theme } = useTheme();
@@ -135,7 +137,7 @@ const createStyles = (theme: Theme) =>
     },
     stepText: {
       fontSize: 11,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       letterSpacing: 1.2,
       marginBottom: 8,
     },
@@ -158,7 +160,7 @@ const createStyles = (theme: Theme) =>
     },
     title: {
       fontSize: 32,
-      fontWeight: "bold",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
       textAlign: "center",
       marginBottom: 16,
@@ -197,7 +199,7 @@ const createStyles = (theme: Theme) =>
     enableButtonText: {
       color: theme.background.dark,
       fontSize: 18,
-      fontWeight: "bold",
+      fontFamily: FONTS.bold,
     },
     notNowButton: {
       paddingVertical: 18,
@@ -207,6 +209,6 @@ const createStyles = (theme: Theme) =>
     notNowButtonText: {
       color: theme.foreground.white,
       fontSize: 16,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
     },
   });

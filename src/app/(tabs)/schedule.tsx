@@ -29,6 +29,8 @@ import {
   translateRoutineName,
 } from "../../utils/exerciseTranslator";
 
+import { FONTS } from "../../constants/fonts";
+
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const MY_USER_ID = "1";
 
@@ -735,13 +737,13 @@ const styles = StyleSheet.create({
   },
   headerEyebrow: {
     fontSize: 13,
-    fontWeight: "700",
+    fontFamily: FONTS.bold,
     letterSpacing: 0.3,
     textTransform: "capitalize",
   },
   headerTitle: {
     fontSize: 34,
-    fontWeight: "800",
+    fontFamily: FONTS.extraBold,
     letterSpacing: -1,
     marginTop: 4,
   },
@@ -779,13 +781,13 @@ const styles = StyleSheet.create({
   },
   daySwitcherLabel: {
     fontSize: 11,
-    fontWeight: "700",
+    fontFamily: FONTS.bold,
     letterSpacing: 0.8,
     textTransform: "uppercase",
   },
   daySwitcherDate: {
     fontSize: 20,
-    fontWeight: "700",
+    fontFamily: FONTS.bold,
     marginTop: 2,
     letterSpacing: -0.4,
   },
@@ -813,13 +815,13 @@ const styles = StyleSheet.create({
   },
   summaryPillText: {
     fontSize: 11,
-    fontWeight: "700",
+    fontFamily: FONTS.bold,
     letterSpacing: 0.8,
     textTransform: "uppercase",
   },
   summaryTitle: {
     fontSize: 20,
-    fontWeight: "700",
+    fontFamily: FONTS.bold,
     letterSpacing: -0.4,
   },
   summaryCaption: {
@@ -835,7 +837,7 @@ const styles = StyleSheet.create({
   },
   summaryAction: {
     fontSize: 14,
-    fontWeight: "600",
+    fontFamily: FONTS.semiBold,
   },
   carousel: {
     flex: 1,
@@ -875,7 +877,7 @@ const styles = StyleSheet.create({
   },
   cardEyebrow: {
     fontSize: 11,
-    fontWeight: "700",
+    fontFamily: FONTS.bold,
     letterSpacing: 1.1,
     marginBottom: 6,
   },
@@ -890,11 +892,11 @@ const styles = StyleSheet.create({
   },
   statusBadgeText: {
     fontSize: 11,
-    fontWeight: "600",
+    fontFamily: FONTS.semiBold,
   },
   dayName: {
     fontSize: 30,
-    fontWeight: "800",
+    fontFamily: FONTS.extraBold,
     letterSpacing: -0.8,
   },
   dayDate: {
@@ -918,7 +920,7 @@ const styles = StyleSheet.create({
   },
   restTitle: {
     fontSize: 22,
-    fontWeight: "700",
+    fontFamily: FONTS.bold,
     marginBottom: 8,
   },
   restSubtitle: {
@@ -941,7 +943,7 @@ const styles = StyleSheet.create({
   restTipText: {
     flex: 1,
     fontSize: 14,
-    fontWeight: "500",
+    fontFamily: FONTS.medium,
   },
   workoutTitleRow: {
     flexDirection: "row",
@@ -954,7 +956,7 @@ const styles = StyleSheet.create({
   },
   workoutName: {
     fontSize: 22,
-    fontWeight: "700",
+    fontFamily: FONTS.bold,
     letterSpacing: -0.5,
   },
   workoutDesc: {
@@ -971,7 +973,7 @@ const styles = StyleSheet.create({
   },
   diffText: {
     fontSize: 11,
-    fontWeight: "700",
+    fontFamily: FONTS.bold,
     textTransform: "capitalize",
   },
   statsGrid: {
@@ -989,12 +991,12 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 11,
-    fontWeight: "600",
+    fontFamily: FONTS.semiBold,
     lineHeight: 14,
   },
   statValue: {
     fontSize: 19,
-    fontWeight: "700",
+    fontFamily: FONTS.bold,
     letterSpacing: -0.4,
   },
   muscleTags: {
@@ -1010,11 +1012,11 @@ const styles = StyleSheet.create({
   },
   muscleTagText: {
     fontSize: 12,
-    fontWeight: "600",
+    fontFamily: FONTS.semiBold,
   },
   sectionLabel: {
     fontSize: 11,
-    fontWeight: "700",
+    fontFamily: FONTS.bold,
     letterSpacing: 1,
     marginBottom: 10,
   },
@@ -1041,15 +1043,15 @@ const styles = StyleSheet.create({
   },
   exNum: {
     fontSize: 12,
-    fontWeight: "700",
+    fontFamily: FONTS.bold,
   },
   exName: {
     fontSize: 14,
-    fontWeight: "600",
+    fontFamily: FONTS.semiBold,
   },
   exSetsReps: {
     fontSize: 13,
-    fontWeight: "600",
+    fontFamily: FONTS.semiBold,
   },
   exerciseCheck: {
     marginLeft: 2,
@@ -1096,7 +1098,7 @@ const styles = StyleSheet.create({
   },
   detailBtnText: {
     fontSize: 15,
-    fontWeight: "600",
+    fontFamily: FONTS.semiBold,
   },
   startBtn: {
     flex: 1,
@@ -1109,7 +1111,7 @@ const styles = StyleSheet.create({
   },
   startBtnText: {
     fontSize: 15,
-    fontWeight: "700",
+    fontFamily: FONTS.bold,
     color: "#0B0D0E",
   },
 });

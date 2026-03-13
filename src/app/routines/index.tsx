@@ -17,6 +17,8 @@ import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getRoutinesByUserId, Routine } from "../../data/mockData";
 
+import { FONTS } from "../../constants/fonts";
+
 const surfaceShadow = Platform.select({
   ios: {
     shadowColor: "#000000",
@@ -202,7 +204,7 @@ const createStyles = (theme: Theme) =>
     },
     routineName: {
       fontSize: 18,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
       flex: 1,
       marginRight: 8,
@@ -223,7 +225,7 @@ const createStyles = (theme: Theme) =>
     },
     difficultyText: {
       fontSize: 10,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.white,
       textTransform: "uppercase",
     },
@@ -250,7 +252,7 @@ const createStyles = (theme: Theme) =>
     statValue: {
       color: theme.foreground.white,
       fontSize: 16,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       marginBottom: 2,
     },
     statLabel: {
@@ -276,7 +278,7 @@ const createStyles = (theme: Theme) =>
     },
     muscleTagText: {
       fontSize: 12,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.primary.main,
       textTransform: "capitalize",
     },
@@ -291,7 +293,7 @@ const createStyles = (theme: Theme) =>
     },
     startRoutineButtonText: {
       fontSize: 14,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.background.dark,
     },
   });

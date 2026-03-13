@@ -16,6 +16,8 @@ import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
 import { auth } from "../../utils/auth";
 
+import { FONTS } from "../../constants/fonts";
+
 function createStyles(theme: Theme) {
   return StyleSheet.create({
     container: {
@@ -37,7 +39,7 @@ function createStyles(theme: Theme) {
     },
     title: {
       fontSize: 32,
-      fontWeight: "bold",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
       textAlign: "center",
       marginBottom: 8,
@@ -56,7 +58,7 @@ function createStyles(theme: Theme) {
     },
     inputLabel: {
       fontSize: 16,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.white,
       marginBottom: 8,
     },
@@ -77,7 +79,7 @@ function createStyles(theme: Theme) {
     forgotPasswordText: {
       color: theme.primary.main,
       fontSize: 14,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
     },
     signInButton: {
       backgroundColor: theme.primary.main,
@@ -93,7 +95,7 @@ function createStyles(theme: Theme) {
     signInButtonText: {
       color: theme.background.dark,
       fontSize: 16,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
     },
     dividerContainer: {
       flexDirection: "row",
@@ -117,7 +119,7 @@ function createStyles(theme: Theme) {
     signUpButtonText: {
       color: theme.primary.main,
       fontSize: 16,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
     },
   });
 }

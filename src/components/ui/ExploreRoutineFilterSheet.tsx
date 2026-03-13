@@ -13,6 +13,8 @@ import {
 } from "../../services/exploreService";
 import { translateRoutineCategory } from "../../utils/exerciseTranslator";
 
+import { FONTS } from "../../constants/fonts";
+
 type FilterTab = "difficulty" | "category";
 
 interface ExploreRoutineFilterSheetProps {
@@ -225,7 +227,7 @@ const createStyles = (theme: Theme) =>
     },
     title: {
       fontSize: 22,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
     },
     clearButton: {
@@ -233,7 +235,7 @@ const createStyles = (theme: Theme) =>
     },
     clearButtonText: {
       fontSize: 14,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.primary.main,
     },
     tabsContainer: {
@@ -257,7 +259,7 @@ const createStyles = (theme: Theme) =>
     },
     tabText: {
       fontSize: 13,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.gray,
     },
     tabTextActive: {
@@ -291,13 +293,13 @@ const createStyles = (theme: Theme) =>
     },
     chipText: {
       fontSize: 12,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.gray,
       textAlign: "center",
     },
     chipTextActive: {
       color: theme.background.dark,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
     },
     footerSpacer: {
       height: 40,

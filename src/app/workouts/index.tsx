@@ -14,6 +14,8 @@ import { useActiveWorkout } from "../../contexts/ActiveWorkoutContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getWorkoutsByUserId, Workout } from "../../data/mockData";
 
+import { FONTS } from "../../constants/fonts";
+
 export default function AllWorkouts() {
   const { theme } = useTheme();
   const styles = createStyles(theme);
@@ -136,7 +138,7 @@ const createStyles = (theme: Theme) =>
     },
     headerTitle: {
       fontSize: 20,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
     },
     content: {
@@ -175,7 +177,7 @@ const createStyles = (theme: Theme) =>
     },
     workoutName: {
       fontSize: 18,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
       marginBottom: 4,
     },
@@ -194,7 +196,7 @@ const createStyles = (theme: Theme) =>
     },
     durationText: {
       fontSize: 12,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.primary.main,
     },
     divider: {
@@ -213,7 +215,7 @@ const createStyles = (theme: Theme) =>
     statValue: {
       color: theme.foreground.white,
       fontSize: 16,
-      fontWeight: "700", // Bolder value
+      fontFamily: FONTS.bold, // Bolder value
     },
     statLabel: {
       color: theme.foreground.gray,
@@ -251,7 +253,7 @@ const createStyles = (theme: Theme) =>
     },
     moreTagText: {
       fontSize: 12,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.gray,
     },
   });

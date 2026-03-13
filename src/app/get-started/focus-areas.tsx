@@ -12,6 +12,8 @@ import {
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
 
+import { FONTS } from "../../constants/fonts";
+
 interface MuscleGroup {
   id: string;
   icon: keyof typeof Ionicons.glyphMap;
@@ -170,7 +172,7 @@ export default function FocusAreas() {
             >
               Your workouts will emphasize{" "}
               <Text
-                style={{ color: theme.foreground.white, fontWeight: "600" }}
+                style={{ color: theme.foreground.white, fontFamily: FONTS.semiBold }}
               >
                 {selected
                   .map(
@@ -216,7 +218,7 @@ function createStyles(theme: Theme) {
     },
     stepText: {
       fontSize: 11,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       letterSpacing: 1.2,
       marginBottom: 8,
     },
@@ -231,7 +233,7 @@ function createStyles(theme: Theme) {
     },
     title: {
       fontSize: 30,
-      fontWeight: "bold",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
       marginBottom: 8,
     },
@@ -262,7 +264,7 @@ function createStyles(theme: Theme) {
     chipLabel: {
       flex: 1,
       fontSize: 15,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
     },
     selectedCount: {
       textAlign: "center",
@@ -295,7 +297,7 @@ function createStyles(theme: Theme) {
     continueButtonText: {
       color: theme.background.dark,
       fontSize: 18,
-      fontWeight: "bold",
+      fontFamily: FONTS.bold,
     },
   });
 }

@@ -15,6 +15,8 @@ import {
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
 
+import { FONTS } from "../../constants/fonts";
+
 export default function BodyMetrics() {
   const router = useRouter();
   const { theme } = useTheme();
@@ -285,7 +287,7 @@ function createStyles(theme: Theme) {
     },
     stepText: {
       fontSize: 11,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       letterSpacing: 1.2,
       marginBottom: 8,
     },
@@ -300,7 +302,7 @@ function createStyles(theme: Theme) {
     },
     title: {
       fontSize: 30,
-      fontWeight: "bold",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
       marginBottom: 8,
     },
@@ -315,7 +317,7 @@ function createStyles(theme: Theme) {
     },
     fieldLabel: {
       fontSize: 15,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       marginBottom: 8,
     },
     fieldLabelRow: {
@@ -340,12 +342,12 @@ function createStyles(theme: Theme) {
     input: {
       flex: 1,
       fontSize: 18,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       padding: 0,
     },
     unitLabel: {
       fontSize: 14,
-      fontWeight: "500",
+      fontFamily: FONTS.medium,
     },
     infoBox: {
       flexDirection: "row",
@@ -373,7 +375,7 @@ function createStyles(theme: Theme) {
     continueButtonText: {
       color: theme.background.dark,
       fontSize: 18,
-      fontWeight: "bold",
+      fontFamily: FONTS.bold,
     },
   });
 }

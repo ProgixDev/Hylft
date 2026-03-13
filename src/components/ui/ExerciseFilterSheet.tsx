@@ -3,6 +3,7 @@ import React, { Dispatch, forwardRef, SetStateAction, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Theme } from "../../constants/themes";
+import { FONTS } from "../../constants/fonts";
 import { useTheme } from "../../contexts/ThemeContext";
 import { Difficulty } from "../../services/exerciseDbApi";
 
@@ -217,7 +218,7 @@ const createStyles = (theme: Theme) =>
     },
     title: {
       fontSize: 22,
-      fontFamily: "Poppins-SemiBold",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.white,
     },
     clearButton: {
@@ -225,7 +226,7 @@ const createStyles = (theme: Theme) =>
     },
     clearButtonText: {
       fontSize: 14,
-      fontFamily: "Poppins-Medium",
+      fontFamily: FONTS.medium,
       color: theme.primary.main,
     },
     tabsContainer: {
@@ -249,7 +250,7 @@ const createStyles = (theme: Theme) =>
     },
     tabText: {
       fontSize: 13,
-      fontFamily: "Poppins-Medium",
+      fontFamily: FONTS.medium,
       color: theme.foreground.gray,
     },
     tabTextActive: {
@@ -284,13 +285,13 @@ const createStyles = (theme: Theme) =>
     },
     chipText: {
       fontSize: 12,
-      fontFamily: "Poppins-Medium",
+      fontFamily: FONTS.medium,
       color: theme.foreground.gray,
       textAlign: "center",
     },
     chipTextActive: {
       color: theme.background.dark,
-      fontFamily: "Poppins-SemiBold",
+      fontFamily: FONTS.semiBold,
     },
     footerSpacer: {
       height: 40,

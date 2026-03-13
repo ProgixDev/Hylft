@@ -6,6 +6,8 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
 
+import { FONTS } from "../../constants/fonts";
+
 interface LevelOption {
   id: string;
   icon: keyof typeof Ionicons.glyphMap;
@@ -217,7 +219,7 @@ function createStyles(theme: Theme) {
     },
     stepText: {
       fontSize: 11,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       letterSpacing: 1.2,
       marginBottom: 8,
     },
@@ -232,7 +234,7 @@ function createStyles(theme: Theme) {
     },
     title: {
       fontSize: 30,
-      fontWeight: "bold",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
       marginBottom: 8,
     },
@@ -274,11 +276,11 @@ function createStyles(theme: Theme) {
     },
     levelLabel: {
       fontSize: 16,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
     },
     timeframe: {
       fontSize: 11,
-      fontWeight: "500",
+      fontFamily: FONTS.medium,
     },
     levelDesc: {
       fontSize: 12,
@@ -310,7 +312,7 @@ function createStyles(theme: Theme) {
     continueButtonText: {
       color: theme.background.dark,
       fontSize: 18,
-      fontWeight: "bold",
+      fontFamily: FONTS.bold,
     },
   });
 }

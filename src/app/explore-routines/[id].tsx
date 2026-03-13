@@ -21,6 +21,8 @@ import {
 } from "../../services/exploreService";
 import { buildActiveWorkoutFromRoutine } from "../../utils/workoutBuilder";
 
+import { FONTS } from "../../constants/fonts";
+
 const REST_LABEL = (s: number) => {
   if (s < 60) return `${s}s`;
   const m = Math.floor(s / 60);
@@ -290,7 +292,7 @@ const createStyles = (theme: Theme) =>
     },
     backLink: {
       color: theme.primary.main,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
     },
     // Header
     header: {
@@ -308,7 +310,7 @@ const createStyles = (theme: Theme) =>
     },
     headerTitle: {
       fontSize: 18,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
       flex: 1,
       textAlign: "center",
@@ -336,7 +338,7 @@ const createStyles = (theme: Theme) =>
     },
     badgeText: {
       fontSize: 11,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       textTransform: "uppercase",
     },
     categoryBadge: {
@@ -349,12 +351,12 @@ const createStyles = (theme: Theme) =>
     },
     categoryBadgeText: {
       fontSize: 11,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.primary.main,
     },
     routineName: {
       fontSize: 26,
-      fontWeight: "800",
+      fontFamily: FONTS.extraBold,
       color: theme.foreground.white,
       marginBottom: 4,
       lineHeight: 32,
@@ -383,7 +385,7 @@ const createStyles = (theme: Theme) =>
     },
     tagText: {
       fontSize: 11,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.gray,
     },
     // Stats card
@@ -410,7 +412,7 @@ const createStyles = (theme: Theme) =>
     },
     statValue: {
       fontSize: 17,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
     },
     statLabel: {
@@ -424,7 +426,7 @@ const createStyles = (theme: Theme) =>
     },
     sectionTitle: {
       fontSize: 16,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
       marginBottom: 12,
     },
@@ -444,7 +446,7 @@ const createStyles = (theme: Theme) =>
     },
     muscleTagText: {
       fontSize: 12,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.primary.main,
     },
     // Exercises list
@@ -469,7 +471,7 @@ const createStyles = (theme: Theme) =>
     },
     exerciseIndexText: {
       fontSize: 12,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.gray,
     },
     exerciseInfo: {
@@ -477,7 +479,7 @@ const createStyles = (theme: Theme) =>
     },
     exerciseName: {
       fontSize: 14,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.white,
       marginBottom: 2,
     },
@@ -525,7 +527,7 @@ const createStyles = (theme: Theme) =>
     },
     ctaSecondaryText: {
       fontSize: 14,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
     },
     ctaPrimary: {
@@ -533,7 +535,7 @@ const createStyles = (theme: Theme) =>
     },
     ctaPrimaryText: {
       fontSize: 14,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.background.dark,
     },
   });

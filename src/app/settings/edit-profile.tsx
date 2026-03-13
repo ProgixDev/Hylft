@@ -18,6 +18,8 @@ import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getUserById } from "../../data/mockData";
 
+import { FONTS } from "../../constants/fonts";
+
 const MY_USER_ID = "1";
 const KEYS = {
   displayName: "@hylift_display_name",
@@ -42,7 +44,7 @@ function createStyles(theme: Theme) {
     backBtn: { padding: 6, marginRight: 8 },
     headerTitle: {
       fontSize: 20,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
     },
     saveBtn: {
@@ -53,7 +55,7 @@ function createStyles(theme: Theme) {
     },
     saveBtnText: {
       fontSize: 14,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.background.dark,
     },
     avatarSection: {
@@ -83,14 +85,14 @@ function createStyles(theme: Theme) {
     },
     changePhotoText: {
       fontSize: 14,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.primary.main,
     },
     form: { paddingHorizontal: 16, paddingTop: 8, gap: 4 },
     fieldGroup: { marginTop: 20 },
     fieldLabel: {
       fontSize: 12,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.gray,
       marginBottom: 8,
       textTransform: "uppercase",
@@ -123,7 +125,7 @@ function createStyles(theme: Theme) {
     },
     sectionLabel: {
       fontSize: 12,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.gray,
       textTransform: "uppercase",
       letterSpacing: 0.6,

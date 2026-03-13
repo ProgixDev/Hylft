@@ -18,6 +18,8 @@ import {
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
 
+import { FONTS } from "../../constants/fonts";
+
 const MAX_IMAGES = 6;
 const AUTHOR_AVATAR = "https://i.pravatar.cc/150?img=12";
 const AUTHOR_USERNAME = "alex_shred";
@@ -350,7 +352,7 @@ const createStyles = (theme: Theme) =>
     },
     headerTitle: {
       fontSize: 17,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
     },
     postBtn: {
@@ -364,7 +366,7 @@ const createStyles = (theme: Theme) =>
     },
     postBtnText: {
       fontSize: 14,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.background.dark,
     },
     postBtnTextDisabled: {
@@ -390,7 +392,7 @@ const createStyles = (theme: Theme) =>
     },
     authorName: {
       fontSize: 15,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
     },
     authorTime: {
@@ -418,7 +420,7 @@ const createStyles = (theme: Theme) =>
     },
     workoutNameText: {
       fontSize: 13,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.primary.main,
       maxWidth: 220,
     },
@@ -430,7 +432,7 @@ const createStyles = (theme: Theme) =>
     },
     sectionTitle: {
       fontSize: 15,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
     },
     sectionCount: {
@@ -478,7 +480,7 @@ const createStyles = (theme: Theme) =>
     },
     addImageText: {
       fontSize: 11,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.primary.main,
     },
     statsRow: {
@@ -497,7 +499,7 @@ const createStyles = (theme: Theme) =>
     },
     bottomPostBtnText: {
       fontSize: 16,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.background.dark,
     },
   });
@@ -528,7 +530,7 @@ const chipStyles = (theme: Theme) =>
     },
     chipValue: {
       fontSize: 15,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
       textAlign: "center",
     },
@@ -537,7 +539,7 @@ const chipStyles = (theme: Theme) =>
     },
     chipLabel: {
       fontSize: 11,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.gray,
       textTransform: "uppercase",
       textAlign: "center",

@@ -19,6 +19,8 @@ import {
     User,
 } from "../../../data/mockData";
 
+import { FONTS } from "../../../constants/fonts";
+
 function createStyles(theme: Theme) {
   return StyleSheet.create({
     container: {
@@ -40,7 +42,7 @@ function createStyles(theme: Theme) {
     },
     headerTitle: {
       fontSize: 20,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
     },
     // tab bar
@@ -61,7 +63,7 @@ function createStyles(theme: Theme) {
     },
     tabText: {
       fontSize: 15,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.gray,
     },
     tabTextActive: {
@@ -85,7 +87,7 @@ function createStyles(theme: Theme) {
     },
     userName: {
       fontSize: 16,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.white,
       marginBottom: 2,
     },
@@ -103,7 +105,7 @@ function createStyles(theme: Theme) {
     },
     followBtnText: {
       fontSize: 13,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.primary.main,
     },
     followingBtn: {
@@ -124,7 +126,7 @@ function createStyles(theme: Theme) {
     },
     emptyTitle: {
       fontSize: 18,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.white,
       marginBottom: 8,
     },

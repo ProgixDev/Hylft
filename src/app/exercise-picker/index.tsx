@@ -31,6 +31,8 @@ import {
 } from "../../services/exerciseDbApi";
 import { translateExerciseName, translateExerciseTerm } from "../../utils/exerciseTranslator";
 
+import { FONTS } from "../../constants/fonts";
+
 const DIFFICULTY_COLORS: Record<Difficulty, string> = {
   beginner: "#4CAF50",
   intermediate: "#FF9800",
@@ -535,7 +537,7 @@ const createStyles = (theme: Theme) =>
       paddingBottom: 16,
     },
     backButton: { padding: 8, borderRadius: 8 },
-    title: { fontSize: 20, fontWeight: "700", color: theme.foreground.white },
+    title: { fontSize: 20, fontFamily: FONTS.bold, color: theme.foreground.white },
     // Search row
     searchRow: {
       flexDirection: "row",
@@ -585,7 +587,7 @@ const createStyles = (theme: Theme) =>
     },
     filterBadgeText: {
       fontSize: 9,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.primary.main,
     },
     // Exercise list
@@ -638,7 +640,7 @@ const createStyles = (theme: Theme) =>
     },
     addSelectedText: {
       fontSize: 16,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.background.dark,
     },
     exerciseThumbnailPlaceholder: {
@@ -652,7 +654,7 @@ const createStyles = (theme: Theme) =>
     exerciseInfo: { flex: 1, gap: 3 },
     exerciseName: {
       fontSize: 15,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
       textTransform: "capitalize",
     },
@@ -670,7 +672,7 @@ const createStyles = (theme: Theme) =>
     exerciseEquipment: {
       fontSize: 11,
       color: theme.primary.main,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       textTransform: "capitalize",
     },
     difficultyPill: {
@@ -681,7 +683,7 @@ const createStyles = (theme: Theme) =>
     },
     difficultyPillText: {
       fontSize: 10,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       textTransform: "capitalize",
     },
     centered: {
@@ -702,6 +704,6 @@ const createStyles = (theme: Theme) =>
     emptyResetText: {
       fontSize: 14,
       color: theme.primary.main,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
     },
   });

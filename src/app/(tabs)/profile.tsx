@@ -31,6 +31,8 @@ import {
   translateRoutineName,
 } from "../../utils/exerciseTranslator";
 
+import { FONTS } from "../../constants/fonts";
+
 // The currently authenticated user
 const MY_USER_ID = "1";
 
@@ -76,7 +78,7 @@ function createStyles(theme: Theme) {
     },
     headerTitle: {
       fontSize: 18,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
       letterSpacing: -0.3,
     },
@@ -161,7 +163,7 @@ function createStyles(theme: Theme) {
     },
     username: {
       fontSize: 24,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
       marginBottom: 6,
       letterSpacing: -0.4,
@@ -195,7 +197,7 @@ function createStyles(theme: Theme) {
     },
     primaryActionText: {
       fontSize: 15,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.background.dark,
     },
     statsRow: {
@@ -223,7 +225,7 @@ function createStyles(theme: Theme) {
     },
     statNumber: {
       fontSize: 18,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
       letterSpacing: -0.3,
     },
@@ -262,7 +264,7 @@ function createStyles(theme: Theme) {
     },
     fitnessValue: {
       fontSize: 18,
-      fontWeight: "800",
+      fontFamily: FONTS.extraBold,
       letterSpacing: -0.4,
     },
     fitnessLabel: {
@@ -298,7 +300,7 @@ function createStyles(theme: Theme) {
     },
     tabText: {
       fontSize: 13,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.gray,
       letterSpacing: 0.1,
     },
@@ -351,7 +353,7 @@ function createStyles(theme: Theme) {
     },
     emptyText: {
       fontSize: 18,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.white,
       marginTop: 14,
       marginBottom: 6,
@@ -395,7 +397,7 @@ function createStyles(theme: Theme) {
     },
     routineName: {
       fontSize: 16,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
       marginBottom: 5,
       letterSpacing: -0.3,
@@ -412,7 +414,7 @@ function createStyles(theme: Theme) {
     },
     difficultyText: {
       fontSize: 11,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
     },
     routineChevron: {
       width: 30,

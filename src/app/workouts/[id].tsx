@@ -15,6 +15,8 @@ import { formatDate } from "../../utils/dateFormatter";
 import { translateExerciseName, translateApiData } from "../../utils/exerciseTranslator";
 import { getWorkoutById } from "../../data/mockData";
 
+import { FONTS } from "../../constants/fonts";
+
 export default function WorkoutDetail() {
   const { t, i18n } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -256,7 +258,7 @@ const createStyles = (theme: Theme) =>
     },
     backFallbackText: {
       color: theme.background.dark,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       fontSize: 14,
     },
     header: {
@@ -274,7 +276,7 @@ const createStyles = (theme: Theme) =>
     },
     headerTitle: {
       fontSize: 18,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
       flex: 1,
       textAlign: "center",
@@ -328,7 +330,7 @@ const createStyles = (theme: Theme) =>
     statCardValue: {
       color: theme.foreground.white,
       fontSize: 20,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
     },
     statCardLabel: {
       color: theme.foreground.gray,
@@ -337,7 +339,7 @@ const createStyles = (theme: Theme) =>
     // Section
     sectionTitle: {
       fontSize: 18,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
       marginTop: 4,
     },
@@ -364,12 +366,12 @@ const createStyles = (theme: Theme) =>
     exerciseIndex: {
       color: theme.primary.main,
       fontSize: 13,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
     },
     exerciseName: {
       color: theme.foreground.white,
       fontSize: 16,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
       flex: 1,
     },
     exerciseDivider: {
@@ -390,7 +392,7 @@ const createStyles = (theme: Theme) =>
     exerciseMetaValue: {
       color: theme.foreground.white,
       fontSize: 18,
-      fontWeight: "700",
+      fontFamily: FONTS.bold,
     },
     exerciseMetaLabel: {
       color: theme.foreground.gray,
@@ -428,7 +430,7 @@ const createStyles = (theme: Theme) =>
     setNumberText: {
       color: theme.foreground.gray,
       fontSize: 11,
-      fontWeight: "600",
+      fontFamily: FONTS.semiBold,
     },
     setDetail: {
       color: theme.foreground.white,
