@@ -1,4 +1,4 @@
-﻿import { Ionicons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import {
@@ -14,17 +14,6 @@ import Post, { PostData } from "../../components/ui/Post";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
 import { addPostsListener, getPostsWithUserData } from "../../data/mockData";
-
-const surfaceShadow = Platform.select({
-  ios: {
-    shadowColor: "#000000",
-    shadowOpacity: 0.2,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 10 },
-  },
-  android: { elevation: 8 },
-  default: {},
-});
 
 const controlShadow = Platform.select({
   ios: {

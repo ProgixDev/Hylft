@@ -1,7 +1,6 @@
-﻿import { Ionicons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Theme } from "../../constants/themes";
 import { useActiveWorkout } from "../../contexts/ActiveWorkoutContext";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -15,7 +14,6 @@ interface MiniWorkoutPlayerProps {
 export const MiniWorkoutPlayer: React.FC<MiniWorkoutPlayerProps> = ({
   onExpand,
 }) => {
-  const insets = useSafeAreaInsets();
   const { theme } = useTheme();
   const { activeWorkout, discardWorkout } = useActiveWorkout();
   const styles = createStyles(theme);

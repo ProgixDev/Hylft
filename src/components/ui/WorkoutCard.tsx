@@ -23,7 +23,7 @@ const WorkoutCard = ({
   onStart,
   fullWidth = false,
 }: Props) => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const styles = createStyles(theme);
 

@@ -151,7 +151,7 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
           },
         ],
       );
-    }, [discardWorkout, setIsExpanded]);
+    }, [discardWorkout, setIsExpanded, t]);
 
     const handleSave = useCallback(() => {
       setTempWorkoutName(`Workout ${formatDisplayDate(new Date())}`);
@@ -482,7 +482,7 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
           </View>
         );
       },
-      [renderSetRow, addSetToExercise, styles, theme],
+      [renderSetRow, addSetToExercise, styles, theme, t],
     );
 
     if (!activeWorkout) return null;

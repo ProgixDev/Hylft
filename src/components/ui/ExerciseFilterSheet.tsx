@@ -49,7 +49,7 @@ const ExerciseFilterSheet = forwardRef<BottomSheet, ExerciseFilterSheetProps>(
     },
     ref,
   ) => {
-    const { t, i18n } = useTranslation();
+    const { t } = useTranslation();
     const { theme } = useTheme();
     const styles = createStyles(theme);
     const snapPoints = useMemo(() => ["100%"], []); // full-screen like ActiveWorkoutSheet

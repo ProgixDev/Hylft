@@ -3,6 +3,8 @@
  * Run with: npx ts-node scripts/fetch-all-exercise-terms.ts
  */
 
+import { writeFileSync } from "fs";
+
 const EXERCISEDB_BASE = "https://oss.exercisedb.dev";
 
 interface ApiExercise {
@@ -153,7 +155,6 @@ async function main() {
   console.log(JSON.stringify(sortedExerciseNames.slice(0, 50), null, 2));
 
   // Save to file
-  const fs = require("fs");
   const output = {
     bodyParts: sortedBodyParts,
     equipments: sortedEquipments,
@@ -163,7 +164,7 @@ async function main() {
     totalExercises: exercises.length,
   };
 
-  fs.writeFileSync(
+  writeFileSync(
     "scripts/exercise-terms.json",
     JSON.stringify(output, null, 2)
   );

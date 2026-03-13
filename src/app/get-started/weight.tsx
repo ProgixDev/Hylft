@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import ScrollWheelPicker from "../../components/ui/ScrollWheelPicker";
 import { FONTS } from "../../constants/fonts";
 import { Theme } from "../../constants/themes";

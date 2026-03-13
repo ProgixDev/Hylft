@@ -18,7 +18,7 @@ import { getWorkoutById } from "../../data/mockData";
 import { FONTS } from "../../constants/fonts";
 
 export default function WorkoutDetail() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { theme } = useTheme();
   const styles = createStyles(theme);

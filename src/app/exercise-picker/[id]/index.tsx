@@ -55,7 +55,7 @@ const DIFFICULTY_CONFIG: Record<
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function ExerciseDetailPage() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const router = useRouter();
   const { theme } = useTheme();
   const { exercise } = useLocalSearchParams<{ exercise: string }>();

@@ -61,7 +61,7 @@ const controlShadow = Platform.select({
 export default function RoutineDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { theme } = useTheme();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const styles = createStyles(theme);
   const router = useRouter();
   const { startWorkout } = useActiveWorkout();
