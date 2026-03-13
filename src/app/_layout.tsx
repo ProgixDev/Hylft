@@ -1,5 +1,6 @@
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
+import { StatusBar } from "expo-status-bar";
 import React from "react";
 import { ActivityIndicator, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -30,33 +31,37 @@ function AppContent() {
   }
 
   return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-        contentStyle: { backgroundColor: "#0B0D0E" },
-      }}
-    >
-      <Stack.Screen name="index" />
-      <Stack.Screen name="OnBoarding" />
-      <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="exercise-picker/index" />
-      <Stack.Screen name="create-routine/index" />
-      <Stack.Screen name="settings/index" />
-      <Stack.Screen name="settings/edit-profile" />
-      <Stack.Screen name="settings/change-password" />
-      <Stack.Screen name="settings/help-center" />
-      <Stack.Screen name="settings/about" />
-      <Stack.Screen name="settings/terms" />
-      <Stack.Screen name="settings/privacy" />
-      <Stack.Screen name="user/follows/[id]" />
-      <Stack.Screen name="schedule/[date]" />
-      <Stack.Screen name="get-started/fitness-goal" />
-      <Stack.Screen name="get-started/experience-level" />
-      <Stack.Screen name="get-started/body-metrics" />
-      <Stack.Screen name="get-started/workout-frequency" />
-      <Stack.Screen name="get-started/focus-areas" />
-      <Stack.Screen name="share-workout/index" />
-    </Stack>
+    <>
+      <StatusBar style="light" translucent backgroundColor="transparent" />
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: "#0B0D0E" },
+          statusBarStyle: "light",
+        }}
+      >
+        <Stack.Screen name="index" />
+        <Stack.Screen name="OnBoarding" />
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="exercise-picker/index" />
+        <Stack.Screen name="create-routine/index" />
+        <Stack.Screen name="settings/index" />
+        <Stack.Screen name="settings/edit-profile" />
+        <Stack.Screen name="settings/change-password" />
+        <Stack.Screen name="settings/help-center" />
+        <Stack.Screen name="settings/about" />
+        <Stack.Screen name="settings/terms" />
+        <Stack.Screen name="settings/privacy" />
+        <Stack.Screen name="user/follows/[id]" />
+        <Stack.Screen name="schedule/[date]" />
+        <Stack.Screen name="get-started/fitness-goal" />
+        <Stack.Screen name="get-started/experience-level" />
+        <Stack.Screen name="get-started/body-metrics" />
+        <Stack.Screen name="get-started/workout-frequency" />
+        <Stack.Screen name="get-started/focus-areas" />
+        <Stack.Screen name="share-workout/index" />
+      </Stack>
+    </>
   );
 }
 

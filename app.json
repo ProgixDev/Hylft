@@ -7,7 +7,6 @@
     "icon": "./assets/images/icon.png",
     "scheme": "hylift",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "platforms": ["ios", "android"],
     "experiments": {
       "typedRoutes": true,
@@ -17,16 +16,19 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.anonymous.hylift",
       "infoPlist": {
-        "UIStatusBarHidden": true,
-        "UIViewControllerBasedStatusBarAppearance": false
+        "UIViewControllerBasedStatusBarAppearance": true
       }
+    },
+    "androidStatusBar": {
+      "translucent": true,
+      "backgroundColor": "#00000000",
+      "barStyle": "light-content"
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/Logo.png"
       },
-      "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "config": {
         "googleMaps": {

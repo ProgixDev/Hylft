@@ -9,16 +9,11 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  UIManager,
   View,
 } from "react-native";
 import { useTranslation } from "react-i18next";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
-
-if (Platform.OS === "android") {
-  UIManager.setLayoutAnimationEnabledExperimental?.(true);
-}
 
 const FAQ_DATA = [
   {
