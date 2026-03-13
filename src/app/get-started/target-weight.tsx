@@ -7,6 +7,7 @@ import ScrollWheelPicker from "../../components/ui/ScrollWheelPicker";
 import { FONTS } from "../../constants/fonts";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
+import ChipButton from "../../components/ui/ChipButton";
 
 export default function TargetWeightScreen() {
   const router = useRouter();
@@ -75,13 +76,13 @@ export default function TargetWeightScreen() {
         </View>
       </View>
 
-      <TouchableOpacity
-        style={styles.continueButton}
+      <ChipButton
+        title={t("common.next")}
         onPress={handleContinue}
-        activeOpacity={0.8}
-      >
-        <Text style={styles.continueButtonText}>{t("common.next")}</Text>
-      </TouchableOpacity>
+        variant="primary"
+        size="lg"
+        fullWidth
+      />
       <TouchableOpacity
         style={styles.skipButton}
         onPress={handleSkip}

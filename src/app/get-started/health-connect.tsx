@@ -12,6 +12,7 @@ import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
 
 import { FONTS } from "../../constants/fonts";
+import ChipButton from "../../components/ui/ChipButton";
 
 export default function HealthConnect() {
   const router = useRouter();
@@ -100,13 +101,13 @@ export default function HealthConnect() {
       </ScrollView>
 
       <View style={styles.buttonsContainer}>
-        <TouchableOpacity
-          style={styles.enableButton}
+        <ChipButton
+          title="Enable Health Connect"
           onPress={handleEnableHealthConnect}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.enableButtonText}>Enable Health Connect</Text>
-        </TouchableOpacity>
+          variant="primary"
+          size="lg"
+          fullWidth
+        />
 
         <TouchableOpacity
           style={styles.notNowButton}

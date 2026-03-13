@@ -7,6 +7,7 @@ import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
 
 import { FONTS } from "../../constants/fonts";
+import ChipButton from "../../components/ui/ChipButton";
 
 interface LevelOption {
   id: string;
@@ -190,17 +191,14 @@ export default function ExperienceLevel() {
         </View>
       </View>
 
-      <TouchableOpacity
-        style={[
-          styles.continueButton,
-          !selected && styles.continueButtonDisabled,
-        ]}
+      <ChipButton
+        title="Continue"
         onPress={handleContinue}
-        activeOpacity={0.8}
+        variant="primary"
+        size="lg"
+        fullWidth
         disabled={!selected}
-      >
-        <Text style={styles.continueButtonText}>Continue</Text>
-      </TouchableOpacity>
+      />
     </View>
   );
 }

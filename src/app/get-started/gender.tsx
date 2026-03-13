@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
+import ChipButton from "../../components/ui/ChipButton";
 
 import { FONTS } from "../../constants/fonts";
 
@@ -166,17 +167,14 @@ export default function GenderSelection() {
         </View>
       </View>
 
-      <TouchableOpacity
-        style={[
-          styles.continueButton,
-          !selectedGender && styles.continueButtonDisabled,
-        ]}
+      <ChipButton
+        title="Continue"
         onPress={handleContinue}
+        variant="primary"
+        size="lg"
+        fullWidth
         disabled={!selectedGender}
-        activeOpacity={0.8}
-      >
-        <Text style={styles.continueButtonText}>Continue</Text>
-      </TouchableOpacity>
+      />
     </View>
   );
 }

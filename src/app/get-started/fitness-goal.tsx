@@ -13,6 +13,7 @@ import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
 
 import { FONTS } from "../../constants/fonts";
+import ChipButton from "../../components/ui/ChipButton";
 
 interface GoalOption {
   id: string;
@@ -200,17 +201,14 @@ export default function FitnessGoal() {
         )}
       </ScrollView>
 
-      <TouchableOpacity
-        style={[
-          styles.continueButton,
-          selected.length === 0 && styles.continueButtonDisabled,
-        ]}
+      <ChipButton
+        title="Continue"
         onPress={handleContinue}
-        activeOpacity={0.8}
+        variant="primary"
+        size="lg"
+        fullWidth
         disabled={selected.length === 0}
-      >
-        <Text style={styles.continueButtonText}>Continue</Text>
-      </TouchableOpacity>
+      />
     </View>
   );
 }

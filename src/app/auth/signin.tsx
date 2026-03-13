@@ -17,6 +17,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { auth } from "../../utils/auth";
 
 import { FONTS } from "../../constants/fonts";
+import ChipButton from "../../components/ui/ChipButton";
 
 function createStyles(theme: Theme) {
   return StyleSheet.create({
@@ -213,16 +214,17 @@ export default function SignIn() {
             <Text style={styles.forgotPasswordText}>{t("auth.forgotPassword")}</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.signInButton, isLoading && styles.disabledButton]}
-            onPress={handleSignIn}
-            disabled={isLoading}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.signInButtonText}>
-              {isLoading ? t("auth.signingIn") : t("auth.signIn")}
-            </Text>
-          </TouchableOpacity>
+          <View style={{ marginBottom: 24 }}>
+            <ChipButton
+              title={isLoading ? t("auth.signingIn") : t("auth.signIn")}
+              onPress={handleSignIn}
+              variant="primary"
+              size="lg"
+              fullWidth
+              disabled={isLoading}
+              loading={isLoading}
+            />
+          </View>
 
           <View style={styles.dividerContainer}>
             <View style={styles.divider} />

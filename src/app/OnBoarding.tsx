@@ -16,6 +16,7 @@ import { useTheme } from "../contexts/ThemeContext";
 import { auth } from "../utils/auth";
 
 import { FONTS } from "../constants/fonts";
+import ChipButton from "../components/ui/ChipButton";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -144,15 +145,15 @@ export default function OnBoarding() {
 
               {/* Buttons positioned over image */}
               <View style={styles.buttonContainer}>
-                <TouchableOpacity
-                  style={styles.primaryButton}
-                  onPress={handleNext}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.primaryButtonText}>
-                    {ONBOARDING_DATA[currentPage].buttonText}
-                  </Text>
-                </TouchableOpacity>
+                <View style={{ marginBottom: 16 }}>
+                  <ChipButton
+                    title={ONBOARDING_DATA[currentPage].buttonText}
+                    onPress={handleNext}
+                    variant="primary"
+                    size="lg"
+                    fullWidth
+                  />
+                </View>
 
                 <TouchableOpacity
                   style={styles.skipButton}

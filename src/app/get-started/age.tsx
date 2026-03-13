@@ -6,6 +6,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import ScrollWheelPicker from "../../components/ui/ScrollWheelPicker";
 import { FONTS } from "../../constants/fonts";
 import { Theme } from "../../constants/themes";
+import ChipButton from "../../components/ui/ChipButton";
 import { useTheme } from "../../contexts/ThemeContext";
 
 export default function AgeScreen() {
@@ -54,13 +55,13 @@ export default function AgeScreen() {
         </View>
       </View>
 
-      <TouchableOpacity
-        style={styles.continueButton}
+      <ChipButton
+        title={t("common.next")}
         onPress={handleContinue}
-        activeOpacity={0.8}
-      >
-        <Text style={styles.continueButtonText}>{t("common.next")}</Text>
-      </TouchableOpacity>
+        variant="primary"
+        size="lg"
+        fullWidth
+      />
     </View>
   );
 }

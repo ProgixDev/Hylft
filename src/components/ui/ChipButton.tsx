@@ -1,50 +1,89 @@
 import React from "react";
-import { Pressable, StyleSheet, Text } from "react-native";
+import {
+  ActivityIndicator,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { FONTS } from "../../constants/fonts";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
 
 interface ChipButtonProps {
-  label: string;
+  title: string;
   onPress: () => void;
-  variant?: "primary" | "secondary";
+  variant?: "primary" | "secondary" | "chip";
   size?: "sm" | "md" | "lg";
   fullWidth?: boolean;
   disabled?: boolean;
+  icon?: React.ReactNode;
+  loading?: boolean;
 }
 
+const SIZE_CONFIG = {
+  sm: { height: 32, paddingHorizontal: 16, fontSize: 13 },
+  md: { height: 44, paddingHorizontal: 24, fontSize: 15 },
+  lg: { height: 52, paddingHorizontal: 32, fontSize: 17 },
+} as const;
+
 export default function ChipButton({
-  label,
+  title,
   onPress,
   variant = "primary",
   size = "md",
   fullWidth = false,
   disabled = false,
+  icon,
+  loading = false,
 }: ChipButtonProps) {
   const { theme } = useTheme();
   const styles = createStyles(theme);
+  const config = SIZE_CONFIG[size];
+  const isDisabled = disabled || loading;
 
   return (
     <Pressable
-      style={[
+      style={({ pressed }) => [
         styles.base,
-        variant === "primary" ? styles.primary : styles.secondary,
-        size === "sm" ? styles.sm : size === "lg" ? styles.lg : styles.md,
+        {
+          height: config.height,
+          minHeight: 44,
+          paddingHorizontal: config.paddingHorizontal,
+          borderRadius: config.height / 2,
+        },
+        variant === "primary" && styles.primary,
+        variant === "secondary" && styles.secondary,
+        variant === "chip" && styles.chip,
         fullWidth && styles.fullWidth,
-        disabled && styles.disabled,
+        isDisabled && styles.disabled,
+        pressed && !isDisabled && { opacity: 0.8 },
       ]}
       onPress={onPress}
-      disabled={disabled}
+      disabled={isDisabled}
     >
-      <Text
-        style={[
-          styles.text,
-          variant === "primary" ? styles.primaryText : styles.secondaryText,
-          size === "lg" && styles.lgText,
-        ]}
-      >
-        {label}
-      </Text>
+      {loading ? (
+        <ActivityIndicator
+          size="small"
+          color={variant === "secondary" ? theme.primary.main : theme.background.dark}
+        />
+      ) : (
+        <View style={styles.content}>
+          {icon && <View style={styles.iconWrapper}>{icon}</View>}
+          <Text
+            style={[
+              styles.text,
+              { fontSize: variant === "chip" ? 13 : config.fontSize },
+              variant === "primary" && styles.primaryText,
+              variant === "secondary" && styles.secondaryText,
+              variant === "chip" && styles.chipText,
+            ]}
+          >
+            {title}
+          </Text>
+        </View>
+      )}
     </Pressable>
   );
 }
@@ -52,27 +91,31 @@ export default function ChipButton({
 function createStyles(theme: Theme) {
   return StyleSheet.create({
     base: {
-      borderRadius: 999,
+      flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
     },
     primary: {
       backgroundColor: theme.primary.main,
+      ...Platform.select({
+        ios: {
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.15,
+          shadowRadius: 4,
+        },
+        android: {
+          elevation: 3,
+        },
+      }),
     },
     secondary: {
       backgroundColor: "transparent",
+      borderWidth: 1.5,
+      borderColor: theme.primary.main,
     },
-    sm: {
-      paddingVertical: 10,
-      paddingHorizontal: 20,
-    },
-    md: {
-      paddingVertical: 14,
-      paddingHorizontal: 28,
-    },
-    lg: {
-      paddingVertical: 18,
-      paddingHorizontal: 32,
+    chip: {
+      backgroundColor: theme.primary.main,
     },
     fullWidth: {
       width: "100%",
@@ -80,18 +123,26 @@ function createStyles(theme: Theme) {
     disabled: {
       opacity: 0.4,
     },
+    content: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    iconWrapper: {
+      marginRight: 10,
+    },
     text: {
-      fontFamily: FONTS.bold,
-      fontSize: 16,
+      fontFamily: FONTS.semiBold,
     },
     primaryText: {
       color: theme.background.dark,
     },
     secondaryText: {
-      color: theme.foreground.gray,
+      color: theme.primary.main,
     },
-    lgText: {
-      fontSize: 18,
+    chipText: {
+      fontFamily: FONTS.medium,
+      color: theme.background.dark,
     },
   });
 }

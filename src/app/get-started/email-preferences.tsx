@@ -12,6 +12,7 @@ import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
 
 import { FONTS } from "../../constants/fonts";
+import ChipButton from "../../components/ui/ChipButton";
 
 export default function EmailPreferences() {
   const router = useRouter();
@@ -102,13 +103,13 @@ export default function EmailPreferences() {
       </ScrollView>
 
       <View style={styles.buttonsContainer}>
-        <TouchableOpacity
-          style={styles.acceptButton}
+        <ChipButton
+          title="Sure!"
           onPress={handleAccept}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.acceptButtonText}>Sure!</Text>
-        </TouchableOpacity>
+          variant="primary"
+          size="lg"
+          fullWidth
+        />
 
         <TouchableOpacity
           style={styles.declineButton}

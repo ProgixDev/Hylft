@@ -18,6 +18,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { auth } from "../../utils/auth";
 
 import { FONTS } from "../../constants/fonts";
+import ChipButton from "../../components/ui/ChipButton";
 
 function createStyles(theme: Theme) {
   return StyleSheet.create({
@@ -248,16 +249,17 @@ export default function SignUp() {
               />
             </View>
 
-            <TouchableOpacity
-              style={[styles.signUpButton, isLoading && styles.disabledButton]}
-              onPress={handleSignUp}
-              disabled={isLoading}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.signUpButtonText}>
-                {isLoading ? t("signup.creatingAccount") : t("signup.signUp")}
-              </Text>
-            </TouchableOpacity>
+            <View style={{ marginBottom: 24, marginTop: 8 }}>
+              <ChipButton
+                title={isLoading ? t("signup.creatingAccount") : t("signup.signUp")}
+                onPress={handleSignUp}
+                variant="primary"
+                size="lg"
+                fullWidth
+                disabled={isLoading}
+                loading={isLoading}
+              />
+            </View>
 
             <View style={styles.dividerContainer}>
               <View style={styles.divider} />

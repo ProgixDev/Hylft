@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import ChipButton from "../../components/ui/ChipButton";
 import { useTranslation } from "react-i18next";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -188,34 +189,40 @@ export default function AuthLanding() {
           <Text style={styles.title}>{t("auth.signUpToGetStarted")}</Text>
 
           {/* Google Sign Up Button */}
-          <TouchableOpacity
-            style={styles.googleButton}
-            onPress={handleGoogleSignUp}
-            activeOpacity={0.8}
-          >
-            <AntDesign
-              name="google"
-              size={20}
-              color={theme.background.dark}
-              style={styles.buttonIcon}
+          <View style={{ marginBottom: 16 }}>
+            <ChipButton
+              title={t("auth.continueWithGoogle")}
+              onPress={handleGoogleSignUp}
+              variant="primary"
+              size="lg"
+              fullWidth
+              icon={
+                <AntDesign
+                  name="google"
+                  size={20}
+                  color={theme.background.dark}
+                />
+              }
             />
-            <Text style={styles.googleButtonText}>{t("auth.continueWithGoogle")}</Text>
-          </TouchableOpacity>
+          </View>
 
           {/* Email Sign Up Button */}
-          <TouchableOpacity
-            style={styles.emailButton}
-            onPress={handleEmailSignUp}
-            activeOpacity={0.8}
-          >
-            <MaterialIcons
-              name="email"
-              size={20}
-              color={theme.background.dark}
-              style={styles.buttonIcon}
+          <View style={{ marginBottom: 24 }}>
+            <ChipButton
+              title={t("auth.continueWithEmail")}
+              onPress={handleEmailSignUp}
+              variant="secondary"
+              size="lg"
+              fullWidth
+              icon={
+                <MaterialIcons
+                  name="email"
+                  size={20}
+                  color={theme.primary.main}
+                />
+              }
             />
-            <Text style={styles.emailButtonText}>{t("auth.continueWithEmail")}</Text>
-          </TouchableOpacity>
+          </View>
 
           {/* Sign In Link */}
           <View style={styles.signInContainer}>

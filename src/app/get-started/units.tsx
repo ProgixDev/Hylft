@@ -11,6 +11,7 @@ import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
 
 import { FONTS } from "../../constants/fonts";
+import ChipButton from "../../components/ui/ChipButton";
 
 type UnitOption = {
   label: string;
@@ -129,13 +130,13 @@ export default function UnitsSelection() {
         </View>
       </ScrollView>
 
-      <TouchableOpacity
-        style={styles.continueButton}
+      <ChipButton
+        title="Continue"
         onPress={handleContinue}
-        activeOpacity={0.8}
-      >
-        <Text style={styles.continueButtonText}>Continue</Text>
-      </TouchableOpacity>
+        variant="primary"
+        size="lg"
+        fullWidth
+      />
     </View>
   );
 }
