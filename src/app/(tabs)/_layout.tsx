@@ -1,8 +1,8 @@
 import BottomSheet from "@gorhom/bottom-sheet";
 import { Tabs } from "expo-router";
 import React, { useRef } from "react";
-import { View } from "react-native";
 import { useTranslation } from "react-i18next";
+import { View } from "react-native";
 import { CustomTabBar } from "../../components/layout/CustomTabBar";
 import ActiveWorkoutSheet from "../../components/ui/ActiveWorkoutSheet";
 import { MiniWorkoutPlayer } from "../../components/ui/MiniWorkoutPlayer";

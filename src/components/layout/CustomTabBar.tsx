@@ -1,13 +1,15 @@
-import { Ionicons } from "@expo/vector-icons";
+﻿import { Ionicons } from "@expo/vector-icons";
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import React from "react";
-import { Platform, Pressable, StyleSheet, View } from "react-native";
+import { useTranslation } from "react-i18next";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
-  withSpring,
+  withTiming,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { FONTS } from "../../constants/fonts";
 import { useTheme } from "../../contexts/ThemeContext";
 
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -34,11 +36,10 @@ export function CustomTabBar({
       style={[
         styles.container,
         {
-          paddingBottom: Platform.OS === "ios" ? insets.bottom : 12,
+          height: 60,
         },
       ]}
     >
-      {/* Tab Buttons */}
       {state.routes.map((route, index) => {
         const isFocused = state.index === index;
         const iconConfig = ICON_MAP[route.name.toLowerCase()];
@@ -65,8 +66,15 @@ export function CustomTabBar({
         return (
           <TabButton
             key={route.key}
+            routeName={route.name}
             isFocused={isFocused}
-            iconName={isFocused ? iconConfig.focused : iconConfig.default}
+            iconName={
+              isFocused && iconConfig
+                ? iconConfig.focused
+                : iconConfig
+                  ? iconConfig.default
+                  : "help-outline"
+            }
             onPress={onPress}
             onLongPress={onLongPress}
           />
@@ -77,6 +85,7 @@ export function CustomTabBar({
 }
 
 interface TabButtonProps {
+  routeName: string;
   isFocused: boolean;
   iconName: IconName;
   onPress: () => void;
@@ -84,31 +93,29 @@ interface TabButtonProps {
 }
 
 function TabButton({
+  routeName,
   isFocused,
   iconName,
   onPress,
   onLongPress,
 }: TabButtonProps) {
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const scale = useSharedValue(1);
-  const translateY = useSharedValue(0);
 
   const styles = createStyles(theme);
 
   React.useEffect(() => {
-    scale.value = withSpring(isFocused ? 1.1 : 1, {
-      damping: 420,
-      stiffness: 950,
-    });
-    translateY.value = withSpring(isFocused ? -2 : 0, {
-      damping: 420,
-      stiffness: 950,
-    });
-  }, [isFocused, scale, translateY]);
+    scale.value = withTiming(isFocused ? 1.05 : 1, { duration: 200 });
+  }, [isFocused, scale]);
 
   const animatedIconStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }, { translateY: translateY.value }],
+    transform: [{ scale: scale.value }],
   }));
+
+  const activeColor = theme.primary.main;
+  const inactiveColor = "rgba(255,255,255,0.55)";
+  const color = isFocused ? activeColor : inactiveColor;
 
   return (
     <Pressable
@@ -116,15 +123,21 @@ function TabButton({
       accessibilityState={isFocused ? { selected: true } : {}}
       onPress={onPress}
       onLongPress={onLongPress}
-      style={({ pressed }) => [styles.tabButton, pressed && { opacity: 0.6 }]}
+      style={styles.tabButton}
     >
-      <Animated.View style={[styles.iconContainer, animatedIconStyle]}>
-        <Ionicons
-          name={iconName}
-          size={24}
-          color={isFocused ? theme.primary.main : theme.foreground.gray}
-        />
-      </Animated.View>
+      <View
+        style={[
+          styles.tabItemContainer,
+          isFocused && { backgroundColor: activeColor + "1A" },
+        ]}
+      >
+        <Animated.View style={[styles.iconContainer, animatedIconStyle]}>
+          <Ionicons name={iconName} size={22} color={color} />
+        </Animated.View>
+        <Text style={[styles.label, { color }]}>
+          {t(("tabs." + routeName.toLowerCase()) as any)}
+        </Text>
+      </View>
     </Pressable>
   );
 }
@@ -133,35 +146,38 @@ function createStyles(theme: any) {
   return StyleSheet.create({
     container: {
       position: "absolute",
-      bottom: Platform.OS === "ios" ? 20 : 16,
-      left: 16,
-      right: 16,
+      bottom: 0,
+      left: 0,
+      width: "100%",
       flexDirection: "row",
-      backgroundColor: theme.background.darker,
-      borderTopWidth: StyleSheet.hairlineWidth,
+      backgroundColor: "#0B0D0E",
+      borderTopWidth: 0.5,
       borderTopColor: "rgba(255,255,255,0.08)",
-      borderRadius: 26,
-      overflow: "hidden",
-      paddingTop: 10,
+      alignItems: "center",
+      justifyContent: "center",
       zIndex: 50,
-      ...Platform.select({
-        ios: {
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: -6 },
-          shadowOpacity: 0.35,
-          shadowRadius: 16,
-        },
-        android: { elevation: 10 },
-      }),
     },
     tabButton: {
       flex: 1,
       alignItems: "center",
       justifyContent: "center",
-      paddingVertical: 2,
+      height: "100%",
+    },
+    tabItemContainer: {
+      alignItems: "center",
+      justifyContent: "center",
+      paddingHorizontal: 16,
+      paddingVertical: 6,
+      borderRadius: 16,
     },
     iconContainer: {
-      marginBottom: 0,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    label: {
+      fontFamily: FONTS.medium,
+      fontSize: 11,
+      marginTop: 4,
     },
   });
 }

@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+﻿import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -462,7 +462,7 @@ function createStyles(theme: Theme) {
   });
 }
 
-// ─── helpers ─────────────────────────────────────────────────────────────────
+// â”€â”€â”€ helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function formatCount(n: number) {
   if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
@@ -493,7 +493,7 @@ function calcTotalVolume(workouts: Workout[]): string {
   return `${Math.round(total)}`;
 }
 
-// ─── Component ───────────────────────────────────────────────────────────────
+// â”€â”€â”€ Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default function Profile() {
   const { t, i18n } = useTranslation();
@@ -702,7 +702,7 @@ export default function Profile() {
                     color={theme.foreground.gray}
                   />
                   <Text style={styles.routineMetaText}>
-                    {routine.timesCompleted}× {t("profile.done")}
+                    {routine.timesCompleted}Ã— {t("profile.done")}
                   </Text>
                 </View>
               </View>
@@ -804,7 +804,7 @@ export default function Profile() {
             </View>
           </View>
 
-          {/* ── Fitness stat bar ── */}
+          {/* â”€â”€ Fitness stat bar â”€â”€ */}
           <View style={styles.fitnessBar}>
             <View style={styles.fitnessStatItem}>
               <View
@@ -915,3 +915,4 @@ export default function Profile() {
     </View>
   );
 }
+
