@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../contexts/ThemeContext";
-import { auth } from "../utils/auth";
+import { useAuth } from "../contexts/AuthContext";
 
 import { FONTS } from "../constants/fonts";
 import ChipButton from "../components/ui/ChipButton";
@@ -82,15 +82,12 @@ export default function OnBoarding() {
     handleFinish();
   };
 
+  const { user, setOnboardingCompleted } = useAuth();
+
   const handleFinish = async () => {
-    // Mark onboarding as completed
-    await auth.setOnboardingCompleted();
+    await setOnboardingCompleted();
 
-    // Check if user is logged in
-    const isLoggedIn = await auth.isLoggedIn();
-
-    // Navigate to auth landing if not logged in, otherwise go to schedule
-    if (isLoggedIn) {
+    if (user) {
       router.navigate("/(tabs)/schedule");
     } else {
       router.navigate("/auth");

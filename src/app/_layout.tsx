@@ -14,6 +14,7 @@ import { ActivityIndicator, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { ActiveWorkoutProvider } from "../contexts/ActiveWorkoutContext";
+import { AuthProvider } from "../contexts/AuthContext";
 import { CreateRoutineProvider } from "../contexts/CreateRoutineContext";
 import { I18nProvider, useI18n } from "../contexts/I18nContext";
 import { ThemeProvider } from "../contexts/ThemeContext";
@@ -106,15 +107,17 @@ export default function RootLayout() {
       <GestureHandlerRootView style={{ flex: 1 }}>
         <I18nProvider>
           <ThemeProvider>
-            <ActiveWorkoutProvider>
-              <CreateRoutineProvider>
+            <AuthProvider>
+              <ActiveWorkoutProvider>
+                <CreateRoutineProvider>
                 <SafeAreaProvider>
                   <SafeAreaView style={{ flex: 1, backgroundColor: "#0B0D0E" }}>
                     <AppContent />
                   </SafeAreaView>
                 </SafeAreaProvider>
-              </CreateRoutineProvider>
-            </ActiveWorkoutProvider>
+                </CreateRoutineProvider>
+              </ActiveWorkoutProvider>
+            </AuthProvider>
           </ThemeProvider>
         </I18nProvider>
       </GestureHandlerRootView>

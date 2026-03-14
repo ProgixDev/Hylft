@@ -15,7 +15,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
-import { auth } from "../../utils/auth";
+import { useAuth } from "../../contexts/AuthContext";
 
 import { FONTS } from "../../constants/fonts";
 import ChipButton from "../../components/ui/ChipButton";
@@ -117,8 +117,9 @@ export default function SignUp() {
     return emailRegex.test(email);
   };
 
+  const { signUp } = useAuth();
+
   const handleSignUp = async () => {
-    // Validation
     if (!username || !email || !password || !confirmPassword) {
       Alert.alert(t("auth.error"), t("auth.fillAllFields"));
       return;
@@ -140,16 +141,16 @@ export default function SignUp() {
     }
 
     setIsLoading(true);
-
-    // Simulate API call
-    setTimeout(async () => {
-      // Save the logged in state
-      await auth.setLoggedIn();
-
-      setIsLoading(false);
-      // Navigate to get-started flow after successful signup
+    try {
+      await signUp(email, password, username);
       router.navigate("/get-started/units");
-    }, 1500);
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "Sign up failed";
+      Alert.alert(t("auth.error"), message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSignIn = () => {

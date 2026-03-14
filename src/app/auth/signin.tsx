@@ -14,7 +14,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
-import { auth } from "../../utils/auth";
+import { useAuth } from "../../contexts/AuthContext";
 
 import { FONTS } from "../../constants/fonts";
 import ChipButton from "../../components/ui/ChipButton";
@@ -119,6 +119,8 @@ export default function SignIn() {
 
   const styles = createStyles(theme);
 
+  const { signIn, hasCompletedGetStarted } = useAuth();
+
   const handleSignIn = async () => {
     if (!email || !password) {
       Alert.alert(t("auth.error"), t("auth.fillAllFields"));
@@ -126,16 +128,17 @@ export default function SignIn() {
     }
 
     setIsLoading(true);
-
-    // Simulate API call
-    setTimeout(async () => {
-      // Save the logged in state
-      await auth.setLoggedIn();
-
+    try {
+      await signIn(email, password);
+      const doneGetStarted = await hasCompletedGetStarted();
+      router.navigate(doneGetStarted ? "/(tabs)/schedule" : "/get-started/units");
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "Sign in failed";
+      Alert.alert(t("auth.error"), message);
+    } finally {
       setIsLoading(false);
-      // Navigate to schedule after successful login
-      router.navigate("/(tabs)/schedule");
-    }, 1500);
+    }
   };
 
   const handleSignUp = () => {

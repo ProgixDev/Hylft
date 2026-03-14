@@ -2,6 +2,7 @@ import { AntDesign, MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
+  Alert,
   Animated,
   Dimensions,
   Image,
@@ -13,6 +14,7 @@ import {
 import ChipButton from "../../components/ui/ChipButton";
 import { useTranslation } from "react-i18next";
 import { Theme } from "../../constants/themes";
+import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
 
 import { FONTS } from "../../constants/fonts";
@@ -116,18 +118,22 @@ export default function AuthLanding() {
     return () => clearInterval(interval);
   }, [fadeAnim]);
 
+  const { signInWithGoogle, hasCompletedGetStarted } = useAuth();
+
   const handleEmailSignUp = () => {
-    router.navigate("/(tabs)/schedule");
+    router.navigate("/auth/signup");
   };
 
-  const handleGoogleSignUp = () => {
-    // Test mode: Simulate Google Sign Up with test credentials
-    // Username: test988, Email: test@gmail.com, Password: test2003
-    console.log("Google Sign Up - Test Mode");
-    console.log("Username: test988, Email: test@gmail.com, Password: test2003");
-
-    // Navigate directly to get-started flow without saving auth state
-    router.navigate("/get-started/units");
+  const handleGoogleSignUp = async () => {
+    try {
+      await signInWithGoogle();
+      const doneGetStarted = await hasCompletedGetStarted();
+      router.navigate(doneGetStarted ? "/(tabs)/schedule" : "/get-started/units");
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "Google sign in failed";
+      Alert.alert("Error", message);
+    }
   };
 
   const handleSignIn = () => {
