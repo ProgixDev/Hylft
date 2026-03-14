@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { useTranslation } from "react-i18next";
 import { Theme, ThemeType } from "../../constants/themes";
+import { useAuth } from "../../contexts/AuthContext";
 import { useI18n } from "../../contexts/I18nContext";
 import { useTheme } from "../../contexts/ThemeContext";
 
@@ -225,6 +226,7 @@ function SettingsRow({
 
 export default function Settings() {
   const { t } = useTranslation();
+  const { signOut } = useAuth();
   const { language, setLanguage } = useI18n();
   const router = useRouter();
   const { theme, themeType, setTheme } = useTheme();
@@ -317,8 +319,8 @@ export default function Settings() {
       {
         text: t("settings.logOut"),
         style: "destructive",
-        onPress: () => {
-          // TODO: clear auth tokens and navigate to auth screen
+        onPress: async () => {
+          await signOut();
           router.replace("/auth" as any);
         },
       },

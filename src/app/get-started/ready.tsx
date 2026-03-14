@@ -31,16 +31,18 @@ export default function Ready() {
           experienceLevel,
           workoutFrequency,
           focusAreas,
+          unitSystem,
         ] = await Promise.all([
           AsyncStorage.getItem("@hylift_age"),
           AsyncStorage.getItem("@hylift_height"),
           AsyncStorage.getItem("@hylift_weight"),
           AsyncStorage.getItem("@hylift_target_weight"),
-          AsyncStorage.getItem("@hylift_theme"),
+          AsyncStorage.getItem("@hylift_gender"),
           AsyncStorage.getItem("@hylift_fitness_goals"),
           AsyncStorage.getItem("@hylift_experience_level"),
           AsyncStorage.getItem("@hylift_workout_frequency"),
           AsyncStorage.getItem("@hylift_focus_areas"),
+          AsyncStorage.getItem("@hylift_unit_system"),
         ]);
 
         // Calculate date_of_birth from age
@@ -56,6 +58,7 @@ export default function Ready() {
           username:
             user.user_metadata?.username ||
             "user_" + user.id.substring(0, 8),
+          unit_system: unitSystem || null,
           height_cm: heightCm ? parseFloat(heightCm) : null,
           weight_kg: weightKg ? parseFloat(weightKg) : null,
           target_weight_kg: targetWeightKg

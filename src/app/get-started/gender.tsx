@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -79,10 +80,10 @@ export default function GenderSelection() {
   const { theme, setTheme } = useTheme();
   const [selectedGender, setSelectedGender] = useState<string>("");
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (!selectedGender) return;
-    // Save gender preference and set theme
     setTheme(selectedGender as "male" | "female");
+    await AsyncStorage.setItem("@hylift_gender", selectedGender);
     router.navigate("/get-started/workout-frequency");
   };
 

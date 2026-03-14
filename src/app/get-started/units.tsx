@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -41,8 +42,9 @@ export default function UnitsSelection() {
     { label: "Inches", value: "in" },
   ];
 
-  const handleContinue = () => {
-    // TODO: Save unit preferences
+  const handleContinue = async () => {
+    const unitSystem = selectedWeight === "kg" ? "metric" : "imperial";
+    await AsyncStorage.setItem("@hylift_unit_system", unitSystem);
     router.navigate("/get-started/fitness-goal");
   };
 

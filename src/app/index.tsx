@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import SplashScreen from "../components/ui/SplashScreen";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -7,39 +7,40 @@ export default function Index() {
   const router = useRouter();
   const { user, isLoading, hasCompletedOnboarding, hasCompletedGetStarted } = useAuth();
   const [splashDone, setSplashDone] = useState(false);
+  const [destination, setDestination] = useState<string | null>(null);
   const hasNavigated = useRef(false);
 
+  // Start auth checks immediately — runs in parallel with the splash animation
   useEffect(() => {
-    if (!splashDone || isLoading || hasNavigated.current) return;
-
-    hasNavigated.current = true;
+    if (isLoading) return;
 
     (async () => {
       try {
         const hasSeenOnboarding = await hasCompletedOnboarding();
-
         if (!hasSeenOnboarding) {
-          router.navigate("/OnBoarding");
+          setDestination("/OnBoarding");
         } else if (!user) {
-          router.navigate("/auth");
+          setDestination("/auth");
         } else {
           const doneGetStarted = await hasCompletedGetStarted();
-          if (!doneGetStarted) {
-            router.navigate("/get-started/units");
-          } else {
-            router.navigate("/(tabs)/schedule");
-          }
+          setDestination(doneGetStarted ? "/(tabs)/schedule" : "/get-started/units");
         }
       } catch (error) {
         console.error("Error checking auth status:", error);
-        router.navigate("/OnBoarding");
+        setDestination("/OnBoarding");
       }
     })();
-  }, [splashDone, isLoading]);
+  }, [isLoading]);
 
-  if (!splashDone) {
-    return <SplashScreen onAnimationComplete={() => setSplashDone(true)} />;
-  }
+  // Navigate only when BOTH the splash animation is done AND the auth check is resolved
+  useEffect(() => {
+    if (!splashDone || !destination || hasNavigated.current) return;
+    hasNavigated.current = true;
+    router.navigate(destination as any);
+  }, [splashDone, destination]);
 
-  return null;
+  // Always keep the splash visible — after its animation it's just a dark background,
+  // so there's no blank screen while waiting for navigation to complete
+  const handleAnimationComplete = useCallback(() => setSplashDone(true), []);
+  return <SplashScreen onAnimationComplete={handleAnimationComplete} />;
 }
