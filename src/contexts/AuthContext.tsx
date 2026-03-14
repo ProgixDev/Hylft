@@ -15,7 +15,7 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   hasCompletedOnboarding: () => Promise<boolean>;
   setOnboardingCompleted: () => Promise<void>;
-  hasCompletedGetStarted: () => Promise<boolean>;
+  hasCompletedGetStarted: (userId?: string) => Promise<boolean>;
   setGetStartedCompleted: () => Promise<void>;
 }
 
@@ -59,7 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) throw error;
   };
 
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = async (): Promise<void> => {
     const redirectUrl = Linking.createURL("/");
 
     const { data, error } = await supabase.auth.signInWithOAuth({
@@ -71,28 +71,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     if (error) throw error;
+    if (!data.url) return;
 
-    if (data.url) {
-      const result = await WebBrowser.openAuthSessionAsync(
-        data.url,
-        redirectUrl,
-      );
+    const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
+    await WebBrowser.dismissBrowser();
 
-      // Always dismiss the browser to avoid "site can't be reached" screen
-      await WebBrowser.dismissBrowser();
+    // iOS: WebBrowser intercepts the redirect directly — set session from URL here
+    // Android/Expo Go: Chrome Custom Tabs can't redirect to exp://, so the deep link
+    // is handled in auth/index.tsx via Linking.useURL()
+    if (result.type === "success") {
+      const url = new URL(result.url);
+      const params = new URLSearchParams(url.hash.substring(1));
+      const accessToken = params.get("access_token");
+      const refreshToken = params.get("refresh_token");
 
-      if (result.type === "success") {
-        const url = new URL(result.url);
-        const params = new URLSearchParams(url.hash.substring(1));
-        const accessToken = params.get("access_token");
-        const refreshToken = params.get("refresh_token");
-
-        if (accessToken && refreshToken) {
-          await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken,
-          });
-        }
+      if (accessToken && refreshToken) {
+        const { error: sessionError } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
+        if (sessionError) throw sessionError;
       }
     }
   };

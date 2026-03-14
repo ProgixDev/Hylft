@@ -1,4 +1,6 @@
 import { AntDesign, MaterialIcons } from "@expo/vector-icons";
+import * as Linking from "expo-linking";
+import { supabase } from "../../services/supabase";
 import { useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -118,7 +120,39 @@ export default function AuthLanding() {
     return () => clearInterval(interval);
   }, [fadeAnim]);
 
-  const { signInWithGoogle, hasCompletedGetStarted } = useAuth();
+  const { user, signInWithGoogle, hasCompletedGetStarted } = useAuth();
+  const hasNavigated = useRef(false);
+
+  // Android/Expo Go: Chrome Custom Tabs redirects to exp://... which it can't load
+  // as a webpage, so the deep link fires separately via Linking. Catch it here,
+  // extract the tokens, and set the session manually.
+  useEffect(() => {
+    const processUrl = (url: string) => {
+      const hash = url.includes("#") ? url.split("#")[1] : "";
+      const params = new URLSearchParams(hash);
+      const accessToken = params.get("access_token");
+      const refreshToken = params.get("refresh_token");
+      if (!accessToken || !refreshToken) return;
+      supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+    };
+
+    // Handle URL if app was opened from cold start via deep link
+    Linking.getInitialURL().then((url) => { if (url) processUrl(url); });
+
+    // Handle URL if app was already running and receives a deep link
+    const subscription = Linking.addEventListener("url", ({ url }) => processUrl(url));
+    return () => subscription.remove();
+  }, []);
+
+  // Navigate as soon as a session is established (covers both iOS direct redirect
+  // and Android deep link path)
+  useEffect(() => {
+    if (!user || hasNavigated.current) return;
+    hasNavigated.current = true;
+    hasCompletedGetStarted(user.id).then((done) => {
+      router.navigate(done ? "/(tabs)/schedule" : "/get-started/units");
+    });
+  }, [user]);
 
   const handleEmailSignUp = () => {
     router.navigate("/auth/signup");
@@ -127,8 +161,7 @@ export default function AuthLanding() {
   const handleGoogleSignUp = async () => {
     try {
       await signInWithGoogle();
-      const doneGetStarted = await hasCompletedGetStarted();
-      router.navigate(doneGetStarted ? "/(tabs)/schedule" : "/get-started/units");
+      // Navigation is handled by the user state watcher above
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : "Google sign in failed";
