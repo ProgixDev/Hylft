@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
 
@@ -18,52 +19,21 @@ import ChipButton from "../../components/ui/ChipButton";
 interface GoalOption {
   id: string;
   icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  description: string;
 }
 
-const GOALS: GoalOption[] = [
-  {
-    id: "build_muscle",
-    icon: "barbell-outline",
-    label: "Build Muscle",
-    description: "Gain size and strength with hypertrophy training",
-  },
-  {
-    id: "lose_fat",
-    icon: "flame-outline",
-    label: "Lose Fat",
-    description: "Cut body fat while preserving lean muscle mass",
-  },
-  {
-    id: "get_stronger",
-    icon: "trophy-outline",
-    label: "Get Stronger",
-    description: "Focus on increasing your 1RM and raw strength",
-  },
-  {
-    id: "stay_fit",
-    icon: "heart-outline",
-    label: "Stay Fit & Healthy",
-    description: "Maintain a balanced, active lifestyle",
-  },
-  {
-    id: "athletic",
-    icon: "flash-outline",
-    label: "Athletic Performance",
-    description: "Improve speed, agility, and sport-specific skills",
-  },
-  {
-    id: "body_recomp",
-    icon: "body-outline",
-    label: "Body Recomposition",
-    description: "Lose fat and gain muscle simultaneously",
-  },
+const GOAL_ICONS: GoalOption[] = [
+  { id: "build_muscle", icon: "barbell-outline" },
+  { id: "lose_fat", icon: "flame-outline" },
+  { id: "get_stronger", icon: "trophy-outline" },
+  { id: "stay_fit", icon: "heart-outline" },
+  { id: "athletic", icon: "flash-outline" },
+  { id: "body_recomp", icon: "body-outline" },
 ];
 
 export default function FitnessGoal() {
   const router = useRouter();
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const styles = createStyles(theme);
   const [selected, setSelected] = useState<string[]>([]);
 
@@ -110,13 +80,13 @@ export default function FitnessGoal() {
           </View>
         </View>
 
-        <Text style={styles.title}>What are your goals?</Text>
+        <Text style={styles.title}>{t("onboarding.fitnessGoal.title")}</Text>
         <Text style={styles.subtitle}>
-          Select up to 3 goals to personalize your training
+          {t("onboarding.fitnessGoal.subtitle")}
         </Text>
 
         <View style={styles.grid}>
-          {GOALS.map((goal) => {
+          {GOAL_ICONS.map((goal) => {
             const isSelected = selected.includes(goal.id);
             return (
               <TouchableOpacity
@@ -165,7 +135,7 @@ export default function FitnessGoal() {
                         },
                       ]}
                     >
-                      {goal.label}
+                      {t(`onboarding.fitnessGoal.goals.${goal.id}.label`)}
                     </Text>
                     <Text
                       style={[
@@ -173,7 +143,7 @@ export default function FitnessGoal() {
                         { color: theme.foreground.gray },
                       ]}
                     >
-                      {goal.description}
+                      {t(`onboarding.fitnessGoal.goals.${goal.id}.description`)}
                     </Text>
                   </View>
                   {isSelected && (
@@ -196,13 +166,13 @@ export default function FitnessGoal() {
           <Text
             style={[styles.selectedCount, { color: theme.foreground.gray }]}
           >
-            {selected.length}/3 selected
+            {t("onboarding.fitnessGoal.selectedCount", { count: selected.length })}
           </Text>
         )}
       </ScrollView>
 
       <ChipButton
-        title="Continue"
+        title={t("common.continue")}
         onPress={handleContinue}
         variant="primary"
         size="lg"

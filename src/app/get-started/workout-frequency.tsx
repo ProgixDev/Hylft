@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
 
@@ -18,53 +19,21 @@ import ChipButton from "../../components/ui/ChipButton";
 interface FreqOption {
   id: string;
   days: number;
-  label: string;
-  description: string;
   icon: keyof typeof Ionicons.glyphMap;
 }
 
 const FREQUENCIES: FreqOption[] = [
-  {
-    id: "2",
-    days: 2,
-    label: "2 days / week",
-    description: "Light schedule — perfect for beginners or busy weeks",
-    icon: "walk-outline",
-  },
-  {
-    id: "3",
-    days: 3,
-    label: "3 days / week",
-    description: "Classic 3-day split — great balance of training and recovery",
-    icon: "fitness-outline",
-  },
-  {
-    id: "4",
-    days: 4,
-    label: "4 days / week",
-    description:
-      "Upper / Lower or Push / Pull — solid for intermediate lifters",
-    icon: "barbell-outline",
-  },
-  {
-    id: "5",
-    days: 5,
-    label: "5 days / week",
-    description: "PPL or Bro split — serious volume for serious gains",
-    icon: "flame-outline",
-  },
-  {
-    id: "6",
-    days: 6,
-    label: "6 days / week",
-    description: "PPL × 2 — maximum frequency for advanced athletes",
-    icon: "flash-outline",
-  },
+  { id: "2", days: 2, icon: "walk-outline" },
+  { id: "3", days: 3, icon: "fitness-outline" },
+  { id: "4", days: 4, icon: "barbell-outline" },
+  { id: "5", days: 5, icon: "flame-outline" },
+  { id: "6", days: 6, icon: "flash-outline" },
 ];
 
 export default function WorkoutFrequency() {
   const router = useRouter();
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const styles = createStyles(theme);
   const [selected, setSelected] = useState<string>("");
 
@@ -98,9 +67,9 @@ export default function WorkoutFrequency() {
           </View>
         </View>
 
-        <Text style={styles.title}>How often do you train?</Text>
+        <Text style={styles.title}>{t("onboarding.workoutFrequency.title")}</Text>
         <Text style={styles.subtitle}>
-          We&apos;ll build your weekly schedule around this
+          {t("onboarding.workoutFrequency.subtitle")}
         </Text>
 
         <View style={styles.list}>
@@ -155,12 +124,12 @@ export default function WorkoutFrequency() {
                       },
                     ]}
                   >
-                    {freq.label}
+                    {t(`onboarding.workoutFrequency.options.${freq.id}.label`)}
                   </Text>
                   <Text
                     style={[styles.freqDesc, { color: theme.foreground.gray }]}
                   >
-                    {freq.description}
+                    {t(`onboarding.workoutFrequency.options.${freq.id}.description`)}
                   </Text>
                 </View>
                 <Ionicons
@@ -177,7 +146,7 @@ export default function WorkoutFrequency() {
       </ScrollView>
 
       <ChipButton
-        title="Continue"
+        title={t("common.continue")}
         onPress={handleContinue}
         variant="primary"
         size="lg"

@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import SplashScreen from "../components/ui/SplashScreen";
@@ -16,6 +17,11 @@ export default function Index() {
 
     (async () => {
       try {
+        const savedLanguage = await AsyncStorage.getItem("@hylift_language");
+        if (!savedLanguage) {
+          setDestination("/get-started/language");
+          return;
+        }
         const hasSeenOnboarding = await hasCompletedOnboarding();
         if (!hasSeenOnboarding) {
           setDestination("/OnBoarding");

@@ -3,6 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
 
@@ -12,49 +13,19 @@ import ChipButton from "../../components/ui/ChipButton";
 interface LevelOption {
   id: string;
   icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  timeframe: string;
-  description: string;
 }
 
 const LEVELS: LevelOption[] = [
-  {
-    id: "beginner",
-    icon: "leaf-outline",
-    label: "Beginner",
-    timeframe: "0 – 6 months",
-    description:
-      "New to the gym or coming back after a long break. Learning the basics of form and programming.",
-  },
-  {
-    id: "intermediate",
-    icon: "barbell-outline",
-    label: "Intermediate",
-    timeframe: "6 months – 2 years",
-    description:
-      "Consistent training, comfortable with compound lifts. Ready for structured programming.",
-  },
-  {
-    id: "advanced",
-    icon: "trophy-outline",
-    label: "Advanced",
-    timeframe: "2 – 5 years",
-    description:
-      "Strong foundation, periodized training, chasing PRs. Understands progressive overload.",
-  },
-  {
-    id: "elite",
-    icon: "diamond-outline",
-    label: "Elite",
-    timeframe: "5+ years",
-    description:
-      "Competitive lifter or experienced athlete. Training is highly individualized.",
-  },
+  { id: "beginner", icon: "leaf-outline" },
+  { id: "intermediate", icon: "barbell-outline" },
+  { id: "advanced", icon: "trophy-outline" },
+  { id: "elite", icon: "diamond-outline" },
 ];
 
 export default function ExperienceLevel() {
   const router = useRouter();
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const styles = createStyles(theme);
   const [selected, setSelected] = useState<string>("");
 
@@ -84,9 +55,9 @@ export default function ExperienceLevel() {
           </View>
         </View>
 
-        <Text style={styles.title}>Experience Level</Text>
+        <Text style={styles.title}>{t("onboarding.experienceLevel.title")}</Text>
         <Text style={styles.subtitle}>
-          Help us match workouts to your skill level
+          {t("onboarding.experienceLevel.subtitle")}
         </Text>
 
         <View style={styles.list}>
@@ -140,7 +111,7 @@ export default function ExperienceLevel() {
                           },
                         ]}
                       >
-                        {level.label}
+                        {t(`onboarding.experienceLevel.levels.${level.id}.label`)}
                       </Text>
                       <Text
                         style={[
@@ -148,7 +119,7 @@ export default function ExperienceLevel() {
                           { color: theme.foreground.gray },
                         ]}
                       >
-                        {level.timeframe}
+                        {t(`onboarding.experienceLevel.levels.${level.id}.timeframe`)}
                       </Text>
                     </View>
                     <Text
@@ -158,7 +129,7 @@ export default function ExperienceLevel() {
                       ]}
                       numberOfLines={2}
                     >
-                      {level.description}
+                      {t(`onboarding.experienceLevel.levels.${level.id}.description`)}
                     </Text>
                   </View>
                 </View>
@@ -192,7 +163,7 @@ export default function ExperienceLevel() {
       </View>
 
       <ChipButton
-        title="Continue"
+        title={t("common.continue")}
         onPress={handleContinue}
         variant="primary"
         size="lg"

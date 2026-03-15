@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
 
@@ -18,25 +19,25 @@ import ChipButton from "../../components/ui/ChipButton";
 interface MuscleGroup {
   id: string;
   icon: keyof typeof Ionicons.glyphMap;
-  label: string;
 }
 
 const MUSCLE_GROUPS: MuscleGroup[] = [
-  { id: "chest", icon: "fitness-outline", label: "Chest" },
-  { id: "back", icon: "body-outline", label: "Back" },
-  { id: "shoulders", icon: "arrow-up-circle-outline", label: "Shoulders" },
-  { id: "arms", icon: "barbell-outline", label: "Arms" },
-  { id: "core", icon: "ellipse-outline", label: "Core / Abs" },
-  { id: "quads", icon: "walk-outline", label: "Quads" },
-  { id: "hamstrings", icon: "footsteps-outline", label: "Hamstrings" },
-  { id: "glutes", icon: "trending-up-outline", label: "Glutes" },
-  { id: "calves", icon: "resize-outline", label: "Calves" },
-  { id: "full_body", icon: "flash-outline", label: "Full Body" },
+  { id: "chest", icon: "fitness-outline" },
+  { id: "back", icon: "body-outline" },
+  { id: "shoulders", icon: "arrow-up-circle-outline" },
+  { id: "arms", icon: "barbell-outline" },
+  { id: "core", icon: "ellipse-outline" },
+  { id: "quads", icon: "walk-outline" },
+  { id: "hamstrings", icon: "footsteps-outline" },
+  { id: "glutes", icon: "trending-up-outline" },
+  { id: "calves", icon: "resize-outline" },
+  { id: "full_body", icon: "flash-outline" },
 ];
 
 export default function FocusAreas() {
   const router = useRouter();
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const styles = createStyles(theme);
   const [selected, setSelected] = useState<string[]>([]);
 
@@ -80,9 +81,9 @@ export default function FocusAreas() {
           </View>
         </View>
 
-        <Text style={styles.title}>Focus Areas</Text>
+        <Text style={styles.title}>{t("onboarding.focusAreas.title")}</Text>
         <Text style={styles.subtitle}>
-          Which muscles do you want to prioritize? Select up to 5.
+          {t("onboarding.focusAreas.subtitle")}
         </Text>
 
         <View style={styles.grid}>
@@ -133,7 +134,7 @@ export default function FocusAreas() {
                     },
                   ]}
                 >
-                  {muscle.label}
+                  {t(`onboarding.focusAreas.muscles.${muscle.id}`)}
                 </Text>
                 {isSelected && (
                   <Ionicons
@@ -151,7 +152,7 @@ export default function FocusAreas() {
           <Text
             style={[styles.selectedCount, { color: theme.foreground.gray }]}
           >
-            {selected.length}/5 selected
+            {t("onboarding.focusAreas.selectedCount", { count: selected.length })}
           </Text>
         )}
 
@@ -171,24 +172,22 @@ export default function FocusAreas() {
             <Text
               style={[styles.previewText, { color: theme.foreground.gray }]}
             >
-              Your workouts will emphasize{" "}
+              {t("onboarding.focusAreas.previewPrefix")}{" "}
               <Text
                 style={{ color: theme.foreground.white, fontFamily: FONTS.semiBold }}
               >
                 {selected
-                  .map(
-                    (id) => MUSCLE_GROUPS.find((m) => m.id === id)?.label ?? id,
-                  )
+                  .map((id) => t(`onboarding.focusAreas.muscles.${id}`))
                   .join(", ")}
               </Text>{" "}
-              with extra volume and weekly frequency.
+              {t("onboarding.focusAreas.previewSuffix")}
             </Text>
           </View>
         )}
       </ScrollView>
 
       <ChipButton
-        title="Continue"
+        title={t("common.continue")}
         onPress={handleContinue}
         variant="primary"
         size="lg"

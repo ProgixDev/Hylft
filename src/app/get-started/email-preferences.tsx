@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
 
@@ -17,6 +18,7 @@ import ChipButton from "../../components/ui/ChipButton";
 export default function EmailPreferences() {
   const router = useRouter();
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const styles = createStyles(theme);
 
   const handleAccept = () => {
@@ -58,9 +60,9 @@ export default function EmailPreferences() {
             <MaterialIcons name="email" size={80} color={theme.primary.main} />
           </View>
 
-          <Text style={styles.title}>Can we send you emails?</Text>
+          <Text style={styles.title}>{t("onboarding.emailPreferences.title")}</Text>
           <Text style={styles.promiseText}>
-            No spam, promise. We hate it too.
+            {t("onboarding.emailPreferences.promise")}
           </Text>
 
           <View style={styles.listContainer}>
@@ -71,7 +73,7 @@ export default function EmailPreferences() {
                 color={theme.primary.main}
               />
               <Text style={styles.listItemText}>
-                Tips for getting the most out of Hylift
+                {t("onboarding.emailPreferences.tips")}
               </Text>
             </View>
             <View style={styles.listItem}>
@@ -80,7 +82,7 @@ export default function EmailPreferences() {
                 size={24}
                 color={theme.primary.main}
               />
-              <Text style={styles.listItemText}>New feature announcements</Text>
+              <Text style={styles.listItemText}>{t("onboarding.emailPreferences.newFeatures")}</Text>
             </View>
             <View style={styles.listItem}>
               <MaterialIcons
@@ -88,7 +90,7 @@ export default function EmailPreferences() {
                 size={24}
                 color={theme.primary.main}
               />
-              <Text style={styles.listItemText}>Promotional offers</Text>
+              <Text style={styles.listItemText}>{t("onboarding.emailPreferences.promotions")}</Text>
             </View>
             <View style={styles.listItem}>
               <MaterialIcons
@@ -96,7 +98,7 @@ export default function EmailPreferences() {
                 size={24}
                 color={theme.primary.main}
               />
-              <Text style={styles.listItemText}>Opt out anytime</Text>
+              <Text style={styles.listItemText}>{t("onboarding.emailPreferences.optOut")}</Text>
             </View>
           </View>
         </View>
@@ -104,7 +106,7 @@ export default function EmailPreferences() {
 
       <View style={styles.buttonsContainer}>
         <ChipButton
-          title="Sure!"
+          title={t("onboarding.emailPreferences.accept")}
           onPress={handleAccept}
           variant="primary"
           size="lg"
@@ -116,7 +118,7 @@ export default function EmailPreferences() {
           onPress={handleDecline}
           activeOpacity={0.7}
         >
-          <Text style={styles.declineButtonText}>No, thanks</Text>
+          <Text style={styles.declineButtonText}>{t("onboarding.emailPreferences.decline")}</Text>
         </TouchableOpacity>
       </View>
     </View>

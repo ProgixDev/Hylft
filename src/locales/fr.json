@@ -64,6 +64,124 @@
       "title": "Quel est votre poids cible ?",
       "subtitle": "C'est optionnel — vous pouvez toujours le modifier plus tard",
       "unit": "kg"
+    },
+    "fitnessGoal": {
+      "title": "Quels sont vos objectifs ?",
+      "subtitle": "Sélectionnez jusqu'à 3 objectifs pour personnaliser votre entraînement",
+      "selectedCount": "{{count}}/3 sélectionné(s)",
+      "goals": {
+        "build_muscle": {
+          "label": "Prendre du muscle",
+          "description": "Gagner en taille et en force avec l'entraînement hypertrophique"
+        },
+        "lose_fat": {
+          "label": "Perdre du gras",
+          "description": "Réduire la masse grasse en préservant la masse musculaire"
+        },
+        "get_stronger": {
+          "label": "Devenir plus fort",
+          "description": "Se concentrer sur l'augmentation de votre 1RM et de la force brute"
+        },
+        "stay_fit": {
+          "label": "Rester en forme",
+          "description": "Maintenir un mode de vie actif et équilibré"
+        },
+        "athletic": {
+          "label": "Performance sportive",
+          "description": "Améliorer la vitesse, l'agilité et les compétences spécifiques au sport"
+        },
+        "body_recomp": {
+          "label": "Recomposition corporelle",
+          "description": "Perdre du gras et prendre du muscle simultanément"
+        }
+      }
+    },
+    "experienceLevel": {
+      "title": "Niveau d'expérience",
+      "subtitle": "Aidez-nous à adapter les entraînements à votre niveau",
+      "levels": {
+        "beginner": {
+          "label": "Débutant",
+          "timeframe": "0 – 6 mois",
+          "description": "Nouveau à la salle ou de retour après une longue pause. Apprentissage des bases de la forme et de la programmation."
+        },
+        "intermediate": {
+          "label": "Intermédiaire",
+          "timeframe": "6 mois – 2 ans",
+          "description": "Entraînement régulier, à l'aise avec les mouvements composés. Prêt pour une programmation structurée."
+        },
+        "advanced": {
+          "label": "Avancé",
+          "timeframe": "2 – 5 ans",
+          "description": "Base solide, entraînement périodisé, à la recherche de PRs. Comprend la surcharge progressive."
+        },
+        "elite": {
+          "label": "Élite",
+          "timeframe": "5+ ans",
+          "description": "Haltérophile compétitif ou athlète expérimenté. L'entraînement est très individualisé."
+        }
+      }
+    },
+    "workoutFrequency": {
+      "title": "À quelle fréquence vous entraînez-vous ?",
+      "subtitle": "Nous construirons votre programme hebdomadaire en fonction de cela",
+      "options": {
+        "2": {
+          "label": "2 jours / semaine",
+          "description": "Programme léger — parfait pour les débutants ou les semaines chargées"
+        },
+        "3": {
+          "label": "3 jours / semaine",
+          "description": "Split 3 jours classique — bon équilibre entre entraînement et récupération"
+        },
+        "4": {
+          "label": "4 jours / semaine",
+          "description": "Haut / Bas ou Push / Pull — solide pour les pratiquants intermédiaires"
+        },
+        "5": {
+          "label": "5 jours / semaine",
+          "description": "PPL ou Bro split — volume sérieux pour des gains sérieux"
+        },
+        "6": {
+          "label": "6 jours / semaine",
+          "description": "PPL × 2 — fréquence maximale pour les athlètes avancés"
+        }
+      }
+    },
+    "focusAreas": {
+      "title": "Zones cibles",
+      "subtitle": "Quels muscles souhaitez-vous prioriser ? Sélectionnez jusqu'à 5.",
+      "selectedCount": "{{count}}/5 sélectionné(s)",
+      "previewPrefix": "Vos entraînements mettront l'accent sur",
+      "previewSuffix": "avec un volume et une fréquence hebdomadaire supplémentaires.",
+      "muscles": {
+        "chest": "Pectoraux",
+        "back": "Dos",
+        "shoulders": "Épaules",
+        "arms": "Bras",
+        "core": "Abdominaux",
+        "quads": "Quadriceps",
+        "hamstrings": "Ischio-jambiers",
+        "glutes": "Fessiers",
+        "calves": "Mollets",
+        "full_body": "Corps entier"
+      }
+    },
+    "emailPreferences": {
+      "title": "Pouvons-nous vous envoyer des e-mails ?",
+      "promise": "Pas de spam, promis. On déteste ça aussi.",
+      "tips": "Conseils pour tirer le meilleur parti de Hylift",
+      "newFeatures": "Annonces de nouvelles fonctionnalités",
+      "promotions": "Offres promotionnelles",
+      "optOut": "Se désabonner à tout moment",
+      "accept": "Bien sûr !",
+      "decline": "Non, merci"
+    },
+    "gender": {
+      "title": "Quel est votre genre de naissance ?",
+      "subtitle": "Cela nous aide à fournir des recommandations personnalisées",
+      "male": "Homme",
+      "female": "Femme"
     }
   },
   "tabs": {
@@ -2248,9 +2366,13 @@
     "yoke walk": "Marche avec joug",
     "zercher carry": "Port Zercher",
     "zercher walk": "Marche Zercher",
-    "heavy_compound_movements_for_chest_shoulders_and_triceps": "Mouvements composés lourds pour la poitrine, les épaules et les triceps",
     "back_and_biceps_focused_on_muscle_growth": "Dos et biceps axés sur la croissance musculaire",
     "high_volume_leg_workout_for_quad_and_hamstring_development": "Entraînement jambes haute volume pour le développement des quadriceps et ischio-jambiers",
     "full_upper_body_strength_and_power_workout": "Entraînement complet de force et puissance du haut du corps"
+  },
+  "languageSelect": {
+    "title": "Choisissez votre langue",
+    "subtitle": "Vous pouvez le modifier plus tard dans les paramètres",
+    "continue": "Continuer"
   }
 }

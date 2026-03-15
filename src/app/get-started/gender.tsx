@@ -2,6 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
 import ChipButton from "../../components/ui/ChipButton";
@@ -78,6 +79,7 @@ function createStyles(theme: Theme) {
 export default function GenderSelection() {
   const router = useRouter();
   const { theme, setTheme } = useTheme();
+  const { t } = useTranslation();
   const [selectedGender, setSelectedGender] = useState<string>("");
 
   const handleContinue = async () => {
@@ -109,9 +111,9 @@ export default function GenderSelection() {
           </View>
         </View>
 
-        <Text style={styles.title}>What&apos;s your birth gender?</Text>
+        <Text style={styles.title}>{t("onboarding.gender.title")}</Text>
         <Text style={styles.subtitle}>
-          This helps us provide personalized recommendations
+          {t("onboarding.gender.subtitle")}
         </Text>
 
         <View style={styles.optionsContainer}>
@@ -129,7 +131,7 @@ export default function GenderSelection() {
                 selectedGender === "male" && styles.genderTextSelected,
               ]}
             >
-              Male
+              {t("onboarding.gender.male")}
             </Text>
           </TouchableOpacity>
 
@@ -147,14 +149,14 @@ export default function GenderSelection() {
                 selectedGender === "female" && styles.genderTextSelected,
               ]}
             >
-              Female
+              {t("onboarding.gender.female")}
             </Text>
           </TouchableOpacity>
         </View>
       </View>
 
       <ChipButton
-        title="Continue"
+        title={t("common.continue")}
         onPress={handleContinue}
         variant="primary"
         size="lg"

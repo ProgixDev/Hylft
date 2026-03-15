@@ -65,6 +65,7 @@ function AppContent() {
         <Stack.Screen name="settings/privacy" />
         <Stack.Screen name="user/follows/[id]" />
         <Stack.Screen name="schedule/[date]" />
+        <Stack.Screen name="get-started/language" />
         <Stack.Screen name="get-started/fitness-goal" />
         <Stack.Screen name="get-started/experience-level" />
         <Stack.Screen name="get-started/workout-frequency" />

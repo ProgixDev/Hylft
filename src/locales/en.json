@@ -64,6 +64,124 @@
       "title": "What's your target weight?",
       "subtitle": "This is optional — you can always change it later",
       "unit": "kg"
+    },
+    "fitnessGoal": {
+      "title": "What are your goals?",
+      "subtitle": "Select up to 3 goals to personalize your training",
+      "selectedCount": "{{count}}/3 selected",
+      "goals": {
+        "build_muscle": {
+          "label": "Build Muscle",
+          "description": "Gain size and strength with hypertrophy training"
+        },
+        "lose_fat": {
+          "label": "Lose Fat",
+          "description": "Cut body fat while preserving lean muscle mass"
+        },
+        "get_stronger": {
+          "label": "Get Stronger",
+          "description": "Focus on increasing your 1RM and raw strength"
+        },
+        "stay_fit": {
+          "label": "Stay Fit & Healthy",
+          "description": "Maintain a balanced, active lifestyle"
+        },
+        "athletic": {
+          "label": "Athletic Performance",
+          "description": "Improve speed, agility, and sport-specific skills"
+        },
+        "body_recomp": {
+          "label": "Body Recomposition",
+          "description": "Lose fat and gain muscle simultaneously"
+        }
+      }
+    },
+    "experienceLevel": {
+      "title": "Experience Level",
+      "subtitle": "Help us match workouts to your skill level",
+      "levels": {
+        "beginner": {
+          "label": "Beginner",
+          "timeframe": "0 – 6 months",
+          "description": "New to the gym or coming back after a long break. Learning the basics of form and programming."
+        },
+        "intermediate": {
+          "label": "Intermediate",
+          "timeframe": "6 months – 2 years",
+          "description": "Consistent training, comfortable with compound lifts. Ready for structured programming."
+        },
+        "advanced": {
+          "label": "Advanced",
+          "timeframe": "2 – 5 years",
+          "description": "Strong foundation, periodized training, chasing PRs. Understands progressive overload."
+        },
+        "elite": {
+          "label": "Elite",
+          "timeframe": "5+ years",
+          "description": "Competitive lifter or experienced athlete. Training is highly individualized."
+        }
+      }
+    },
+    "workoutFrequency": {
+      "title": "How often do you train?",
+      "subtitle": "We'll build your weekly schedule around this",
+      "options": {
+        "2": {
+          "label": "2 days / week",
+          "description": "Light schedule — perfect for beginners or busy weeks"
+        },
+        "3": {
+          "label": "3 days / week",
+          "description": "Classic 3-day split — great balance of training and recovery"
+        },
+        "4": {
+          "label": "4 days / week",
+          "description": "Upper / Lower or Push / Pull — solid for intermediate lifters"
+        },
+        "5": {
+          "label": "5 days / week",
+          "description": "PPL or Bro split — serious volume for serious gains"
+        },
+        "6": {
+          "label": "6 days / week",
+          "description": "PPL × 2 — maximum frequency for advanced athletes"
+        }
+      }
+    },
+    "focusAreas": {
+      "title": "Focus Areas",
+      "subtitle": "Which muscles do you want to prioritize? Select up to 5.",
+      "selectedCount": "{{count}}/5 selected",
+      "previewPrefix": "Your workouts will emphasize",
+      "previewSuffix": "with extra volume and weekly frequency.",
+      "muscles": {
+        "chest": "Chest",
+        "back": "Back",
+        "shoulders": "Shoulders",
+        "arms": "Arms",
+        "core": "Core / Abs",
+        "quads": "Quads",
+        "hamstrings": "Hamstrings",
+        "glutes": "Glutes",
+        "calves": "Calves",
+        "full_body": "Full Body"
+      }
+    },
+    "emailPreferences": {
+      "title": "Can we send you emails?",
+      "promise": "No spam, promise. We hate it too.",
+      "tips": "Tips for getting the most out of Hylift",
+      "newFeatures": "New feature announcements",
+      "promotions": "Promotional offers",
+      "optOut": "Opt out anytime",
+      "accept": "Sure!",
+      "decline": "No, thanks"
+    },
+    "gender": {
+      "title": "What's your birth gender?",
+      "subtitle": "This helps us provide personalized recommendations",
+      "male": "Male",
+      "female": "Female"
     }
   },
   "tabs": {
@@ -2248,13 +2366,13 @@
     "yoke walk": "Yoke Walk",
     "zercher carry": "Zercher Carry",
     "zercher walk": "Zercher Walk",
-    "push day - strength": "Push Day - Strength",
-    "pull day - hypertrophy": "Pull Day - Hypertrophy",
-    "leg day - volume": "Leg Day - Volume",
-    "upper body power": "Upper Body Power",
-    "heavy_compound_movements_for_chest_shoulders_and_triceps": "Heavy compound movements for chest, shoulders and triceps",
     "back_and_biceps_focused_on_muscle_growth": "Back and biceps focused on muscle growth",
     "high_volume_leg_workout_for_quad_and_hamstring_development": "High volume leg workout for quad and hamstring development",
     "full_upper_body_strength_and_power_workout": "Full upper body strength and power workout"
+  },
+  "languageSelect": {
+    "title": "Choose your language",
+    "subtitle": "You can change this later in settings",
+    "continue": "Continue"
   }
 }
