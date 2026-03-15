@@ -19,16 +19,16 @@ import { mockUsers } from "@/data/mock-data";
 import { MoreHorizontal } from "lucide-react";
 import { useState } from "react";
 
-const statusStyles: Record<string, { bg: string; text: string }> = {
-  active: { bg: "rgba(200,241,74,0.15)", text: "#c8f14a" },
-  inactive: { bg: "rgba(191,195,199,0.15)", text: "#bfc3c7" },
-  banned: { bg: "rgba(239,68,68,0.15)", text: "#ef4444" },
+const statusStyles: Record<string, string> = {
+  active: "bg-lime/15 text-lime",
+  inactive: "bg-muted-foreground/15 text-muted-foreground",
+  banned: "bg-danger/15 text-danger",
 };
 
-const levelStyles: Record<string, { bg: string; text: string }> = {
-  beginner: { bg: "rgba(79,195,247,0.15)", text: "#4fc3f7" },
-  intermediate: { bg: "rgba(245,158,11,0.15)", text: "#f59e0b" },
-  advanced: { bg: "rgba(182,82,199,0.15)", text: "#b652c7" },
+const levelStyles: Record<string, string> = {
+  beginner: "bg-sky/15 text-sky",
+  intermediate: "bg-amber/15 text-amber",
+  advanced: "bg-purple/15 text-purple",
 };
 
 const columns: ColumnDef<User>[] = [
@@ -38,7 +38,7 @@ const columns: ColumnDef<User>[] = [
     sortable: false,
     render: (user) => (
       <div className="flex items-center gap-3">
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#c8f14a]/20 text-xs font-semibold text-[#c8f14a]">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-lime/20 text-xs font-semibold text-lime">
           {user.avatar}
         </div>
         <div>
@@ -58,32 +58,24 @@ const columns: ColumnDef<User>[] = [
   {
     key: "status",
     label: "Status",
-    render: (user) => {
-      const style = statusStyles[user.status];
-      return (
-        <span
-          className="rounded-full px-2 py-0.5 text-xs font-medium"
-          style={{ backgroundColor: style.bg, color: style.text }}
-        >
-          {user.status}
-        </span>
-      );
-    },
+    render: (user) => (
+      <span
+        className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusStyles[user.status]}`}
+      >
+        {user.status}
+      </span>
+    ),
   },
   {
     key: "experienceLevel",
     label: "Level",
-    render: (user) => {
-      const style = levelStyles[user.experienceLevel];
-      return (
-        <span
-          className="rounded-full px-2 py-0.5 text-xs font-medium"
-          style={{ backgroundColor: style.bg, color: style.text }}
-        >
-          {user.experienceLevel}
-        </span>
-      );
-    },
+    render: (user) => (
+      <span
+        className={`rounded-full px-2 py-0.5 text-xs font-medium ${levelStyles[user.experienceLevel]}`}
+      >
+        {user.experienceLevel}
+      </span>
+    ),
   },
   {
     key: "followers",
@@ -198,7 +190,7 @@ export default function UsersPage() {
         {selectedUser && (
           <div className="space-y-4">
             <div className="flex items-center gap-4">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#c8f14a]/20 text-lg font-bold text-[#c8f14a]">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-lime/20 text-lg font-bold text-lime">
                 {selectedUser.avatar}
               </div>
               <div>

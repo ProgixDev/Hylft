@@ -26,10 +26,16 @@ const activityIcons = {
 } as const;
 
 const activityColors = {
-  user_joined: "text-[#4fc3f7]",
-  workout_completed: "text-[#c8f14a]",
-  post_flagged: "text-[#ef4444]",
-  routine_created: "text-[#b652c7]",
+  user_joined: "text-sky",
+  workout_completed: "text-lime",
+  post_flagged: "text-danger",
+  routine_created: "text-purple",
+} as const;
+
+const statusStyles = {
+  active: "bg-lime/15 text-lime",
+  inactive: "bg-muted-foreground/15 text-muted-foreground",
+  banned: "bg-danger/15 text-danger",
 } as const;
 
 export default function DashboardPage() {
@@ -81,8 +87,8 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <Card>
           <CardContent className="flex items-center gap-4 p-6">
-            <div className="rounded-full bg-[#c8f14a]/10 p-3">
-              <TrendingUp className="h-5 w-5 text-[#c8f14a]" />
+            <div className="rounded-full bg-lime/10 p-3">
+              <TrendingUp className="h-5 w-5 text-lime" />
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Active Users</p>
@@ -98,8 +104,8 @@ export default function DashboardPage() {
         </Card>
         <Card>
           <CardContent className="flex items-center gap-4 p-6">
-            <div className="rounded-full bg-[#4fc3f7]/10 p-3">
-              <Activity className="h-5 w-5 text-[#4fc3f7]" />
+            <div className="rounded-full bg-sky/10 p-3">
+              <Activity className="h-5 w-5 text-sky" />
             </div>
             <div>
               <p className="text-sm text-muted-foreground">
@@ -114,8 +120,8 @@ export default function DashboardPage() {
         </Card>
         <Card>
           <CardContent className="flex items-center gap-4 p-6">
-            <div className="rounded-full bg-[#ef4444]/10 p-3">
-              <AlertTriangle className="h-5 w-5 text-[#ef4444]" />
+            <div className="rounded-full bg-danger/10 p-3">
+              <AlertTriangle className="h-5 w-5 text-danger" />
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Flagged Posts</p>
@@ -140,7 +146,7 @@ export default function DashboardPage() {
                   className="flex items-center justify-between"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#c8f14a]/20 text-xs font-semibold text-[#c8f14a]">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-lime/20 text-xs font-semibold text-lime">
                       {user.avatar}
                     </div>
                     <div>
@@ -151,22 +157,7 @@ export default function DashboardPage() {
                     </div>
                   </div>
                   <span
-                    className="rounded-full px-2 py-0.5 text-xs font-medium"
-                    data-status={user.status}
-                    style={{
-                      backgroundColor:
-                        user.status === "active"
-                          ? "rgba(200,241,74,0.15)"
-                          : user.status === "inactive"
-                            ? "rgba(191,195,199,0.15)"
-                            : "rgba(239,68,68,0.15)",
-                      color:
-                        user.status === "active"
-                          ? "#c8f14a"
-                          : user.status === "inactive"
-                            ? "#bfc3c7"
-                            : "#ef4444",
-                    }}
+                    className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusStyles[user.status as keyof typeof statusStyles]}`}
                   >
                     {user.status}
                   </span>

@@ -18,10 +18,10 @@ import { mockRoutines } from "@/data/mock-data";
 import { MoreHorizontal } from "lucide-react";
 import { useState } from "react";
 
-const difficultyStyles: Record<string, { bg: string; text: string }> = {
-  beginner: { bg: "rgba(79,195,247,0.15)", text: "#4fc3f7" },
-  intermediate: { bg: "rgba(245,158,11,0.15)", text: "#f59e0b" },
-  advanced: { bg: "rgba(182,82,199,0.15)", text: "#b652c7" },
+const difficultyStyles: Record<string, string> = {
+  beginner: "bg-sky/15 text-sky",
+  intermediate: "bg-amber/15 text-amber",
+  advanced: "bg-purple/15 text-purple",
 };
 
 const columns: ColumnDef<Routine>[] = [
@@ -45,17 +45,13 @@ const columns: ColumnDef<Routine>[] = [
   {
     key: "difficulty",
     label: "Difficulty",
-    render: (routine) => {
-      const style = difficultyStyles[routine.difficulty];
-      return (
-        <span
-          className="rounded-full px-2 py-0.5 text-xs font-medium capitalize"
-          style={{ backgroundColor: style.bg, color: style.text }}
-        >
-          {routine.difficulty}
-        </span>
-      );
-    },
+    render: (routine) => (
+      <span
+        className={`rounded-full px-2 py-0.5 text-xs font-medium capitalize ${difficultyStyles[routine.difficulty]}`}
+      >
+        {routine.difficulty}
+      </span>
+    ),
   },
   {
     key: "exerciseCount",

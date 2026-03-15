@@ -1,11 +1,11 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/auth-context";
-import { Dumbbell, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -39,104 +39,94 @@ export default function LoginPage() {
   if (authLoading) return null;
 
   return (
-    <div className="flex min-h-svh">
-      {/* Left branding panel */}
-      <div className="hidden flex-1 flex-col items-center justify-center gap-6 bg-[#121417] lg:flex">
-        <div className="flex items-center gap-3">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#c8f14a]">
-            <Dumbbell className="h-8 w-8 text-[#0b0d0e]" />
-          </div>
-          <div>
-            <h1 className="text-4xl font-bold text-white">Hylift</h1>
-            <p className="text-sm text-[#bfc3c7]">Administration Panel</p>
-          </div>
-        </div>
-        <div className="mt-4 max-w-md text-center">
-          <p className="text-lg text-[#bfc3c7]">
-            Manage users, workouts, routines, and content from your admin
-            dashboard.
+    <div className="relative flex min-h-svh items-center justify-center overflow-hidden bg-background">
+      {/* Background glow */}
+      <div className="pointer-events-none absolute -top-40 left-1/2 h-125 w-175 -translate-x-1/2 rounded-full bg-lime/5 blur-[120px]" />
+
+      <div className="relative z-10 w-full max-w-md px-8">
+        {/* Logo + title */}
+        <div className="mb-12 flex flex-col items-center">
+          <Image
+            src="/Logo.png"
+            alt="Hylift"
+            width={96}
+            height={96}
+            className="mb-6"
+            priority
+          />
+          <h1 className="text-4xl font-bold tracking-tight text-white">
+            Hylift Admin
+          </h1>
+          <p className="mt-2 text-base text-muted-foreground">
+            Sign in to continue
           </p>
         </div>
-        <div className="mt-8 grid grid-cols-3 gap-6 text-center">
-          <div>
-            <p className="text-3xl font-bold text-[#c8f14a]">2.8K+</p>
-            <p className="text-sm text-[#bfc3c7]">Users</p>
-          </div>
-          <div>
-            <p className="text-3xl font-bold text-[#c8f14a]">18K+</p>
-            <p className="text-sm text-[#bfc3c7]">Workouts</p>
-          </div>
-          <div>
-            <p className="text-3xl font-bold text-[#c8f14a]">950+</p>
-            <p className="text-sm text-[#bfc3c7]">Routines</p>
-          </div>
-        </div>
-      </div>
 
-      {/* Right login form */}
-      <div className="flex flex-1 items-center justify-center p-6">
-        <Card className="w-full max-w-md border-border/50">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-[#c8f14a] lg:hidden">
-              <Dumbbell className="h-6 w-6 text-[#0b0d0e]" />
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="email" className="text-sm text-muted-foreground">
+              Email
+            </Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="admin@admin.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="h-12 text-base border-white/10 bg-white/5 text-white placeholder:text-white/30 focus-visible:ring-lime/40"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="password" className="text-sm text-muted-foreground">
+              Password
+            </Label>
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="h-12 text-base border-white/10 bg-white/5 pr-12 text-white placeholder:text-white/30 focus-visible:ring-lime/40"
+              />
+              <button
+                type="button"
+                className="absolute top-1/2 right-4 -translate-y-1/2 text-white/40 transition-colors hover:text-white/70"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-5 w-5" />
+                ) : (
+                  <Eye className="h-5 w-5" />
+                )}
+              </button>
             </div>
-            <CardTitle className="text-2xl">Welcome back</CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Sign in to your admin account
-            </p>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="admin@hylift.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Enter your password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="absolute top-0 right-0 h-full px-3 hover:bg-transparent"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4 text-muted-foreground" />
-                    ) : (
-                      <Eye className="h-4 w-4 text-muted-foreground" />
-                    )}
-                  </Button>
-                </div>
-              </div>
-              {error && (
-                <p className="text-sm text-destructive">{error}</p>
-              )}
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-                Sign In
-              </Button>
-              <p className="text-center text-xs text-muted-foreground">
-                Demo: admin@hylift.com / admin123
-              </p>
-            </form>
-          </CardContent>
-        </Card>
+          </div>
+
+          {error && (
+            <p className="text-center text-base text-danger">{error}</p>
+          )}
+
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="h-12 w-full text-base bg-lime font-semibold text-primary-foreground hover:bg-lime-light"
+          >
+            {isLoading ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : (
+              "Sign In"
+            )}
+          </Button>
+        </form>
+
+        <p className="mt-8 text-center text-sm text-white/30">
+          Demo &mdash; admin@admin.com / admin123
+        </p>
       </div>
     </div>
   );

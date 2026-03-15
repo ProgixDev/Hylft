@@ -19,10 +19,10 @@ import { mockPosts } from "@/data/mock-data";
 import { Heart, Image, MessageCircle, MoreHorizontal } from "lucide-react";
 import { useState } from "react";
 
-const statusStyles: Record<string, { bg: string; text: string }> = {
-  published: { bg: "rgba(200,241,74,0.15)", text: "#c8f14a" },
-  flagged: { bg: "rgba(245,158,11,0.15)", text: "#f59e0b" },
-  removed: { bg: "rgba(239,68,68,0.15)", text: "#ef4444" },
+const statusStyles: Record<string, string> = {
+  published: "bg-lime/15 text-lime",
+  flagged: "bg-amber/15 text-amber",
+  removed: "bg-danger/15 text-danger",
 };
 
 const columns: ColumnDef<Post>[] = [
@@ -55,7 +55,7 @@ const columns: ColumnDef<Post>[] = [
     label: "Likes",
     render: (post) => (
       <div className="flex items-center gap-1.5">
-        <Heart className="h-3.5 w-3.5 text-[#ef4444]" />
+        <Heart className="h-3.5 w-3.5 text-danger" />
         <span>{post.likes}</span>
       </div>
     ),
@@ -65,7 +65,7 @@ const columns: ColumnDef<Post>[] = [
     label: "Comments",
     render: (post) => (
       <div className="flex items-center gap-1.5">
-        <MessageCircle className="h-3.5 w-3.5 text-[#4fc3f7]" />
+        <MessageCircle className="h-3.5 w-3.5 text-sky" />
         <span>{post.comments}</span>
       </div>
     ),
@@ -73,17 +73,13 @@ const columns: ColumnDef<Post>[] = [
   {
     key: "status",
     label: "Status",
-    render: (post) => {
-      const style = statusStyles[post.status];
-      return (
-        <span
-          className="rounded-full px-2 py-0.5 text-xs font-medium capitalize"
-          style={{ backgroundColor: style.bg, color: style.text }}
-        >
-          {post.status}
-        </span>
-      );
-    },
+    render: (post) => (
+      <span
+        className={`rounded-full px-2 py-0.5 text-xs font-medium capitalize ${statusStyles[post.status]}`}
+      >
+        {post.status}
+      </span>
+    ),
   },
   {
     key: "timestamp",

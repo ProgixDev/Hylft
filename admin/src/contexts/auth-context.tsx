@@ -30,7 +30,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
 const MOCK_ADMIN: AdminUser = {
   id: "admin-1",
   name: "Admin",
-  email: "admin@hylift.com",
+  email: "admin@admin.com",
   role: "Super Admin",
   avatar: "AD",
 };
@@ -57,7 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback(
     async (email: string, password: string): Promise<boolean> => {
       // Mock authentication
-      if (email === "admin@hylift.com" && password === "admin123") {
+      if (email === "admin@admin.com" && password === "admin123") {
         setUser(MOCK_ADMIN);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(MOCK_ADMIN));
         router.push("/dashboard");
