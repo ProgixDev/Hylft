@@ -11,7 +11,8 @@
     "lint": "eslint .",
     "build": "bun expo export --platform android",
     "server": "cd server && bun run start:dev",
-    "server:build": "cd server && bun run build"
+    "server:build": "cd server && bun run build",
+    "admin": "cd admin && bun run dev"
   },
   "dependencies": {
     "@expo-google-fonts/poppins": "^0.4.1",
