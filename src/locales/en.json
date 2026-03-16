@@ -185,6 +185,7 @@
     }
   },
   "tabs": {
+    "home": "Home",
     "schedule": "Schedule",
     "workout": "Workout",
     "feed": "Feed",
@@ -288,6 +289,27 @@
   },
   "feed": {
     "title": "Feed"
+  },
+  "home": {
+    "dashboard": "Dashboard",
+    "hello": "Hello",
+    "letsGetMoving": "Let's get moving today!",
+    "healthSummary": "Health Summary",
+    "workouts": "Workouts",
+    "calories": "Calories",
+    "activity": "Activity",
+    "weekSessions": "Sessions This Week",
+    "todaysWorkout": "Today's Workout",
+    "restDay": "Rest Day",
+    "restDayTitle": "Rest Day",
+    "restDayMessage": "Take it easy today. Recovery is just as important as training.",
+    "exercises": "exercises",
+    "start": "Start",
+    "quickActions": "Quick Actions",
+    "mySchedule": "Schedule",
+    "startWorkout": "Workout",
+    "explore": "Explore",
+    "feed": "Feed"
   },
   "schedule": {
     "mySchedule": "My Schedule",

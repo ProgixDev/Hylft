@@ -29,7 +29,7 @@ export default function Index() {
           setDestination("/auth");
         } else {
           const doneGetStarted = await hasCompletedGetStarted();
-          setDestination(doneGetStarted ? "/(tabs)/schedule" : "/get-started/units");
+          setDestination(doneGetStarted ? "/(tabs)/home" : "/get-started/units");
         }
       } catch (error) {
         console.error("Error checking auth status:", error);

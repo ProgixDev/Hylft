@@ -33,6 +33,12 @@ function TabsLayoutContent() {
         }}
       >
         <Tabs.Screen
+          name="home"
+          options={{
+            title: t("tabs.home"),
+          }}
+        />
+        <Tabs.Screen
           name="schedule"
           options={{
             title: t("tabs.schedule"),

@@ -185,6 +185,7 @@
     }
   },
   "tabs": {
+    "home": "Accueil",
     "schedule": "Calendrier",
     "workout": "Entraînement",
     "feed": "Fil",
@@ -288,6 +289,27 @@
   },
   "feed": {
     "title": "Fil"
+  },
+  "home": {
+    "dashboard": "Tableau de bord",
+    "hello": "Bonjour",
+    "letsGetMoving": "C'est parti pour aujourd'hui !",
+    "healthSummary": "Résumé santé",
+    "workouts": "Séances",
+    "calories": "Calories",
+    "activity": "Activité",
+    "weekSessions": "Séances de la semaine",
+    "todaysWorkout": "Entraînement du jour",
+    "restDay": "Jour de repos",
+    "restDayTitle": "Jour de repos",
+    "restDayMessage": "Reposez-vous aujourd'hui. La récupération est aussi importante que l'entraînement.",
+    "exercises": "exercices",
+    "start": "Démarrer",
+    "quickActions": "Accès rapide",
+    "mySchedule": "Calendrier",
+    "startWorkout": "Entraînement",
+    "explore": "Explorer",
+    "feed": "Fil"
   },
   "schedule": {
     "mySchedule": "Mon Planning",
