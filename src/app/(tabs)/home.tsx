@@ -3,7 +3,6 @@ import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  Dimensions,
   Image,
   Platform,
   Pressable,
@@ -30,7 +29,6 @@ import {
   translateRoutineName,
 } from "../../utils/exerciseTranslator";
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const MY_USER_ID = "1";
 
 const controlShadow = Platform.select({
@@ -174,33 +172,9 @@ export default function Home() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
+      {/* Header + Greeting */}
       <View style={styles.header}>
-        <Image source={theme.logo} style={styles.logo} resizeMode="contain" />
-        <View style={styles.headerRight}>
-          <Text style={styles.headerTitle}>{t("home.dashboard")}</Text>
-          <Pressable
-            style={({ pressed }) => [
-              styles.iconButton,
-              pressed && { opacity: 0.7, transform: [{ scale: 0.92 }] },
-            ]}
-            onPress={() => router.navigate("/notifications" as any)}
-          >
-            <Ionicons
-              name="notifications-outline"
-              size={20}
-              color={theme.foreground.white}
-            />
-          </Pressable>
-        </View>
-      </View>
-
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 90 }}
-      >
-        {/* Greeting */}
-        <View style={styles.greetingSection}>
+        <View style={styles.headerLeft}>
           <Image
             source={{ uri: user?.avatar }}
             style={styles.greetingAvatar}
@@ -214,14 +188,28 @@ export default function Home() {
             </Text>
           </View>
         </View>
+        <Pressable
+          style={({ pressed }) => [
+            styles.iconButton,
+            pressed && { opacity: 0.7, transform: [{ scale: 0.92 }] },
+          ]}
+          onPress={() => router.navigate("/notifications" as any)}
+        >
+          <Ionicons
+            name="notifications-outline"
+            size={18}
+            color={theme.foreground.white}
+          />
+        </Pressable>
+      </View>
 
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 80 }}
+      >
         {/* ── Health Summary ─────────────────────────────────────────── */}
         <View style={styles.sectionHeader}>
-          <Ionicons
-            name="stats-chart"
-            size={18}
-            color={theme.primary.main}
-          />
+          <Ionicons name="stats-chart" size={14} color={theme.primary.main} />
           <Text style={styles.sectionTitle}>{t("home.healthSummary")}</Text>
         </View>
         <View style={styles.statsList}>
@@ -385,13 +373,13 @@ export default function Home() {
         </View>
 
         {/* ── Today's Workout Card ───────────────────────────────────── */}
-        <View style={styles.sectionHeader}>
+        <View style={styles.workoutSectionHeader}>
           <Ionicons
             name="flash-outline"
             size={18}
             color={theme.primary.main}
           />
-          <Text style={styles.sectionTitle}>
+          <Text style={styles.workoutSectionTitle}>
             {todaySchedule?.status === "rest"
               ? t("home.restDay")
               : t("home.todaysWorkout")}
@@ -406,7 +394,7 @@ export default function Home() {
             ]}
             onPress={() => router.push("/schedule/" as any)}
           >
-            <View style={styles.workoutCardGlow} />
+
             <View style={styles.workoutCardContent}>
               <View style={{ flex: 1 }}>
                 <Text style={styles.workoutCardTitle}>
@@ -483,99 +471,6 @@ export default function Home() {
             </Text>
           </View>
         )}
-
-        {/* ── Quick Actions ──────────────────────────────────────────── */}
-        <View style={styles.sectionHeader}>
-          <Ionicons
-            name="apps-outline"
-            size={18}
-            color={theme.primary.main}
-          />
-          <Text style={styles.sectionTitle}>{t("home.quickActions")}</Text>
-        </View>
-        <View style={styles.quickActionsRow}>
-          <Pressable
-            style={({ pressed }) => [
-              styles.quickAction,
-              pressed && { opacity: 0.7, transform: [{ scale: 0.95 }] },
-            ]}
-            onPress={() => router.navigate("/(tabs)/schedule" as any)}
-          >
-            <View
-              style={[
-                styles.quickActionIcon,
-                { backgroundColor: theme.primary.main + "1A" },
-              ]}
-            >
-              <Ionicons
-                name="calendar"
-                size={22}
-                color={theme.primary.main}
-              />
-            </View>
-            <Text style={styles.quickActionText}>
-              {t("home.mySchedule")}
-            </Text>
-          </Pressable>
-
-          <Pressable
-            style={({ pressed }) => [
-              styles.quickAction,
-              pressed && { opacity: 0.7, transform: [{ scale: 0.95 }] },
-            ]}
-            onPress={() => router.navigate("/(tabs)/workout" as any)}
-          >
-            <View
-              style={[
-                styles.quickActionIcon,
-                { backgroundColor: "#FF6B35" + "1A" },
-              ]}
-            >
-              <Ionicons name="barbell" size={22} color="#FF6B35" />
-            </View>
-            <Text style={styles.quickActionText}>
-              {t("home.startWorkout")}
-            </Text>
-          </Pressable>
-
-          <Pressable
-            style={({ pressed }) => [
-              styles.quickAction,
-              pressed && { opacity: 0.7, transform: [{ scale: 0.95 }] },
-            ]}
-            onPress={() => router.navigate("/explore-routines" as any)}
-          >
-            <View
-              style={[
-                styles.quickActionIcon,
-                { backgroundColor: "#4FC3F7" + "1A" },
-              ]}
-            >
-              <Ionicons name="compass" size={22} color="#4FC3F7" />
-            </View>
-            <Text style={styles.quickActionText}>
-              {t("home.explore")}
-            </Text>
-          </Pressable>
-
-          <Pressable
-            style={({ pressed }) => [
-              styles.quickAction,
-              pressed && { opacity: 0.7, transform: [{ scale: 0.95 }] },
-            ]}
-            onPress={() => router.navigate("/(tabs)/feed" as any)}
-          >
-            <View
-              style={[
-                styles.quickActionIcon,
-                { backgroundColor: "#B652C7" + "1A" },
-              ]}
-            >
-              <Ionicons name="flame" size={22} color="#B652C7" />
-            </View>
-            <Text style={styles.quickActionText}>{t("home.feed")}</Text>
-          </Pressable>
-        </View>
       </ScrollView>
     </View>
   );
@@ -592,75 +487,54 @@ function createStyles(theme: Theme) {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      paddingHorizontal: 20,
-      paddingBottom: 8,
+      paddingHorizontal: 16,
+      paddingBottom: 4,
     },
-    logo: {
-      height: 32,
-      width: 100,
-    },
-    headerRight: {
+    headerLeft: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 12,
-    },
-    headerTitle: {
-      fontFamily: FONTS.bold,
-      fontSize: 13,
-      color: theme.foreground.gray,
-      letterSpacing: 1.5,
-      textTransform: "uppercase",
+      gap: 10,
     },
     iconButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 12,
+      width: 36,
+      height: 36,
+      borderRadius: 10,
       alignItems: "center",
       justifyContent: "center",
       backgroundColor: theme.background.accent,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: "rgba(255,255,255,0.08)",
     },
-
-    // Greeting
-    greetingSection: {
-      flexDirection: "row",
-      alignItems: "center",
-      paddingHorizontal: 20,
-      paddingVertical: 16,
-      gap: 14,
-    },
     greetingAvatar: {
-      width: 48,
-      height: 48,
-      borderRadius: 24,
+      width: 40,
+      height: 40,
+      borderRadius: 20,
       borderWidth: 2,
       borderColor: theme.primary.main,
     },
     greetingText: {
       fontFamily: FONTS.bold,
-      fontSize: 20,
+      fontSize: 16,
       color: theme.foreground.white,
     },
     greetingSubtext: {
       fontFamily: FONTS.regular,
-      fontSize: 13,
+      fontSize: 11,
       color: theme.foreground.gray,
-      marginTop: 2,
     },
 
     // Section headers
     sectionHeader: {
       flexDirection: "row",
       alignItems: "center",
-      paddingHorizontal: 20,
-      paddingTop: 20,
-      paddingBottom: 12,
-      gap: 8,
+      paddingHorizontal: 16,
+      paddingTop: 12,
+      paddingBottom: 8,
+      gap: 6,
     },
     sectionTitle: {
       fontFamily: FONTS.bold,
-      fontSize: 15,
+      fontSize: 12,
       color: theme.foreground.white,
       letterSpacing: 0.5,
       textTransform: "uppercase",
@@ -668,29 +542,29 @@ function createStyles(theme: Theme) {
 
     // Stats list
     statsList: {
-      paddingHorizontal: 20,
-      gap: 10,
+      paddingHorizontal: 16,
+      gap: 6,
     },
     statRow: {
       flexDirection: "row",
       alignItems: "center",
       backgroundColor: theme.background.accent,
-      borderRadius: 14,
-      padding: 14,
-      gap: 12,
+      borderRadius: 12,
+      padding: 10,
+      gap: 10,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: "rgba(255,255,255,0.06)",
     },
     statIconBox: {
-      width: 40,
-      height: 40,
-      borderRadius: 12,
+      width: 32,
+      height: 32,
+      borderRadius: 8,
       alignItems: "center",
       justifyContent: "center",
     },
     statInfo: {
       flex: 1,
-      gap: 6,
+      gap: 4,
     },
     statTextRow: {
       flexDirection: "row",
@@ -699,90 +573,98 @@ function createStyles(theme: Theme) {
     },
     statLabel: {
       fontFamily: FONTS.medium,
-      fontSize: 13,
+      fontSize: 12,
       color: theme.foreground.white,
     },
     statValue: {
       fontFamily: FONTS.bold,
-      fontSize: 13,
+      fontSize: 12,
     },
     progressBarBg: {
-      height: 6,
-      borderRadius: 3,
+      height: 4,
+      borderRadius: 2,
       backgroundColor: "rgba(255,255,255,0.08)",
       overflow: "hidden",
     },
     progressBarFill: {
-      height: 6,
-      borderRadius: 3,
+      height: 4,
+      borderRadius: 2,
     },
 
     // Week row
     weekRow: {
       flexDirection: "row",
       justifyContent: "space-between",
-      paddingHorizontal: 20,
-      gap: 4,
+      paddingHorizontal: 16,
     },
     weekDayCol: {
       alignItems: "center",
-      gap: 6,
+      gap: 4,
     },
     weekDayLabel: {
       fontFamily: FONTS.medium,
-      fontSize: 11,
+      fontSize: 10,
       color: theme.foreground.gray,
     },
     weekDayCircle: {
-      width: 38,
-      height: 38,
-      borderRadius: 19,
+      width: 32,
+      height: 32,
+      borderRadius: 16,
       alignItems: "center",
       justifyContent: "center",
     },
     weekDayText: {
       fontFamily: FONTS.semiBold,
-      fontSize: 13,
+      fontSize: 11,
       color: theme.foreground.gray,
+    },
+
+    // Workout section header (larger than compact sections above)
+    workoutSectionHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: 16,
+      paddingTop: 12,
+      paddingBottom: 8,
+      gap: 6,
+    },
+    workoutSectionTitle: {
+      fontFamily: FONTS.bold,
+      fontSize: 12,
+      color: theme.foreground.white,
+      letterSpacing: 0.5,
+      textTransform: "uppercase",
     },
 
     // Workout card
     workoutCard: {
-      marginHorizontal: 20,
-      borderRadius: 20,
+      marginHorizontal: 16,
+      borderRadius: 14,
       backgroundColor: theme.background.accent,
       overflow: "hidden",
       borderWidth: 1,
       borderColor: theme.primary.main + "33",
       ...controlShadow,
     },
-    workoutCardGlow: {
-      position: "absolute",
-      top: 0,
-      left: 0,
-      right: 0,
-      height: 3,
-      backgroundColor: theme.primary.main,
-    },
     workoutCardContent: {
-      padding: 18,
+      padding: 12,
     },
     workoutCardTitle: {
       fontFamily: FONTS.bold,
-      fontSize: 18,
+      fontSize: 15,
       color: theme.foreground.white,
       textTransform: "uppercase",
     },
     workoutCardDesc: {
       fontFamily: FONTS.regular,
-      fontSize: 13,
+      fontSize: 12,
       color: theme.foreground.gray,
       marginTop: 4,
     },
     workoutCardMeta: {
       flexDirection: "row",
-      gap: 16,
-      marginTop: 12,
+      gap: 12,
+      marginTop: 8,
     },
     workoutMetaItem: {
       flexDirection: "row",
@@ -797,18 +679,18 @@ function createStyles(theme: Theme) {
     muscleTags: {
       flexDirection: "row",
       flexWrap: "wrap",
-      gap: 6,
-      marginTop: 12,
+      gap: 4,
+      marginTop: 8,
     },
     muscleTag: {
       backgroundColor: theme.primary.main + "1A",
-      paddingHorizontal: 10,
-      paddingVertical: 4,
-      borderRadius: 8,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 6,
     },
     muscleTagText: {
       fontFamily: FONTS.medium,
-      fontSize: 11,
+      fontSize: 10,
       color: theme.primary.main,
       textTransform: "capitalize",
     },
@@ -817,16 +699,16 @@ function createStyles(theme: Theme) {
       alignItems: "center",
       justifyContent: "center",
       backgroundColor: theme.primary.main,
-      paddingVertical: 12,
-      paddingHorizontal: 24,
-      borderRadius: 14,
-      gap: 6,
-      marginTop: 16,
+      paddingVertical: 10,
+      paddingHorizontal: 20,
+      borderRadius: 12,
+      gap: 5,
+      marginTop: 10,
       alignSelf: "flex-start",
     },
     startButtonText: {
       fontFamily: FONTS.bold,
-      fontSize: 14,
+      fontSize: 13,
       color: "#000",
       textTransform: "uppercase",
       letterSpacing: 1,
@@ -834,55 +716,25 @@ function createStyles(theme: Theme) {
 
     // Rest day
     restDayCard: {
-      marginHorizontal: 20,
-      borderRadius: 20,
+      marginHorizontal: 16,
+      borderRadius: 14,
       backgroundColor: theme.background.accent,
-      padding: 28,
+      padding: 20,
       alignItems: "center",
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: "rgba(255,255,255,0.06)",
     },
     restDayTitle: {
       fontFamily: FONTS.bold,
-      fontSize: 18,
+      fontSize: 15,
       color: theme.foreground.white,
-      marginTop: 12,
+      marginTop: 8,
     },
     restDaySubtext: {
       fontFamily: FONTS.regular,
       fontSize: 13,
       color: theme.foreground.gray,
       marginTop: 6,
-      textAlign: "center",
-    },
-
-    // Quick actions
-    quickActionsRow: {
-      flexDirection: "row",
-      paddingHorizontal: 16,
-      gap: 10,
-    },
-    quickAction: {
-      flex: 1,
-      backgroundColor: theme.background.accent,
-      borderRadius: 16,
-      paddingVertical: 16,
-      alignItems: "center",
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: "rgba(255,255,255,0.06)",
-    },
-    quickActionIcon: {
-      width: 44,
-      height: 44,
-      borderRadius: 14,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    quickActionText: {
-      fontFamily: FONTS.medium,
-      fontSize: 10,
-      color: theme.foreground.gray,
-      marginTop: 8,
       textAlign: "center",
     },
   });

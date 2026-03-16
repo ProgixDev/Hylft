@@ -376,16 +376,16 @@ const createStyles = (theme: Theme) =>
       alignItems: "center",
       justifyContent: "space-between",
       paddingHorizontal: 20,
-      paddingBottom: 12,
+      paddingBottom: 8,
     },
     headerLogo: {
       height: 36,
       width: 110,
     },
     addButton: {
-      width: 44,
-      height: 44,
-      borderRadius: 14,
+      width: 36,
+      height: 36,
+      borderRadius: 10,
       alignItems: "center",
       justifyContent: "center",
       backgroundColor: theme.background.accent,
@@ -400,21 +400,22 @@ const createStyles = (theme: Theme) =>
     quickActionsColumn: {
       flexDirection: "column",
       paddingHorizontal: 16,
-      paddingVertical: 12,
-      gap: 12,
+      paddingVertical: 8,
+      gap: 8,
     },
     quickActionsRow: {
       flexDirection: "row",
-      gap: 12,
+      gap: 8,
     },
     actionButton: {
       flex: 1,
       backgroundColor: theme.background.darker,
-      borderRadius: 18,
-      paddingVertical: 22,
-      paddingHorizontal: 14,
+      borderRadius: 16,
+      paddingVertical: 14,
+      paddingHorizontal: 12,
       alignItems: "center",
-      gap: 8,
+      justifyContent: "center",
+      gap: 6,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: "rgba(255,255,255,0.08)",
       overflow: "hidden",
@@ -429,9 +430,9 @@ const createStyles = (theme: Theme) =>
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
-      paddingHorizontal: 16,
-      paddingVertical: 18,
-      gap: 12,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      gap: 10,
     },
     actionIconContainer: {
       width: 40,
@@ -455,22 +456,22 @@ const createStyles = (theme: Theme) =>
     },
     // Sections
     section: {
-      marginBottom: 24,
+      marginBottom: 16,
     },
     sectionHeader: {
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
       paddingHorizontal: 16,
-      marginBottom: 16,
+      marginBottom: 8,
     },
     sectionTitle: {
-      fontSize: 20,
+      fontSize: 16,
       fontFamily: FONTS.bold,
       color: theme.foreground.white,
     },
     seeAllText: {
-      fontSize: 14,
+      fontSize: 12,
       fontFamily: FONTS.semiBold,
       color: theme.primary.main,
     },
@@ -478,7 +479,7 @@ const createStyles = (theme: Theme) =>
     emptyRoutines: {
       alignItems: "center",
       justifyContent: "center",
-      paddingVertical: 40,
+      paddingVertical: 28,
       paddingHorizontal: 32,
     },
     emptyRoutinesText: {
@@ -632,8 +633,8 @@ const createStyles = (theme: Theme) =>
     },
     // Workouts List
     workoutsList: {
-      paddingHorizontal: 16, // Use same standard padding as routines
-      gap: 16,
+      paddingHorizontal: 16,
+      gap: 10,
     },
     workoutCard: {
       backgroundColor: theme.background.darker,

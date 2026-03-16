@@ -96,24 +96,24 @@ const RoutineCard = ({
 const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
   StyleSheet.create({
     card: {
-      width: 280,
+      width: 260,
       backgroundColor: theme.background.darker,
-      borderRadius: 16,
-      padding: 16,
+      borderRadius: 14,
+      padding: 12,
       borderWidth: 1,
       borderColor: theme.background.darker,
-      marginRight: 12,
+      marginRight: 10,
     },
     cardFull: {
       width: "100%",
       marginRight: 0,
-      marginBottom: 12,
+      marginBottom: 10,
     },
     header: {
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "flex-start",
-      marginBottom: 8,
+      marginBottom: 6,
     },
     name: {
       fontSize: 18,
@@ -143,15 +143,15 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       textTransform: "uppercase",
     },
     description: {
-      fontSize: 13,
+      fontSize: 12,
       color: theme.foreground.gray,
-      marginBottom: 12,
-      lineHeight: 18,
+      marginBottom: 8,
+      lineHeight: 17,
     },
     statsRow: {
       flexDirection: "row",
-      gap: 12,
-      marginBottom: 12,
+      gap: 8,
+      marginBottom: 8,
     },
     statItem: {
       alignItems: "center",
@@ -170,13 +170,13 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     musclesContainer: {
       flexDirection: "row",
       flexWrap: "wrap",
-      gap: 6,
-      marginBottom: 12,
+      gap: 5,
+      marginBottom: 8,
     },
     muscleTag: {
       backgroundColor: theme.background.dark,
-      paddingHorizontal: 10,
-      paddingVertical: 5,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
       borderRadius: 6,
       borderWidth: 1,
       borderColor: theme.primary.main + "30",
@@ -189,13 +189,13 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     startButton: {
       backgroundColor: theme.primary.main,
-      paddingVertical: 10,
-      paddingHorizontal: 14,
-      borderRadius: 18,
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+      borderRadius: 16,
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
-      gap: 8,
+      gap: 6,
     },
     startButtonText: {
       fontSize: 13,
