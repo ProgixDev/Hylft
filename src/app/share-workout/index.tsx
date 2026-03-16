@@ -109,8 +109,8 @@ export default function ShareWorkout() {
       console.warn("addPost failed:", err);
     }
 
-    // Navigate to home feed
-    router.replace("/(tabs)/home" as any);
+    // Navigate to feed
+    router.replace("/(tabs)/feed" as any);
   };
 
   // ── Render ────────────────────────────────────────────────────────────────

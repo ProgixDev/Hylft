@@ -73,7 +73,7 @@ function createStyles(theme: Theme) {
   });
 }
 
-export default function Home() {
+export default function Feed() {
   const router = useRouter();
   const { theme } = useTheme();
   const [refreshing, setRefreshing] = useState(false);

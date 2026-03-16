@@ -187,7 +187,7 @@
   "tabs": {
     "schedule": "Calendrier",
     "workout": "Entraînement",
-    "home": "Accueil",
+    "feed": "Fil",
     "profile": "Profil"
   },
   "workout": {
@@ -286,8 +286,8 @@
     "language": "Langue",
     "languageSubtitle": "Choisissez votre langue préférée"
   },
-  "home": {
-    "title": "Accueil"
+  "feed": {
+    "title": "Fil"
   },
   "schedule": {
     "mySchedule": "Mon Planning",
