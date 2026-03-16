@@ -148,7 +148,7 @@ export default function ExploreRoutineDetail() {
           <View style={styles.statItem}>
             <Ionicons
               name="barbell-outline"
-              size={20}
+              size={16}
               color={theme.primary.main}
             />
             <Text style={styles.statValue}>{routine.exercises.length}</Text>
@@ -158,7 +158,7 @@ export default function ExploreRoutineDetail() {
           <View style={styles.statItem}>
             <Ionicons
               name="time-outline"
-              size={20}
+              size={16}
               color={theme.primary.main}
             />
             <Text style={styles.statValue}>{routine.estimatedDuration}m</Text>
@@ -168,7 +168,7 @@ export default function ExploreRoutineDetail() {
           <View style={styles.statItem}>
             <Ionicons
               name="layers-outline"
-              size={20}
+              size={16}
               color={theme.primary.main}
             />
             <Text style={styles.statValue}>{totalSets}</Text>
@@ -178,7 +178,7 @@ export default function ExploreRoutineDetail() {
           <View style={styles.statItem}>
             <Ionicons
               name="calendar-outline"
-              size={20}
+              size={16}
               color={theme.primary.main}
             />
             <Text style={styles.statValue}>{routine.daysPerWeek}×</Text>
@@ -234,7 +234,7 @@ export default function ExploreRoutineDetail() {
         </View>
 
         {/* ── Spacer for CTAs ── */}
-        <View style={{ height: 24 }} />
+        <View style={{ height: 12 }} />
       </ScrollView>
 
       {/* ── Sticky CTA bar ── */}
@@ -284,15 +284,16 @@ const createStyles = (theme: Theme) =>
     centred: {
       alignItems: "center",
       justifyContent: "center",
-      gap: 12,
+      gap: 10,
     },
     notFoundText: {
-      fontSize: 16,
+      fontSize: 13,
       color: theme.foreground.gray,
     },
     backLink: {
       color: theme.primary.main,
       fontFamily: FONTS.bold,
+      fontSize: 13,
     },
     // Header
     header: {
@@ -300,16 +301,16 @@ const createStyles = (theme: Theme) =>
       justifyContent: "space-between",
       alignItems: "center",
       paddingHorizontal: 16,
-      paddingVertical: 12,
+      paddingVertical: 8,
       borderBottomWidth: 1,
       borderBottomColor: theme.background.darker,
     },
     backButton: {
-      padding: 8,
-      marginLeft: -8,
+      padding: 6,
+      marginLeft: -6,
     },
     headerTitle: {
-      fontSize: 18,
+      fontSize: 15,
       fontFamily: FONTS.bold,
       color: theme.foreground.white,
       flex: 1,
@@ -317,74 +318,74 @@ const createStyles = (theme: Theme) =>
     },
     // Scroll
     scroll: { flex: 1 },
-    scrollContent: { paddingBottom: 16 },
+    scrollContent: { paddingBottom: 10 },
     // Hero
     heroBlock: {
-      paddingHorizontal: 20,
-      paddingTop: 20,
-      paddingBottom: 16,
+      paddingHorizontal: 16,
+      paddingTop: 14,
+      paddingBottom: 12,
       borderBottomWidth: 1,
       borderBottomColor: theme.background.darker,
     },
     badgeRow: {
       flexDirection: "row",
-      gap: 8,
-      marginBottom: 12,
+      gap: 6,
+      marginBottom: 8,
     },
     badge: {
-      paddingHorizontal: 10,
-      paddingVertical: 5,
-      borderRadius: 20,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 16,
     },
     badgeText: {
-      fontSize: 11,
+      fontSize: 10,
       fontFamily: FONTS.bold,
       textTransform: "uppercase",
     },
     categoryBadge: {
-      paddingHorizontal: 10,
-      paddingVertical: 5,
-      borderRadius: 20,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 16,
       backgroundColor: theme.primary.main + "20",
       borderWidth: 1,
       borderColor: theme.primary.main + "50",
     },
     categoryBadgeText: {
-      fontSize: 11,
+      fontSize: 10,
       fontFamily: FONTS.bold,
       color: theme.primary.main,
     },
     routineName: {
-      fontSize: 26,
+      fontSize: 20,
       fontFamily: FONTS.extraBold,
       color: theme.foreground.white,
-      marginBottom: 4,
-      lineHeight: 32,
+      marginBottom: 3,
+      lineHeight: 26,
     },
     routineAuthor: {
-      fontSize: 13,
+      fontSize: 12,
       color: theme.foreground.gray,
-      marginBottom: 10,
+      marginBottom: 6,
     },
     routineDescription: {
-      fontSize: 14,
+      fontSize: 12,
       color: theme.foreground.gray,
-      lineHeight: 22,
-      marginBottom: 14,
+      lineHeight: 18,
+      marginBottom: 10,
     },
     tagsRow: {
       flexDirection: "row",
       flexWrap: "wrap",
-      gap: 8,
+      gap: 6,
     },
     tag: {
       backgroundColor: theme.background.darker,
-      paddingHorizontal: 10,
-      paddingVertical: 5,
-      borderRadius: 8,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 7,
     },
     tagText: {
-      fontSize: 11,
+      fontSize: 10,
       fontFamily: FONTS.semiBold,
       color: theme.foreground.gray,
     },
@@ -392,85 +393,85 @@ const createStyles = (theme: Theme) =>
     statsCard: {
       flexDirection: "row",
       backgroundColor: theme.background.darker,
-      marginHorizontal: 16,
-      marginTop: 16,
-      borderRadius: 16,
-      paddingVertical: 16,
-      paddingHorizontal: 8,
+      marginHorizontal: 14,
+      marginTop: 10,
+      borderRadius: 12,
+      paddingVertical: 10,
+      paddingHorizontal: 6,
       borderWidth: 1,
       borderColor: theme.background.accent,
     },
     statItem: {
       flex: 1,
       alignItems: "center",
-      gap: 4,
+      gap: 3,
     },
     statDivider: {
       width: 1,
       backgroundColor: theme.background.accent,
-      marginVertical: 4,
+      marginVertical: 3,
     },
     statValue: {
-      fontSize: 17,
+      fontSize: 14,
       fontFamily: FONTS.bold,
       color: theme.foreground.white,
     },
     statLabel: {
-      fontSize: 11,
+      fontSize: 10,
       color: theme.foreground.gray,
     },
     // Sections
     section: {
-      paddingHorizontal: 20,
-      paddingTop: 24,
+      paddingHorizontal: 16,
+      paddingTop: 16,
     },
     sectionTitle: {
-      fontSize: 16,
+      fontSize: 14,
       fontFamily: FONTS.bold,
       color: theme.foreground.white,
-      marginBottom: 12,
+      marginBottom: 8,
     },
     // Muscles
     musclesRow: {
       flexDirection: "row",
       flexWrap: "wrap",
-      gap: 8,
+      gap: 6,
     },
     muscleTag: {
       backgroundColor: theme.primary.main + "18",
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      borderRadius: 10,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 8,
       borderWidth: 1,
       borderColor: theme.primary.main + "40",
     },
     muscleTagText: {
-      fontSize: 12,
+      fontSize: 11,
       fontFamily: FONTS.semiBold,
       color: theme.primary.main,
     },
     // Exercises list
     exercisesList: {
-      gap: 10,
+      gap: 6,
     },
     exerciseRow: {
       flexDirection: "row",
       alignItems: "center",
       backgroundColor: theme.background.darker,
-      borderRadius: 12,
-      padding: 14,
-      gap: 12,
+      borderRadius: 10,
+      padding: 10,
+      gap: 10,
     },
     exerciseIndex: {
-      width: 28,
-      height: 28,
-      borderRadius: 14,
+      width: 24,
+      height: 24,
+      borderRadius: 12,
       backgroundColor: theme.background.accent,
       alignItems: "center",
       justifyContent: "center",
     },
     exerciseIndexText: {
-      fontSize: 12,
+      fontSize: 11,
       fontFamily: FONTS.bold,
       color: theme.foreground.gray,
     },
@@ -478,31 +479,31 @@ const createStyles = (theme: Theme) =>
       flex: 1,
     },
     exerciseName: {
-      fontSize: 14,
+      fontSize: 13,
       fontFamily: FONTS.semiBold,
       color: theme.foreground.white,
-      marginBottom: 2,
+      marginBottom: 1,
     },
     exerciseMeta: {
-      fontSize: 12,
+      fontSize: 11,
       color: theme.foreground.gray,
     },
     exerciseRest: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 3,
+      gap: 2,
     },
     exerciseRestText: {
-      fontSize: 11,
+      fontSize: 10,
       color: theme.foreground.gray,
     },
     // CTA bar
     ctaBar: {
       flexDirection: "row",
-      paddingHorizontal: 16,
-      paddingVertical: 16,
-      paddingBottom: 24,
-      gap: 12,
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+      paddingBottom: 18,
+      gap: 10,
       borderTopWidth: 1,
       borderTopColor: theme.background.darker,
       backgroundColor: theme.background.dark,
@@ -512,9 +513,9 @@ const createStyles = (theme: Theme) =>
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
-      borderRadius: 22,
-      paddingVertical: 14,
-      gap: 8,
+      borderRadius: 18,
+      paddingVertical: 10,
+      gap: 6,
     },
     ctaSecondary: {
       backgroundColor: theme.background.darker,
@@ -526,7 +527,7 @@ const createStyles = (theme: Theme) =>
       backgroundColor: theme.primary.main + "12",
     },
     ctaSecondaryText: {
-      fontSize: 15,
+      fontSize: 13,
       fontFamily: FONTS.bold,
       color: theme.foreground.white,
     },
@@ -534,7 +535,7 @@ const createStyles = (theme: Theme) =>
       backgroundColor: theme.primary.main,
     },
     ctaPrimaryText: {
-      fontSize: 15,
+      fontSize: 13,
       fontFamily: FONTS.bold,
       color: theme.background.dark,
     },

@@ -84,7 +84,7 @@ export default function Search() {
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons
             name="chevron-back"
-            size={28}
+            size={24}
             color={theme.foreground.white}
           />
         </TouchableOpacity>
@@ -131,7 +131,7 @@ export default function Search() {
         <View style={styles.emptyState}>
           <Ionicons
             name="search-outline"
-            size={48}
+            size={36}
             color={theme.foreground.gray}
           />
           <Text style={styles.emptyText}>{t("search.noUsersFound")}</Text>
@@ -155,39 +155,39 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       alignItems: "center",
       justifyContent: "space-between",
       paddingHorizontal: 16,
-      paddingVertical: 12,
+      paddingVertical: 8,
       borderBottomWidth: 1,
       borderBottomColor: theme.background.darker,
     },
     headerTitle: {
-      fontSize: 24,
+      fontSize: 17,
       fontFamily: FONTS.bold,
       color: theme.foreground.white,
     },
     spacer: {
-      width: 28,
+      width: 24,
     },
     searchContainer: {
       flexDirection: "row",
       alignItems: "center",
-      marginHorizontal: 16,
-      marginVertical: 12,
-      paddingHorizontal: 12,
-      borderRadius: 12,
+      marginHorizontal: 12,
+      marginVertical: 8,
+      paddingHorizontal: 10,
+      borderRadius: 10,
       backgroundColor: theme.background.darker,
     },
     searchIcon: {
-      marginRight: 8,
+      marginRight: 6,
     },
     searchInput: {
       flex: 1,
-      paddingVertical: 12,
+      paddingVertical: 9,
       color: theme.foreground.white,
-      fontSize: 14,
+      fontSize: 13,
     },
     listContent: {
       paddingHorizontal: 12,
-      paddingVertical: 8,
+      paddingVertical: 4,
     },
     userItemContainer: {
       marginHorizontal: 0,
@@ -195,35 +195,35 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     userItem: {
       flexDirection: "row",
       alignItems: "center",
-      paddingHorizontal: 12,
-      paddingVertical: 12,
-      marginVertical: 6,
-      borderRadius: 12,
+      paddingHorizontal: 10,
+      paddingVertical: 8,
+      marginVertical: 3,
+      borderRadius: 10,
       backgroundColor: theme.background.darker,
     },
     userAvatar: {
-      width: 52,
-      height: 52,
-      borderRadius: 26,
-      marginRight: 12,
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      marginRight: 10,
     },
     userInfo: {
       flex: 1,
     },
     username: {
-      fontSize: 14,
+      fontSize: 13,
       fontFamily: FONTS.semiBold,
       color: theme.foreground.white,
-      marginBottom: 4,
+      marginBottom: 2,
     },
     bio: {
-      fontSize: 12,
+      fontSize: 11,
       color: theme.foreground.gray,
     },
     followButton: {
-      paddingHorizontal: 16,
-      paddingVertical: 8,
-      borderRadius: 8,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 7,
       backgroundColor: theme.primary.main,
     },
     followingButton: {
@@ -232,7 +232,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       borderColor: theme.primary.main,
     },
     followButtonText: {
-      fontSize: 12,
+      fontSize: 11,
       fontFamily: FONTS.semiBold,
       color: theme.background.dark,
     },
@@ -243,17 +243,17 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       flex: 1,
       justifyContent: "center",
       alignItems: "center",
-      paddingHorizontal: 32,
+      paddingHorizontal: 24,
     },
     emptyText: {
-      fontSize: 18,
+      fontSize: 15,
       fontFamily: FONTS.semiBold,
       color: theme.foreground.white,
-      marginTop: 16,
-      marginBottom: 8,
+      marginTop: 12,
+      marginBottom: 6,
     },
     emptySubtext: {
-      fontSize: 14,
+      fontSize: 12,
       color: theme.foreground.gray,
       textAlign: "center",
     },

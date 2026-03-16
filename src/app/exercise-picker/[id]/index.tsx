@@ -159,7 +159,7 @@ export default function ExerciseDetailPage() {
             <View style={styles.videoPlaceholder}>
               <Ionicons
                 name="barbell-outline"
-                size={64}
+                size={44}
                 color={theme.foreground.gray}
               />
             </View>
@@ -200,7 +200,7 @@ export default function ExerciseDetailPage() {
           <View style={styles.statCard}>
             <Ionicons
               name="barbell-outline"
-              size={20}
+              size={16}
               color={theme.primary.main}
             />
             <Text style={styles.statLabel}>{t("exerciseDetail.equipment")}</Text>
@@ -209,7 +209,7 @@ export default function ExerciseDetailPage() {
             </Text>
           </View>
           <View style={styles.statCard}>
-            <Ionicons name={diff.icon} size={20} color={diff.color} />
+            <Ionicons name={diff.icon} size={16} color={diff.color} />
             <Text style={styles.statLabel}>{t("exerciseDetail.difficulty")}</Text>
             <Text style={[styles.statValue, { color: diff.color }]}>
               {translateApiData(diff.label.toLowerCase())}
@@ -218,7 +218,7 @@ export default function ExerciseDetailPage() {
           <View style={styles.statCard}>
             <Ionicons
               name="body-outline"
-              size={20}
+              size={16}
               color={theme.primary.main}
             />
             <Text style={styles.statLabel}>{t("exerciseDetail.bodyPart")}</Text>
@@ -229,7 +229,7 @@ export default function ExerciseDetailPage() {
           <View style={styles.statCard}>
             <Ionicons
               name="locate-outline"
-              size={20}
+              size={16}
               color={theme.primary.main}
             />
             <Text style={styles.statLabel}>{t("exerciseDetail.target")}</Text>
@@ -333,7 +333,7 @@ export default function ExerciseDetailPage() {
           </Text>
         </View>
 
-        <View style={{ height: 40 }} />
+        <View style={{ height: 20 }} />
       </ScrollView>
 
       {/* Add to workout */}
@@ -345,9 +345,9 @@ export default function ExerciseDetailPage() {
         >
           <Ionicons
             name="add-circle"
-            size={24}
+            size={20}
             color={theme.background.dark}
-            style={{ marginRight: 8 }}
+            style={{ marginRight: 6 }}
           />
           <Text style={styles.addButtonText}>{t("exerciseDetail.addToWorkout")}</Text>
         </TouchableOpacity>
@@ -366,21 +366,21 @@ const createStyles = (theme: Theme) =>
       justifyContent: "space-between",
       alignItems: "center",
       paddingHorizontal: 16,
-      paddingVertical: 16,
+      paddingVertical: 8,
       backgroundColor: theme.background.darker,
     },
     headerBack: { padding: 4 },
-    title: { fontSize: 18, fontFamily: FONTS.semiBold, color: theme.foreground.white },
-    content: { flex: 1, paddingHorizontal: 16, paddingTop: 20 },
+    title: { fontSize: 15, fontFamily: FONTS.semiBold, color: theme.foreground.white },
+    content: { flex: 1, paddingHorizontal: 14, paddingTop: 12 },
     centered: { flex: 1, justifyContent: "center", alignItems: "center" },
-    emptyText: { fontSize: 16, color: theme.foreground.gray, marginTop: 12 },
+    emptyText: { fontSize: 13, color: theme.foreground.gray, marginTop: 10 },
     // GIF
     videoContainer: {
       width: "100%",
-      height: 300,
-      borderRadius: 20,
+      height: 240,
+      borderRadius: 16,
       overflow: "hidden",
-      marginBottom: 20,
+      marginBottom: 14,
       backgroundColor: theme.background.darker,
     },
     video: { width: "100%", height: "100%" },
@@ -392,25 +392,25 @@ const createStyles = (theme: Theme) =>
       backgroundColor: theme.background.darker,
     },
     // Title
-    titleSection: { marginBottom: 20 },
+    titleSection: { marginBottom: 14 },
     exerciseName: {
-      fontSize: 26,
+      fontSize: 20,
       fontFamily: FONTS.bold,
       color: theme.foreground.white,
-      marginBottom: 12,
+      marginBottom: 8,
       textTransform: "capitalize",
     },
-    tagsRow: { flexDirection: "row", gap: 8, flexWrap: "wrap" },
+    tagsRow: { flexDirection: "row", gap: 6, flexWrap: "wrap" },
     tag: {
-      paddingHorizontal: 12,
-      paddingVertical: 5,
-      borderRadius: 20,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 16,
       backgroundColor: theme.background.accent,
       borderWidth: 1,
       borderColor: theme.background.accent,
     },
     tagText: {
-      fontSize: 12,
+      fontSize: 11,
       fontFamily: FONTS.semiBold,
       color: theme.foreground.gray,
       textTransform: "capitalize",
@@ -419,49 +419,49 @@ const createStyles = (theme: Theme) =>
     statGrid: {
       flexDirection: "row",
       flexWrap: "wrap",
-      gap: 10,
-      marginBottom: 24,
+      gap: 8,
+      marginBottom: 16,
     },
     statCard: {
       flex: 1,
       minWidth: "45%",
       backgroundColor: theme.background.darker,
-      borderRadius: 14,
-      padding: 14,
-      gap: 6,
+      borderRadius: 10,
+      padding: 10,
+      gap: 4,
       alignItems: "flex-start",
     },
     statLabel: {
-      fontSize: 11,
+      fontSize: 10,
       color: theme.foreground.gray,
       fontFamily: FONTS.semiBold,
     },
     statValue: {
-      fontSize: 13,
+      fontSize: 12,
       color: theme.foreground.white,
       fontFamily: FONTS.bold,
       textTransform: "capitalize",
     },
     // Sections
-    section: { marginBottom: 24 },
+    section: { marginBottom: 16 },
     sectionTitle: {
-      fontSize: 15,
+      fontSize: 13,
       fontFamily: FONTS.bold,
       color: theme.foreground.white,
-      marginBottom: 12,
+      marginBottom: 8,
     },
-    badgeList: { gap: 8 },
+    badgeList: { gap: 6 },
     equipmentBadge: {
       flexDirection: "row",
       alignItems: "center",
       backgroundColor: theme.background.darker,
-      paddingHorizontal: 12,
-      paddingVertical: 10,
-      borderRadius: 10,
-      gap: 8,
+      paddingHorizontal: 10,
+      paddingVertical: 7,
+      borderRadius: 8,
+      gap: 6,
     },
     equipmentText: {
-      fontSize: 14,
+      fontSize: 12,
       color: theme.foreground.white,
       textTransform: "capitalize",
     },
@@ -469,10 +469,10 @@ const createStyles = (theme: Theme) =>
       flexDirection: "row",
       alignItems: "center",
       backgroundColor: theme.background.darker,
-      paddingHorizontal: 12,
-      paddingVertical: 10,
-      borderRadius: 10,
-      gap: 10,
+      paddingHorizontal: 10,
+      paddingVertical: 7,
+      borderRadius: 8,
+      gap: 8,
       borderLeftWidth: 3,
       borderLeftColor: theme.primary.main,
     },
@@ -480,43 +480,43 @@ const createStyles = (theme: Theme) =>
       flexDirection: "row",
       alignItems: "center",
       backgroundColor: theme.background.darker,
-      paddingHorizontal: 12,
-      paddingVertical: 10,
-      borderRadius: 10,
-      gap: 10,
+      paddingHorizontal: 10,
+      paddingVertical: 7,
+      borderRadius: 8,
+      gap: 8,
       borderLeftWidth: 3,
       borderLeftColor: theme.foreground.gray + "60",
     },
-    muscleDot: { width: 8, height: 8, borderRadius: 4 },
+    muscleDot: { width: 6, height: 6, borderRadius: 3 },
     muscleText: {
       flex: 1,
-      fontSize: 14,
+      fontSize: 12,
       color: theme.foreground.gray,
       textTransform: "capitalize",
     },
     primaryBadgePill: {
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-      borderRadius: 10,
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: 8,
     },
-    primaryBadgePillText: { fontSize: 10, fontFamily: FONTS.bold },
+    primaryBadgePillText: { fontSize: 9, fontFamily: FONTS.bold },
     // Tips
     tipsCard: {
       backgroundColor: theme.background.darker,
-      borderRadius: 14,
-      padding: 14,
+      borderRadius: 10,
+      padding: 10,
     },
     tipsHeader: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 6,
-      marginBottom: 8,
+      gap: 5,
+      marginBottom: 6,
     },
-    description: { fontSize: 14, color: theme.foreground.gray, lineHeight: 22 },
+    description: { fontSize: 12, color: theme.foreground.gray, lineHeight: 18 },
     // Footer
     footer: {
-      paddingHorizontal: 16,
-      paddingVertical: 16,
+      paddingHorizontal: 14,
+      paddingVertical: 10,
       borderTopWidth: 1,
       borderTopColor: theme.background.darker,
       backgroundColor: theme.background.dark,
@@ -526,11 +526,11 @@ const createStyles = (theme: Theme) =>
       flexDirection: "row",
       justifyContent: "center",
       alignItems: "center",
-      paddingVertical: 14,
-      borderRadius: 12,
+      paddingVertical: 10,
+      borderRadius: 10,
     },
     addButtonText: {
-      fontSize: 16,
+      fontSize: 14,
       fontFamily: FONTS.semiBold,
       color: theme.background.dark,
     },

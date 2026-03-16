@@ -133,7 +133,7 @@ const Post = memo(
             <View style={styles.workoutBannerIcon}>
               <Ionicons
                 name="barbell-outline"
-                size={40}
+                size={32}
                 color={theme.primary.main}
               />
             </View>
@@ -153,7 +153,7 @@ const Post = memo(
             >
               <Ionicons
                 name={post.isLiked ? "trophy" : "trophy-outline"}
-                size={26}
+                size={22}
                 color={
                   post.isLiked ? theme.primary.main : theme.foreground.white
                 }
@@ -178,7 +178,7 @@ const Post = memo(
             >
               <Ionicons
                 name="chatbubble-outline"
-                size={24}
+                size={20}
                 color={theme.foreground.white}
               />
               {post.comments > 0 && (
@@ -194,7 +194,7 @@ const Post = memo(
             >
               <Ionicons
                 name="share-outline"
-                size={24}
+                size={20}
                 color={theme.foreground.white}
               />
             </Pressable>
@@ -208,7 +208,7 @@ const Post = memo(
           >
             <Ionicons
               name={isSaved ? "bookmark" : "bookmark-outline"}
-              size={24}
+              size={20}
               color={isSaved ? theme.primary.main : theme.foreground.white}
             />
           </Pressable>
@@ -256,37 +256,37 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       marginBottom: 0,
     },
     workoutBanner: {
-      marginHorizontal: 16,
-      borderRadius: 16,
+      marginHorizontal: 12,
+      borderRadius: 12,
       backgroundColor: theme.background.darker,
       borderWidth: 1,
       borderColor: theme.primary.main + "33",
-      paddingVertical: 32,
+      paddingVertical: 22,
       alignItems: "center",
-      gap: 10,
+      gap: 8,
     },
     workoutBannerIcon: {
-      width: 72,
-      height: 72,
-      borderRadius: 36,
+      width: 56,
+      height: 56,
+      borderRadius: 28,
       backgroundColor: theme.primary.main + "20",
       alignItems: "center",
       justifyContent: "center",
     },
     workoutBannerTitle: {
-      fontSize: 18,
+      fontSize: 15,
       fontFamily: FONTS.bold,
       color: theme.foreground.white,
     },
     divider: {
-      height: 8,
+      height: 6,
       backgroundColor: theme.background.dark,
     },
     postHeader: {
       flexDirection: "row",
       alignItems: "center",
-      paddingHorizontal: 16,
-      paddingVertical: 10,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
     },
     userHeaderButton: {
       flexDirection: "row",
@@ -294,45 +294,45 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       flex: 1,
     },
     avatarWrapper: {
-      width: 44,
-      height: 44,
-      borderRadius: 22,
+      width: 36,
+      height: 36,
+      borderRadius: 18,
       padding: 2,
       backgroundColor: theme.primary.main + "40",
-      marginRight: 10,
+      marginRight: 8,
     },
     avatar: {
       width: "100%",
       height: "100%",
-      borderRadius: 20,
+      borderRadius: 16,
     },
     userInfo: {
       flex: 1,
     },
     username: {
-      fontSize: 15,
+      fontSize: 13,
       fontFamily: FONTS.semiBold,
       color: theme.foreground.white,
     },
     timestamp: {
-      fontSize: 12,
+      fontSize: 11,
       color: theme.foreground.gray,
-      marginTop: 2,
+      marginTop: 1,
     },
     moreButton: {
       padding: 4,
     },
     postImage: {
       width: "100%",
-      height: 400,
+      height: 380,
       backgroundColor: theme.background.darker,
     },
     actionsContainer: {
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
-      paddingHorizontal: 8,
-      paddingVertical: 6,
+      paddingHorizontal: 6,
+      paddingVertical: 4,
     },
     leftActions: {
       flexDirection: "row",
@@ -341,80 +341,80 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     actionButton: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 5,
-      paddingHorizontal: 10,
-      paddingVertical: 8,
+      gap: 4,
+      paddingHorizontal: 8,
+      paddingVertical: 6,
     },
     actionCount: {
-      fontSize: 13,
+      fontSize: 12,
       fontFamily: FONTS.semiBold,
       color: theme.foreground.white,
     },
     metricsSection: {
-      paddingHorizontal: 16,
-      paddingVertical: 12,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: "rgba(255,255,255,0.08)",
     },
     metricsContainer: {
       flexDirection: "row",
-      gap: 12,
+      gap: 8,
       flexWrap: "wrap",
     },
     metricItem: {
       flex: 1,
-      minWidth: 70,
+      minWidth: 60,
       alignItems: "center",
-      paddingVertical: 6,
+      paddingVertical: 4,
     },
     metricLabel: {
-      fontSize: 11,
+      fontSize: 10,
       color: theme.foreground.gray,
-      marginBottom: 4,
+      marginBottom: 2,
     },
     metricValue: {
-      fontSize: 14,
+      fontSize: 13,
       fontFamily: FONTS.bold,
       color: theme.foreground.white,
     },
     postInfo: {
-      paddingHorizontal: 16,
+      paddingHorizontal: 12,
       paddingTop: 2,
-      paddingBottom: 12,
+      paddingBottom: 8,
     },
     metadataContainer: {
       flexDirection: "row",
-      gap: 8,
-      marginBottom: 12,
+      gap: 6,
+      marginBottom: 8,
       flexWrap: "wrap",
     },
     metadataTag: {
       backgroundColor: theme.primary.main,
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      borderRadius: 20,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 16,
     },
     metadataLabel: {
-      fontSize: 12,
+      fontSize: 11,
       fontFamily: FONTS.semiBold,
       color: theme.background.dark,
     },
     likes: {
-      fontSize: 14,
+      fontSize: 13,
       fontFamily: FONTS.semiBold,
       color: theme.foreground.white,
-      marginBottom: 8,
+      marginBottom: 6,
     },
     caption: {
-      fontSize: 14,
+      fontSize: 13,
       color: theme.foreground.white,
-      lineHeight: 20,
-      marginBottom: 4,
+      lineHeight: 18,
+      marginBottom: 3,
     },
     viewComments: {
-      fontSize: 14,
+      fontSize: 13,
       color: theme.foreground.gray,
-      marginTop: 4,
+      marginTop: 3,
     },
   });
 

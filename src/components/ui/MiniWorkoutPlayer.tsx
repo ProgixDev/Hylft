@@ -41,7 +41,7 @@ export const MiniWorkoutPlayer: React.FC<MiniWorkoutPlayerProps> = ({
     >
       <View style={styles.content}>
         <View style={styles.iconContainer}>
-          <Ionicons name="fitness" size={20} color={theme.primary.main} />
+          <Ionicons name="fitness" size={16} color={theme.primary.main} />
         </View>
 
         <View style={styles.info}>
@@ -71,7 +71,7 @@ export const MiniWorkoutPlayer: React.FC<MiniWorkoutPlayerProps> = ({
       </View>
 
       <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
-        <Ionicons name="trash-outline" size={24} color="#FF4444" />
+        <Ionicons name="trash-outline" size={20} color="#FF4444" />
       </TouchableOpacity>
     </TouchableOpacity>
   );
@@ -85,14 +85,14 @@ const createStyles = (theme: Theme) =>
       borderTopColor: theme.background.accent,
       position: "absolute",
       bottom: 90,
-      left: 16,
-      right: 16,
-      paddingHorizontal: 16,
-      paddingVertical: 12,
+      left: 12,
+      right: 12,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      borderRadius: 24,
+      borderRadius: 18,
       overflow: "hidden",
       shadowColor: "#000",
       shadowOffset: {
@@ -106,12 +106,12 @@ const createStyles = (theme: Theme) =>
       flex: 1,
       flexDirection: "row",
       alignItems: "center",
-      gap: 12,
+      gap: 10,
     },
     iconContainer: {
-      width: 40,
-      height: 40,
-      borderRadius: 8,
+      width: 32,
+      height: 32,
+      borderRadius: 7,
       backgroundColor: theme.background.dark,
       alignItems: "center",
       justifyContent: "center",
@@ -120,34 +120,34 @@ const createStyles = (theme: Theme) =>
       flex: 1,
     },
     title: {
-      fontSize: 14,
+      fontSize: 12,
       fontFamily: FONTS.bold,
       color: theme.foreground.white,
-      marginBottom: 4,
+      marginBottom: 2,
     },
     statsRow: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 6,
+      gap: 4,
     },
     statItem: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 4,
+      gap: 3,
     },
     stat: {
-      fontSize: 12,
+      fontSize: 11,
       color: theme.foreground.gray,
       fontFamily: FONTS.semiBold,
     },
     statSeparator: {
-      fontSize: 12,
+      fontSize: 11,
       color: theme.foreground.gray,
-      marginHorizontal: 2,
+      marginHorizontal: 1,
     },
     deleteButton: {
-      padding: 8,
-      borderRadius: 8,
+      padding: 6,
+      borderRadius: 7,
       justifyContent: "center",
       alignItems: "center",
     },

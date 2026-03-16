@@ -72,24 +72,24 @@ function createStyles(theme: Theme) {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      paddingHorizontal: 20,
-      paddingTop: 10,
-      paddingBottom: 6,
+      paddingHorizontal: 16,
+      paddingTop: 6,
+      paddingBottom: 4,
     },
     headerTitle: {
-      fontSize: 18,
+      fontSize: 16,
       fontFamily: FONTS.bold,
       color: theme.foreground.white,
       letterSpacing: -0.3,
     },
     headerLogo: {
-      height: 36,
-      width: 110,
+      height: 32,
+      width: 100,
     },
     iconBtn: {
-      width: 44,
-      height: 44,
-      borderRadius: 14,
+      width: 36,
+      height: 36,
+      borderRadius: 10,
       alignItems: "center",
       justifyContent: "center",
       backgroundColor: theme.background.accent,
@@ -102,12 +102,12 @@ function createStyles(theme: Theme) {
       transform: [{ scale: 0.96 }],
     },
     heroCard: {
-      marginHorizontal: 20,
-      marginTop: 6,
-      borderRadius: 30,
-      paddingHorizontal: 20,
-      paddingTop: 24,
-      paddingBottom: 22,
+      marginHorizontal: 16,
+      marginTop: 4,
+      borderRadius: 22,
+      paddingHorizontal: 16,
+      paddingTop: 16,
+      paddingBottom: 14,
       backgroundColor: theme.background.accent,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: "rgba(255,255,255,0.08)",
@@ -116,79 +116,79 @@ function createStyles(theme: Theme) {
     },
     heroGlow: {
       position: "absolute",
-      width: 180,
-      height: 180,
-      borderRadius: 90,
+      width: 150,
+      height: 150,
+      borderRadius: 75,
       backgroundColor: theme.primary.main,
       opacity: 0.12,
-      top: -72,
-      right: -28,
+      top: -60,
+      right: -20,
     },
     hero: {
       alignItems: "center",
     },
     avatarButton: {
       position: "relative",
-      marginBottom: 16,
-      borderRadius: 60,
+      marginBottom: 10,
+      borderRadius: 46,
     },
     avatarButtonPressed: {
       opacity: 0.92,
       transform: [{ scale: 0.97 }],
     },
     avatarFrame: {
-      padding: 4,
-      borderRadius: 60,
+      padding: 3,
+      borderRadius: 46,
       backgroundColor: "rgba(255,255,255,0.06)",
     },
     avatar: {
-      width: 108,
-      height: 108,
-      borderRadius: 54,
+      width: 82,
+      height: 82,
+      borderRadius: 41,
       borderWidth: 2,
       borderColor: theme.primary.main,
       backgroundColor: theme.background.darker,
     },
     avatarEditBadge: {
       position: "absolute",
-      bottom: 4,
-      right: 4,
-      width: 32,
-      height: 32,
-      borderRadius: 16,
+      bottom: 2,
+      right: 2,
+      width: 26,
+      height: 26,
+      borderRadius: 13,
       backgroundColor: theme.foreground.white,
       alignItems: "center",
       justifyContent: "center",
       ...controlShadow,
     },
     username: {
-      fontSize: 24,
+      fontSize: 20,
       fontFamily: FONTS.bold,
       color: theme.foreground.white,
-      marginBottom: 6,
+      marginBottom: 4,
       letterSpacing: -0.4,
     },
     bio: {
-      fontSize: 14,
+      fontSize: 12,
       color: theme.foreground.gray,
       textAlign: "center",
-      lineHeight: 20,
-      paddingHorizontal: 12,
-      marginBottom: 20,
+      lineHeight: 17,
+      paddingHorizontal: 10,
+      marginBottom: 12,
     },
     heroActions: {
       flexDirection: "row",
       justifyContent: "center",
     },
     primaryAction: {
-      minHeight: 46,
-      borderRadius: 23,
-      paddingHorizontal: 20,
+      minHeight: 38,
+      borderRadius: 19,
+      paddingHorizontal: 16,
       backgroundColor: theme.primary.main,
       alignItems: "center",
       justifyContent: "center",
       flexDirection: "row",
-      gap: 8,
+      gap: 6,
       ...controlShadow,
     },
     primaryActionPressed: {
@@ -196,25 +196,25 @@ function createStyles(theme: Theme) {
       transform: [{ scale: 0.98 }],
     },
     primaryActionText: {
-      fontSize: 15,
+      fontSize: 13,
       fontFamily: FONTS.bold,
       color: theme.background.dark,
     },
     statsRow: {
       flexDirection: "row",
-      gap: 10,
-      marginHorizontal: 20,
-      marginTop: 16,
+      gap: 8,
+      marginHorizontal: 16,
+      marginTop: 10,
     },
     statBox: {
       flex: 1,
-      minHeight: 82,
+      minHeight: 62,
       alignItems: "center",
       justifyContent: "center",
-      paddingHorizontal: 8,
-      paddingVertical: 14,
+      paddingHorizontal: 6,
+      paddingVertical: 10,
       backgroundColor: theme.background.darker,
-      borderRadius: 22,
+      borderRadius: 16,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: "rgba(255,255,255,0.07)",
       ...surfaceShadow,
@@ -224,21 +224,21 @@ function createStyles(theme: Theme) {
       transform: [{ scale: 0.98 }],
     },
     statNumber: {
-      fontSize: 18,
+      fontSize: 16,
       fontFamily: FONTS.bold,
       color: theme.foreground.white,
       letterSpacing: -0.3,
     },
     statLabel: {
-      fontSize: 12,
+      fontSize: 11,
       color: theme.foreground.gray,
-      marginTop: 4,
+      marginTop: 2,
       textAlign: "center",
     },
     fitnessBar: {
       flexDirection: "row",
-      marginTop: 20,
-      paddingTop: 16,
+      marginTop: 12,
+      paddingTop: 10,
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: "rgba(255,255,255,0.08)",
       alignItems: "center",
@@ -246,24 +246,24 @@ function createStyles(theme: Theme) {
     fitnessStatItem: {
       flex: 1,
       alignItems: "center",
-      gap: 5,
+      gap: 3,
       paddingVertical: 2,
     },
     fitnessIconBadge: {
-      width: 32,
-      height: 32,
-      borderRadius: 10,
+      width: 26,
+      height: 26,
+      borderRadius: 8,
       alignItems: "center",
       justifyContent: "center",
-      marginBottom: 2,
+      marginBottom: 1,
     },
     fitnessStatDivider: {
       width: StyleSheet.hairlineWidth,
-      height: 40,
+      height: 32,
       backgroundColor: "rgba(255,255,255,0.08)",
     },
     fitnessValue: {
-      fontSize: 18,
+      fontSize: 15,
       fontFamily: FONTS.extraBold,
       letterSpacing: -0.4,
     },
@@ -276,10 +276,10 @@ function createStyles(theme: Theme) {
     },
     tabBar: {
       flexDirection: "row",
-      marginHorizontal: 20,
-      marginTop: 20,
-      padding: 4,
-      borderRadius: 18,
+      marginHorizontal: 16,
+      marginTop: 12,
+      padding: 3,
+      borderRadius: 14,
       backgroundColor: theme.background.accent,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: "rgba(255,255,255,0.07)",
@@ -288,8 +288,8 @@ function createStyles(theme: Theme) {
       flex: 1,
       alignItems: "center",
       justifyContent: "center",
-      minHeight: 40,
-      borderRadius: 14,
+      minHeight: 34,
+      borderRadius: 11,
     },
     tabActive: {
       backgroundColor: theme.background.darker,
@@ -299,7 +299,7 @@ function createStyles(theme: Theme) {
       opacity: 0.92,
     },
     tabText: {
-      fontSize: 13,
+      fontSize: 12,
       fontFamily: FONTS.semiBold,
       color: theme.foreground.gray,
       letterSpacing: 0.1,
@@ -310,16 +310,16 @@ function createStyles(theme: Theme) {
     postsGrid: {
       flexDirection: "row",
       flexWrap: "wrap",
-      gap: 4,
-      paddingHorizontal: 20,
-      paddingTop: 18,
+      gap: 3,
+      paddingHorizontal: 16,
+      paddingTop: 12,
     },
     gridItem: {
       width: "32%",
       aspectRatio: 1,
-      borderRadius: 16,
+      borderRadius: 12,
       overflow: "hidden",
-      marginBottom: 4,
+      marginBottom: 3,
       backgroundColor: theme.background.accent,
     },
     gridItemPressed: {
@@ -332,48 +332,48 @@ function createStyles(theme: Theme) {
     },
     multipleIndicator: {
       position: "absolute",
-      top: 8,
-      right: 8,
+      top: 6,
+      right: 6,
       borderRadius: 999,
       backgroundColor: "rgba(11,13,14,0.72)",
-      paddingHorizontal: 6,
-      paddingVertical: 4,
+      paddingHorizontal: 5,
+      paddingVertical: 3,
     },
     emptyState: {
       alignItems: "center",
-      marginHorizontal: 20,
-      marginTop: 18,
-      borderRadius: 26,
-      paddingVertical: 48,
-      paddingHorizontal: 24,
+      marginHorizontal: 16,
+      marginTop: 12,
+      borderRadius: 20,
+      paddingVertical: 32,
+      paddingHorizontal: 20,
       backgroundColor: theme.background.accent,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: "rgba(255,255,255,0.07)",
       ...surfaceShadow,
     },
     emptyText: {
-      fontSize: 18,
+      fontSize: 15,
       fontFamily: FONTS.semiBold,
       color: theme.foreground.white,
-      marginTop: 14,
-      marginBottom: 6,
+      marginTop: 10,
+      marginBottom: 4,
     },
     emptySubtext: {
-      fontSize: 13,
+      fontSize: 12,
       color: theme.foreground.gray,
       textAlign: "center",
-      lineHeight: 19,
+      lineHeight: 17,
     },
     routinesList: {
-      paddingHorizontal: 20,
-      paddingTop: 18,
+      paddingHorizontal: 16,
+      paddingTop: 12,
       paddingBottom: 4,
     },
     routineCard: {
       backgroundColor: theme.background.accent,
-      borderRadius: 26,
-      padding: 18,
-      marginBottom: 12,
+      borderRadius: 18,
+      padding: 12,
+      marginBottom: 8,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: "rgba(255,255,255,0.08)",
       ...surfaceShadow,
@@ -385,41 +385,41 @@ function createStyles(theme: Theme) {
     routineHeader: {
       flexDirection: "row",
       alignItems: "flex-start",
-      marginBottom: 12,
+      marginBottom: 8,
     },
     routineInfo: {
       flex: 1,
-      paddingRight: 12,
+      paddingRight: 10,
     },
     routineHeaderRight: {
       alignItems: "flex-end",
-      gap: 10,
+      gap: 8,
     },
     routineName: {
-      fontSize: 16,
+      fontSize: 14,
       fontFamily: FONTS.bold,
       color: theme.foreground.white,
-      marginBottom: 5,
+      marginBottom: 3,
       letterSpacing: -0.3,
     },
     routineDesc: {
-      fontSize: 13,
+      fontSize: 12,
       color: theme.foreground.gray,
-      lineHeight: 19,
+      lineHeight: 17,
     },
     difficultyBadge: {
-      paddingHorizontal: 10,
-      paddingVertical: 5,
-      borderRadius: 20,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 16,
     },
     difficultyText: {
-      fontSize: 11,
+      fontSize: 10,
       fontFamily: FONTS.bold,
     },
     routineChevron: {
-      width: 30,
-      height: 30,
-      borderRadius: 15,
+      width: 26,
+      height: 26,
+      borderRadius: 13,
       alignItems: "center",
       justifyContent: "center",
       backgroundColor: theme.background.darker,
@@ -427,35 +427,35 @@ function createStyles(theme: Theme) {
     routineMeta: {
       flexDirection: "row",
       flexWrap: "wrap",
-      gap: 16,
+      gap: 8,
     },
     routineMetaItem: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 6,
-      paddingHorizontal: 10,
-      paddingVertical: 7,
+      gap: 4,
+      paddingHorizontal: 8,
+      paddingVertical: 5,
       borderRadius: 999,
       backgroundColor: theme.background.darker,
     },
     routineMetaText: {
-      fontSize: 12,
+      fontSize: 11,
       color: theme.foreground.gray,
     },
     muscleTagsRow: {
       flexDirection: "row",
       flexWrap: "wrap",
-      gap: 6,
-      marginTop: 10,
+      gap: 5,
+      marginTop: 8,
     },
     muscleTag: {
-      paddingHorizontal: 10,
-      paddingVertical: 6,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
       borderRadius: 999,
       backgroundColor: "rgba(255,255,255,0.05)",
     },
     muscleTagText: {
-      fontSize: 11,
+      fontSize: 10,
       color: theme.foreground.gray,
       textTransform: "capitalize",
     },
@@ -566,7 +566,7 @@ export default function Profile() {
         <View style={styles.emptyState}>
           <Ionicons
             name="image-outline"
-            size={58}
+            size={44}
             color={theme.foreground.gray}
           />
           <Text style={styles.emptyText}>{t("profile.noPostsYet")}</Text>
@@ -618,7 +618,7 @@ export default function Profile() {
         <View style={styles.emptyState}>
           <Ionicons
             name="barbell-outline"
-            size={58}
+            size={44}
             color={theme.foreground.gray}
           />
           <Text style={styles.emptyText}>{t("profile.noRoutinesYet")}</Text>
@@ -664,13 +664,6 @@ export default function Profile() {
                       {translateApiData(routine.difficulty)}
                     </Text>
                   </View>
-                  <View style={styles.routineChevron}>
-                    <Ionicons
-                      name="chevron-forward"
-                      size={16}
-                      color={theme.foreground.gray}
-                    />
-                  </View>
                 </View>
               </View>
 
@@ -702,7 +695,7 @@ export default function Profile() {
                     color={theme.foreground.gray}
                   />
                   <Text style={styles.routineMetaText}>
-                    {routine.timesCompleted}Ã— {t("profile.done")}
+                    {routine.timesCompleted} × {t("profile.done")}
                   </Text>
                 </View>
               </View>
@@ -733,8 +726,8 @@ export default function Profile() {
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
-          paddingTop: 6,
-          paddingBottom: 36 + insets.bottom,
+          paddingTop: 4,
+          paddingBottom: 24 + insets.bottom,
         }}
       >
         <View style={styles.header}>
@@ -753,7 +746,7 @@ export default function Profile() {
           >
             <Ionicons
               name="settings-outline"
-              size={24}
+              size={20}
               color={theme.foreground.white}
             />
           </Pressable>
@@ -776,7 +769,7 @@ export default function Profile() {
               <View style={styles.avatarEditBadge}>
                 <Ionicons
                   name="camera"
-                  size={16}
+                  size={13}
                   color={theme.background.dark}
                 />
               </View>
@@ -794,7 +787,7 @@ export default function Profile() {
               >
                 <Ionicons
                   name="create-outline"
-                  size={16}
+                  size={14}
                   color={theme.background.dark}
                 />
                 <Text style={styles.primaryActionText}>

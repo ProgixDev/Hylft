@@ -396,7 +396,7 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
                     ? "checkmark-circle"
                     : "checkmark-circle-outline"
                 }
-                size={24}
+                size={20}
                 color={
                   set.isCompleted ? theme.primary.main : theme.foreground.gray
                 }
@@ -507,7 +507,7 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
                 style={styles.headerButton}
                 onPress={handleDiscard}
               >
-                <Ionicons name="trash-outline" size={24} color="#ef4444" />
+                <Ionicons name="trash-outline" size={20} color="#ef4444" />
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.headerButton}
@@ -515,7 +515,7 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
               >
                 <Ionicons
                   name="checkmark-circle-outline"
-                  size={24}
+                  size={20}
                   color="#4CAF50"
                 />
               </TouchableOpacity>
@@ -531,7 +531,7 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
               <View style={styles.statCard}>
                 <Ionicons
                   name="time-outline"
-                  size={22}
+                  size={18}
                   color={theme.primary.main}
                 />
                 <Text style={styles.statValue}>
@@ -542,7 +542,7 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
               <View style={styles.statCard}>
                 <Ionicons
                   name="barbell-outline"
-                  size={22}
+                  size={18}
                   color={theme.primary.main}
                 />
                 <Text style={styles.statValue}>{activeWorkout.volume} lbs</Text>
@@ -551,7 +551,7 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
               <View style={styles.statCard}>
                 <Ionicons
                   name="repeat-outline"
-                  size={22}
+                  size={18}
                   color={theme.primary.main}
                 />
                 <Text style={styles.statValue}>{activeWorkout.sets}</Text>
@@ -605,7 +605,7 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
                 <View style={styles.emptyIconContainer}>
                   <Ionicons
                     name="fitness-outline"
-                    size={64}
+                    size={44}
                     color={theme.foreground.gray}
                   />
                 </View>
@@ -623,7 +623,7 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
             >
               <Ionicons
                 name="add-circle"
-                size={24}
+                size={20}
                 color={theme.background.dark}
               />
               <Text style={styles.addExerciseButtonText}>
@@ -794,31 +794,31 @@ const createStyles = (theme: Theme) =>
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
-      paddingHorizontal: 20,
-      paddingTop: 4,
-      paddingBottom: 16,
+      paddingHorizontal: 16,
+      paddingTop: 2,
+      paddingBottom: 10,
     },
-    title: { fontSize: 24, fontFamily: FONTS.bold, color: theme.foreground.white },
-    headerButtons: { flexDirection: "row", gap: 4 },
-    headerButton: { padding: 8 },
-    scrollContent: { paddingHorizontal: 20, paddingBottom: 40, gap: 16 },
+    title: { fontSize: 18, fontFamily: FONTS.bold, color: theme.foreground.white },
+    headerButtons: { flexDirection: "row", gap: 2 },
+    headerButton: { padding: 6 },
+    scrollContent: { paddingHorizontal: 16, paddingBottom: 30, gap: 10 },
     // Stats
-    statsGrid: { flexDirection: "row", gap: 12 },
+    statsGrid: { flexDirection: "row", gap: 8 },
     statCard: {
       flex: 1,
       backgroundColor: theme.background.darker,
-      borderRadius: 16,
-      padding: 14,
+      borderRadius: 12,
+      padding: 10,
       alignItems: "center",
-      gap: 6,
+      gap: 4,
     },
     statValue: {
-      fontSize: 18,
+      fontSize: 15,
       fontFamily: FONTS.bold,
       color: theme.foreground.white,
     },
     statLabel: {
-      fontSize: 11,
+      fontSize: 10,
       fontFamily: FONTS.semiBold,
       color: theme.foreground.gray,
       textTransform: "uppercase",
@@ -828,21 +828,21 @@ const createStyles = (theme: Theme) =>
       flexDirection: "row",
       alignItems: "center",
       backgroundColor: theme.background.darker,
-      borderRadius: 14,
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      gap: 10,
+      borderRadius: 10,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      gap: 8,
     },
     timerLabel: {
-      fontSize: 14,
+      fontSize: 13,
       fontFamily: FONTS.semiBold,
       color: theme.foreground.white,
     },
     timerValue: {
-      fontSize: 18,
+      fontSize: 15,
       fontFamily: FONTS.bold,
       color: theme.primary.main,
-      minWidth: 42,
+      minWidth: 38,
     },
     timerTrack: {
       flex: 1,
@@ -859,24 +859,24 @@ const createStyles = (theme: Theme) =>
     // Exercise card
     exerciseCard: {
       backgroundColor: theme.background.darker,
-      borderRadius: 16,
-      paddingVertical: 14,
-      paddingHorizontal: 14,
-      gap: 8,
+      borderRadius: 12,
+      paddingVertical: 10,
+      paddingHorizontal: 10,
+      gap: 6,
     },
     exerciseHeader: {
       flexDirection: "row",
       alignItems: "flex-start",
       justifyContent: "space-between",
-      marginBottom: 4,
+      marginBottom: 2,
     },
-    exerciseTitleBlock: { flex: 1, gap: 2 },
+    exerciseTitleBlock: { flex: 1, gap: 1 },
     exerciseName: {
-      fontSize: 16,
+      fontSize: 14,
       fontFamily: FONTS.bold,
       color: theme.foreground.white,
     },
-    exerciseMuscles: { fontSize: 12, color: theme.foreground.gray },
+    exerciseMuscles: { fontSize: 11, color: theme.foreground.gray },
     menuBtn: { padding: 4 },
     // Set header row
     setHeaderRow: {
@@ -909,32 +909,32 @@ const createStyles = (theme: Theme) =>
       textAlign: "center",
     },
     setInput: {
-      width: 60,
-      height: 36,
-      borderRadius: 8,
+      width: 56,
+      height: 32,
+      borderRadius: 7,
       backgroundColor: theme.background.dark,
       color: theme.foreground.white,
-      fontSize: 14,
+      fontSize: 13,
       fontFamily: FONTS.semiBold,
       textAlign: "center",
-      marginHorizontal: 4,
+      marginHorizontal: 3,
     },
     setInputCompleted: { backgroundColor: theme.background.dark },
-    setDoneBtn: { width: 36, alignItems: "center" },
+    setDoneBtn: { width: 32, alignItems: "center" },
     // Add set
     addSetBtn: {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
-      paddingVertical: 10,
-      gap: 6,
-      borderRadius: 16,
+      paddingVertical: 8,
+      gap: 4,
+      borderRadius: 12,
       borderWidth: 1,
       borderColor: theme.primary.main + "44",
-      marginTop: 4,
+      marginTop: 2,
     },
     addSetText: {
-      fontSize: 13,
+      fontSize: 12,
       fontFamily: FONTS.semiBold,
       color: theme.primary.main,
     },
@@ -942,42 +942,42 @@ const createStyles = (theme: Theme) =>
     emptyState: {
       alignItems: "center",
       justifyContent: "center",
-      paddingVertical: 48,
+      paddingVertical: 32,
     },
     emptyIconContainer: {
-      width: 100,
-      height: 100,
-      borderRadius: 50,
+      width: 72,
+      height: 72,
+      borderRadius: 36,
       backgroundColor: theme.background.darker,
       alignItems: "center",
       justifyContent: "center",
-      marginBottom: 20,
+      marginBottom: 14,
     },
     emptyTitle: {
-      fontSize: 22,
+      fontSize: 18,
       fontFamily: FONTS.bold,
       color: theme.foreground.white,
-      marginBottom: 8,
+      marginBottom: 6,
     },
     emptySubtitle: {
-      fontSize: 15,
+      fontSize: 13,
       color: theme.foreground.gray,
       textAlign: "center",
-      paddingHorizontal: 32,
+      paddingHorizontal: 24,
     },
     // Add exercise
     addExerciseButton: {
       backgroundColor: theme.primary.main,
-      paddingVertical: 16,
-      paddingHorizontal: 24,
-      borderRadius: 26,
+      paddingVertical: 12,
+      paddingHorizontal: 20,
+      borderRadius: 20,
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
-      gap: 12,
+      gap: 8,
     },
     addExerciseButtonText: {
-      fontSize: 17,
+      fontSize: 14,
       fontFamily: FONTS.bold,
       color: theme.background.dark,
     },
@@ -991,14 +991,14 @@ const createStyles = (theme: Theme) =>
     },
     saveModalContent: {
       backgroundColor: theme.background.darker,
-      borderRadius: 16,
-      padding: 24,
+      borderRadius: 14,
+      padding: 18,
       width: "100%",
-      maxWidth: 400,
-      gap: 20,
+      maxWidth: 380,
+      gap: 14,
     },
     saveModalTitle: {
-      fontSize: 20,
+      fontSize: 17,
       fontFamily: FONTS.bold,
       color: theme.foreground.white,
       textAlign: "center",
@@ -1006,20 +1006,20 @@ const createStyles = (theme: Theme) =>
     saveModalInput: {
       borderWidth: 1,
       borderColor: theme.primary.main,
-      borderRadius: 8,
-      padding: 12,
-      fontSize: 16,
+      borderRadius: 7,
+      padding: 10,
+      fontSize: 14,
       color: theme.foreground.white,
       backgroundColor: theme.background.dark,
     },
     saveModalButtons: {
       flexDirection: "row",
-      gap: 12,
+      gap: 10,
     },
     saveModalButton: {
       flex: 1,
-      paddingVertical: 12,
-      borderRadius: 22,
+      paddingVertical: 10,
+      borderRadius: 18,
       alignItems: "center",
     },
     cancelButton: {
@@ -1029,75 +1029,75 @@ const createStyles = (theme: Theme) =>
       backgroundColor: theme.primary.main,
     },
     cancelButtonText: {
-      fontSize: 15,
+      fontSize: 13,
       fontFamily: FONTS.semiBold,
       color: theme.foreground.gray,
     },
     confirmButtonText: {
-      fontSize: 15,
+      fontSize: 13,
       fontFamily: FONTS.semiBold,
       color: theme.foreground.white,
     },
     // Workout summary modal
     summaryContent: {
       backgroundColor: theme.background.darker,
-      borderRadius: 24,
-      padding: 28,
+      borderRadius: 18,
+      padding: 20,
       width: "100%",
-      maxWidth: 400,
-      gap: 12,
+      maxWidth: 380,
+      gap: 8,
       alignItems: "center",
     },
     summaryIconWrap: {
-      width: 72,
-      height: 72,
-      borderRadius: 36,
+      width: 56,
+      height: 56,
+      borderRadius: 28,
       backgroundColor: theme.primary.main + "22",
       alignItems: "center",
       justifyContent: "center",
-      marginBottom: 4,
+      marginBottom: 2,
     },
-    summaryEmoji: { fontSize: 36 },
+    summaryEmoji: { fontSize: 28 },
     summaryTitle: {
-      fontSize: 22,
+      fontSize: 18,
       fontFamily: FONTS.extraBold,
       color: theme.foreground.white,
       textAlign: "center",
     },
     summarySubtitle: {
-      fontSize: 16,
+      fontSize: 14,
       fontFamily: FONTS.semiBold,
       color: theme.primary.main,
       textAlign: "center",
     },
     summaryHint: {
-      fontSize: 13,
+      fontSize: 12,
       color: theme.foreground.gray,
       textAlign: "center",
-      marginBottom: 4,
+      marginBottom: 2,
     },
     summaryStats: {
       flexDirection: "row",
-      gap: 10,
+      gap: 8,
       width: "100%",
-      marginTop: 4,
-      marginBottom: 8,
+      marginTop: 2,
+      marginBottom: 4,
     },
     summaryStatCard: {
       flex: 1,
       backgroundColor: theme.background.dark,
-      borderRadius: 14,
-      paddingVertical: 14,
+      borderRadius: 10,
+      paddingVertical: 10,
       alignItems: "center",
-      gap: 4,
+      gap: 3,
     },
     summaryStatValue: {
-      fontSize: 18,
+      fontSize: 15,
       fontFamily: FONTS.bold,
       color: theme.foreground.white,
     },
     summaryStatLabel: {
-      fontSize: 10,
+      fontSize: 9,
       fontFamily: FONTS.semiBold,
       color: theme.foreground.gray,
       textTransform: "uppercase",
@@ -1107,24 +1107,24 @@ const createStyles = (theme: Theme) =>
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
-      gap: 10,
+      gap: 8,
       backgroundColor: theme.primary.main,
-      paddingVertical: 14,
-      borderRadius: 22,
+      paddingVertical: 10,
+      borderRadius: 18,
       width: "100%",
     },
     shareBtnText: {
-      fontSize: 15,
+      fontSize: 13,
       fontFamily: FONTS.bold,
       color: theme.background.dark,
     },
     closeBtn: {
-      paddingVertical: 12,
+      paddingVertical: 8,
       width: "100%",
       alignItems: "center",
     },
     closeBtnText: {
-      fontSize: 15,
+      fontSize: 13,
       fontFamily: FONTS.semiBold,
       color: theme.foreground.gray,
     },
@@ -1140,29 +1140,29 @@ const menuStyles = (theme: Theme) =>
     },
     sheet: {
       backgroundColor: theme.background.darker,
-      borderTopLeftRadius: 20,
-      borderTopRightRadius: 20,
-      paddingTop: 12,
-      paddingBottom: 36,
-      paddingHorizontal: 20,
+      borderTopLeftRadius: 16,
+      borderTopRightRadius: 16,
+      paddingTop: 8,
+      paddingBottom: 28,
+      paddingHorizontal: 16,
     },
     handle: {
-      width: 40,
+      width: 36,
       height: 4,
       borderRadius: 2,
       backgroundColor: theme.foreground.gray,
       alignSelf: "center",
-      marginBottom: 16,
+      marginBottom: 10,
       opacity: 0.4,
     },
     option: {
       flexDirection: "row",
       alignItems: "center",
-      paddingVertical: 16,
-      gap: 14,
+      paddingVertical: 12,
+      gap: 10,
     },
     optionText: {
-      fontSize: 16,
+      fontSize: 14,
       fontFamily: FONTS.medium,
       color: theme.foreground.white,
     },

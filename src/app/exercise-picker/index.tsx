@@ -286,7 +286,7 @@ export default function ExercisePicker() {
               <View style={styles.exerciseThumbnailPlaceholder}>
                 <Ionicons
                   name="barbell-outline"
-                  size={28}
+                  size={22}
                   color={theme.foreground.gray}
                 />
               </View>
@@ -319,7 +319,7 @@ export default function ExercisePicker() {
           >
             <Ionicons
               name="help-circle-outline"
-              size={26}
+              size={22}
               color={theme.primary.main}
             />
           </TouchableOpacity>
@@ -443,7 +443,7 @@ export default function ExercisePicker() {
           <View style={styles.centered}>
             <Ionicons
               name="search-outline"
-              size={48}
+              size={36}
               color={theme.foreground.gray}
             />
             <Text style={styles.emptyText}>{t("exercisePicker.noExercisesFound")}</Text>
@@ -533,35 +533,35 @@ const createStyles = (theme: Theme) =>
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      paddingHorizontal: 20,
-      paddingBottom: 16,
+      paddingHorizontal: 16,
+      paddingBottom: 10,
     },
-    backButton: { padding: 8, borderRadius: 8 },
-    title: { fontSize: 20, fontFamily: FONTS.bold, color: theme.foreground.white },
+    backButton: { padding: 6, borderRadius: 7 },
+    title: { fontSize: 17, fontFamily: FONTS.bold, color: theme.foreground.white },
     // Search row
     searchRow: {
       flexDirection: "row",
       alignItems: "center",
-      marginHorizontal: 20,
-      marginBottom: 12,
-      gap: 10,
+      marginHorizontal: 16,
+      marginBottom: 8,
+      gap: 8,
     },
     searchContainer: {
       flex: 1,
-      height: 46, // match filter button height
+      height: 38,
       flexDirection: "row",
       alignItems: "center",
       backgroundColor: theme.background.darker,
-      borderRadius: 12,
-      paddingHorizontal: 12,
+      borderRadius: 10,
+      paddingHorizontal: 10,
       paddingVertical: 0,
     },
-    searchIcon: { marginRight: 8 },
-    searchInput: { flex: 1, color: theme.foreground.white, fontSize: 16 },
+    searchIcon: { marginRight: 6 },
+    searchInput: { flex: 1, color: theme.foreground.white, fontSize: 13 },
     filterButton: {
-      width: 46,
-      height: 46,
-      borderRadius: 12,
+      width: 38,
+      height: 38,
+      borderRadius: 10,
       backgroundColor: theme.background.darker,
       alignItems: "center",
       justifyContent: "center",
@@ -574,11 +574,11 @@ const createStyles = (theme: Theme) =>
     },
     filterBadge: {
       position: "absolute",
-      top: 6,
-      right: 6,
-      width: 18,
-      height: 18,
-      borderRadius: 9,
+      top: 4,
+      right: 4,
+      width: 16,
+      height: 16,
+      borderRadius: 8,
       backgroundColor: theme.background.dark,
       alignItems: "center",
       justifyContent: "center",
@@ -586,33 +586,33 @@ const createStyles = (theme: Theme) =>
       borderColor: theme.primary.main,
     },
     filterBadgeText: {
-      fontSize: 9,
+      fontSize: 8,
       fontFamily: FONTS.bold,
       color: theme.primary.main,
     },
     // Exercise list
-    listContent: { paddingHorizontal: 20, paddingBottom: 40 },
+    listContent: { paddingHorizontal: 16, paddingBottom: 30 },
     exerciseRow: {
       flexDirection: "row",
       alignItems: "center",
-      paddingVertical: 12,
+      paddingVertical: 8,
       borderBottomWidth: 1,
       borderBottomColor: theme.background.darker,
-      gap: 12,
+      gap: 10,
     },
     exerciseThumbnailContainer: {
       position: "relative",
-      width: 64,
-      height: 64,
-      borderRadius: 12,
+      width: 50,
+      height: 50,
+      borderRadius: 10,
       overflow: "hidden",
       backgroundColor: theme.background.darker,
     },
-    exerciseThumbnail: { width: 64, height: 64 },
+    exerciseThumbnail: { width: 50, height: 50 },
     selectedOverlay: {
       position: "absolute",
-      top: 6,
-      right: 6,
+      top: 4,
+      right: 4,
       zIndex: 3,
     },
     exerciseRowSelected: {
@@ -620,16 +620,16 @@ const createStyles = (theme: Theme) =>
     },
     bulkFooter: {
       position: "absolute",
-      left: 20,
-      right: 20,
-      bottom: 18,
+      left: 16,
+      right: 16,
+      bottom: 14,
       alignItems: "center",
     },
     addSelectedButton: {
       backgroundColor: theme.primary.main,
-      paddingVertical: 12,
-      paddingHorizontal: 20,
-      borderRadius: 22,
+      paddingVertical: 10,
+      paddingHorizontal: 16,
+      borderRadius: 18,
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
@@ -639,50 +639,50 @@ const createStyles = (theme: Theme) =>
       elevation: 4,
     },
     addSelectedText: {
-      fontSize: 15,
+      fontSize: 13,
       fontFamily: FONTS.bold,
       color: theme.background.dark,
     },
     exerciseThumbnailPlaceholder: {
-      width: 64,
-      height: 64,
+      width: 50,
+      height: 50,
       alignItems: "center",
       justifyContent: "center",
       backgroundColor: theme.background.accent,
-      borderRadius: 12,
+      borderRadius: 10,
     },
-    exerciseInfo: { flex: 1, gap: 3 },
+    exerciseInfo: { flex: 1, gap: 2 },
     exerciseName: {
-      fontSize: 15,
+      fontSize: 13,
       fontFamily: FONTS.bold,
       color: theme.foreground.white,
       textTransform: "capitalize",
     },
     exerciseMeta: {
-      fontSize: 12,
+      fontSize: 11,
       color: theme.foreground.gray,
       textTransform: "capitalize",
     },
     exerciseTagRow: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 6,
+      gap: 5,
       flexWrap: "wrap",
     },
     exerciseEquipment: {
-      fontSize: 11,
+      fontSize: 10,
       color: theme.primary.main,
       fontFamily: FONTS.semiBold,
       textTransform: "capitalize",
     },
     difficultyPill: {
-      paddingHorizontal: 7,
+      paddingHorizontal: 6,
       paddingVertical: 2,
-      borderRadius: 10,
+      borderRadius: 8,
       borderWidth: 1,
     },
     difficultyPillText: {
-      fontSize: 10,
+      fontSize: 9,
       fontFamily: FONTS.bold,
       textTransform: "capitalize",
     },
@@ -690,19 +690,19 @@ const createStyles = (theme: Theme) =>
       flex: 1,
       alignItems: "center",
       justifyContent: "center",
-      gap: 12,
+      gap: 10,
     },
-    emptyText: { fontSize: 16, color: theme.foreground.gray },
+    emptyText: { fontSize: 14, color: theme.foreground.gray },
     emptyResetButton: {
-      paddingHorizontal: 20,
-      paddingVertical: 10,
-      borderRadius: 20,
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderRadius: 16,
       backgroundColor: theme.primary.main + "20",
       borderWidth: 1,
       borderColor: theme.primary.main,
     },
     emptyResetText: {
-      fontSize: 14,
+      fontSize: 12,
       color: theme.primary.main,
       fontFamily: FONTS.semiBold,
     },

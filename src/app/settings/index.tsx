@@ -43,27 +43,27 @@ function createStyles(theme: Theme) {
       flexDirection: "row",
       alignItems: "center",
       paddingHorizontal: 16,
-      paddingVertical: 12,
+      paddingVertical: 8,
       borderBottomWidth: 1,
       borderBottomColor: theme.background.accent,
     },
     backBtn: {
-      padding: 6,
-      marginRight: 8,
+      padding: 4,
+      marginRight: 6,
     },
     headerTitle: {
-      fontSize: 20,
+      fontSize: 17,
       fontFamily: FONTS.bold,
       color: theme.foreground.white,
     },
     // section
     sectionHeader: {
       paddingHorizontal: 16,
-      paddingTop: 28,
-      paddingBottom: 8,
+      paddingTop: 18,
+      paddingBottom: 6,
     },
     sectionLabel: {
-      fontSize: 12,
+      fontSize: 11,
       fontFamily: FONTS.semiBold,
       letterSpacing: 0.8,
       textTransform: "uppercase",
@@ -72,68 +72,68 @@ function createStyles(theme: Theme) {
     sectionBody: {
       backgroundColor: theme.background.accent,
       marginHorizontal: 16,
-      borderRadius: 12,
+      borderRadius: 10,
       overflow: "hidden",
     },
     // row
     row: {
       flexDirection: "row",
       alignItems: "center",
-      paddingHorizontal: 16,
-      paddingVertical: 14,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
     },
     rowBorder: {
       borderBottomWidth: 1,
       borderBottomColor: theme.background.darker,
     },
     rowIcon: {
-      width: 34,
-      height: 34,
-      borderRadius: 8,
+      width: 28,
+      height: 28,
+      borderRadius: 7,
       alignItems: "center",
       justifyContent: "center",
-      marginRight: 12,
+      marginRight: 10,
     },
     rowContent: {
       flex: 1,
     },
     rowTitle: {
-      fontSize: 15,
+      fontSize: 14,
       fontFamily: FONTS.medium,
       color: theme.foreground.white,
     },
     rowSubtitle: {
-      fontSize: 12,
+      fontSize: 11,
       color: theme.foreground.gray,
       marginTop: 1,
     },
     rowRight: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 6,
+      gap: 4,
     },
     rowValue: {
-      fontSize: 14,
+      fontSize: 13,
       color: theme.foreground.gray,
     },
     // segmented control
     segmented: {
       flexDirection: "row",
       backgroundColor: theme.background.darker,
-      borderRadius: 8,
-      padding: 3,
+      borderRadius: 7,
+      padding: 2,
       gap: 2,
     },
     segBtn: {
-      paddingHorizontal: 14,
-      paddingVertical: 6,
-      borderRadius: 6,
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      borderRadius: 5,
     },
     segBtnActive: {
       backgroundColor: theme.primary.main,
     },
     segBtnText: {
-      fontSize: 13,
+      fontSize: 12,
       fontFamily: FONTS.semiBold,
       color: theme.foreground.gray,
     },
@@ -144,27 +144,27 @@ function createStyles(theme: Theme) {
     dangerSection: {
       backgroundColor: theme.background.accent,
       marginHorizontal: 16,
-      borderRadius: 12,
+      borderRadius: 10,
       overflow: "hidden",
     },
     dangerRow: {
       flexDirection: "row",
       alignItems: "center",
-      paddingHorizontal: 16,
-      paddingVertical: 15,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
     },
     dangerText: {
-      fontSize: 15,
+      fontSize: 14,
       fontFamily: FONTS.semiBold,
-      marginLeft: 12,
+      marginLeft: 10,
     },
     // version
     version: {
       textAlign: "center",
-      fontSize: 12,
+      fontSize: 11,
       color: theme.foreground.gray,
-      marginTop: 28,
-      marginBottom: 16,
+      marginTop: 18,
+      marginBottom: 12,
     },
   });
 }
@@ -203,7 +203,7 @@ function SettingsRow({
       {...(onPress ? { onPress, activeOpacity: 0.7 } : {})}
     >
       <View style={[styles.rowIcon, { backgroundColor: iconBg }]}>
-        <Ionicons name={icon} size={18} color={theme.foreground.white} />
+        <Ionicons name={icon} size={15} color={theme.foreground.white} />
       </View>
       <View style={styles.rowContent}>
         <Text style={styles.rowTitle}>{title}</Text>
@@ -399,7 +399,7 @@ export default function Settings() {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 40 }}
+        contentContainerStyle={{ paddingBottom: 24 }}
       >
         {/* ── ACCOUNT ────────────────────────────────────────── */}
         <View style={styles.sectionHeader}>

@@ -115,7 +115,7 @@ export default function Notifications() {
       <View style={styles.iconContainer}>
         <Ionicons
           name={getIconName(item.type)}
-          size={18}
+          size={15}
           color={getIconColor(item.type)}
         />
       </View>
@@ -129,7 +129,7 @@ export default function Notifications() {
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons
             name="chevron-back"
-            size={28}
+            size={24}
             color={theme.foreground.white}
           />
         </TouchableOpacity>
@@ -145,13 +145,13 @@ export default function Notifications() {
         scrollEnabled={true}
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={
-          <View style={{ alignItems: "center", marginTop: 40 }}>
+          <View style={{ alignItems: "center", marginTop: 28 }}>
             <Ionicons
               name="notifications-off-outline"
-              size={48}
+              size={36}
               color={theme.foreground.gray}
             />
-            <Text style={{ color: theme.foreground.gray, marginTop: 12 }}>
+            <Text style={{ color: theme.foreground.gray, marginTop: 8, fontSize: 13 }}>
               {t("notifications.noNotificationsYet")}
             </Text>
           </View>
@@ -172,56 +172,56 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       alignItems: "center",
       justifyContent: "space-between",
       paddingHorizontal: 16,
-      paddingVertical: 12,
+      paddingVertical: 8,
       borderBottomWidth: 1,
       borderBottomColor: theme.background.darker,
     },
     headerTitle: {
-      fontSize: 24,
+      fontSize: 17,
       fontFamily: FONTS.bold,
       color: theme.foreground.white,
     },
     spacer: {
-      width: 28,
+      width: 24,
     },
     unreadBanner: {
       backgroundColor: theme.primary.main,
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      marginHorizontal: 16,
-      marginTop: 12,
-      borderRadius: 12,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      marginHorizontal: 12,
+      marginTop: 8,
+      borderRadius: 10,
     },
     unreadText: {
-      fontSize: 14,
+      fontSize: 12,
       fontFamily: FONTS.semiBold,
       color: theme.background.dark,
     },
     listContent: {
       paddingHorizontal: 12,
-      paddingVertical: 12,
+      paddingVertical: 4,
     },
     notificationItem: {
       flexDirection: "row",
       alignItems: "center",
-      paddingHorizontal: 12,
-      paddingVertical: 12,
-      marginVertical: 6,
-      borderRadius: 12,
+      paddingHorizontal: 10,
+      paddingVertical: 8,
+      marginVertical: 3,
+      borderRadius: 10,
       backgroundColor: theme.background.darker,
     },
     notificationItemUnread: {
       backgroundColor: theme.background.accent,
     },
     avatarContainer: {
-      width: 52,
-      height: 52,
-      borderRadius: 26,
-      marginRight: 12,
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      marginRight: 10,
       flexShrink: 0,
     },
     avatar: {
-      fontSize: 22,
+      fontSize: 18,
       fontFamily: FONTS.bold,
       color: theme.background.dark,
     },
@@ -231,29 +231,29 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     textRow: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 6,
-      marginBottom: 4,
+      gap: 4,
+      marginBottom: 2,
     },
     username: {
-      fontSize: 14,
+      fontSize: 13,
       fontFamily: FONTS.semiBold,
       color: theme.foreground.white,
-      marginBottom: 4,
+      marginBottom: 2,
     },
     action: {
-      fontSize: 13,
+      fontSize: 12,
       color: theme.foreground.gray,
-      marginBottom: 4,
+      marginBottom: 2,
     },
     timestamp: {
-      fontSize: 11,
+      fontSize: 10,
       color: theme.foreground.gray,
     },
     iconContainer: {
-      marginLeft: 8,
-      padding: 8,
+      marginLeft: 6,
+      padding: 6,
       backgroundColor: theme.background.dark,
-      borderRadius: 8,
+      borderRadius: 7,
     },
   });
 
