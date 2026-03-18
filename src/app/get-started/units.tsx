@@ -150,21 +150,21 @@ function createStyles(theme: Theme) {
     container: {
       flex: 1,
       backgroundColor: theme.background.dark,
-      paddingHorizontal: 24,
-      paddingBottom: 20,
+      paddingHorizontal: 20,
+      paddingBottom: 16,
     },
     scrollContent: {
-      paddingBottom: 20,
+      paddingBottom: 16,
     },
     stepRow: {
-      marginBottom: 20,
-      marginTop: 8,
+      marginBottom: 14,
+      marginTop: 4,
     },
     stepText: {
       fontSize: 11,
       fontFamily: FONTS.bold,
       letterSpacing: 1.2,
-      marginBottom: 8,
+      marginBottom: 6,
     },
     progressBar: {
       height: 4,
@@ -179,27 +179,27 @@ function createStyles(theme: Theme) {
       flex: 1,
     },
     title: {
-      fontSize: 32,
+      fontSize: 24,
       fontFamily: FONTS.bold,
       color: theme.foreground.white,
-      marginVertical: 8,
+      marginVertical: 6,
     },
     subtitle: {
-      fontSize: 16,
+      fontSize: 14,
       color: theme.foreground.gray,
-      marginBottom: 20,
+      marginBottom: 16,
     },
     optionsContainer: {
-      gap: 32,
+      gap: 22,
     },
     optionGroup: {
-      gap: 12,
+      gap: 10,
     },
     optionTitle: {
-      fontSize: 18,
+      fontSize: 15,
       fontFamily: FONTS.semiBold,
       color: theme.foreground.white,
-      marginBottom: 4,
+      marginBottom: 2,
     },
     optionsRow: {
       flexDirection: "row",
@@ -207,9 +207,9 @@ function createStyles(theme: Theme) {
     },
     optionButton: {
       flex: 1,
-      paddingVertical: 16,
-      paddingHorizontal: 20,
-      borderRadius: 12,
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      borderRadius: 10,
       borderWidth: 2,
       borderColor: theme.foreground.gray,
       backgroundColor: theme.background.darker,
@@ -220,7 +220,7 @@ function createStyles(theme: Theme) {
       backgroundColor: theme.background.accent,
     },
     optionText: {
-      fontSize: 16,
+      fontSize: 14,
       fontFamily: FONTS.semiBold,
       color: theme.foreground.gray,
     },

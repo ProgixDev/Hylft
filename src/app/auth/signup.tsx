@@ -31,47 +31,47 @@ function createStyles(theme: Theme) {
     },
     logoContainer: {
       alignItems: "center",
-      marginBottom: 20,
+      marginBottom: 14,
     },
     logo: {
-      width: 120,
-      height: 40,
+      width: 100,
+      height: 34,
     },
     contentContainer: {
       flex: 1,
-      paddingHorizontal: 32,
+      paddingHorizontal: 28,
     },
     title: {
-      fontSize: 32,
+      fontSize: 26,
       fontFamily: FONTS.bold,
       color: theme.foreground.white,
       textAlign: "center",
-      marginBottom: 8,
+      marginBottom: 6,
     },
     subtitle: {
-      fontSize: 16,
+      fontSize: 14,
       color: theme.foreground.gray,
       textAlign: "center",
-      marginBottom: 32,
+      marginBottom: 22,
     },
     formContainer: {
       flex: 1,
     },
     inputContainer: {
-      marginBottom: 20,
+      marginBottom: 14,
     },
     inputLabel: {
-      fontSize: 16,
+      fontSize: 14,
       fontFamily: FONTS.semiBold,
       color: theme.foreground.white,
-      marginBottom: 8,
+      marginBottom: 6,
     },
     input: {
       backgroundColor: theme.background.darker,
-      borderRadius: 12,
-      paddingHorizontal: 16,
-      paddingVertical: 16,
-      fontSize: 16,
+      borderRadius: 10,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      fontSize: 14,
       color: theme.foreground.white,
       borderWidth: 1,
       borderColor: theme.background.accent,
@@ -79,7 +79,7 @@ function createStyles(theme: Theme) {
     dividerContainer: {
       flexDirection: "row",
       alignItems: "center",
-      marginBottom: 24,
+      marginBottom: 16,
     },
     divider: {
       flex: 1,
@@ -88,16 +88,16 @@ function createStyles(theme: Theme) {
     },
     dividerText: {
       color: theme.foreground.gray,
-      fontSize: 14,
-      marginHorizontal: 16,
+      fontSize: 13,
+      marginHorizontal: 12,
     },
     signInButton: {
       alignItems: "center",
-      paddingVertical: 16,
+      paddingVertical: 10,
     },
     signInButtonText: {
       color: theme.primary.main,
-      fontSize: 16,
+      fontSize: 14,
       fontFamily: FONTS.semiBold,
     },
   });
@@ -236,7 +236,7 @@ export default function SignUp() {
               />
             </View>
 
-            <View style={{ marginBottom: 24, marginTop: 8 }}>
+            <View style={{ marginBottom: 18, marginTop: 6 }}>
               <ChipButton
                 title={isLoading ? t("signup.creatingAccount") : t("signup.signUp")}
                 onPress={handleSignUp}

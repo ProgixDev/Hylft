@@ -82,7 +82,7 @@ export default function Ready() {
     saveProfile();
 
     const timer = setTimeout(() => {
-      router.navigate("/(tabs)/schedule");
+      router.navigate("/(tabs)/home");
     }, 1500);
 
     return () => clearTimeout(timer);
@@ -113,8 +113,8 @@ const createStyles = (theme: Theme) =>
     container: {
       flex: 1,
       backgroundColor: theme.background.dark,
-      paddingHorizontal: 32,
-      paddingBottom: 20,
+      paddingHorizontal: 24,
+      paddingBottom: 16,
       justifyContent: "center",
       alignItems: "center",
     },
@@ -122,19 +122,19 @@ const createStyles = (theme: Theme) =>
       alignItems: "center",
     },
     iconContainer: {
-      marginBottom: 40,
+      marginBottom: 28,
     },
     title: {
-      fontSize: 40,
+      fontSize: 32,
       fontFamily: FONTS.bold,
       color: theme.foreground.white,
       textAlign: "center",
-      marginBottom: 16,
+      marginBottom: 12,
     },
     subtitle: {
-      fontSize: 18,
+      fontSize: 15,
       color: theme.foreground.gray,
       textAlign: "center",
-      lineHeight: 28,
+      lineHeight: 24,
     },
   });

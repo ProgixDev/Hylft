@@ -14,32 +14,32 @@ function createStyles(theme: Theme) {
     container: {
       flex: 1,
       backgroundColor: theme.background.dark,
-      paddingHorizontal: 32,
-      paddingBottom: 20,
+      paddingHorizontal: 20,
+      paddingBottom: 16,
     },
     content: {
       flex: 1,
     },
     title: {
-      fontSize: 32,
+      fontSize: 24,
       fontFamily: FONTS.bold,
       color: theme.foreground.white,
-      marginVertical: 8,
+      marginVertical: 6,
     },
     subtitle: {
-      fontSize: 16,
+      fontSize: 14,
       color: theme.foreground.gray,
-      marginBottom: 50,
+      marginBottom: 28,
     },
     stepRow: {
-      marginBottom: 20,
-      marginTop: 8,
+      marginBottom: 14,
+      marginTop: 4,
     },
     stepText: {
       fontSize: 11,
       fontFamily: FONTS.bold,
       letterSpacing: 1.2,
-      marginBottom: 8,
+      marginBottom: 6,
     },
     progressBar: {
       height: 4,
@@ -51,11 +51,11 @@ function createStyles(theme: Theme) {
       borderRadius: 2,
     },
     optionsContainer: {
-      gap: 16,
+      gap: 12,
     },
     genderButton: {
-      paddingVertical: 24,
-      borderRadius: 12,
+      paddingVertical: 18,
+      borderRadius: 10,
       borderWidth: 2,
       borderColor: theme.foreground.gray,
       backgroundColor: theme.background.darker,
@@ -66,7 +66,7 @@ function createStyles(theme: Theme) {
       backgroundColor: theme.background.accent,
     },
     genderText: {
-      fontSize: 20,
+      fontSize: 17,
       fontFamily: FONTS.semiBold,
       color: theme.foreground.gray,
     },

@@ -99,18 +99,18 @@ function createStyles(theme: Theme) {
     container: {
       flex: 1,
       backgroundColor: theme.background.dark,
-      paddingHorizontal: 24,
-      paddingBottom: 20,
+      paddingHorizontal: 20,
+      paddingBottom: 16,
     },
     stepRow: {
-      marginBottom: 20,
-      marginTop: 8,
+      marginBottom: 14,
+      marginTop: 4,
     },
     stepText: {
       fontSize: 11,
       fontFamily: FONTS.bold,
       letterSpacing: 1.2,
-      marginBottom: 8,
+      marginBottom: 6,
     },
     progressBar: {
       height: 4,
@@ -122,16 +122,16 @@ function createStyles(theme: Theme) {
       borderRadius: 2,
     },
     title: {
-      fontSize: 30,
+      fontSize: 24,
       fontFamily: FONTS.bold,
       color: theme.foreground.white,
-      marginBottom: 8,
+      marginBottom: 6,
     },
     subtitle: {
-      fontSize: 15,
+      fontSize: 13,
       color: theme.foreground.gray,
-      marginBottom: 28,
-      lineHeight: 22,
+      marginBottom: 18,
+      lineHeight: 20,
     },
     pickerContainer: {
       flex: 1,
@@ -139,13 +139,13 @@ function createStyles(theme: Theme) {
       alignItems: "center",
     },
     skipButton: {
-      paddingVertical: 14,
+      paddingVertical: 10,
       alignItems: "center",
       justifyContent: "center",
     },
     skipButtonText: {
       color: theme.foreground.gray,
-      fontSize: 16,
+      fontSize: 14,
       fontFamily: FONTS.semiBold,
     },
   });

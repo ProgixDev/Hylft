@@ -50,26 +50,26 @@ function createStyles(theme: Theme) {
     content: {
       flex: 1,
       justifyContent: "space-between",
-      paddingVertical: 40,
+      paddingVertical: 30,
     },
     logoContainer: {
       alignItems: "center",
-      marginTop: 20,
+      marginTop: 14,
     },
     logo: {
-      width: 140,
-      height: 50,
+      width: 120,
+      height: 42,
     },
     bottomSection: {
-      paddingHorizontal: 32,
-      paddingBottom: 20,
+      paddingHorizontal: 28,
+      paddingBottom: 16,
     },
     title: {
-      fontSize: 28,
+      fontSize: 24,
       fontFamily: FONTS.bold,
       color: theme.foreground.white,
       textAlign: "center",
-      marginBottom: 32,
+      marginBottom: 24,
     },
     signInContainer: {
       flexDirection: "row",
@@ -78,11 +78,11 @@ function createStyles(theme: Theme) {
     },
     signInText: {
       color: theme.foreground.white,
-      fontSize: 14,
+      fontSize: 13,
     },
     signInLink: {
       color: theme.primary.main,
-      fontSize: 14,
+      fontSize: 13,
       fontFamily: FONTS.semiBold,
     },
   });
@@ -150,7 +150,7 @@ export default function AuthLanding() {
     if (!user || hasNavigated.current) return;
     hasNavigated.current = true;
     hasCompletedGetStarted(user.id).then((done) => {
-      router.navigate(done ? "/(tabs)/schedule" : "/get-started/gender");
+      router.navigate(done ? "/(tabs)/home" : "/get-started/gender");
     });
   }, [user]);
 
@@ -197,7 +197,7 @@ export default function AuthLanding() {
           <Text style={styles.title}>{t("auth.signUpToGetStarted")}</Text>
 
           {/* Google Sign Up Button */}
-          <View style={{ marginBottom: 16 }}>
+          <View style={{ marginBottom: 12 }}>
             <ChipButton
               title={t("auth.continueWithGoogle")}
               onPress={handleGoogleSignUp}
@@ -215,7 +215,7 @@ export default function AuthLanding() {
           </View>
 
           {/* Email Sign Up Button */}
-          <View style={{ marginBottom: 24 }}>
+          <View style={{ marginBottom: 18 }}>
             <ChipButton
               title={t("auth.continueWithEmail")}
               onPress={handleEmailSignUp}
