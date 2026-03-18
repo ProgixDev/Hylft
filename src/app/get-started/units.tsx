@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ScrollView,
   StyleSheet,
@@ -22,24 +23,25 @@ type UnitOption = {
 export default function UnitsSelection() {
   const router = useRouter();
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const styles = createStyles(theme);
   const [selectedWeight, setSelectedWeight] = useState<string>("kg");
   const [selectedDistance, setSelectedDistance] = useState<string>("km");
   const [selectedHeight, setSelectedHeight] = useState<string>("cm");
 
   const weightOptions: UnitOption[] = [
-    { label: "Kilograms", value: "kg" },
-    { label: "Pounds", value: "lbs" },
+    { label: t("onboarding.units.kilograms"), value: "kg" },
+    { label: t("onboarding.units.pounds"), value: "lbs" },
   ];
 
   const distanceOptions: UnitOption[] = [
-    { label: "Kilometers", value: "km" },
-    { label: "Miles", value: "mi" },
+    { label: t("onboarding.units.kilometers"), value: "km" },
+    { label: t("onboarding.units.miles"), value: "mi" },
   ];
 
   const heightOptions: UnitOption[] = [
-    { label: "Centimeters", value: "cm" },
-    { label: "Inches", value: "in" },
+    { label: t("onboarding.units.centimeters"), value: "cm" },
+    { label: t("onboarding.units.inches"), value: "in" },
   ];
 
   const handleContinue = async () => {
@@ -90,7 +92,7 @@ export default function UnitsSelection() {
       >
         <View style={styles.stepRow}>
           <Text style={[styles.stepText, { color: theme.primary.main }]}>
-            STEP 1 OF 13
+            {t("onboarding.units.step")}
           </Text>
           <View style={styles.progressBar}>
             <View
@@ -105,26 +107,26 @@ export default function UnitsSelection() {
           </View>
         </View>
 
-        <Text style={styles.title}>Select Your Units</Text>
+        <Text style={styles.title}>{t("onboarding.units.title")}</Text>
         <Text style={styles.subtitle}>
-          Choose your preferred measurement units
+          {t("onboarding.units.subtitle")}
         </Text>
 
         <View style={styles.optionsContainer}>
           {renderOptionGroup(
-            "Weight",
+            t("onboarding.units.weight"),
             weightOptions,
             selectedWeight,
             setSelectedWeight,
           )}
           {renderOptionGroup(
-            "Distance",
+            t("onboarding.units.distance"),
             distanceOptions,
             selectedDistance,
             setSelectedDistance,
           )}
           {renderOptionGroup(
-            "Height",
+            t("onboarding.units.height"),
             heightOptions,
             selectedHeight,
             setSelectedHeight,
@@ -133,7 +135,7 @@ export default function UnitsSelection() {
       </ScrollView>
 
       <ChipButton
-        title="Continue"
+        title={t("common.continue")}
         onPress={handleContinue}
         variant="primary"
         size="lg"

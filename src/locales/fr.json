@@ -177,6 +177,20 @@
       "accept": "Bien sûr !",
       "decline": "Non, merci"
     },
+    "units": {
+      "title": "Sélectionnez vos unités",
+      "subtitle": "Choisissez vos unités de mesure préférées",
+      "step": "ÉTAPE 1 SUR 13",
+      "weight": "Poids",
+      "distance": "Distance",
+      "height": "Taille",
+      "kilograms": "Kilogrammes",
+      "pounds": "Livres",
+      "kilometers": "Kilomètres",
+      "miles": "Miles",
+      "centimeters": "Centimètres",
+      "inches": "Pouces"
+    },
     "gender": {
       "title": "Quel est votre genre de naissance ?",
       "subtitle": "Cela nous aide à fournir des recommandations personnalisées",
