@@ -40,7 +40,7 @@ export default function ExperienceLevel() {
       <View style={{ flex: 1 }}>
         <View style={styles.stepRow}>
           <Text style={[styles.stepText, { color: theme.primary.main }]}>
-            STEP 3 OF 13
+            {t("onboarding.stepOf", { current: 4, total: 13 })}
           </Text>
           <View style={styles.progressBar}>
             <View
@@ -48,7 +48,7 @@ export default function ExperienceLevel() {
                 styles.progressFill,
                 {
                   backgroundColor: theme.primary.main,
-                  width: `${(3 / 13) * 100}%`,
+                  width: `${(4 / 13) * 100}%`,
                 },
               ]}
             />

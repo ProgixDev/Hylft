@@ -150,7 +150,7 @@ export default function AuthLanding() {
     if (!user || hasNavigated.current) return;
     hasNavigated.current = true;
     hasCompletedGetStarted(user.id).then((done) => {
-      router.navigate(done ? "/(tabs)/schedule" : "/get-started/units");
+      router.navigate(done ? "/(tabs)/schedule" : "/get-started/gender");
     });
   }, [user]);
 

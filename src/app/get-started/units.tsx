@@ -92,7 +92,7 @@ export default function UnitsSelection() {
       >
         <View style={styles.stepRow}>
           <Text style={[styles.stepText, { color: theme.primary.main }]}>
-            {t("onboarding.units.step")}
+            {t("onboarding.stepOf", { current: 2, total: 13 })}
           </Text>
           <View style={styles.progressBar}>
             <View
@@ -100,7 +100,7 @@ export default function UnitsSelection() {
                 styles.progressFill,
                 {
                   backgroundColor: theme.primary.main,
-                  width: `${(1 / 13) * 100}%`,
+                  width: `${(2 / 13) * 100}%`,
                 },
               ]}
             />

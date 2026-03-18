@@ -52,7 +52,7 @@ export default function WorkoutFrequency() {
       >
         <View style={styles.stepRow}>
           <Text style={[styles.stepText, { color: theme.primary.main }]}>
-            STEP 9 OF 13
+            {t("onboarding.stepOf", { current: 9, total: 13 })}
           </Text>
           <View style={styles.progressBar}>
             <View

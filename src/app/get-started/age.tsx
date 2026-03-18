@@ -26,7 +26,7 @@ export default function AgeScreen() {
       <View style={{ flex: 1 }}>
         <View style={styles.stepRow}>
           <Text style={[styles.stepText, { color: theme.primary.main }]}>
-            STEP 4 OF 13
+            {t("onboarding.stepOf", { current: 5, total: 13 })}
           </Text>
           <View style={styles.progressBar}>
             <View
@@ -34,7 +34,7 @@ export default function AgeScreen() {
                 styles.progressFill,
                 {
                   backgroundColor: theme.primary.main,
-                  width: `${(4 / 13) * 100}%`,
+                  width: `${(5 / 13) * 100}%`,
                 },
               ]}
             />

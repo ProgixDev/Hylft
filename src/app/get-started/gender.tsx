@@ -86,7 +86,7 @@ export default function GenderSelection() {
     if (!selectedGender) return;
     setTheme(selectedGender as "male" | "female");
     await AsyncStorage.setItem("@hylift_gender", selectedGender);
-    router.navigate("/get-started/workout-frequency");
+    router.navigate("/get-started/units");
   };
 
   const styles = createStyles(theme);
@@ -96,7 +96,7 @@ export default function GenderSelection() {
       <View style={styles.content}>
         <View style={styles.stepRow}>
           <Text style={[styles.stepText, { color: theme.primary.main }]}>
-            STEP 8 OF 13
+            {t("onboarding.stepOf", { current: 1, total: 13 })}
           </Text>
           <View style={styles.progressBar}>
             <View
@@ -104,7 +104,7 @@ export default function GenderSelection() {
                 styles.progressFill,
                 {
                   backgroundColor: theme.primary.main,
-                  width: `${(8 / 13) * 100}%`,
+                  width: `${(1 / 13) * 100}%`,
                 },
               ]}
             />

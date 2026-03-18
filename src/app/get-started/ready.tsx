@@ -2,6 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { StyleSheet, Text, View } from "react-native";
 import { Theme } from "../../constants/themes";
 import { useAuth } from "../../contexts/AuthContext";
@@ -14,6 +15,7 @@ export default function Ready() {
   const router = useRouter();
   const { theme } = useTheme();
   const { user, setGetStartedCompleted } = useAuth();
+  const { t } = useTranslation();
   const styles = createStyles(theme);
 
   useEffect(() => {
@@ -97,9 +99,9 @@ export default function Ready() {
           />
         </View>
 
-        <Text style={styles.title}>You&apos;re Ready!</Text>
+        <Text style={styles.title}>{t("onboarding.ready.title")}</Text>
         <Text style={styles.subtitle}>
-          Let&apos;s start your fitness journey together
+          {t("onboarding.ready.subtitle")}
         </Text>
       </View>
     </View>

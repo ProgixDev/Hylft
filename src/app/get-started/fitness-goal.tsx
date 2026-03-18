@@ -65,7 +65,7 @@ export default function FitnessGoal() {
       >
         <View style={styles.stepRow}>
           <Text style={[styles.stepText, { color: theme.primary.main }]}>
-            STEP 2 OF 13
+            {t("onboarding.stepOf", { current: 3, total: 13 })}
           </Text>
           <View style={styles.progressBar}>
             <View
@@ -73,7 +73,7 @@ export default function FitnessGoal() {
                 styles.progressFill,
                 {
                   backgroundColor: theme.primary.main,
-                  width: `${(2 / 13) * 100}%`,
+                  width: `${(3 / 13) * 100}%`,
                 },
               ]}
             />

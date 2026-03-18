@@ -26,7 +26,7 @@ export default function HeightScreen() {
       <View style={{ flex: 1 }}>
         <View style={styles.stepRow}>
           <Text style={[styles.stepText, { color: theme.primary.main }]}>
-            STEP 5 OF 13
+            {t("onboarding.stepOf", { current: 6, total: 13 })}
           </Text>
           <View style={styles.progressBar}>
             <View
@@ -34,7 +34,7 @@ export default function HeightScreen() {
                 styles.progressFill,
                 {
                   backgroundColor: theme.primary.main,
-                  width: `${(5 / 13) * 100}%`,
+                  width: `${(6 / 13) * 100}%`,
                 },
               ]}
             />

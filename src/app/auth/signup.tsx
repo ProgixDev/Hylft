@@ -26,6 +26,9 @@ function createStyles(theme: Theme) {
       flex: 1,
       backgroundColor: theme.background.dark,
     },
+    scrollContent: {
+      flexGrow: 1,
+    },
     logoContainer: {
       alignItems: "center",
       marginBottom: 20,
@@ -143,7 +146,7 @@ export default function SignUp() {
     setIsLoading(true);
     try {
       await signUp(email, password, username);
-      router.navigate("/get-started/units");
+      router.navigate("/get-started/gender");
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : "Sign up failed";

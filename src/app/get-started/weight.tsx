@@ -26,7 +26,7 @@ export default function WeightScreen() {
       <View style={{ flex: 1 }}>
         <View style={styles.stepRow}>
           <Text style={[styles.stepText, { color: theme.primary.main }]}>
-            STEP 6 OF 13
+            {t("onboarding.stepOf", { current: 7, total: 13 })}
           </Text>
           <View style={styles.progressBar}>
             <View
@@ -34,7 +34,7 @@ export default function WeightScreen() {
                 styles.progressFill,
                 {
                   backgroundColor: theme.primary.main,
-                  width: `${(6 / 13) * 100}%`,
+                  width: `${(7 / 13) * 100}%`,
                 },
               ]}
             />

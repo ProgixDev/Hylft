@@ -40,7 +40,7 @@ export default function EmailPreferences() {
       >
         <View style={styles.stepRow}>
           <Text style={[styles.stepText, { color: theme.primary.main }]}>
-            STEP 12 OF 13
+            {t("onboarding.stepOf", { current: 12, total: 13 })}
           </Text>
           <View style={styles.progressBar}>
             <View

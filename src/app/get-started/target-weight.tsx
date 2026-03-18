@@ -31,11 +31,11 @@ export default function TargetWeightScreen() {
 
   const handleContinue = async () => {
     await AsyncStorage.setItem("@hylift_target_weight", value.toString());
-    router.push("/get-started/gender");
+    router.push("/get-started/workout-frequency");
   };
 
   const handleSkip = () => {
-    router.push("/get-started/gender");
+    router.push("/get-started/workout-frequency");
   };
 
   return (
@@ -43,7 +43,7 @@ export default function TargetWeightScreen() {
       <View style={{ flex: 1 }}>
         <View style={styles.stepRow}>
           <Text style={[styles.stepText, { color: theme.primary.main }]}>
-            STEP 7 OF 13
+            {t("onboarding.stepOf", { current: 8, total: 13 })}
           </Text>
           <View style={styles.progressBar}>
             <View
@@ -51,7 +51,7 @@ export default function TargetWeightScreen() {
                 styles.progressFill,
                 {
                   backgroundColor: theme.primary.main,
-                  width: `${(7 / 13) * 100}%`,
+                  width: `${(8 / 13) * 100}%`,
                 },
               ]}
             />

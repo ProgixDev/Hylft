@@ -1,6 +1,7 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import {
   ScrollView,
   StyleSheet,
@@ -17,6 +18,7 @@ import ChipButton from "../../components/ui/ChipButton";
 export default function HealthConnect() {
   const router = useRouter();
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const styles = createStyles(theme);
 
   const handleEnableHealthConnect = () => {
@@ -37,7 +39,7 @@ export default function HealthConnect() {
       >
         <View style={styles.stepRow}>
           <Text style={[styles.stepText, { color: theme.primary.main }]}>
-            STEP 11 OF 13
+            {t("onboarding.stepOf", { current: 11, total: 13 })}
           </Text>
           <View style={styles.progressBar}>
             <View
@@ -61,10 +63,9 @@ export default function HealthConnect() {
             />
           </View>
 
-          <Text style={styles.title}>Connect Your Health Data</Text>
+          <Text style={styles.title}>{t("onboarding.healthConnect.title")}</Text>
           <Text style={styles.subtitle}>
-            Sync your fitness data automatically to track your progress and get
-            personalized insights
+            {t("onboarding.healthConnect.subtitle")}
           </Text>
 
           <View style={styles.benefitsContainer}>
@@ -75,7 +76,7 @@ export default function HealthConnect() {
                 color={theme.primary.main}
               />
               <Text style={styles.benefitText}>
-                Automatic activity tracking
+                {t("onboarding.healthConnect.activityTracking")}
               </Text>
             </View>
             <View style={styles.benefitItem}>
@@ -85,7 +86,7 @@ export default function HealthConnect() {
                 color={theme.primary.main}
               />
               <Text style={styles.benefitText}>
-                Personalized recommendations
+                {t("onboarding.healthConnect.recommendations")}
               </Text>
             </View>
             <View style={styles.benefitItem}>
@@ -94,7 +95,7 @@ export default function HealthConnect() {
                 size={24}
                 color={theme.primary.main}
               />
-              <Text style={styles.benefitText}>Better progress insights</Text>
+              <Text style={styles.benefitText}>{t("onboarding.healthConnect.insights")}</Text>
             </View>
           </View>
         </View>
@@ -102,7 +103,7 @@ export default function HealthConnect() {
 
       <View style={styles.buttonsContainer}>
         <ChipButton
-          title="Enable Health Connect"
+          title={t("onboarding.healthConnect.enable")}
           onPress={handleEnableHealthConnect}
           variant="primary"
           size="lg"
@@ -114,7 +115,7 @@ export default function HealthConnect() {
           onPress={handleNotNow}
           activeOpacity={0.7}
         >
-          <Text style={styles.notNowButtonText}>Not Now</Text>
+          <Text style={styles.notNowButtonText}>{t("onboarding.healthConnect.notNow")}</Text>
         </TouchableOpacity>
       </View>
     </View>

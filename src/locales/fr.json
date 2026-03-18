@@ -45,6 +45,7 @@
     "page3TitleBold": "Parcours Fitness",
     "page3Subtitle": "\"Entraînements personnalisés rien que pour vous\"",
     "page3Button": "Suivant",
+    "stepOf": "ÉTAPE {{current}} SUR {{total}}",
     "age": {
       "title": "Quel âge avez-vous ?",
       "subtitle": "Cela nous aide à personnaliser votre programme fitness",
@@ -180,7 +181,6 @@
     "units": {
       "title": "Sélectionnez vos unités",
       "subtitle": "Choisissez vos unités de mesure préférées",
-      "step": "ÉTAPE 1 SUR 13",
       "weight": "Poids",
       "distance": "Distance",
       "height": "Taille",
@@ -196,6 +196,19 @@
       "subtitle": "Cela nous aide à fournir des recommandations personnalisées",
       "male": "Homme",
       "female": "Femme"
+    },
+    "healthConnect": {
+      "title": "Connectez vos données de santé",
+      "subtitle": "Synchronisez automatiquement vos données fitness pour suivre vos progrès et obtenir des recommandations personnalisées",
+      "activityTracking": "Suivi automatique de l'activité",
+      "recommendations": "Recommandations personnalisées",
+      "insights": "Meilleur suivi des progrès",
+      "enable": "Activer Health Connect",
+      "notNow": "Pas maintenant"
+    },
+    "ready": {
+      "title": "Vous êtes prêt !",
+      "subtitle": "Commençons votre parcours fitness ensemble"
     }
   },
   "tabs": {

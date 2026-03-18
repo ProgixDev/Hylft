@@ -45,6 +45,7 @@
     "page3TitleBold": "Journey",
     "page3Subtitle": "\"Personalized workouts just for you\"",
     "page3Button": "Next",
+    "stepOf": "STEP {{current}} OF {{total}}",
     "age": {
       "title": "How old are you?",
       "subtitle": "This helps us personalize your fitness plan",
@@ -180,7 +181,6 @@
     "units": {
       "title": "Select Your Units",
       "subtitle": "Choose your preferred measurement units",
-      "step": "STEP 1 OF 13",
       "weight": "Weight",
       "distance": "Distance",
       "height": "Height",
@@ -196,6 +196,19 @@
       "subtitle": "This helps us provide personalized recommendations",
       "male": "Male",
       "female": "Female"
+    },
+    "healthConnect": {
+      "title": "Connect Your Health Data",
+      "subtitle": "Sync your fitness data automatically to track your progress and get personalized insights",
+      "activityTracking": "Automatic activity tracking",
+      "recommendations": "Personalized recommendations",
+      "insights": "Better progress insights",
+      "enable": "Enable Health Connect",
+      "notNow": "Not Now"
+    },
+    "ready": {
+      "title": "You're Ready!",
+      "subtitle": "Let's start your fitness journey together"
     }
   },
   "tabs": {
