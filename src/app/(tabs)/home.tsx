@@ -444,18 +444,29 @@ export default function Home() {
                   ))}
                 </View>
               </View>
-              <Pressable
-                style={({ pressed }) => [
-                  styles.startButton,
-                  pressed && { opacity: 0.85, transform: [{ scale: 0.95 }] },
-                ]}
-                onPress={handleStartWorkout}
-              >
-                <Ionicons name="play" size={18} color="#000" />
-                <Text style={styles.startButtonText}>
-                  {t("home.start")}
-                </Text>
-              </Pressable>
+              <View style={styles.workoutActions}>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.detailsButton,
+                    pressed && { opacity: 0.85, transform: [{ scale: 0.95 }] },
+                  ]}
+                  onPress={() => router.push("/schedule/" as any)}
+                >
+                  <Ionicons name="eye-outline" size={16} color={theme.primary.main} />
+                  <Text style={styles.detailsButtonText}>
+                    {t("home.viewDetails")}
+                  </Text>
+                </Pressable>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.startButton,
+                    pressed && { opacity: 0.85, transform: [{ scale: 0.95 }] },
+                  ]}
+                  onPress={handleStartWorkout}
+                >
+                  <Ionicons name="play" size={20} color="#000" />
+                </Pressable>
+              </View>
             </View>
           </Pressable>
         ) : (
@@ -488,7 +499,7 @@ function createStyles(theme: Theme) {
       alignItems: "center",
       justifyContent: "space-between",
       paddingHorizontal: 16,
-      paddingBottom: 4,
+      paddingBottom: 12,
     },
     headerLeft: {
       flexDirection: "row",
@@ -528,8 +539,8 @@ function createStyles(theme: Theme) {
       flexDirection: "row",
       alignItems: "center",
       paddingHorizontal: 16,
-      paddingTop: 12,
-      paddingBottom: 8,
+      paddingTop: 20,
+      paddingBottom: 10,
       gap: 6,
     },
     sectionTitle: {
@@ -543,15 +554,15 @@ function createStyles(theme: Theme) {
     // Stats list
     statsList: {
       paddingHorizontal: 16,
-      gap: 6,
+      gap: 8,
     },
     statRow: {
       flexDirection: "row",
       alignItems: "center",
       backgroundColor: theme.background.accent,
       borderRadius: 12,
-      padding: 10,
-      gap: 10,
+      padding: 12,
+      gap: 12,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: "rgba(255,255,255,0.06)",
     },
@@ -596,6 +607,7 @@ function createStyles(theme: Theme) {
       flexDirection: "row",
       justifyContent: "space-between",
       paddingHorizontal: 16,
+      paddingBottom: 4,
     },
     weekDayCol: {
       alignItems: "center",
@@ -624,8 +636,8 @@ function createStyles(theme: Theme) {
       flexDirection: "row",
       alignItems: "center",
       paddingHorizontal: 16,
-      paddingTop: 12,
-      paddingBottom: 8,
+      paddingTop: 20,
+      paddingBottom: 10,
       gap: 6,
     },
     workoutSectionTitle: {
@@ -647,7 +659,7 @@ function createStyles(theme: Theme) {
       ...controlShadow,
     },
     workoutCardContent: {
-      padding: 12,
+      padding: 14,
     },
     workoutCardTitle: {
       fontFamily: FONTS.bold,
@@ -694,24 +706,37 @@ function createStyles(theme: Theme) {
       color: theme.primary.main,
       textTransform: "capitalize",
     },
-    startButton: {
+    workoutActions: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginTop: 12,
+    },
+    detailsButton: {
+      flex: 1,
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
-      backgroundColor: theme.primary.main,
-      paddingVertical: 10,
-      paddingHorizontal: 20,
+      gap: 6,
+      backgroundColor: theme.primary.main + "1A",
+      height: 44,
+      marginRight: 10,
       borderRadius: 12,
-      gap: 5,
-      marginTop: 10,
-      alignSelf: "flex-start",
+      borderWidth: 1,
+      borderColor: theme.primary.main + "40",
     },
-    startButtonText: {
+    detailsButtonText: {
       fontFamily: FONTS.bold,
       fontSize: 13,
-      color: "#000",
-      textTransform: "uppercase",
-      letterSpacing: 1,
+      color: theme.primary.main,
+    },
+    startButton: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: theme.primary.main,
+      alignItems: "center",
+      justifyContent: "center",
     },
 
     // Rest day

@@ -15,6 +15,7 @@
     "admin": "cd admin && bun run dev"
   },
   "dependencies": {
+    "@expo-google-fonts/poppins": "^0.4.1",
     "@expo-google-fonts/ubuntu": "^0.4.1",
     "@expo/vector-icons": "^15.0.3",
     "@gorhom/bottom-sheet": "^5",
