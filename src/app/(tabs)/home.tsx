@@ -348,7 +348,7 @@ export default function Home() {
                     !isToday &&
                       !isCompleted &&
                       !isMissed && {
-                        borderColor: "rgba(255,255,255,0.08)",
+                        borderColor: "rgba(0,0,0,0.08)",
                       },
                   ]}
                 >
@@ -464,7 +464,7 @@ export default function Home() {
                   ]}
                   onPress={handleStartWorkout}
                 >
-                  <Ionicons name="play" size={20} color="#000" />
+                  <Ionicons name="play" size={20} color="#fff" />
                 </Pressable>
               </View>
             </View>
@@ -514,7 +514,7 @@ function createStyles(theme: Theme) {
       justifyContent: "center",
       backgroundColor: theme.background.accent,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: "rgba(255,255,255,0.08)",
+      borderColor: "rgba(0,0,0,0.08)",
     },
     greetingAvatar: {
       width: 40,
@@ -564,7 +564,7 @@ function createStyles(theme: Theme) {
       padding: 12,
       gap: 12,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: "rgba(255,255,255,0.06)",
+      borderColor: "rgba(0,0,0,0.06)",
     },
     statIconBox: {
       width: 32,
@@ -594,7 +594,7 @@ function createStyles(theme: Theme) {
     progressBarBg: {
       height: 4,
       borderRadius: 2,
-      backgroundColor: "rgba(255,255,255,0.08)",
+      backgroundColor: "rgba(0,0,0,0.08)",
       overflow: "hidden",
     },
     progressBarFill: {
@@ -747,7 +747,7 @@ function createStyles(theme: Theme) {
       padding: 20,
       alignItems: "center",
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: "rgba(255,255,255,0.06)",
+      borderColor: "rgba(0,0,0,0.06)",
     },
     restDayTitle: {
       fontFamily: FONTS.bold,

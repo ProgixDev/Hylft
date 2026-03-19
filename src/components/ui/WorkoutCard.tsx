@@ -82,7 +82,7 @@ const WorkoutCard = ({
         style={styles.startButton}
       >
         <Text style={styles.startButtonText}>{t("schedule.startWorkout")}</Text>
-        <Ionicons name="arrow-forward" size={13} color={"#111"} />
+        <Ionicons name="arrow-forward" size={13} color={theme.background.dark} />
       </TouchableOpacity>
     </TouchableOpacity>
   );
@@ -170,7 +170,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       color: theme.foreground.white,
     },
     moreTag: {
-      backgroundColor: "rgba(255,255,255,0.03)",
+      backgroundColor: "rgba(0,0,0,0.03)",
       paddingHorizontal: 8,
       paddingVertical: 4,
       borderRadius: 6,

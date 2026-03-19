@@ -2,7 +2,6 @@ export interface Theme {
   primary: {
     main: string;
     light: string;
-    dark: string;
   };
   background: {
     dark: string;
@@ -19,38 +18,36 @@ export interface Theme {
 
 export const maleTheme: Theme = {
   primary: {
-    main: "#C8F14A", // Current green
-    light: "#D6F45F",
-    dark: "#A4E600",
+    main: "#004BFF",
+    light: "#3370F8",
   },
   background: {
-    dark: "#0B0D0E",
-    darker: "#121417",
-    accent: "#1B1F24",
+    dark: "#FFFFFF",
+    darker: "#F2F3F5",
+    accent: "#E8EAF0",
     purple: "#B652C7",
   },
   foreground: {
-    white: "#FFFFFF",
-    gray: "#BFC3C7",
+    white: "#0B0D0E",
+    gray: "#5F6368",
   },
   logo: require("../../assets/images/Logo.png"),
 };
 
 export const femaleTheme: Theme = {
   primary: {
-    main: "#4FC3F7", // Light blue
-    light: "#81D4FA",
-    dark: "#29B6F6",
+    main: "#F91B66",
+    light: "#FA4D85",
   },
   background: {
-    dark: "#0B0D0E",
-    darker: "#121417",
-    accent: "#1B1F24",
+    dark: "#FFFFFF",
+    darker: "#F2F3F5",
+    accent: "#E8EAF0",
     purple: "#B652C7",
   },
   foreground: {
-    white: "#FFFFFF",
-    gray: "#BFC3C7",
+    white: "#0B0D0E",
+    gray: "#5F6368",
   },
   logo: require("../../assets/images/LogoBlue.png"),
 };

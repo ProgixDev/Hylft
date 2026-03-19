@@ -714,7 +714,7 @@ export default function ScheduleDetailPage() {
                     onPress={handleStartWorkout}
                     activeOpacity={0.85}
                   >
-                    <Ionicons name="play" size={18} color="#0B0D0E" />
+                    <Ionicons name="play" size={18} color="#FFFFFF" />
                     <Text style={styles.primaryBtnText}>{t("scheduleDetail.startWorkout")}</Text>
                   </TouchableOpacity>
                 </>
@@ -1029,7 +1029,7 @@ const styles = StyleSheet.create({
   primaryBtnText: {
     fontSize: 17,
     fontFamily: FONTS.bold,
-    color: "#0B0D0E",
+    color: "#FFFFFF",
   },
   secondaryBtn: {
     flex: 1,

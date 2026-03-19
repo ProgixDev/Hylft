@@ -354,7 +354,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       paddingHorizontal: 12,
       paddingVertical: 8,
       borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: "rgba(255,255,255,0.08)",
+      borderBottomColor: "rgba(0,0,0,0.08)",
     },
     metricsContainer: {
       flexDirection: "row",

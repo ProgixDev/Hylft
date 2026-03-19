@@ -33,22 +33,22 @@ function AppContent() {
           flex: 1,
           justifyContent: "center",
           alignItems: "center",
-          backgroundColor: "#0B0D0E",
+          backgroundColor: "#FFFFFF",
         }}
       >
-        <ActivityIndicator size="large" color="#4CAF50" />
+        <ActivityIndicator size="large" color="#004BFF" />
       </View>
     );
   }
 
   return (
     <>
-      <StatusBar style="light" translucent backgroundColor="transparent" />
+      <StatusBar style="dark" translucent backgroundColor="transparent" />
       <Stack
         screenOptions={{
           headerShown: false,
-          contentStyle: { backgroundColor: "#0B0D0E" },
-          statusBarStyle: "light",
+          contentStyle: { backgroundColor: "#FFFFFF" },
+          statusBarStyle: "dark",
         }}
       >
         <Stack.Screen name="index" />
@@ -112,7 +112,7 @@ export default function RootLayout() {
               <ActiveWorkoutProvider>
                 <CreateRoutineProvider>
                 <SafeAreaProvider>
-                  <SafeAreaView style={{ flex: 1, backgroundColor: "#0B0D0E" }}>
+                  <SafeAreaView style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
                     <AppContent />
                   </SafeAreaView>
                 </SafeAreaProvider>

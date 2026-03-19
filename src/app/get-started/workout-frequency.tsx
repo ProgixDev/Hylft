@@ -107,7 +107,7 @@ export default function WorkoutFrequency() {
                     style={[
                       styles.daysNum,
                       {
-                        color: isSelected ? "#0B0D0E" : theme.foreground.white,
+                        color: isSelected ? "#FFFFFF" : theme.foreground.white,
                       },
                     ]}
                   >

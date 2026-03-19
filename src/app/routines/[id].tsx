@@ -356,7 +356,7 @@ const createStyles = (theme: Theme) =>
       justifyContent: "center",
       backgroundColor: theme.background.darker,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: "rgba(255,255,255,0.10)",
+      borderColor: "rgba(0,0,0,0.10)",
       ...controlShadow,
     },
     headerTitle: {
@@ -383,7 +383,7 @@ const createStyles = (theme: Theme) =>
       padding: 20,
       overflow: "hidden",
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: "rgba(255,255,255,0.07)",
+      borderColor: "rgba(0,0,0,0.07)",
       ...surfaceShadow,
     },
     heroGlow: {
@@ -426,7 +426,7 @@ const createStyles = (theme: Theme) =>
     },
     heroDivider: {
       height: StyleSheet.hairlineWidth,
-      backgroundColor: "rgba(255,255,255,0.08)",
+      backgroundColor: "rgba(0,0,0,0.08)",
       marginBottom: 16,
     },
     statsRow: {
@@ -450,7 +450,7 @@ const createStyles = (theme: Theme) =>
     statDivider: {
       width: StyleSheet.hairlineWidth,
       height: 28,
-      backgroundColor: "rgba(255,255,255,0.10)",
+      backgroundColor: "rgba(0,0,0,0.10)",
     },
     lastUsedRow: {
       flexDirection: "row",
@@ -495,7 +495,7 @@ const createStyles = (theme: Theme) =>
       borderRadius: 20,
       padding: 18,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: "rgba(255,255,255,0.07)",
+      borderColor: "rgba(0,0,0,0.07)",
       ...surfaceShadow,
     },
     exerciseHeader: {
@@ -525,7 +525,7 @@ const createStyles = (theme: Theme) =>
     },
     exerciseDivider: {
       height: StyleSheet.hairlineWidth,
-      backgroundColor: "rgba(255,255,255,0.08)",
+      backgroundColor: "rgba(0,0,0,0.08)",
       marginBottom: 12,
     },
     exerciseMetaRow: {
@@ -550,7 +550,7 @@ const createStyles = (theme: Theme) =>
     exerciseMetaDivider: {
       width: StyleSheet.hairlineWidth,
       height: 28,
-      backgroundColor: "rgba(255,255,255,0.10)",
+      backgroundColor: "rgba(0,0,0,0.10)",
     },
     // Set Preview
     setPreviewRow: {
@@ -565,7 +565,7 @@ const createStyles = (theme: Theme) =>
       borderRadius: 10,
       alignItems: "center",
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: "rgba(255,255,255,0.07)",
+      borderColor: "rgba(0,0,0,0.07)",
     },
     setPreviewLabel: {
       color: theme.foreground.gray,

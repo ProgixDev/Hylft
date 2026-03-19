@@ -379,7 +379,7 @@ export default function Settings() {
   }
 
   const switchThumb = theme.primary.main;
-  const switchTrackOn = theme.primary.dark + "88";
+  const switchTrackOn = theme.primary.light + "88";
 
   // ─── JSX ──────────────────────────────────────────────────────────────────
 
@@ -408,7 +408,7 @@ export default function Settings() {
         <View style={styles.sectionBody}>
           <SettingsRow
             icon="person-outline"
-            iconBg="#1c3a5e"
+            iconBg="#dbeafe"
             title={t("settings.editProfile")}
             subtitle={t("settings.changeProfileSubtitle")}
             showBorder
@@ -419,7 +419,7 @@ export default function Settings() {
           />
           <SettingsRow
             icon="lock-closed-outline"
-            iconBg="#3a1a5e"
+            iconBg="#ede9fe"
             title={t("settings.changePassword")}
             subtitle={t("settings.changePasswordSubtitle")}
             showBorder
@@ -430,7 +430,7 @@ export default function Settings() {
           />
           <SettingsRow
             icon="eye-off-outline"
-            iconBg="#1a3a3a"
+            iconBg="#ccfbf1"
             title={t("settings.privateAccount")}
             subtitle={t("settings.privateAccountSubtitle")}
             showBorder={false}
@@ -454,7 +454,7 @@ export default function Settings() {
         <View style={styles.sectionBody}>
           <SettingsRow
             icon="color-palette-outline"
-            iconBg="#2a3a1a"
+            iconBg="#ecfccb"
             title={t("settings.theme")}
             subtitle={themeType === "male" ? t("settings.themeMale") : t("settings.themeFemale")}
             showBorder
@@ -473,7 +473,7 @@ export default function Settings() {
           />
           <SettingsRow
             icon="language-outline"
-            iconBg="#3a2a1a"
+            iconBg="#fef3c7"
             title={t("settings.language")}
             subtitle={t("settings.languageSubtitle")}
             showBorder={false}
@@ -499,7 +499,7 @@ export default function Settings() {
         <View style={styles.sectionBody}>
           <SettingsRow
             icon="scale-outline"
-            iconBg="#3a2a1a"
+            iconBg="#fef3c7"
             title={t("settings.weightUnit")}
             showBorder
             right={
@@ -517,7 +517,7 @@ export default function Settings() {
           />
           <SettingsRow
             icon="navigate-outline"
-            iconBg="#1a2a3a"
+            iconBg="#e0f2fe"
             title={t("settings.distanceUnit")}
             showBorder
             right={
@@ -535,7 +535,7 @@ export default function Settings() {
           />
           <SettingsRow
             icon="calendar-outline"
-            iconBg="#1a3a2a"
+            iconBg="#d1fae5"
             title={t("settings.firstDayOfWeek")}
             showBorder={false}
             right={
@@ -560,7 +560,7 @@ export default function Settings() {
         <View style={styles.sectionBody}>
           <SettingsRow
             icon="notifications-outline"
-            iconBg="#3a1a2a"
+            iconBg="#fce7f3"
             title={t("settings.pushNotifications")}
             subtitle={t("settings.pushNotificationsSubtitle")}
             showBorder
@@ -577,7 +577,7 @@ export default function Settings() {
           />
           <SettingsRow
             icon="alarm-outline"
-            iconBg="#2a3a1a"
+            iconBg="#ecfccb"
             title={t("settings.workoutReminders")}
             subtitle={t("settings.workoutRemindersSubtitle")}
             showBorder
@@ -594,7 +594,7 @@ export default function Settings() {
           />
           <SettingsRow
             icon="mail-outline"
-            iconBg="#1a2a3a"
+            iconBg="#e0f2fe"
             title={t("settings.emailNotifications")}
             subtitle={t("settings.emailNotificationsSubtitle")}
             showBorder={false}
@@ -618,7 +618,7 @@ export default function Settings() {
         <View style={styles.sectionBody}>
           <SettingsRow
             icon="heart-outline"
-            iconBg="#3a1a1a"
+            iconBg="#fee2e2"
             title={t("settings.healthConnect")}
             subtitle={t("settings.healthConnectSubtitle")}
             showBorder={false}
@@ -642,7 +642,7 @@ export default function Settings() {
         <View style={styles.sectionBody}>
           <SettingsRow
             icon="help-circle-outline"
-            iconBg="#1c3a5e"
+            iconBg="#dbeafe"
             title={t("settings.helpCenter")}
             showBorder
             showChevron
@@ -652,7 +652,7 @@ export default function Settings() {
           />
           <SettingsRow
             icon="star-outline"
-            iconBg="#3a3a1a"
+            iconBg="#fef9c3"
             title={t("settings.rateHylift")}
             subtitle={t("settings.rateHyliftSubtitle")}
             showBorder
@@ -663,7 +663,7 @@ export default function Settings() {
           />
           <SettingsRow
             icon="information-circle-outline"
-            iconBg="#2a2a3a"
+            iconBg="#e8e0f0"
             title={t("settings.aboutHylift")}
             subtitle={t("settings.version")}
             showBorder
@@ -674,7 +674,7 @@ export default function Settings() {
           />
           <SettingsRow
             icon="document-text-outline"
-            iconBg="#1a3a3a"
+            iconBg="#ccfbf1"
             title={t("settings.termsOfService")}
             showBorder
             showChevron
@@ -684,7 +684,7 @@ export default function Settings() {
           />
           <SettingsRow
             icon="shield-checkmark-outline"
-            iconBg="#2a1a3a"
+            iconBg="#f3e8ff"
             title={t("settings.privacyPolicy")}
             showBorder={false}
             showChevron

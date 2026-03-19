@@ -139,7 +139,7 @@ export default function Workout() {
             <Pressable
               style={({ pressed }) => [
                 styles.modalOption,
-                pressed && { backgroundColor: "rgba(255,255,255,0.04)" },
+                pressed && { backgroundColor: "rgba(0,0,0,0.04)" },
               ]}
               onPress={() => {
                 handleStartEmptyWorkout();
@@ -156,7 +156,7 @@ export default function Workout() {
             <Pressable
               style={({ pressed }) => [
                 styles.modalOption,
-                pressed && { backgroundColor: "rgba(255,255,255,0.04)" },
+                pressed && { backgroundColor: "rgba(0,0,0,0.04)" },
               ]}
               onPress={handleCreateRoutine}
             >
@@ -170,7 +170,7 @@ export default function Workout() {
             <Pressable
               style={({ pressed }) => [
                 styles.modalOption,
-                pressed && { backgroundColor: "rgba(255,255,255,0.04)" },
+                pressed && { backgroundColor: "rgba(0,0,0,0.04)" },
               ]}
               onPress={() => {
                 setPlusModalVisible(false);
@@ -390,7 +390,7 @@ const createStyles = (theme: Theme) =>
       justifyContent: "center",
       backgroundColor: theme.background.accent,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: "rgba(255,255,255,0.08)",
+      borderColor: "rgba(0,0,0,0.08)",
       ...controlShadow,
     },
     content: {
@@ -417,7 +417,7 @@ const createStyles = (theme: Theme) =>
       justifyContent: "center",
       gap: 6,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: "rgba(255,255,255,0.08)",
+      borderColor: "rgba(0,0,0,0.08)",
       overflow: "hidden",
       ...surfaceShadow,
     },
@@ -611,7 +611,7 @@ const createStyles = (theme: Theme) =>
       paddingVertical: 8,
       overflow: "hidden",
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: "rgba(255,255,255,0.10)",
+      borderColor: "rgba(0,0,0,0.10)",
       ...surfaceShadow,
     },
     modalOption: {

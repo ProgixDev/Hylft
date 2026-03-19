@@ -134,7 +134,7 @@ function TabButton({
   }));
 
   const activeColor = theme.primary.main;
-  const inactiveColor = "rgba(255,255,255,0.55)";
+  const inactiveColor = "rgba(0,0,0,0.45)";
   const color = isFocused ? activeColor : inactiveColor;
 
   return (
@@ -186,9 +186,9 @@ const styles = StyleSheet.create({
     left: 0,
     width: "100%",
     flexDirection: "row",
-    backgroundColor: "#0B0D0E",
+    backgroundColor: "#FFFFFF",
     borderTopWidth: 0.5,
-    borderTopColor: "rgba(255,255,255,0.08)",
+    borderTopColor: "rgba(0,0,0,0.08)",
     alignItems: "center",
     justifyContent: "center",
     zIndex: 50,

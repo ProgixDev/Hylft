@@ -197,25 +197,25 @@ export default function About() {
             {[
               {
                 icon: "code-slash-outline",
-                bg: "#1c3a5e",
+                bg: "#dbeafe",
                 label: t("about.developer"),
                 value: "DigitariaWebs",
               },
               {
                 icon: "globe-outline",
-                bg: "#1a3a2a",
+                bg: "#d1fae5",
                 label: t("about.platform"),
                 value: "iOS & Android",
               },
               {
                 icon: "calendar-outline",
-                bg: "#3a2a1a",
+                bg: "#fef3c7",
                 label: t("about.released"),
                 value: "2026",
               },
               {
                 icon: "language-outline",
-                bg: "#2a1a3a",
+                bg: "#f3e8ff",
                 label: t("about.technologies"),
                 value: "React Native · Expo",
                 last: true,
@@ -264,19 +264,19 @@ export default function About() {
             {[
               {
                 icon: "document-text-outline",
-                bg: "#1a3a3a",
+                bg: "#ccfbf1",
                 label: t("settings.termsOfService"),
                 onPress: () => router.push("/settings/terms" as any),
               },
               {
                 icon: "shield-checkmark-outline",
-                bg: "#2a1a3a",
+                bg: "#f3e8ff",
                 label: t("settings.privacyPolicy"),
                 onPress: () => router.push("/settings/privacy" as any),
               },
               {
                 icon: "open-outline",
-                bg: "#1c3a5e",
+                bg: "#dbeafe",
                 label: t("about.website"),
                 onPress: () => Linking.openURL("https://digitariawebs.com"),
                 last: true,

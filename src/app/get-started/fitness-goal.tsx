@@ -153,7 +153,7 @@ export default function FitnessGoal() {
                         { backgroundColor: theme.primary.main },
                       ]}
                     >
-                      <Ionicons name="checkmark" size={14} color="#0B0D0E" />
+                      <Ionicons name="checkmark" size={14} color="#FFFFFF" />
                     </View>
                   )}
                 </View>

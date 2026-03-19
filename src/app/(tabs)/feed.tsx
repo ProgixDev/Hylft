@@ -56,7 +56,7 @@ function createStyles(theme: Theme) {
       justifyContent: "center",
       backgroundColor: theme.background.accent,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: "rgba(255,255,255,0.08)",
+      borderColor: "rgba(0,0,0,0.08)",
       ...controlShadow,
     },
     notificationBadge: {

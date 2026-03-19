@@ -234,7 +234,7 @@ const createStyles = (theme: Theme) =>
       paddingHorizontal: 4,
       paddingVertical: 8,
       borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: "rgba(255,255,255,0.08)",
+      borderBottomColor: "rgba(0,0,0,0.08)",
       gap: 8,
     },
     tab: {
@@ -276,7 +276,7 @@ const createStyles = (theme: Theme) =>
       borderRadius: 14,
       backgroundColor: theme.background.accent,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: "rgba(255,255,255,0.08)",
+      borderColor: "rgba(0,0,0,0.08)",
       marginBottom: 8,
     },
     chipActive: {

@@ -94,7 +94,7 @@ function createStyles(theme: Theme) {
       justifyContent: "center",
       backgroundColor: theme.background.accent,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: "rgba(255,255,255,0.08)",
+      borderColor: "rgba(0,0,0,0.08)",
       ...controlShadow,
     },
     iconBtnPressed: {
@@ -110,7 +110,7 @@ function createStyles(theme: Theme) {
       paddingBottom: 14,
       backgroundColor: theme.background.accent,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: "rgba(255,255,255,0.08)",
+      borderColor: "rgba(0,0,0,0.08)",
       overflow: "hidden",
       ...surfaceShadow,
     },
@@ -139,7 +139,7 @@ function createStyles(theme: Theme) {
     avatarFrame: {
       padding: 3,
       borderRadius: 46,
-      backgroundColor: "rgba(255,255,255,0.06)",
+      backgroundColor: "rgba(0,0,0,0.06)",
     },
     avatar: {
       width: 82,
@@ -216,7 +216,7 @@ function createStyles(theme: Theme) {
       backgroundColor: theme.background.darker,
       borderRadius: 16,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: "rgba(255,255,255,0.07)",
+      borderColor: "rgba(0,0,0,0.07)",
       ...surfaceShadow,
     },
     statBoxPressed: {
@@ -240,7 +240,7 @@ function createStyles(theme: Theme) {
       marginTop: 12,
       paddingTop: 10,
       borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: "rgba(255,255,255,0.08)",
+      borderTopColor: "rgba(0,0,0,0.08)",
       alignItems: "center",
     },
     fitnessStatItem: {
@@ -260,7 +260,7 @@ function createStyles(theme: Theme) {
     fitnessStatDivider: {
       width: StyleSheet.hairlineWidth,
       height: 32,
-      backgroundColor: "rgba(255,255,255,0.08)",
+      backgroundColor: "rgba(0,0,0,0.08)",
     },
     fitnessValue: {
       fontSize: 15,
@@ -282,7 +282,7 @@ function createStyles(theme: Theme) {
       borderRadius: 14,
       backgroundColor: theme.background.accent,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: "rgba(255,255,255,0.07)",
+      borderColor: "rgba(0,0,0,0.07)",
     },
     tab: {
       flex: 1,
@@ -335,7 +335,7 @@ function createStyles(theme: Theme) {
       top: 6,
       right: 6,
       borderRadius: 999,
-      backgroundColor: "rgba(11,13,14,0.72)",
+      backgroundColor: "rgba(0,0,0,0.55)",
       paddingHorizontal: 5,
       paddingVertical: 3,
     },
@@ -348,7 +348,7 @@ function createStyles(theme: Theme) {
       paddingHorizontal: 20,
       backgroundColor: theme.background.accent,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: "rgba(255,255,255,0.07)",
+      borderColor: "rgba(0,0,0,0.07)",
       ...surfaceShadow,
     },
     emptyText: {
@@ -375,7 +375,7 @@ function createStyles(theme: Theme) {
       padding: 12,
       marginBottom: 8,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: "rgba(255,255,255,0.08)",
+      borderColor: "rgba(0,0,0,0.08)",
       ...surfaceShadow,
     },
     routineCardPressed: {
@@ -452,7 +452,7 @@ function createStyles(theme: Theme) {
       paddingHorizontal: 8,
       paddingVertical: 4,
       borderRadius: 999,
-      backgroundColor: "rgba(255,255,255,0.05)",
+      backgroundColor: "rgba(0,0,0,0.05)",
     },
     muscleTagText: {
       fontSize: 10,
@@ -471,11 +471,10 @@ function formatCount(n: number) {
 
 function difficultyColor(
   d: Routine["difficulty"],
-  theme: Theme,
 ): { bg: string; text: string } {
-  if (d === "beginner") return { bg: "#1a3a2a", text: "#4ade80" };
-  if (d === "intermediate") return { bg: "#2a2a10", text: theme.primary.main };
-  return { bg: "#3a1a1a", text: "#f87171" };
+  if (d === "beginner") return { bg: "#d1fae5", text: "#16a34a" };
+  if (d === "intermediate") return { bg: "#fef3c7", text: "#d97706" };
+  return { bg: "#fee2e2", text: "#dc2626" };
 }
 
 function calcTotalVolume(workouts: Workout[]): string {
@@ -631,7 +630,7 @@ export default function Profile() {
     return (
       <View style={styles.routinesList}>
         {routines.map((routine) => {
-          const colors = difficultyColor(routine.difficulty, theme);
+          const colors = difficultyColor(routine.difficulty);
           return (
             <Pressable
               key={routine.id}

@@ -196,7 +196,7 @@ function DayCard({
                 onPress={onStartWorkout}
                 activeOpacity={0.85}
               >
-                <Ionicons name="play" size={16} color="#0B0D0E" />
+                <Ionicons name="play" size={16} color="#FFFFFF" />
                 <Text style={styles.startBtnText}>
                   {slide.offset === 0
                     ? t("schedule.startWorkout")
@@ -1112,7 +1112,7 @@ const styles = StyleSheet.create({
   startBtnText: {
     fontSize: 13,
     fontFamily: FONTS.bold,
-    color: "#0B0D0E",
+    color: "#FFFFFF",
   },
 });
 
