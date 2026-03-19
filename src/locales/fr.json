@@ -127,6 +127,10 @@
       "title": "À quelle fréquence vous entraînez-vous ?",
       "subtitle": "Nous construirons votre programme hebdomadaire en fonction de cela",
       "options": {
+        "1": {
+          "label": "1 jour / semaine",
+          "description": "Engagement minimal — idéal pour maintenir une routine de base"
+        },
         "2": {
           "label": "2 jours / semaine",
           "description": "Programme léger — parfait pour les débutants ou les semaines chargées"

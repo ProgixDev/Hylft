@@ -23,6 +23,7 @@ interface FreqOption {
 }
 
 const FREQUENCIES: FreqOption[] = [
+  { id: "1", days: 1, icon: "body-outline" },
   { id: "2", days: 2, icon: "walk-outline" },
   { id: "3", days: 3, icon: "fitness-outline" },
   { id: "4", days: 4, icon: "barbell-outline" },

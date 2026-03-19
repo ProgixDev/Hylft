@@ -1,10 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
-import * as ImagePicker from "expo-image-picker";
+
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  Alert,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -20,7 +19,6 @@ import { useTheme } from "../../contexts/ThemeContext";
 
 import { FONTS } from "../../constants/fonts";
 
-const MAX_IMAGES = 6;
 const AUTHOR_AVATAR = "https://i.pravatar.cc/150?img=12";
 const AUTHOR_USERNAME = "alex_shred";
 
@@ -45,44 +43,10 @@ export default function ShareWorkout() {
 
   // ── State ─────────────────────────────────────────────────────────────────
   const [caption, setCaption] = useState("");
-  const [images, setImages] = useState<string[]>([]);
   const [showWeight, setShowWeight] = useState(true);
   const [showSets, setShowSets] = useState(true);
   const [showDuration, setShowDuration] = useState(true);
   const [posting, setPosting] = useState(false);
-
-  // ── Image picker ──────────────────────────────────────────────────────────
-  const pickImages = async () => {
-    const remaining = MAX_IMAGES - images.length;
-    if (remaining <= 0) return;
-
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") {
-      Alert.alert(
-        t("shareWorkout.permissionDeniedTitle"),
-        t("shareWorkout.permissionDeniedBody"),
-      );
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: "images",
-      allowsMultipleSelection: true,
-      selectionLimit: remaining,
-      quality: 0.85,
-      orderedSelection: true,
-    });
-
-    if (!result.canceled) {
-      setImages((prev) =>
-        [...prev, ...result.assets.map((a) => a.uri)].slice(0, MAX_IMAGES),
-      );
-    }
-  };
-
-  const removeImage = (index: number) => {
-    setImages((prev) => prev.filter((_, i) => i !== index));
-  };
 
   // ── Post ──────────────────────────────────────────────────────────────────
   const handlePost = () => {
@@ -95,7 +59,7 @@ export default function ShareWorkout() {
       addPost({
         id: `post-${Date.now()}`,
         userId: "1",
-        images,
+        images: [],
         likes: 0,
         caption: caption.trim() || workoutName,
         comments: 0,
@@ -114,7 +78,7 @@ export default function ShareWorkout() {
   };
 
   // ── Render ────────────────────────────────────────────────────────────────
-  const canPost = caption.trim().length > 0 || images.length > 0;
+  const canPost = caption.trim().length > 0;
 
   return (
     <KeyboardAvoidingView
@@ -180,37 +144,6 @@ export default function ShareWorkout() {
           <Text style={styles.workoutNameText} numberOfLines={1}>
             {workoutName}
           </Text>
-        </View>
-
-        {/* ── Image grid ────────────────────────────────────────────────── */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>{t("shareWorkout.photos")}</Text>
-          <Text style={styles.sectionCount}>
-            {images.length}/{MAX_IMAGES}
-          </Text>
-        </View>
-
-        <View style={styles.imageGrid}>
-          {images.map((uri, idx) => (
-            <View key={uri + idx} style={styles.imageCell}>
-              <Image source={{ uri }} style={styles.imageThumbnail} />
-              <TouchableOpacity
-                style={styles.removeImageBtn}
-                onPress={() => removeImage(idx)}
-                hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
-              >
-                <Ionicons name="close-circle" size={22} color="#ef4444" />
-              </TouchableOpacity>
-            </View>
-          ))}
-          {images.length < MAX_IMAGES && (
-            <TouchableOpacity style={styles.addImageCell} onPress={pickImages}>
-              <Ionicons name="add" size={32} color={theme.primary.main} />
-              <Text style={styles.addImageText}>
-                {t("shareWorkout.addPhoto")}
-              </Text>
-            </TouchableOpacity>
-          )}
         </View>
 
         {/* ── Stat chips ───────────────────────────────────────────────── */}
@@ -435,53 +368,9 @@ const createStyles = (theme: Theme) =>
       fontFamily: FONTS.bold,
       color: theme.foreground.white,
     },
-    sectionCount: {
-      fontSize: 13,
-      color: theme.foreground.gray,
-    },
     sectionHint: {
       fontSize: 12,
       color: theme.foreground.gray,
-    },
-    imageGrid: {
-      flexDirection: "row",
-      flexWrap: "wrap",
-      gap: 8,
-    },
-    imageCell: {
-      width: "31%",
-      aspectRatio: 1,
-      borderRadius: 12,
-      overflow: "visible",
-    },
-    imageThumbnail: {
-      width: "100%",
-      height: "100%",
-      borderRadius: 12,
-    },
-    removeImageBtn: {
-      position: "absolute",
-      top: -8,
-      right: -8,
-      backgroundColor: theme.background.dark,
-      borderRadius: 11,
-    },
-    addImageCell: {
-      width: "31%",
-      aspectRatio: 1,
-      borderRadius: 12,
-      borderWidth: 1.5,
-      borderStyle: "dashed",
-      borderColor: theme.primary.main + "60",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: 4,
-      backgroundColor: theme.background.darker,
-    },
-    addImageText: {
-      fontSize: 11,
-      fontFamily: FONTS.semiBold,
-      color: theme.primary.main,
     },
     statsRow: {
       flexDirection: "row",

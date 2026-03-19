@@ -127,6 +127,10 @@
       "title": "How often do you train?",
       "subtitle": "We'll build your weekly schedule around this",
       "options": {
+        "1": {
+          "label": "1 day / week",
+          "description": "Minimal commitment — great for maintaining a basic routine"
+        },
         "2": {
           "label": "2 days / week",
           "description": "Light schedule — perfect for beginners or busy weeks"
