@@ -164,18 +164,6 @@ export default function Home() {
     },
   ];
 
-  const categoryTags: {
-    icon: keyof typeof Ionicons.glyphMap;
-    label: string;
-  }[] = [
-    { icon: "flame-outline", label: t("home.warmUp") },
-    { icon: "body-outline", label: t("home.stretch") },
-    { icon: "layers-outline", label: t("home.advancedTag") },
-    { icon: "barbell-outline", label: t("home.buildMuscle") },
-    { icon: "time-outline", label: t("home.duration715") },
-    { icon: "flame-outline", label: t("home.burnFat") },
-  ];
-
   return (
     <View style={styles.container}>
       <ScrollView
@@ -374,26 +362,6 @@ export default function Home() {
                 </Text>
                 <DifficultyBolts level={exercise.difficulty} theme={theme} />
               </View>
-            </Pressable>
-          ))}
-        </View>
-
-        {/* ── Category Tags ───────────────────────────────────────── */}
-        <View style={styles.categoryTagsContainer}>
-          {categoryTags.map((tag, index) => (
-            <Pressable
-              key={index}
-              style={({ pressed }) => [
-                styles.categoryTag,
-                pressed && { opacity: 0.8 },
-              ]}
-            >
-              <Ionicons
-                name={tag.icon}
-                size={18}
-                color={theme.primary.main}
-              />
-              <Text style={styles.categoryTagText}>{tag.label}</Text>
             </Pressable>
           ))}
         </View>
@@ -815,30 +783,6 @@ function createStyles(theme: Theme) {
       marginTop: 3,
     },
 
-    // ── Category Tags ─────────────────────────
-    categoryTagsContainer: {
-      flexDirection: "row",
-      flexWrap: "wrap",
-      paddingHorizontal: 20,
-      gap: 10,
-      marginBottom: 28,
-    },
-    categoryTag: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 8,
-      backgroundColor: theme.background.darker,
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      borderRadius: 28,
-      borderWidth: 1,
-      borderColor: "rgba(0,0,0,0.06)",
-    },
-    categoryTagText: {
-      fontFamily: FONTS.medium,
-      fontSize: 13,
-      color: theme.foreground.white,
-    },
 
     // ── Custom Workout Card ───────────────────
     customWorkoutCard: {

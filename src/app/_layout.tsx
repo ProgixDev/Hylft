@@ -1,11 +1,10 @@
 import {
-  Poppins_400Regular,
-  Poppins_500Medium,
-  Poppins_600SemiBold,
-  Poppins_700Bold,
-  Poppins_800ExtraBold,
+  Zain_300Light,
+  Zain_400Regular,
+  Zain_700Bold,
+  Zain_800ExtraBold,
   useFonts,
-} from "@expo-google-fonts/poppins";
+} from "@expo-google-fonts/zain";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
@@ -78,11 +77,10 @@ function AppContent() {
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
-    Poppins_400Regular,
-    Poppins_500Medium,
-    Poppins_600SemiBold,
-    Poppins_700Bold,
-    Poppins_800ExtraBold,
+    Zain_300Light,
+    Zain_400Regular,
+    Zain_700Bold,
+    Zain_800ExtraBold,
   });
 
   useEffect(() => {

@@ -1,16 +1,18 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   FlatList,
-  Image,
   Platform,
   Pressable,
   RefreshControl,
   StyleSheet,
+  Text,
   View,
 } from "react-native";
 import Post, { PostData } from "../../components/ui/Post";
+import { FONTS } from "../../constants/fonts";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
 import { addPostsListener, getPostsWithUserData } from "../../data/mockData";
@@ -36,12 +38,13 @@ function createStyles(theme: Theme) {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      paddingHorizontal: 16,
+      paddingHorizontal: 20,
       paddingBottom: 8,
     },
-    logo: {
-      height: 32,
-      width: 100,
+    title: {
+      fontFamily: FONTS.extraBold,
+      fontSize: 22,
+      color: theme.foreground.white,
     },
     headerIcons: {
       flexDirection: "row",
@@ -51,7 +54,7 @@ function createStyles(theme: Theme) {
     iconButton: {
       width: 36,
       height: 36,
-      borderRadius: 10,
+      borderRadius: 12,
       alignItems: "center",
       justifyContent: "center",
       backgroundColor: theme.background.accent,
@@ -76,6 +79,7 @@ function createStyles(theme: Theme) {
 export default function Feed() {
   const router = useRouter();
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const [refreshing, setRefreshing] = useState(false);
   const [unreadCount] = useState(3); // Example: 3 unread messages
 
@@ -164,7 +168,7 @@ export default function Feed() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Image source={theme.logo} style={styles.logo} resizeMode="contain" />
+        <Text style={styles.title}>{t("tabs.feed")}</Text>
         <View style={styles.headerIcons}>
           <Pressable
             style={({ pressed }) => [
@@ -198,7 +202,7 @@ export default function Feed() {
         renderItem={renderPost}
         keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 70 }}
+        contentContainerStyle={{ paddingBottom: 90 }}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}

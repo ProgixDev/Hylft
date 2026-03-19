@@ -5,9 +5,9 @@ import { useTranslation } from "react-i18next";
 import {
   Dimensions,
   FlatList,
+  Pressable,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
   ViewToken,
 } from "react-native";
@@ -128,10 +128,13 @@ function DayCard({
       : theme.foreground.white;
 
   return (
-    <TouchableOpacity
-      style={[styles.cardOuter, { width: SCREEN_WIDTH }]}
+    <Pressable
+      style={({ pressed }) => [
+        styles.cardOuter,
+        { width: SCREEN_WIDTH },
+        pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
+      ]}
       onPress={onPress}
-      activeOpacity={0.88}
     >
       <View
         style={[
@@ -188,13 +191,13 @@ function DayCard({
 
           <View style={styles.ctaRow}>
             {!isRest && !isCompleted && slide.offset <= 0 && (
-              <TouchableOpacity
-                style={[
+              <Pressable
+                style={({ pressed }) => [
                   styles.startBtn,
                   { backgroundColor: theme.primary.main, flex: 1 },
+                  pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
                 ]}
                 onPress={onStartWorkout}
-                activeOpacity={0.85}
               >
                 <Ionicons name="play" size={16} color="#FFFFFF" />
                 <Text style={styles.startBtnText}>
@@ -202,28 +205,28 @@ function DayCard({
                     ? t("schedule.startWorkout")
                     : t("schedule.startNow")}
                 </Text>
-              </TouchableOpacity>
+              </Pressable>
             )}
 
             {!isRest && isCompleted && (
-              <TouchableOpacity
-                style={[
+              <Pressable
+                style={({ pressed }) => [
                   styles.startBtn,
                   { backgroundColor: "#4CAF50", flex: 1 },
+                  pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
                 ]}
                 onPress={onPress}
-                activeOpacity={0.85}
               >
                 <Ionicons name="trophy-outline" size={16} color="#fff" />
                 <Text style={[styles.startBtnText, { color: "#fff" }]}>
                   {t("schedule.viewSummary")}
                 </Text>
-              </TouchableOpacity>
+              </Pressable>
             )}
           </View>
         </View>
       </View>
-    </TouchableOpacity>
+    </Pressable>
   );
 }
 
@@ -582,40 +585,29 @@ export default function Schedule() {
     >
       <View style={styles.topSection}>
         <View style={styles.header}>
-          <View style={styles.headerCopyBlock}>
-            <Text style={[styles.headerEyebrow, { color: theme.primary.main }]}>
-              {formatDisplayDate(new Date(), { weekday: "long" })}
-            </Text>
-            <Text
-              style={[styles.headerTitle, { color: theme.foreground.white }]}
-            >
-              {t("schedule.mySchedule")}
-            </Text>
-            <Text style={[styles.headerSub, { color: theme.foreground.gray }]}>
-              {formatDisplayDate(new Date(), {
-                month: "long",
-                day: "numeric",
-              })}
-            </Text>
-          </View>
+          <Text
+            style={[styles.headerTitle, { color: theme.foreground.white }]}
+          >
+            {t("schedule.mySchedule")}
+          </Text>
 
-          <TouchableOpacity
-            style={[
+          <Pressable
+            style={({ pressed }) => [
               styles.headerBtn,
               {
                 backgroundColor: theme.background.accent,
                 borderColor: theme.background.darker,
               },
+              pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
             ]}
             onPress={() => router.push(`/schedule/${toISO(new Date())}` as any)}
-            activeOpacity={0.75}
           >
             <Ionicons
               name="calendar-outline"
               size={18}
               color={theme.primary.main}
             />
-          </TouchableOpacity>
+          </Pressable>
         </View>
 
         <View
@@ -631,9 +623,9 @@ export default function Schedule() {
             const isActive = index === activeIndex;
 
             return (
-              <TouchableOpacity
+              <Pressable
                 key={slide.date}
-                style={[
+                style={({ pressed }) => [
                   styles.daySwitcherItem,
                   {
                     backgroundColor: isActive
@@ -643,9 +635,9 @@ export default function Schedule() {
                       ? theme.primary.main + "44"
                       : "transparent",
                   },
+                  pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
                 ]}
                 onPress={() => handleScrollToIndex(index)}
-                activeOpacity={0.8}
               >
                 <Text
                   style={[
@@ -670,7 +662,7 @@ export default function Schedule() {
                 >
                   {slide.dayNumber}
                 </Text>
-              </TouchableOpacity>
+              </Pressable>
             );
           })}
         </View>
@@ -722,35 +714,19 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   topSection: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingTop: 8,
   },
   header: {
     flexDirection: "row",
-    alignItems: "flex-start",
+    alignItems: "center",
     justifyContent: "space-between",
     marginBottom: 10,
   },
-  headerCopyBlock: {
-    flex: 1,
-    paddingRight: 16,
-  },
-  headerEyebrow: {
-    fontSize: 11,
-    fontFamily: FONTS.bold,
-    letterSpacing: 0.3,
-    textTransform: "capitalize",
-  },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 22,
     fontFamily: FONTS.extraBold,
     letterSpacing: -0.5,
-    marginTop: 2,
-  },
-  headerSub: {
-    fontSize: 12,
-    marginTop: 2,
-    lineHeight: 16,
   },
   headerBtn: {
     width: 36,
@@ -759,25 +735,24 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
-    marginTop: 16,
   },
   daySwitcher: {
     flexDirection: "row",
-    gap: 6,
-    padding: 4,
-    borderRadius: 16,
+    gap: 8,
+    padding: 6,
+    borderRadius: 20,
     borderWidth: 1,
     marginBottom: 8,
   },
   daySwitcherItem: {
     flex: 1,
-    minHeight: 48,
-    borderRadius: 12,
+    minHeight: 56,
+    borderRadius: 14,
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 6,
-    paddingHorizontal: 4,
+    paddingVertical: 8,
+    paddingHorizontal: 6,
   },
   daySwitcherLabel: {
     fontSize: 10,
@@ -844,10 +819,10 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   carouselContent: {
-    paddingBottom: 80,
+    paddingBottom: 90,
   },
   cardOuter: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingTop: 4,
   },
   card: {
@@ -861,14 +836,14 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   cardInner: {
-    padding: 14,
-    paddingBottom: 16,
+    padding: 18,
+    paddingBottom: 18,
   },
   cardHeaderRow: {
     flexDirection: "row",
     alignItems: "flex-start",
     justifyContent: "space-between",
-    gap: 10,
+    gap: 12,
     marginBottom: 12,
   },
   cardHeaderCopy: {
@@ -903,7 +878,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   restContent: {
-    gap: 10,
+    gap: 12,
   },
   restHero: {
     alignItems: "center",
@@ -947,8 +922,8 @@ const styles = StyleSheet.create({
   workoutTitleRow: {
     flexDirection: "row",
     alignItems: "flex-start",
-    gap: 8,
-    marginBottom: 10,
+    gap: 12,
+    marginBottom: 12,
   },
   workoutCopy: {
     flex: 1,
@@ -978,11 +953,11 @@ const styles = StyleSheet.create({
   statsGrid: {
     flexDirection: "row",
     gap: 8,
-    marginBottom: 10,
+    marginBottom: 12,
   },
   statTile: {
     flex: 1,
-    padding: 10,
+    padding: 12,
     borderRadius: 14,
   },
   statItem: {
@@ -1002,7 +977,7 @@ const styles = StyleSheet.create({
   muscleTags: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 6,
+    gap: 8,
     marginBottom: 12,
   },
   muscleTag: {
@@ -1084,7 +1059,7 @@ const styles = StyleSheet.create({
   },
   ctaRow: {
     flexDirection: "row",
-    gap: 8,
+    gap: 12,
     marginTop: 12,
   },
   detailBtn: {
@@ -1106,8 +1081,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 5,
-    paddingVertical: 10,
-    borderRadius: 14,
+    height: 48,
+    borderRadius: 16,
   },
   startBtnText: {
     fontSize: 13,

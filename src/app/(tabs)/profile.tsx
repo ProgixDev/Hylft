@@ -72,24 +72,20 @@ function createStyles(theme: Theme) {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      paddingHorizontal: 16,
+      paddingHorizontal: 20,
       paddingTop: 6,
       paddingBottom: 4,
     },
     headerTitle: {
-      fontSize: 16,
-      fontFamily: FONTS.bold,
+      fontSize: 22,
+      fontFamily: FONTS.extraBold,
       color: theme.foreground.white,
       letterSpacing: -0.3,
-    },
-    headerLogo: {
-      height: 32,
-      width: 100,
     },
     iconBtn: {
       width: 36,
       height: 36,
-      borderRadius: 10,
+      borderRadius: 12,
       alignItems: "center",
       justifyContent: "center",
       backgroundColor: theme.background.accent,
@@ -102,7 +98,7 @@ function createStyles(theme: Theme) {
       transform: [{ scale: 0.96 }],
     },
     heroCard: {
-      marginHorizontal: 16,
+      marginHorizontal: 20,
       marginTop: 4,
       borderRadius: 22,
       paddingHorizontal: 16,
@@ -203,7 +199,7 @@ function createStyles(theme: Theme) {
     statsRow: {
       flexDirection: "row",
       gap: 8,
-      marginHorizontal: 16,
+      marginHorizontal: 20,
       marginTop: 10,
     },
     statBox: {
@@ -276,10 +272,10 @@ function createStyles(theme: Theme) {
     },
     tabBar: {
       flexDirection: "row",
-      marginHorizontal: 16,
+      marginHorizontal: 20,
       marginTop: 12,
       padding: 3,
-      borderRadius: 14,
+      borderRadius: 16,
       backgroundColor: theme.background.accent,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: "rgba(0,0,0,0.07)",
@@ -289,7 +285,7 @@ function createStyles(theme: Theme) {
       alignItems: "center",
       justifyContent: "center",
       minHeight: 34,
-      borderRadius: 11,
+      borderRadius: 13,
     },
     tabActive: {
       backgroundColor: theme.background.darker,
@@ -311,7 +307,7 @@ function createStyles(theme: Theme) {
       flexDirection: "row",
       flexWrap: "wrap",
       gap: 3,
-      paddingHorizontal: 16,
+      paddingHorizontal: 20,
       paddingTop: 12,
     },
     gridItem: {
@@ -341,7 +337,7 @@ function createStyles(theme: Theme) {
     },
     emptyState: {
       alignItems: "center",
-      marginHorizontal: 16,
+      marginHorizontal: 20,
       marginTop: 12,
       borderRadius: 20,
       paddingVertical: 32,
@@ -365,7 +361,7 @@ function createStyles(theme: Theme) {
       lineHeight: 17,
     },
     routinesList: {
-      paddingHorizontal: 16,
+      paddingHorizontal: 20,
       paddingTop: 12,
       paddingBottom: 4,
     },
@@ -726,15 +722,11 @@ export default function Profile() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
           paddingTop: 4,
-          paddingBottom: 24 + insets.bottom,
+          paddingBottom: Math.max(90, 24 + insets.bottom),
         }}
       >
         <View style={styles.header}>
-          <Image
-            source={theme.logo}
-            style={styles.headerLogo}
-            resizeMode="contain"
-          />
+          <Text style={styles.headerTitle}>{t("tabs.profile")}</Text>
           <Pressable
             style={({ pressed }) => [
               styles.iconBtn,

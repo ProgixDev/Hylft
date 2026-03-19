@@ -3,7 +3,6 @@ import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  Image,
   Modal,
   Platform,
   Pressable,
@@ -108,15 +107,11 @@ export default function Workout() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Image
-          source={theme.logo}
-          style={styles.headerLogo}
-          resizeMode="contain"
-        />
+        <Text style={styles.headerTitle}>{t("workout.title", "Workout")}</Text>
         <Pressable
           style={({ pressed }) => [
             styles.addButton,
-            pressed && { opacity: 0.7, transform: [{ scale: 0.92 }] },
+            pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
           ]}
           onPress={() => setPlusModalVisible(true)}
         >
@@ -189,7 +184,7 @@ export default function Workout() {
         ref={scrollRef}
         style={styles.content}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 70 }}
+        contentContainerStyle={{ paddingBottom: 90 }}
       >
         {/* Quick Actions - new layout */}
         <View style={styles.quickActionsColumn}>
@@ -198,7 +193,7 @@ export default function Workout() {
             style={({ pressed }) => [
               styles.actionButton,
               styles.actionButtonFull,
-              pressed && { opacity: 0.88, transform: [{ scale: 0.98 }] },
+              pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
             ]}
             onPress={() => router.push("/explore-routines" as any)}
           >
@@ -224,7 +219,7 @@ export default function Workout() {
             <Pressable
               style={({ pressed }) => [
                 styles.actionButton,
-                pressed && { opacity: 0.88, transform: [{ scale: 0.98 }] },
+                pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
               ]}
               onPress={handleStartEmptyWorkout}
             >
@@ -243,7 +238,7 @@ export default function Workout() {
             <Pressable
               style={({ pressed }) => [
                 styles.actionButton,
-                pressed && { opacity: 0.88, transform: [{ scale: 0.98 }] },
+                pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
               ]}
               onPress={handleCreateRoutine}
             >
@@ -274,7 +269,7 @@ export default function Workout() {
               style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
               onPress={() => router.push("/routines" as any)}
             >
-              <Text style={styles.seeAllText}>{t("common.seeAll")}</Text>
+              <Text style={styles.seeAllText}>{t("common.seeAll")} {">"}</Text>
             </Pressable>
           </View>
 
@@ -318,7 +313,7 @@ export default function Workout() {
                 style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
                 onPress={() => router.push("/workouts" as any)}
               >
-                <Text style={styles.seeAllText}>{t("common.seeAll")}</Text>
+                <Text style={styles.seeAllText}>{t("common.seeAll")} {">"}</Text>
               </Pressable>
             </View>
 
@@ -378,9 +373,11 @@ const createStyles = (theme: Theme) =>
       paddingHorizontal: 20,
       paddingBottom: 8,
     },
-    headerLogo: {
-      height: 36,
-      width: 110,
+    headerTitle: {
+      fontSize: 22,
+      fontFamily: FONTS.extraBold,
+      color: theme.foreground.white,
+      textTransform: "uppercase",
     },
     addButton: {
       width: 36,
@@ -399,19 +396,19 @@ const createStyles = (theme: Theme) =>
     // Quick Actions
     quickActionsColumn: {
       flexDirection: "column",
-      paddingHorizontal: 16,
+      paddingHorizontal: 20,
       paddingVertical: 8,
-      gap: 8,
+      gap: 10,
     },
     quickActionsRow: {
       flexDirection: "row",
-      gap: 8,
+      gap: 10,
     },
     actionButton: {
       flex: 1,
       backgroundColor: theme.background.darker,
-      borderRadius: 16,
-      paddingVertical: 14,
+      borderRadius: 18,
+      paddingVertical: 16,
       paddingHorizontal: 12,
       alignItems: "center",
       justifyContent: "center",
@@ -462,16 +459,16 @@ const createStyles = (theme: Theme) =>
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
-      paddingHorizontal: 16,
+      paddingHorizontal: 20,
       marginBottom: 8,
     },
     sectionTitle: {
-      fontSize: 16,
+      fontSize: 18,
       fontFamily: FONTS.bold,
       color: theme.foreground.white,
     },
     seeAllText: {
-      fontSize: 12,
+      fontSize: 14,
       fontFamily: FONTS.semiBold,
       color: theme.primary.main,
     },
@@ -490,8 +487,8 @@ const createStyles = (theme: Theme) =>
     },
     // Routines
     routinesScroll: {
-      paddingHorizontal: 16,
-      gap: 12,
+      paddingHorizontal: 20,
+      gap: 14,
     },
     routineCard: {
       width: 280,
@@ -607,8 +604,8 @@ const createStyles = (theme: Theme) =>
       width: "100%",
       maxWidth: 480,
       backgroundColor: theme.background.darker,
-      borderRadius: 22,
-      paddingVertical: 8,
+      borderRadius: 24,
+      paddingVertical: 10,
       overflow: "hidden",
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: "rgba(0,0,0,0.10)",
@@ -633,8 +630,8 @@ const createStyles = (theme: Theme) =>
     },
     // Workouts List
     workoutsList: {
-      paddingHorizontal: 16,
-      gap: 10,
+      paddingHorizontal: 20,
+      gap: 12,
     },
     workoutCard: {
       backgroundColor: theme.background.darker,
