@@ -404,7 +404,13 @@
     "exercises": "Exercises",
     "totalSets": "Total Sets",
     "estTime": "Est. Time",
-    "moreExercises": "more exercises"
+    "moreExercises": "more exercises",
+    "weekProgress": "Week Progress",
+    "tipOfDay": "Tip of the Day",
+    "motivationQuote": "Consistency beats intensity. Show up every day and the results will follow.",
+    "done": "Done",
+    "remaining": "Remaining",
+    "restDays": "Rest Days"
   },
   "profile": {
     "posts": "Posts",

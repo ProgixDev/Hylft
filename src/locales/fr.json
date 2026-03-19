@@ -404,7 +404,13 @@
     "exercises": "Exercices",
     "totalSets": "Séries totales",
     "estTime": "Temps estimé",
-    "moreExercises": "exercices supplémentaires"
+    "moreExercises": "exercices supplémentaires",
+    "weekProgress": "Progression de la semaine",
+    "tipOfDay": "Astuce du jour",
+    "motivationQuote": "La régularité bat l'intensité. Présentez-vous chaque jour et les résultats suivront.",
+    "done": "Terminé",
+    "remaining": "Restant",
+    "restDays": "Jours de repos"
   },
   "profile": {
     "posts": "Publications",

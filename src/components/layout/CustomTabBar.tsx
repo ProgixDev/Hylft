@@ -6,7 +6,7 @@ import { Pressable, StyleSheet, View } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
-  withTiming,
+  withSpring,
 } from "react-native-reanimated";
 import { FONTS } from "../../constants/fonts";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -21,9 +21,9 @@ const ICON_MAP: Record<string, { default: IconName; focused: IconName }> = {
   profile: { default: "person-outline", focused: "person" },
 };
 
-const ACTIVE_FLEX = 2.6;
+const ACTIVE_FLEX = 2.2;
 const INACTIVE_FLEX = 1;
-const TIMING_CONFIG = { duration: 300 };
+const SPRING = { damping: 22, stiffness: 260, mass: 0.7 };
 
 export function CustomTabBar({
   state,
@@ -31,14 +31,7 @@ export function CustomTabBar({
   navigation,
 }: BottomTabBarProps) {
   return (
-    <View
-      style={[
-        styles.container,
-        {
-          height: 60,
-        },
-      ]}
-    >
+    <View style={styles.container}>
       {state.routes.map((route, index) => {
         const isFocused = state.index === index;
         const iconConfig = ICON_MAP[route.name.toLowerCase()];
@@ -49,7 +42,6 @@ export function CustomTabBar({
             target: route.key,
             canPreventDefault: true,
           });
-
           if (!isFocused && !event.defaultPrevented) {
             navigation.navigate(route.name, route.params);
           }
@@ -102,43 +94,33 @@ function TabButton({
   const { t } = useTranslation();
 
   const flex = useSharedValue(isFocused ? ACTIVE_FLEX : INACTIVE_FLEX);
-  const scale = useSharedValue(isFocused ? 1.05 : 1);
   const labelOpacity = useSharedValue(isFocused ? 1 : 0);
-  const innerScaleX = useSharedValue(isFocused ? 1 : 0.5);
+  const bgOpacity = useSharedValue(isFocused ? 1 : 0);
 
   React.useEffect(() => {
-    flex.value = withTiming(isFocused ? ACTIVE_FLEX : INACTIVE_FLEX, TIMING_CONFIG);
-    scale.value = withTiming(isFocused ? 1.05 : 1, TIMING_CONFIG);
-    labelOpacity.value = withTiming(isFocused ? 1 : 0, TIMING_CONFIG);
-    innerScaleX.value = withTiming(isFocused ? 1 : 0.5, TIMING_CONFIG);
-  }, [isFocused, flex, scale, labelOpacity, innerScaleX]);
+    flex.value = withSpring(isFocused ? ACTIVE_FLEX : INACTIVE_FLEX, SPRING);
+    labelOpacity.value = withSpring(isFocused ? 1 : 0, SPRING);
+    bgOpacity.value = withSpring(isFocused ? 1 : 0, SPRING);
+  }, [isFocused, flex, labelOpacity, bgOpacity]);
 
-  const animatedContainerStyle = useAnimatedStyle(() => ({
+  const outerStyle = useAnimatedStyle(() => ({
     flex: flex.value,
   }));
 
-  const animatedIconStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
-
-  const animatedLabelStyle = useAnimatedStyle(() => ({
+  const labelStyle = useAnimatedStyle(() => ({
     opacity: labelOpacity.value,
   }));
 
-  const animatedInnerStyle = useAnimatedStyle(() => ({
-    transform: [{ scaleX: innerScaleX.value }],
-  }));
-
-  const animatedContentStyle = useAnimatedStyle(() => ({
-    transform: [{ scaleX: innerScaleX.value === 0 ? 1 : 1 / innerScaleX.value }],
+  const pillStyle = useAnimatedStyle(() => ({
+    opacity: bgOpacity.value,
   }));
 
   const activeColor = theme.primary.main;
-  const inactiveColor = "rgba(0,0,0,0.45)";
+  const inactiveColor = "rgba(0,0,0,0.4)";
   const color = isFocused ? activeColor : inactiveColor;
 
   return (
-    <Animated.View style={[styles.tabButtonOuter, animatedContainerStyle]}>
+    <Animated.View style={[styles.tabOuter, outerStyle]}>
       <Pressable
         accessibilityRole="button"
         accessibilityState={isFocused ? { selected: true } : {}}
@@ -146,34 +128,27 @@ function TabButton({
         onLongPress={onLongPress}
         style={styles.tabButton}
       >
+        {/* Active pill background */}
         <Animated.View
           style={[
-            styles.tabItemContainer,
-            isFocused && {
-              backgroundColor: activeColor + "1A",
-              borderWidth: 1,
-              borderColor: activeColor + "33",
-              borderRadius: 18,
-              alignSelf: "stretch",
-              marginHorizontal: 6,
-            },
-            animatedInnerStyle,
+            styles.pill,
+            { backgroundColor: activeColor + "14" },
+            pillStyle,
           ]}
-        >
-          <Animated.View style={[styles.contentWrapper, animatedContentStyle]}>
-            <Animated.View style={[styles.iconContainer, animatedIconStyle]}>
-              <Ionicons name={iconName} size={22} color={color} />
-            </Animated.View>
-            {isFocused && (
-              <Animated.Text
-                style={[styles.label, { color }, animatedLabelStyle]}
-                numberOfLines={1}
-              >
-                {t(("tabs." + routeName.toLowerCase()) as any)}
-              </Animated.Text>
-            )}
-          </Animated.View>
-        </Animated.View>
+        />
+
+        {/* Content */}
+        <View style={styles.content}>
+          <Ionicons name={iconName} size={21} color={color} />
+          {isFocused && (
+            <Animated.Text
+              style={[styles.label, { color: activeColor }, labelStyle]}
+              numberOfLines={1}
+            >
+              {t(("tabs." + routeName.toLowerCase()) as any)}
+            </Animated.Text>
+          )}
+        </View>
       </Pressable>
     </Animated.View>
   );
@@ -185,42 +160,41 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     width: "100%",
+    height: 60,
     flexDirection: "row",
     backgroundColor: "#FFFFFF",
-    borderTopWidth: 0.5,
+    borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: "rgba(0,0,0,0.08)",
     alignItems: "center",
-    justifyContent: "center",
+    paddingHorizontal: 6,
     zIndex: 50,
   },
-  tabButtonOuter: {
-    height: "100%",
+  tabOuter: {
+    height: 44,
   },
   tabButton: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
     height: "100%",
-    paddingVertical: 6,
+    position: "relative",
   },
-  tabItemContainer: {
+  pill: {
+    position: "absolute",
+    top: 0,
+    left: 4,
+    right: 4,
+    bottom: 0,
+    borderRadius: 14,
+  },
+  content: {
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 16,
-  },
-  contentWrapper: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  iconContainer: {
-    alignItems: "center",
-    justifyContent: "center",
+    gap: 6,
   },
   label: {
-    fontFamily: FONTS.medium,
-    fontSize: 11,
-    marginTop: 3,
+    fontFamily: FONTS.semiBold,
+    fontSize: 12,
   },
 });

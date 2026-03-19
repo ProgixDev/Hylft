@@ -1,8 +1,11 @@
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  Dimensions,
+  Image,
   Modal,
   Platform,
   Pressable,
@@ -11,8 +14,7 @@ import {
   Text,
   View,
 } from "react-native";
-import RoutineCard from "../../components/ui/RoutineCard";
-import WorkoutCard from "../../components/ui/WorkoutCard";
+import { FONTS } from "../../constants/fonts";
 import { Theme } from "../../constants/themes";
 import { useActiveWorkout } from "../../contexts/ActiveWorkoutContext";
 import { useCreateRoutine } from "../../contexts/CreateRoutineContext";
@@ -23,64 +25,63 @@ import {
   Routine,
   Workout as WorkoutData,
 } from "../../data/mockData";
+import {
+  translateApiData,
+  translateRoutineDescription,
+  translateRoutineName,
+} from "../../utils/exerciseTranslator";
 
-import { FONTS } from "../../constants/fonts";
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const ROUTINE_CARD_W = SCREEN_WIDTH * 0.65;
+
+const routineImages = [
+  require("../../../assets/images/AuthPage/PullUp.jpg"),
+  require("../../../assets/images/OnBoarding/ManWithTwoWeights.jpg"),
+  require("../../../assets/images/AuthPage/HoldingTwoWeights.jpg"),
+  require("../../../assets/images/OnBoarding/ManWithOneWeights.jpg"),
+  require("../../../assets/images/AuthPage/DeadLiftIGuess.jpg"),
+  require("../../../assets/images/OnBoarding/ManLookingUp.jpg"),
+];
+
+const diffColors: Record<string, { bg: string; text: string }> = {
+  beginner: { bg: "#4CAF5030", text: "#4CAF50" },
+  intermediate: { bg: "#FF980030", text: "#FF9800" },
+  advanced: { bg: "#F4433630", text: "#F44336" },
+};
 
 const surfaceShadow = Platform.select({
   ios: {
     shadowColor: "#000000",
-    shadowOpacity: 0.2,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 10 },
-  },
-  android: { elevation: 8 },
-  default: {},
-});
-
-const controlShadow = Platform.select({
-  ios: {
-    shadowColor: "#000000",
-    shadowOpacity: 0.14,
-    shadowRadius: 12,
+    shadowOpacity: 0.15,
+    shadowRadius: 14,
     shadowOffset: { width: 0, height: 6 },
   },
-  android: { elevation: 4 },
+  android: { elevation: 6 },
   default: {},
 });
 
 export default function Workout() {
   const { t } = useTranslation();
   const { theme } = useTheme();
-  const styles = createStyles(theme);
   const router = useRouter();
+  const styles = createStyles(theme);
+
   const [workouts, setWorkouts] = useState<WorkoutData[]>([]);
   const [routines, setRoutines] = useState<Routine[]>([]);
   const { startWorkout } = useActiveWorkout();
   const { initCreation } = useCreateRoutine();
-
   const [plusModalVisible, setPlusModalVisible] = useState(false);
   const scrollRef = useRef<ScrollView | null>(null);
-  const routinesSectionY = useRef<number>(0);
 
   const loadData = useCallback(() => {
     setWorkouts(getWorkoutsByUserId("1"));
     setRoutines(getRoutinesByUserId("1"));
   }, []);
 
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  useEffect(() => { loadData(); }, [loadData]);
+  useFocusEffect(useCallback(() => { loadData(); }, [loadData]));
 
-  // Reload routines when screen comes back into focus (e.g. after saving one)
-  useFocusEffect(
-    useCallback(() => {
-      loadData();
-    }, [loadData]),
-  );
-
-  // Subscribe to in-memory workout changes so new saves show immediately
   useEffect(() => {
-    // lazy-import listener helpers from mockData to avoid circular imports
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { addWorkoutsListener } = require("../../data/mockData");
     const unsub = addWorkoutsListener(() => loadData());
@@ -103,15 +104,23 @@ export default function Workout() {
     });
   };
 
+  // Stats
+  const totalWorkouts = workouts.length;
+  const totalMinutes = workouts.reduce((s, w) => s + w.duration, 0);
+  const totalExercises = workouts.reduce(
+    (s, w) => s + w.exercises.length,
+    0
+  );
+
   return (
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>{t("workout.title", "Workout")}</Text>
+        <Text style={styles.headerTitle}>WORKOUT</Text>
         <Pressable
           style={({ pressed }) => [
-            styles.addButton,
-            pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
+            styles.addBtn,
+            pressed && { opacity: 0.8 },
           ]}
           onPress={() => setPlusModalVisible(true)}
         >
@@ -119,7 +128,7 @@ export default function Workout() {
         </Pressable>
       </View>
 
-      {/* Plus modal */}
+      {/* Plus Modal */}
       <Modal
         transparent
         visible={plusModalVisible}
@@ -141,13 +150,16 @@ export default function Workout() {
                 setPlusModalVisible(false);
               }}
             >
+              <Ionicons
+                name="flash-outline"
+                size={20}
+                color={theme.primary.main}
+              />
               <Text style={styles.modalOptionText}>
                 {t("workout.startEmptyWorkout")}
               </Text>
             </Pressable>
-
             <View style={styles.modalDivider} />
-
             <Pressable
               style={({ pressed }) => [
                 styles.modalOption,
@@ -155,23 +167,24 @@ export default function Workout() {
               ]}
               onPress={handleCreateRoutine}
             >
+              <Ionicons
+                name="create-outline"
+                size={20}
+                color={theme.primary.main}
+              />
               <Text style={styles.modalOptionText}>
                 {t("workout.createRoutine")}
               </Text>
             </Pressable>
-
             <View style={styles.modalDivider} />
-
             <Pressable
               style={({ pressed }) => [
                 styles.modalOption,
                 pressed && { backgroundColor: "rgba(0,0,0,0.04)" },
               ]}
-              onPress={() => {
-                setPlusModalVisible(false);
-              }}
+              onPress={() => setPlusModalVisible(false)}
             >
-              <Text style={styles.modalOptionTextDanger}>
+              <Text style={styles.modalCancelText}>
                 {t("common.cancel")}
               </Text>
             </Pressable>
@@ -179,420 +192,333 @@ export default function Workout() {
         </Pressable>
       </Modal>
 
-      {/* Content */}
       <ScrollView
         ref={scrollRef}
-        style={styles.content}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 90 }}
       >
-        {/* Quick Actions - new layout */}
-        <View style={styles.quickActionsColumn}>
-          {/* Row 1: full-width Explore */}
-          <Pressable
-            style={({ pressed }) => [
-              styles.actionButton,
-              styles.actionButtonFull,
-              pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
-            ]}
-            onPress={() => router.push("/explore-routines" as any)}
-          >
-            <View style={[styles.actionBgIcon, { right: -12, bottom: -20 }]}>
-              <Ionicons
-                name="compass-outline"
-                size={90}
-                color={theme.primary.main}
-              />
-            </View>
-            <View style={{ alignItems: "center", gap: 2 }}>
-              <Text style={styles.actionButtonText}>
-                {t("workout.exploreRoutines")}
-              </Text>
-              <Text style={styles.actionButtonSub}>
-                {t("workout.browseCommunityTemplates")}
-              </Text>
-            </View>
-          </Pressable>
-
-          {/* Row 2: two buttons side-by-side */}
-          <View style={styles.quickActionsRow}>
-            <Pressable
-              style={({ pressed }) => [
-                styles.actionButton,
-                pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
-              ]}
-              onPress={handleStartEmptyWorkout}
-            >
-              <View style={[styles.actionBgIcon, { right: -14, bottom: -18 }]}>
-                <Ionicons
-                  name="fitness-outline"
-                  size={70}
-                  color={theme.primary.main}
-                />
-              </View>
-              <Text style={styles.actionButtonText}>
-                {t("workout.startEmptyWorkout")}
-              </Text>
-            </Pressable>
-
-            <Pressable
-              style={({ pressed }) => [
-                styles.actionButton,
-                pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
-              ]}
-              onPress={handleCreateRoutine}
-            >
-              <View style={[styles.actionBgIcon, { right: -14, bottom: -18 }]}>
-                <Ionicons
-                  name="create-outline"
-                  size={70}
-                  color={theme.primary.main}
-                />
-              </View>
-              <Text style={styles.actionButtonText}>
-                {t("workout.createRoutine")}
-              </Text>
-            </Pressable>
-          </View>
-        </View>
-
-        {/* My Routines Section */}
-        <View
-          style={styles.section}
-          onLayout={(e) => {
-            routinesSectionY.current = e.nativeEvent.layout.y;
-          }}
+        {/* ── Quick Start Hero ──────────────────────────────── */}
+        <Pressable
+          style={({ pressed }) => [
+            styles.quickStartCard,
+            pressed && { opacity: 0.95, transform: [{ scale: 0.99 }] },
+          ]}
+          onPress={handleStartEmptyWorkout}
         >
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>{t("workout.myRoutines")}</Text>
-            <Pressable
-              style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
-              onPress={() => router.push("/routines" as any)}
-            >
-              <Text style={styles.seeAllText}>{t("common.seeAll")} {">"}</Text>
-            </Pressable>
-          </View>
-
-          {routines.length === 0 ? (
-            <View style={styles.emptyRoutines}>
-              <Ionicons
-                name="barbell"
-                size={60}
-                color={theme.foreground.gray}
-              />
-              <Text style={styles.emptyRoutinesText}>
-                {t("workout.noRoutinesYet")}
-              </Text>
+          <Image
+            source={routineImages[0]}
+            style={styles.quickStartImage}
+            resizeMode="cover"
+          />
+          <LinearGradient
+            colors={["rgba(0,0,0,0.2)", theme.primary.main + "DD"]}
+            style={styles.quickStartGradient}
+          />
+          <View style={styles.quickStartContent}>
+            <View style={styles.quickStartBadge}>
+              <Ionicons name="flash" size={14} color="#FFD700" />
+              <Text style={styles.quickStartBadgeText}>QUICK START</Text>
             </View>
-          ) : (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.routinesScroll}
-            >
-              {routines.map((routine) => (
-                <RoutineCard
-                  key={routine.id}
-                  routine={routine}
-                  onPress={() => router.push(`/routines/${routine.id}` as any)}
-                  onStart={() => router.push(`/routines/${routine.id}` as any)}
-                />
-              ))}
-            </ScrollView>
-          )}
+            <Text style={styles.quickStartTitle}>
+              {t("workout.startEmptyWorkout")}
+            </Text>
+            <Text style={styles.quickStartSub}>
+              {t("workout.addExerciseToStart")}
+            </Text>
+            <View style={styles.quickStartBtn}>
+              <Ionicons name="play" size={16} color={theme.primary.main} />
+              <Text style={styles.quickStartBtnText}>GO</Text>
+            </View>
+          </View>
+        </Pressable>
+
+        {/* ── My Routines ───────────────────────────────────── */}
+        <View style={styles.sectionHeaderRow}>
+          <Text style={styles.sectionTitle}>{t("workout.myRoutines")}</Text>
+          <Pressable
+            onPress={() => router.push("/routines" as any)}
+            style={({ pressed }) => pressed && { opacity: 0.7 }}
+          >
+            <Text style={styles.moreLink}>
+              {t("home.more")} {">"}
+            </Text>
+          </Pressable>
         </View>
 
-        {/* Recent Workouts Section */}
+        {routines.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Ionicons
+              name="barbell-outline"
+              size={48}
+              color={theme.foreground.gray}
+            />
+            <Text style={styles.emptyStateText}>
+              {t("workout.noRoutinesYet")}
+            </Text>
+          </View>
+        ) : (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.routineScroll}
+            snapToInterval={ROUTINE_CARD_W + 14}
+            decelerationRate="fast"
+          >
+            {routines.map((routine, index) => {
+              const dc = diffColors[routine.difficulty] || diffColors.beginner;
+              return (
+                <Pressable
+                  key={routine.id}
+                  style={({ pressed }) => [
+                    styles.routineCard,
+                    pressed && {
+                      opacity: 0.95,
+                      transform: [{ scale: 0.98 }],
+                    },
+                  ]}
+                  onPress={() =>
+                    router.push(`/routines/${routine.id}` as any)
+                  }
+                >
+                  <Image
+                    source={routineImages[index % routineImages.length]}
+                    style={styles.routineCardImage}
+                    resizeMode="cover"
+                  />
+                  <LinearGradient
+                    colors={["transparent", "rgba(0,0,0,0.8)"]}
+                    style={styles.routineCardGradient}
+                  />
+
+                  {/* Difficulty badge */}
+                  <View
+                    style={[
+                      styles.routineDiffBadge,
+                      { backgroundColor: dc.bg },
+                    ]}
+                  >
+                    <Text style={[styles.routineDiffText, { color: dc.text }]}>
+                      {translateApiData(routine.difficulty)}
+                    </Text>
+                  </View>
+
+                  <View style={styles.routineCardContent}>
+                    <Text style={styles.routineCardName} numberOfLines={1}>
+                      {translateRoutineName(routine.name)}
+                    </Text>
+                    <Text
+                      style={styles.routineCardDesc}
+                      numberOfLines={1}
+                    >
+                      {translateRoutineDescription(routine.description)}
+                    </Text>
+                    <View style={styles.routineCardMeta}>
+                      <View style={styles.routineMetaItem}>
+                        <Ionicons
+                          name="barbell-outline"
+                          size={12}
+                          color="rgba(255,255,255,0.7)"
+                        />
+                        <Text style={styles.routineMetaText}>
+                          {routine.exercises.length}
+                        </Text>
+                      </View>
+                      <View style={styles.routineMetaItem}>
+                        <Ionicons
+                          name="time-outline"
+                          size={12}
+                          color="rgba(255,255,255,0.7)"
+                        />
+                        <Text style={styles.routineMetaText}>
+                          {routine.estimatedDuration}m
+                        </Text>
+                      </View>
+                      <View style={styles.routineMetaItem}>
+                        <Ionicons
+                          name="checkmark-circle-outline"
+                          size={12}
+                          color="rgba(255,255,255,0.7)"
+                        />
+                        <Text style={styles.routineMetaText}>
+                          {routine.timesCompleted}×
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        )}
+
+        {/* ── Recent Workouts ───────────────────────────────── */}
         {workouts.length > 0 && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
+          <>
+            <View style={styles.sectionHeaderRow}>
               <Text style={styles.sectionTitle}>
                 {t("workout.recentWorkouts")}
               </Text>
               <Pressable
-                style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
                 onPress={() => router.push("/workouts" as any)}
+                style={({ pressed }) => pressed && { opacity: 0.7 }}
               >
-                <Text style={styles.seeAllText}>{t("common.seeAll")} {">"}</Text>
+                <Text style={styles.moreLink}>
+                  {t("home.more")} {">"}
+                </Text>
               </Pressable>
             </View>
 
-            <View style={styles.workoutsList}>
-              {workouts.map((workout) => (
-                <WorkoutCard
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.recentScroll}
+            >
+              {workouts.slice(0, 5).map((workout, index) => (
+                <Pressable
                   key={workout.id}
-                  workout={workout}
-                  onPress={() => router.push(`/workouts/${workout.id}` as any)}
-                  onStart={() => {
-                    const active = {
-                      id: `workout-${Date.now()}`,
-                      duration: workout.duration || 0,
-                      volume: 0,
-                      sets: workout.exercises.reduce(
-                        (s, e) => s + (e.sets || 0),
-                        0,
-                      ),
-                      exercises: workout.exercises.map((ex) => ({
-                        id: `${Date.now()}-${Math.random()}`,
-                        exerciseId: 0,
-                        name: ex.name,
-                        muscles: [],
-                        equipment: [],
-                        sets: Array.from({ length: ex.sets }).map((_, i) => ({
-                          id: `${Date.now()}-${Math.random()}-${i}`,
-                          setNumber: i + 1,
-                          kg: ex.weight || "",
-                          reps: ex.reps || "",
-                          isCompleted: false,
-                        })),
-                        addedAt: Date.now(),
-                      })),
-                    };
-                    startWorkout(active);
-                  }}
-                />
+                  style={({ pressed }) => [
+                    styles.recentCard,
+                    pressed && { opacity: 0.95, transform: [{ scale: 0.98 }] },
+                  ]}
+                  onPress={() =>
+                    router.push(`/workouts/${workout.id}` as any)
+                  }
+                >
+                  <Image
+                    source={routineImages[(index + 1) % routineImages.length]}
+                    style={styles.recentCardImage}
+                    resizeMode="cover"
+                  />
+                  <LinearGradient
+                    colors={["transparent", "rgba(0,0,0,0.75)"]}
+                    style={styles.recentCardGradient}
+                  />
+                  <View style={styles.recentCardContent}>
+                    <Text style={styles.recentCardName} numberOfLines={1}>
+                      {workout.name}
+                    </Text>
+                    <View style={styles.recentCardMeta}>
+                      <Ionicons name="time-outline" size={11} color="rgba(255,255,255,0.7)" />
+                      <Text style={styles.recentCardMetaText}>
+                        {workout.duration} min
+                      </Text>
+                      <Text style={styles.recentCardMetaText}>·</Text>
+                      <Ionicons name="barbell-outline" size={11} color="rgba(255,255,255,0.7)" />
+                      <Text style={styles.recentCardMetaText}>
+                        {workout.exercises.length}
+                      </Text>
+                    </View>
+                  </View>
+                </Pressable>
               ))}
-            </View>
-          </View>
+            </ScrollView>
+          </>
         )}
+
+        {/* ── Create Routine CTA ─────────────────────────────── */}
+        <View style={styles.sectionHeaderRow}>
+          <Text style={styles.sectionTitle}>
+            {t("home.customWorkout")}
+          </Text>
+        </View>
+        <Pressable
+          style={({ pressed }) => [
+            styles.createCard,
+            pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
+          ]}
+          onPress={handleCreateRoutine}
+        >
+          <LinearGradient
+            colors={["#6C63FF", "#4A42D0"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.createGradient}
+          >
+            <View style={styles.createContent}>
+              <Text style={styles.createTitle}>
+                {t("workout.createRoutine")}
+              </Text>
+              <Text style={styles.createSub}>
+                {t("workout.browseCommunityTemplates")}
+              </Text>
+              <View style={styles.createBtn}>
+                <Text style={styles.createBtnText}>GO</Text>
+              </View>
+            </View>
+            <MaterialCommunityIcons
+              name="dumbbell"
+              size={64}
+              color="rgba(255,255,255,0.12)"
+              style={{ marginRight: 10 }}
+            />
+          </LinearGradient>
+        </Pressable>
+
+        {/* ── Explore Banner ────────────────────────────────── */}
+        <Pressable
+          style={({ pressed }) => [
+            styles.exploreCard,
+            pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
+          ]}
+          onPress={() => router.push("/explore-routines" as any)}
+        >
+          <Image
+            source={routineImages[4]}
+            style={styles.exploreImage}
+            resizeMode="cover"
+          />
+          <LinearGradient
+            colors={["transparent", "rgba(0,0,0,0.75)"]}
+            style={styles.exploreGradient}
+          />
+          <View style={styles.exploreContent}>
+            <Ionicons name="compass" size={22} color="#FFD700" />
+            <Text style={styles.exploreTitle}>
+              {t("workout.exploreRoutines")}
+            </Text>
+            <Text style={styles.exploreSub}>
+              {t("workout.browseCommunityTemplates")}
+            </Text>
+          </View>
+        </Pressable>
       </ScrollView>
     </View>
   );
 }
 
-const createStyles = (theme: Theme) =>
-  StyleSheet.create({
+// ── Styles ───────────────────────────────────────────────────────────────────
+function createStyles(theme: Theme) {
+  return StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: theme.background.dark,
     },
+
+    // Header
     header: {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
       paddingHorizontal: 20,
-      paddingBottom: 8,
+      paddingTop: 4,
+      paddingBottom: 12,
     },
     headerTitle: {
-      fontSize: 22,
       fontFamily: FONTS.extraBold,
+      fontSize: 22,
       color: theme.foreground.white,
-      textTransform: "uppercase",
+      letterSpacing: 0.5,
     },
-    addButton: {
-      width: 36,
-      height: 36,
-      borderRadius: 10,
-      alignItems: "center",
-      justifyContent: "center",
-      backgroundColor: theme.background.accent,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: "rgba(0,0,0,0.08)",
-      ...controlShadow,
-    },
-    content: {
-      flex: 1,
-    },
-    // Quick Actions
-    quickActionsColumn: {
-      flexDirection: "column",
-      paddingHorizontal: 20,
-      paddingVertical: 8,
-      gap: 10,
-    },
-    quickActionsRow: {
-      flexDirection: "row",
-      gap: 10,
-    },
-    actionButton: {
-      flex: 1,
-      backgroundColor: theme.background.darker,
-      borderRadius: 18,
-      paddingVertical: 16,
-      paddingHorizontal: 12,
-      alignItems: "center",
-      justifyContent: "center",
-      gap: 6,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: "rgba(0,0,0,0.08)",
-      overflow: "hidden",
-      ...surfaceShadow,
-    },
-    actionBgIcon: {
-      position: "absolute",
-      opacity: 0.07,
-    },
-    actionButtonFull: {
-      width: "100%",
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "center",
-      paddingHorizontal: 14,
-      paddingVertical: 12,
-      gap: 10,
-    },
-    actionIconContainer: {
+    addBtn: {
       width: 40,
       height: 40,
-      borderRadius: 20,
-      backgroundColor: theme.background.dark,
+      borderRadius: 14,
       alignItems: "center",
       justifyContent: "center",
-      marginBottom: 0,
-    },
-    actionButtonText: {
-      fontSize: 13,
-      fontFamily: FONTS.semiBold,
-      color: theme.foreground.white,
-      textAlign: "center",
-    },
-    actionButtonSub: {
-      fontSize: 11,
-      color: theme.foreground.gray,
-      textAlign: "center",
-    },
-    // Sections
-    section: {
-      marginBottom: 16,
-    },
-    sectionHeader: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-      paddingHorizontal: 20,
-      marginBottom: 8,
-    },
-    sectionTitle: {
-      fontSize: 18,
-      fontFamily: FONTS.bold,
-      color: theme.foreground.white,
-    },
-    seeAllText: {
-      fontSize: 14,
-      fontFamily: FONTS.semiBold,
-      color: theme.primary.main,
-    },
-    // Empty States
-    emptyRoutines: {
-      alignItems: "center",
-      justifyContent: "center",
-      paddingVertical: 28,
-      paddingHorizontal: 32,
-    },
-    emptyRoutinesText: {
-      fontSize: 14,
-      color: theme.foreground.gray,
-      textAlign: "center",
-      marginTop: 12,
-    },
-    // Routines
-    routinesScroll: {
-      paddingHorizontal: 20,
-      gap: 14,
-    },
-    routineCard: {
-      width: 280,
       backgroundColor: theme.background.darker,
-      borderRadius: 16,
-      padding: 16,
-      borderWidth: 1,
-      borderColor: theme.background.darker,
     },
-    routineHeader: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "flex-start",
-      marginBottom: 8,
-    },
-    routineName: {
-      fontSize: 18,
-      fontFamily: FONTS.bold,
-      color: theme.foreground.white,
-      flex: 1,
-      marginRight: 8,
-    },
-    difficultyBadge: {
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-      borderRadius: 6,
-    },
-    difficulty_beginner: {
-      backgroundColor: "#22c55e20",
-    },
-    difficulty_intermediate: {
-      backgroundColor: "#f59e0b20",
-    },
-    difficulty_advanced: {
-      backgroundColor: "#ef444420",
-    },
-    difficultyText: {
-      fontSize: 10,
-      fontFamily: FONTS.semiBold,
-      color: theme.foreground.white,
-      textTransform: "uppercase",
-    },
-    routineDescription: {
-      fontSize: 13,
-      color: theme.foreground.gray,
-      marginBottom: 12,
-      lineHeight: 18,
-    },
-    routineStats: {
-      flexDirection: "row",
-      gap: 16,
-      marginBottom: 12,
-    },
-    routineStat: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 4,
-    },
-    routineStatText: {
-      fontSize: 12,
-      color: theme.foreground.gray,
-    },
-    musclesContainer: {
-      flexDirection: "row",
-      flexWrap: "wrap",
-      gap: 6,
-      marginBottom: 12,
-    },
-    muscleTag: {
-      backgroundColor: theme.background.dark,
-      paddingHorizontal: 10,
-      paddingVertical: 5,
-      borderRadius: 6,
-      borderWidth: 1,
-      borderColor: theme.primary.main + "30",
-    },
-    muscleTagText: {
-      fontSize: 11,
-      fontFamily: FONTS.semiBold,
-      color: theme.primary.main,
-      textTransform: "capitalize",
-    },
-    completedText: {
-      fontSize: 12,
-      color: theme.foreground.gray,
-      marginBottom: 12,
-      fontStyle: "italic",
-    },
-    startRoutineButton: {
-      backgroundColor: theme.primary.main,
-      paddingVertical: 12,
-      paddingHorizontal: 16,
-      borderRadius: 10,
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: 8,
-    },
-    startRoutineButtonText: {
-      fontSize: 14,
-      fontFamily: FONTS.bold,
-      color: theme.background.dark,
-    },
-    // Plus modal
+
+    // Modal
     modalOverlay: {
       flex: 1,
       backgroundColor: "rgba(0,0,0,0.5)",
@@ -605,126 +531,376 @@ const createStyles = (theme: Theme) =>
       maxWidth: 480,
       backgroundColor: theme.background.darker,
       borderRadius: 24,
-      paddingVertical: 10,
+      paddingVertical: 8,
       overflow: "hidden",
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: "rgba(0,0,0,0.10)",
       ...surfaceShadow,
     },
     modalOption: {
-      paddingVertical: 16,
-      paddingHorizontal: 20,
+      flexDirection: "row",
       alignItems: "center",
-      justifyContent: "center",
+      gap: 12,
+      paddingVertical: 16,
+      paddingHorizontal: 24,
     },
     modalOptionText: {
+      fontFamily: FONTS.semiBold,
       fontSize: 16,
-      fontFamily: FONTS.bold,
       color: theme.foreground.white,
     },
-    modalDivider: { height: 1, backgroundColor: theme.background.dark },
-    modalOptionTextDanger: {
-      fontSize: 16,
+    modalDivider: {
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: "rgba(0,0,0,0.08)",
+      marginHorizontal: 20,
+    },
+    modalCancelText: {
       fontFamily: FONTS.bold,
+      fontSize: 16,
       color: "#ef4444",
-    },
-    // Workouts List
-    workoutsList: {
-      paddingHorizontal: 20,
-      gap: 12,
-    },
-    workoutCard: {
-      backgroundColor: theme.background.darker,
-      borderRadius: 16,
-      padding: 16,
-      // Remove borderLeftWidth to match Routine card style
-      // Instead, use a shadow or subtle border
-      borderWidth: 1,
-      borderColor: theme.background.dark,
-    },
-    workoutHeader: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      marginBottom: 12,
-    },
-    workoutTitleContainer: {
+      textAlign: "center",
       flex: 1,
-      paddingRight: 12,
     },
-    workoutName: {
-      fontSize: 18,
+
+    // Quick Start Hero
+    quickStartCard: {
+      marginHorizontal: 20,
+      height: 200,
+      borderRadius: 22,
+      overflow: "hidden",
+      marginBottom: 20,
+    },
+    quickStartImage: {
+      width: "100%",
+      height: "100%",
+      position: "absolute",
+    },
+    quickStartGradient: {
+      position: "absolute",
+      left: 0,
+      right: 0,
+      bottom: 0,
+      height: "100%",
+    },
+    quickStartContent: {
+      position: "absolute",
+      bottom: 0,
+      left: 0,
+      right: 0,
+      padding: 20,
+    },
+    quickStartBadge: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 5,
+      alignSelf: "flex-start",
+      marginBottom: 6,
+    },
+    quickStartBadgeText: {
       fontFamily: FONTS.bold,
-      color: theme.foreground.white,
+      fontSize: 11,
+      color: "#FFD700",
+      letterSpacing: 1,
+    },
+    quickStartTitle: {
+      fontFamily: FONTS.extraBold,
+      fontSize: 20,
+      color: "#fff",
       marginBottom: 4,
     },
-    workoutDate: {
-      fontSize: 13,
-      color: theme.foreground.gray,
+    quickStartSub: {
+      fontFamily: FONTS.regular,
+      fontSize: 12,
+      color: "rgba(255,255,255,0.7)",
+      marginBottom: 14,
     },
-    workoutDurationBadge: {
+    quickStartBtn: {
       flexDirection: "row",
       alignItems: "center",
-      backgroundColor: theme.background.dark,
-      paddingHorizontal: 10,
-      paddingVertical: 6,
-      borderRadius: 8,
-      gap: 4,
+      justifyContent: "center",
+      gap: 6,
+      backgroundColor: "#fff",
+      borderRadius: 24,
+      paddingVertical: 10,
+      paddingHorizontal: 28,
       alignSelf: "flex-start",
     },
-    workoutDurationText: {
-      fontSize: 13,
-      fontFamily: FONTS.semiBold,
+    quickStartBtnText: {
+      fontFamily: FONTS.bold,
+      fontSize: 14,
       color: theme.primary.main,
     },
-    workoutStatsRow: {
+
+    // Stats
+    statsCard: {
+      marginHorizontal: 20,
+      backgroundColor: theme.background.darker,
+      borderRadius: 18,
+      paddingVertical: 16,
+      paddingHorizontal: 10,
+      marginBottom: 24,
+    },
+    statsInnerRow: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 12,
-      marginBottom: 16,
     },
-    workoutStat: {
-      flexDirection: "row",
+    statItem: {
+      flex: 1,
       alignItems: "center",
-      gap: 6,
+      gap: 2,
     },
-    workoutStatDivider: {
-      width: 1,
-      height: 12,
-      backgroundColor: theme.foreground.gray,
-      opacity: 0.3,
+    statDivider: {
+      width: StyleSheet.hairlineWidth,
+      height: 28,
+      backgroundColor: "rgba(0,0,0,0.1)",
     },
-    workoutStatText: {
-      fontSize: 13,
-      fontFamily: FONTS.medium,
+    statValue: {
+      fontFamily: FONTS.bold,
+      fontSize: 22,
+    },
+    statLabel: {
+      fontFamily: FONTS.regular,
+      fontSize: 11,
       color: theme.foreground.gray,
     },
-    workoutExercisesTags: {
+
+    // Section Header
+    sectionHeaderRow: {
       flexDirection: "row",
-      flexWrap: "wrap",
-      gap: 8,
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingHorizontal: 20,
+      marginBottom: 14,
     },
-    workoutExerciseTag: {
-      backgroundColor: theme.background.dark,
-      paddingHorizontal: 10,
-      paddingVertical: 6,
-      borderRadius: 8,
-    },
-    workoutExerciseTagText: {
-      fontSize: 12,
+    sectionTitle: {
+      fontFamily: FONTS.bold,
+      fontSize: 18,
       color: theme.foreground.white,
-      fontFamily: FONTS.medium,
     },
-    workoutExerciseMoreTag: {
-      backgroundColor: theme.background.dark,
-      paddingHorizontal: 10,
-      paddingVertical: 6,
-      borderRadius: 8,
-      opacity: 0.7,
-    },
-    workoutExerciseMoreText: {
-      fontSize: 12,
-      color: theme.foreground.gray,
+    moreLink: {
       fontFamily: FONTS.semiBold,
+      fontSize: 14,
+      color: theme.primary.main,
+    },
+
+    // Empty
+    emptyState: {
+      alignItems: "center",
+      paddingVertical: 30,
+      paddingHorizontal: 20,
+      gap: 10,
+      marginBottom: 20,
+    },
+    emptyStateText: {
+      fontFamily: FONTS.medium,
+      fontSize: 14,
+      color: theme.foreground.gray,
+      textAlign: "center",
+    },
+
+    // Routine Cards
+    routineScroll: {
+      paddingLeft: 20,
+      paddingRight: 6,
+      paddingBottom: 24,
+    },
+    routineCard: {
+      width: ROUTINE_CARD_W,
+      height: 220,
+      borderRadius: 20,
+      overflow: "hidden",
+      marginRight: 14,
+      backgroundColor: theme.background.accent,
+    },
+    routineCardImage: {
+      width: "100%",
+      height: "100%",
+      position: "absolute",
+    },
+    routineCardGradient: {
+      position: "absolute",
+      left: 0,
+      right: 0,
+      bottom: 0,
+      height: "70%",
+    },
+    routineDiffBadge: {
+      position: "absolute",
+      top: 12,
+      left: 12,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 12,
+    },
+    routineDiffText: {
+      fontFamily: FONTS.bold,
+      fontSize: 10,
+      textTransform: "uppercase",
+      letterSpacing: 0.5,
+    },
+    routineCardContent: {
+      position: "absolute",
+      bottom: 0,
+      left: 0,
+      right: 0,
+      padding: 14,
+    },
+    routineCardName: {
+      fontFamily: FONTS.bold,
+      fontSize: 16,
+      color: "#fff",
+      marginBottom: 2,
+    },
+    routineCardDesc: {
+      fontFamily: FONTS.regular,
+      fontSize: 12,
+      color: "rgba(255,255,255,0.7)",
+      marginBottom: 8,
+    },
+    routineCardMeta: {
+      flexDirection: "row",
+      gap: 12,
+    },
+    routineMetaItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+    },
+    routineMetaText: {
+      fontFamily: FONTS.medium,
+      fontSize: 11,
+      color: "rgba(255,255,255,0.7)",
+    },
+
+    // Recent Workouts
+    recentScroll: {
+      paddingLeft: 20,
+      paddingRight: 6,
+      paddingBottom: 24,
+    },
+    recentCard: {
+      width: SCREEN_WIDTH * 0.42,
+      height: 160,
+      borderRadius: 16,
+      overflow: "hidden",
+      marginRight: 12,
+      backgroundColor: theme.background.accent,
+    },
+    recentCardImage: {
+      width: "100%",
+      height: "100%",
+      position: "absolute",
+    },
+    recentCardGradient: {
+      position: "absolute",
+      left: 0,
+      right: 0,
+      bottom: 0,
+      height: "60%",
+    },
+    recentCardContent: {
+      position: "absolute",
+      bottom: 0,
+      left: 0,
+      right: 0,
+      padding: 12,
+    },
+    recentCardName: {
+      fontFamily: FONTS.bold,
+      fontSize: 13,
+      color: "#fff",
+      marginBottom: 4,
+    },
+    recentCardMeta: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+    },
+    recentCardMetaText: {
+      fontFamily: FONTS.regular,
+      fontSize: 10,
+      color: "rgba(255,255,255,0.7)",
+    },
+
+    // Create Routine
+    createCard: {
+      marginHorizontal: 20,
+      borderRadius: 20,
+      overflow: "hidden",
+      marginBottom: 20,
+    },
+    createGradient: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      padding: 22,
+      minHeight: 130,
+    },
+    createContent: {
+      flex: 1,
+    },
+    createTitle: {
+      fontFamily: FONTS.extraBold,
+      fontSize: 20,
+      color: "#fff",
+      lineHeight: 24,
+      marginBottom: 4,
+    },
+    createSub: {
+      fontFamily: FONTS.regular,
+      fontSize: 12,
+      color: "rgba(255,255,255,0.7)",
+      marginBottom: 14,
+    },
+    createBtn: {
+      backgroundColor: "#fff",
+      borderRadius: 22,
+      paddingVertical: 8,
+      paddingHorizontal: 24,
+      alignSelf: "flex-start",
+    },
+    createBtnText: {
+      fontFamily: FONTS.bold,
+      fontSize: 14,
+      color: "#6C63FF",
+    },
+
+    // Explore
+    exploreCard: {
+      marginHorizontal: 20,
+      height: 140,
+      borderRadius: 20,
+      overflow: "hidden",
+      marginBottom: 10,
+    },
+    exploreImage: {
+      width: "100%",
+      height: "100%",
+      position: "absolute",
+    },
+    exploreGradient: {
+      position: "absolute",
+      left: 0,
+      right: 0,
+      bottom: 0,
+      height: "100%",
+    },
+    exploreContent: {
+      position: "absolute",
+      bottom: 0,
+      left: 0,
+      right: 0,
+      padding: 18,
+    },
+    exploreTitle: {
+      fontFamily: FONTS.bold,
+      fontSize: 17,
+      color: "#fff",
+      marginTop: 6,
+    },
+    exploreSub: {
+      fontFamily: FONTS.regular,
+      fontSize: 12,
+      color: "rgba(255,255,255,0.7)",
+      marginTop: 2,
     },
   });
-
+}
