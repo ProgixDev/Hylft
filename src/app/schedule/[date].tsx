@@ -14,7 +14,13 @@ import { Theme } from "../../constants/themes";
 import { useActiveWorkout } from "../../contexts/ActiveWorkoutContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { formatDate, formatWeekday } from "../../utils/dateFormatter";
-import { translateRoutineName, translateRoutineDescription, translateExerciseTerm, translateExerciseName, translateApiData } from "../../utils/exerciseTranslator";
+import {
+  translateRoutineName,
+  translateRoutineDescription,
+  translateExerciseTerm,
+  translateExerciseName,
+  translateApiData,
+} from "../../utils/exerciseTranslator";
 import {
   getRoutineById,
   getScheduleForDate,
@@ -43,7 +49,8 @@ function getDayLabel(dateStr: string, t: (key: string) => string): string {
 }
 
 function formatRestTime(seconds: number, t: (key: string) => string): string {
-  if (seconds >= 60) return `${Math.round(seconds / 60)}${t("scheduleDetail.minRest")}`;
+  if (seconds >= 60)
+    return `${Math.round(seconds / 60)}${t("scheduleDetail.minRest")}`;
   return `${seconds}${t("scheduleDetail.sRest")}`;
 }
 
@@ -253,35 +260,43 @@ export default function ScheduleDetailPage() {
 
   const handleMarkCompleted = () => {
     if (!date) return;
-    Alert.alert(t("scheduleDetail.markAsCompleted"), t("scheduleDetail.markWorkoutCompleted"), [
-      { text: t("common.cancel"), style: "cancel" },
-      {
-        text: t("scheduleDetail.markComplete"),
-        onPress: () => {
-          updateScheduleDay(date, { status: "completed" });
-          setSchedDay((prev) =>
-            prev ? { ...prev, status: "completed" } : prev,
-          );
+    Alert.alert(
+      t("scheduleDetail.markAsCompleted"),
+      t("scheduleDetail.markWorkoutCompleted"),
+      [
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("scheduleDetail.markComplete"),
+          onPress: () => {
+            updateScheduleDay(date, { status: "completed" });
+            setSchedDay((prev) =>
+              prev ? { ...prev, status: "completed" } : prev,
+            );
+          },
         },
-      },
-    ]);
+      ],
+    );
   };
 
   const handleMarkRest = () => {
     if (!date) return;
-    Alert.alert(t("scheduleDetail.changeToRestDay"), t("scheduleDetail.changeDayToRest"), [
-      { text: t("common.cancel"), style: "cancel" },
-      {
-        text: t("scheduleDetail.setRestDay"),
-        onPress: () => {
-          updateScheduleDay(date, { status: "rest", routineId: undefined });
-          setSchedDay((prev) =>
-            prev ? { ...prev, status: "rest", routineId: undefined } : prev,
-          );
-          setRoutine(undefined);
+    Alert.alert(
+      t("scheduleDetail.changeToRestDay"),
+      t("scheduleDetail.changeDayToRest"),
+      [
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("scheduleDetail.setRestDay"),
+          onPress: () => {
+            updateScheduleDay(date, { status: "rest", routineId: undefined });
+            setSchedDay((prev) =>
+              prev ? { ...prev, status: "rest", routineId: undefined } : prev,
+            );
+            setRoutine(undefined);
+          },
         },
-      },
-    ]);
+      ],
+    );
   };
 
   const handleStartWorkout = () => {
@@ -332,7 +347,7 @@ export default function ScheduleDetailPage() {
         >
           <Ionicons
             name="chevron-back"
-            size={24}
+            size={22}
             color={theme.foreground.white}
           />
         </TouchableOpacity>
@@ -389,7 +404,7 @@ export default function ScheduleDetailPage() {
                   ? "moon"
                   : "time-outline"
             }
-            size={20}
+            size={18}
             color={
               isCompleted
                 ? "#4CAF50"
@@ -436,7 +451,7 @@ export default function ScheduleDetailPage() {
                 { backgroundColor: theme.background.accent },
               ]}
             >
-              <Ionicons name="moon" size={48} color={theme.foreground.gray} />
+              <Ionicons name="moon" size={38} color={theme.foreground.gray} />
             </View>
             <Text style={[styles.restTitle, { color: theme.foreground.white }]}>
               {t("scheduleDetail.restAndRecovery")}
@@ -637,7 +652,10 @@ export default function ScheduleDetailPage() {
                 contentContainerStyle={styles.muscleTags}
               >
                 {routine.targetMuscles.map((m) => {
-                  const translatedMuscle = translateExerciseTerm(m, "targetMuscles");
+                  const translatedMuscle = translateExerciseTerm(
+                    m,
+                    "targetMuscles",
+                  );
                   return (
                     <View
                       key={m}
@@ -652,7 +670,8 @@ export default function ScheduleDetailPage() {
                           { color: theme.primary.main },
                         ]}
                       >
-                        {translatedMuscle.charAt(0).toUpperCase() + translatedMuscle.slice(1)}
+                        {translatedMuscle.charAt(0).toUpperCase() +
+                          translatedMuscle.slice(1)}
                       </Text>
                     </View>
                   );
@@ -715,7 +734,9 @@ export default function ScheduleDetailPage() {
                     activeOpacity={0.85}
                   >
                     <Ionicons name="play" size={18} color="#FFFFFF" />
-                    <Text style={styles.primaryBtnText}>{t("scheduleDetail.startWorkout")}</Text>
+                    <Text style={styles.primaryBtnText}>
+                      {t("scheduleDetail.startWorkout")}
+                    </Text>
                   </TouchableOpacity>
                 </>
               )}
@@ -742,7 +763,7 @@ export default function ScheduleDetailPage() {
           <View style={styles.emptyState}>
             <Ionicons
               name="calendar-outline"
-              size={48}
+              size={40}
               color={theme.foreground.gray}
             />
             <Text
@@ -767,145 +788,145 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    gap: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
     borderBottomWidth: 1,
   },
   backBtn: {
-    width: 36,
-    height: 36,
+    width: 32,
+    height: 32,
     alignItems: "center",
     justifyContent: "center",
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontFamily: FONTS.bold,
   },
   headerDate: {
-    fontSize: 12,
+    fontSize: 11,
     marginTop: 1,
   },
   completeBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1.5,
   },
   content: {
-    padding: 16,
-    paddingBottom: 40,
+    padding: 14,
+    paddingBottom: 30,
   },
   // ── Status banner ──
   statusBanner: {
     flexDirection: "row",
     alignItems: "flex-start",
-    gap: 12,
-    padding: 14,
-    borderRadius: 14,
+    gap: 10,
+    padding: 10,
+    borderRadius: 12,
     borderWidth: 1,
-    marginBottom: 18,
+    marginBottom: 14,
   },
   statusTitle: {
-    fontSize: 14,
+    fontSize: 13,
     fontFamily: FONTS.bold,
   },
   statusNotes: {
-    fontSize: 12,
-    marginTop: 3,
-    lineHeight: 18,
+    fontSize: 11,
+    marginTop: 2,
+    lineHeight: 16,
   },
   // ── Rest view ──
   restView: {
     alignItems: "center",
-    paddingTop: 20,
+    paddingTop: 16,
   },
   restIconLg: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 20,
+    marginBottom: 14,
   },
   restTitle: {
-    fontSize: 22,
+    fontSize: 19,
     fontFamily: FONTS.bold,
-    marginBottom: 10,
+    marginBottom: 8,
   },
   restBody: {
-    fontSize: 14,
+    fontSize: 13,
     textAlign: "center",
-    lineHeight: 22,
-    paddingHorizontal: 16,
-    marginBottom: 24,
+    lineHeight: 20,
+    paddingHorizontal: 12,
+    marginBottom: 18,
   },
   restTipsList: {
     width: "100%",
-    gap: 8,
+    gap: 6,
   },
   restTipRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    padding: 14,
-    borderRadius: 12,
+    gap: 10,
+    padding: 10,
+    borderRadius: 10,
   },
   restTipText: {
-    fontSize: 14,
+    fontSize: 13,
     flex: 1,
   },
   // ── Routine card ──
   routineCard: {
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 20,
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 14,
   },
   routineCardTop: {
     flexDirection: "row",
     alignItems: "flex-start",
-    gap: 10,
-    marginBottom: 14,
+    gap: 8,
+    marginBottom: 10,
   },
   routineName: {
-    fontSize: 20,
+    fontSize: 17,
     fontFamily: FONTS.bold,
   },
   routineDesc: {
-    fontSize: 13,
-    marginTop: 4,
-    lineHeight: 18,
+    fontSize: 12,
+    marginTop: 3,
+    lineHeight: 17,
   },
   diffBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 7,
     borderWidth: 1,
     marginTop: 2,
   },
   diffText: {
-    fontSize: 10,
+    fontSize: 9,
     fontFamily: FONTS.bold,
   },
   routineStats: {
     flexDirection: "row",
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 12,
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 10,
   },
   routineStat: {
     flex: 1,
     alignItems: "center",
-    gap: 3,
+    gap: 2,
   },
   routineStatVal: {
-    fontSize: 16,
+    fontSize: 14,
     fontFamily: FONTS.bold,
   },
   routineStatLabel: {
-    fontSize: 9,
+    fontSize: 8,
     letterSpacing: 0.3,
     textAlign: "center",
   },
@@ -915,119 +936,119 @@ const styles = StyleSheet.create({
   },
   muscleTags: {
     flexDirection: "row",
-    gap: 6,
+    gap: 5,
   },
   muscleTag: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 20,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 16,
   },
   muscleTagText: {
-    fontSize: 11,
+    fontSize: 10,
     fontFamily: FONTS.semiBold,
   },
   sectionTitle: {
-    fontSize: 10,
+    fontSize: 9,
     fontFamily: FONTS.bold,
     letterSpacing: 1.5,
-    marginBottom: 10,
+    marginBottom: 8,
   },
   // ── Exercise card ──
   exCard: {
-    borderRadius: 12,
+    borderRadius: 10,
     borderWidth: 1,
-    marginBottom: 8,
+    marginBottom: 6,
     overflow: "hidden",
   },
   exCardMain: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 12,
-    gap: 10,
+    padding: 10,
+    gap: 8,
   },
   exIndexBadge: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
     alignItems: "center",
     justifyContent: "center",
   },
   exIndexText: {
-    fontSize: 12,
+    fontSize: 11,
     fontFamily: FONTS.bold,
   },
   exCardName: {
-    fontSize: 14,
+    fontSize: 13,
     fontFamily: FONTS.semiBold,
-    marginBottom: 4,
+    marginBottom: 3,
   },
   exMetaRow: {
     flexDirection: "row",
-    gap: 5,
+    gap: 4,
   },
   exMetaChip: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 3,
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-    borderRadius: 6,
+    gap: 2,
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+    borderRadius: 5,
   },
   exMetaText: {
-    fontSize: 10,
+    fontSize: 9,
   },
   exNotes: {
     flexDirection: "row",
     alignItems: "flex-start",
-    gap: 8,
-    padding: 12,
+    gap: 6,
+    padding: 10,
     borderTopWidth: 1,
   },
   exNotesText: {
     flex: 1,
-    fontSize: 12,
-    lineHeight: 18,
+    fontSize: 11,
+    lineHeight: 16,
   },
   setBreakdown: {
-    padding: 12,
-    gap: 6,
+    padding: 10,
+    gap: 5,
     borderTopWidth: 1,
   },
   setRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: 8,
   },
   setNumBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 5,
   },
   setNumText: {
-    fontSize: 11,
+    fontSize: 10,
     fontFamily: FONTS.semiBold,
   },
   setRepsText: {
     flex: 1,
-    fontSize: 13,
+    fontSize: 12,
   },
   // ── Actions ──
   actionsRow: {
     flexDirection: "row",
-    gap: 10,
-    marginTop: 24,
+    gap: 8,
+    marginTop: 18,
   },
   primaryBtn: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
-    paddingVertical: 15,
-    borderRadius: 26,
+    gap: 6,
+    paddingVertical: 12,
+    borderRadius: 22,
   },
   primaryBtnText: {
-    fontSize: 17,
+    fontSize: 15,
     fontFamily: FONTS.bold,
     color: "#FFFFFF",
   },
@@ -1036,37 +1057,37 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
-    paddingVertical: 15,
-    borderRadius: 26,
+    gap: 6,
+    paddingVertical: 12,
+    borderRadius: 22,
     borderWidth: 1.5,
   },
   secondaryBtnText: {
-    fontSize: 15,
+    fontSize: 13,
     fontFamily: FONTS.semiBold,
   },
   restDayLink: {
     alignItems: "center",
-    paddingVertical: 14,
-    marginTop: 6,
+    paddingVertical: 10,
+    marginTop: 4,
   },
   restDayLinkText: {
-    fontSize: 13,
+    fontSize: 12,
     textDecorationLine: "underline",
   },
   // ── Empty ──
   emptyState: {
     alignItems: "center",
-    paddingTop: 60,
-    gap: 12,
+    paddingTop: 40,
+    gap: 10,
   },
   emptyTitle: {
-    fontSize: 20,
+    fontSize: 17,
     fontFamily: FONTS.bold,
   },
   emptyBody: {
-    fontSize: 14,
+    fontSize: 13,
     textAlign: "center",
-    lineHeight: 20,
+    lineHeight: 18,
   },
 });

@@ -1,55 +1,40 @@
-import { Ionicons } from "@expo/vector-icons";
-import { useFocusEffect, useRouter } from "expo-router";
-import React, { useCallback, useState } from "react";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  Dimensions,
   Image,
   Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import { FONTS } from "../../constants/fonts";
 import { Theme } from "../../constants/themes";
-import { useActiveWorkout } from "../../contexts/ActiveWorkoutContext";
 import { useTheme } from "../../contexts/ThemeContext";
-import {
-  getRecentWorkouts,
-  getRoutineById,
-  getScheduleForDate,
-  getScheduleForDateRange,
-  getUserById,
-  Routine,
-  ScheduledDay,
-} from "../../data/mockData";
-import {
-  translateRoutineDescription,
-  translateRoutineName,
-} from "../../utils/exerciseTranslator";
 
-const MY_USER_ID = "1";
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const CHALLENGE_CARD_WIDTH = SCREEN_WIDTH * 0.78;
 
-const controlShadow = Platform.select({
-  ios: {
-    shadowColor: "#000000",
-    shadowOpacity: 0.18,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 4 },
-  },
-  android: { elevation: 6 },
-  default: {},
-});
+const challengeImages = [
+  require("../../../assets/images/OnBoarding/ManWithTwoWeights.jpg"),
+  require("../../../assets/images/AuthPage/PullUp.jpg"),
+  require("../../../assets/images/AuthPage/HoldingTwoWeights.jpg"),
+];
 
-function toISO(date: Date): string {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
-}
+const bodyFocusImages = [
+  require("../../../assets/images/AuthPage/DeadLiftIGuess.jpg"),
+  require("../../../assets/images/OnBoarding/ManWithOneWeights.jpg"),
+  require("../../../assets/images/AuthPage/OneKneeOnTheGround.jpg"),
+  require("../../../assets/images/AuthPage/PullUp.jpg"),
+];
 
-function getWeekDays(): { date: Date; iso: string; dayShort: string }[] {
+function getWeekDays(): { date: Date; dayNum: number }[] {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const day = today.getDay();
@@ -59,429 +44,477 @@ function getWeekDays(): { date: Date; iso: string; dayShort: string }[] {
   return Array.from({ length: 7 }, (_, i) => {
     const d = new Date(monday);
     d.setDate(monday.getDate() + i);
-    return {
-      date: d,
-      iso: toISO(d),
-      dayShort: d.toLocaleDateString("en", { weekday: "short" }).slice(0, 3),
-    };
+    return { date: d, dayNum: d.getDate() };
   });
 }
 
+// Difficulty bolts component
+function DifficultyBolts({ level, theme }: { level: number; theme: Theme }) {
+  return (
+    <View style={{ flexDirection: "row", gap: 2, marginTop: 4 }}>
+      {[1, 2, 3].map((i) => (
+        <Ionicons
+          key={i}
+          name="flash"
+          size={14}
+          color={i <= level ? theme.primary.main : "#D1D5DB"}
+        />
+      ))}
+    </View>
+  );
+}
 
-// ── Main Component ───────────────────────────────────────────────────────────
 export default function Home() {
   const router = useRouter();
   const { theme } = useTheme();
   const { t } = useTranslation();
-  const { startWorkout } = useActiveWorkout();
+  const [selectedBodyFocus, setSelectedBodyFocus] = useState(0);
+  const [weeklyGoal] = useState(6);
+  const [completedDays] = useState(0);
 
-  const [todaySchedule, setTodaySchedule] = useState<ScheduledDay | undefined>();
-  const [todayRoutine, setTodayRoutine] = useState<Routine | undefined>();
-  const [weekSchedule, setWeekSchedule] = useState<ScheduledDay[]>([]);
-  const [weeklyStats, setWeeklyStats] = useState({
-    workoutsCompleted: 0,
-    totalMinutes: 0,
-    totalCalories: 0,
-    weeklyGoal: 5,
-  });
-
-  const user = getUserById(MY_USER_ID);
   const styles = createStyles(theme);
-
-  useFocusEffect(
-    useCallback(() => {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const todayISO = toISO(today);
-
-      // Today's schedule
-      const sched = getScheduleForDate(todayISO, MY_USER_ID);
-      setTodaySchedule(sched);
-      if (sched?.routineId) {
-        setTodayRoutine(getRoutineById(sched.routineId));
-      } else {
-        setTodayRoutine(undefined);
-      }
-
-      // This week's schedule
-      const weekDays = getWeekDays();
-      const weekStart = weekDays[0].iso;
-      const weekEnd = weekDays[6].iso;
-      const weekSched = getScheduleForDateRange(weekStart, weekEnd, MY_USER_ID);
-      setWeekSchedule(weekSched);
-
-      // Weekly stats
-      const completed = weekSched.filter((s) => s.status === "completed").length;
-      const recentWorkouts = getRecentWorkouts(MY_USER_ID, 7);
-      const totalMins = recentWorkouts.reduce((sum, w) => sum + w.duration, 0);
-      const totalCals = recentWorkouts.reduce(
-        (sum, w) => sum + w.caloriesBurned,
-        0,
-      );
-
-      setWeeklyStats({
-        workoutsCompleted: completed,
-        totalMinutes: totalMins,
-        totalCalories: totalCals,
-        weeklyGoal: 5,
-      });
-    }, []),
-  );
-
-  const handleStartWorkout = () => {
-    if (todayRoutine) {
-      startWorkout({
-        id: `workout-${Date.now()}`,
-        duration: 0,
-        volume: 0,
-        sets: 0,
-        exercises: todayRoutine.exercises.map((ex, exIdx) => ({
-          id: `entry-${Date.now()}-${exIdx}`,
-          exerciseId: exIdx + 1,
-          name: ex.name,
-          muscles: [],
-          equipment: [],
-          sets: Array.from({ length: ex.sets }, (_, i) => ({
-            id: `${ex.id}-set-${i}`,
-            setNumber: i + 1,
-            kg: "",
-            reps: ex.reps,
-            isCompleted: false,
-          })),
-          notes: ex.notes || "",
-          addedAt: Date.now(),
-        })),
-      });
-    }
-  };
-
   const weekDays = getWeekDays();
-  const todayISO = toISO(new Date());
+  const todayDate = new Date().getDate();
 
-  const goalPct = Math.round(
-    (weeklyStats.workoutsCompleted / weeklyStats.weeklyGoal) * 100,
-  );
-  const activityPct = Math.min(
-    Math.round((weeklyStats.totalMinutes / 300) * 100),
-    100,
-  );
-  const calPct = Math.min(
-    Math.round((weeklyStats.totalCalories / 3000) * 100),
-    100,
-  );
+  const bodyFocusOptions = [
+    t("home.abs"),
+    t("home.arm"),
+    t("home.chest"),
+    t("home.leg"),
+    t("home.shoulder"),
+  ];
+
+  const challenges = [
+    {
+      days: 28,
+      title: t("home.fullBodyChallenge"),
+      desc: t("home.fullBodyChallengeDesc"),
+      image: challengeImages[0],
+      color: "#1565C0",
+    },
+    {
+      days: 28,
+      title: t("home.sculptUpperBody"),
+      desc: t("home.sculptUpperBodyDesc"),
+      image: challengeImages[1],
+      color: "#2E7D9A",
+    },
+    {
+      days: 21,
+      title: t("home.lowerBodyBlast"),
+      desc: t("home.lowerBodyBlastDesc"),
+      image: challengeImages[2],
+      color: "#6A1B9A",
+    },
+  ];
+
+  const selectedLabel = bodyFocusOptions[selectedBodyFocus];
+
+  const bodyFocusExercises = [
+    {
+      name: selectedLabel + " " + t("home.beginner"),
+      duration: "15 mins",
+      exercises: 16,
+      difficulty: 1,
+      image: bodyFocusImages[selectedBodyFocus % bodyFocusImages.length],
+    },
+    {
+      name: selectedLabel + " " + t("home.intermediate"),
+      duration: "24 mins",
+      exercises: 21,
+      difficulty: 2,
+      image: bodyFocusImages[(selectedBodyFocus + 1) % bodyFocusImages.length],
+    },
+    {
+      name: selectedLabel + " " + t("home.advanced"),
+      duration: "27 mins",
+      exercises: 21,
+      difficulty: 3,
+      image: bodyFocusImages[(selectedBodyFocus + 2) % bodyFocusImages.length],
+    },
+  ];
+
+  const justForYouWorkouts = [
+    {
+      name: t("home.killerChestRoutine"),
+      duration: "10 min",
+      level: t("home.intermediate"),
+      image: bodyFocusImages[0],
+    },
+    {
+      name: t("home.sevenMinAbs"),
+      duration: "7 min",
+      level: t("home.beginner"),
+      image: bodyFocusImages[1],
+    },
+  ];
+
+  const stretchWorkouts = [
+    {
+      name: t("home.sleepyTimeStretching"),
+      image: bodyFocusImages[2],
+    },
+    {
+      name: t("home.fourMinTabata"),
+      image: bodyFocusImages[3],
+    },
+    {
+      name: t("home.morningStretch"),
+      image: bodyFocusImages[0],
+    },
+  ];
+
+  const categoryTags: {
+    icon: keyof typeof Ionicons.glyphMap;
+    label: string;
+  }[] = [
+    { icon: "flame-outline", label: t("home.warmUp") },
+    { icon: "body-outline", label: t("home.stretch") },
+    { icon: "layers-outline", label: t("home.advancedTag") },
+    { icon: "barbell-outline", label: t("home.buildMuscle") },
+    { icon: "time-outline", label: t("home.duration715") },
+    { icon: "flame-outline", label: t("home.burnFat") },
+  ];
 
   return (
     <View style={styles.container}>
-      {/* Header + Greeting */}
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <Image
-            source={{ uri: user?.avatar }}
-            style={styles.greetingAvatar}
-          />
-          <View>
-            <Text style={styles.greetingText}>
-              {t("home.hello")}, {user?.username}!
-            </Text>
-            <Text style={styles.greetingSubtext}>
-              {t("home.letsGetMoving")}
-            </Text>
-          </View>
-        </View>
-        <Pressable
-          style={({ pressed }) => [
-            styles.iconButton,
-            pressed && { opacity: 0.7, transform: [{ scale: 0.92 }] },
-          ]}
-          onPress={() => router.navigate("/notifications" as any)}
-        >
-          <Ionicons
-            name="notifications-outline"
-            size={18}
-            color={theme.foreground.white}
-          />
-        </Pressable>
-      </View>
-
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 80 }}
+        contentContainerStyle={{ paddingBottom: 90 }}
       >
-        {/* ── Health Summary ─────────────────────────────────────────── */}
-        <View style={styles.sectionHeader}>
-          <Ionicons name="stats-chart" size={14} color={theme.primary.main} />
-          <Text style={styles.sectionTitle}>{t("home.healthSummary")}</Text>
-        </View>
-        <View style={styles.statsList}>
-          {/* Workouts */}
-          <View style={styles.statRow}>
-            <View style={[styles.statIconBox, { backgroundColor: theme.primary.main + "1A" }]}>
-              <Ionicons name="barbell-outline" size={18} color={theme.primary.main} />
-            </View>
-            <View style={styles.statInfo}>
-              <View style={styles.statTextRow}>
-                <Text style={styles.statLabel}>{t("home.workouts")}</Text>
-                <Text style={[styles.statValue, { color: theme.primary.main }]}>
-                  {weeklyStats.workoutsCompleted}/{weeklyStats.weeklyGoal}
-                </Text>
-              </View>
-              <View style={styles.progressBarBg}>
-                <View
-                  style={[
-                    styles.progressBarFill,
-                    { width: `${Math.min(goalPct, 100)}%`, backgroundColor: theme.primary.main },
-                  ]}
-                />
-              </View>
-            </View>
-          </View>
-
-          {/* Calories */}
-          <View style={styles.statRow}>
-            <View style={[styles.statIconBox, { backgroundColor: "#FF6B351A" }]}>
-              <Ionicons name="flame-outline" size={18} color="#FF6B35" />
-            </View>
-            <View style={styles.statInfo}>
-              <View style={styles.statTextRow}>
-                <Text style={styles.statLabel}>{t("home.calories")}</Text>
-                <Text style={[styles.statValue, { color: "#FF6B35" }]}>
-                  {weeklyStats.totalCalories}/3000
-                </Text>
-              </View>
-              <View style={styles.progressBarBg}>
-                <View
-                  style={[
-                    styles.progressBarFill,
-                    { width: `${Math.min(calPct, 100)}%`, backgroundColor: "#FF6B35" },
-                  ]}
-                />
-              </View>
-            </View>
-          </View>
-
-          {/* Activity */}
-          <View style={styles.statRow}>
-            <View style={[styles.statIconBox, { backgroundColor: "#4FC3F71A" }]}>
-              <Ionicons name="time-outline" size={18} color="#4FC3F7" />
-            </View>
-            <View style={styles.statInfo}>
-              <View style={styles.statTextRow}>
-                <Text style={styles.statLabel}>{t("home.activity")}</Text>
-                <Text style={[styles.statValue, { color: "#4FC3F7" }]}>
-                  {weeklyStats.totalMinutes}/300 min
-                </Text>
-              </View>
-              <View style={styles.progressBarBg}>
-                <View
-                  style={[
-                    styles.progressBarFill,
-                    { width: `${Math.min(activityPct, 100)}%`, backgroundColor: "#4FC3F7" },
-                  ]}
-                />
-              </View>
-            </View>
+        {/* ── Header ──────────────────────────────────────────────── */}
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>{t("home.homeWorkout")}</Text>
+          <View style={styles.headerRight}>
+            <Ionicons name="flame" size={26} color="#FF4444" />
+            <Pressable
+              style={({ pressed }) => [
+                styles.proBadge,
+                pressed && { opacity: 0.8 },
+              ]}
+              onPress={() => router.navigate("/settings" as any)}
+            >
+              <Ionicons name="diamond" size={13} color="#fff" />
+              <Text style={styles.proBadgeText}>{t("home.pro")}</Text>
+            </Pressable>
           </View>
         </View>
 
-        {/* ── Weekly Sessions ────────────────────────────────────────── */}
-        <View style={styles.sectionHeader}>
-          <Ionicons
-            name="calendar-outline"
-            size={18}
-            color={theme.primary.main}
+        {/* ── Search Bar ──────────────────────────────────────────── */}
+        <Pressable
+          style={styles.searchBar}
+          onPress={() => router.navigate("/search" as any)}
+        >
+          <Ionicons name="search" size={18} color={theme.foreground.gray} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder={t("home.searchPlaceholder")}
+            placeholderTextColor={theme.foreground.gray}
+            editable={false}
+            pointerEvents="none"
           />
-          <Text style={styles.sectionTitle}>
-            {t("home.weekSessions")}
-          </Text>
-        </View>
-        <View style={styles.weekRow}>
-          {weekDays.map((day) => {
-            const sched = weekSchedule.find((s) => s.date === day.iso);
-            const isToday = day.iso === todayISO;
-            const isCompleted = sched?.status === "completed";
-            const isScheduled = sched?.status === "scheduled";
-            const isRest = sched?.status === "rest";
-            const isMissed =
-              !sched?.status &&
-              day.iso < todayISO;
+        </Pressable>
 
-            let bgColor = theme.background.accent;
-            let borderColor = "transparent";
-            let iconName: keyof typeof Ionicons.glyphMap | null = null;
-            let iconColor = theme.foreground.gray;
+        {/* ── Weekly Goal ─────────────────────────────────────────── */}
+        <View style={styles.weeklyGoalCard}>
+          <View style={styles.weeklyGoalHeader}>
+            <Text style={styles.weeklyGoalTitle}>{t("home.weeklyGoal")}</Text>
+            <View style={styles.weeklyGoalRight}>
+              <Text style={styles.weeklyGoalCount}>
+                <Text style={styles.weeklyGoalCountBold}>{completedDays}</Text>
+                /{weeklyGoal}
+              </Text>
+              <Ionicons
+                name="pencil"
+                size={14}
+                color={theme.foreground.gray}
+              />
+            </View>
+          </View>
 
-            if (isCompleted) {
-              bgColor = "#4CAF50" + "33";
-              borderColor = "#4CAF50";
-              iconName = "checkmark";
-              iconColor = "#4CAF50";
-            } else if (isMissed) {
-              bgColor = "#F4433633";
-              borderColor = "#F44336";
-              iconName = "close";
-              iconColor = "#F44336";
-            } else if (isToday && isScheduled) {
-              bgColor = theme.primary.main + "22";
-              borderColor = theme.primary.main;
-            } else if (isRest) {
-              bgColor = theme.background.accent;
-            }
-
-            return (
-              <View key={day.iso} style={styles.weekDayCol}>
-                <Text
-                  style={[
-                    styles.weekDayLabel,
-                    isToday && { color: theme.primary.main },
-                  ]}
-                >
-                  {day.dayShort}
-                </Text>
-                <View
-                  style={[
-                    styles.weekDayCircle,
-                    {
-                      backgroundColor: bgColor,
-                      borderColor,
-                      borderWidth: isToday || isCompleted || isMissed ? 2 : 1,
-                    },
-                    !isToday &&
-                      !isCompleted &&
-                      !isMissed && {
-                        borderColor: "rgba(0,0,0,0.08)",
-                      },
-                  ]}
-                >
-                  {iconName ? (
-                    <Ionicons name={iconName} size={16} color={iconColor} />
-                  ) : (
+          {/* Day numbers row */}
+          <View style={styles.weekDaysRow}>
+            {weekDays.map((day, index) => {
+              const isToday = day.dayNum === todayDate;
+              return (
+                <View key={index} style={styles.weekDayItem}>
+                  <View
+                    style={[
+                      styles.weekDayCircle,
+                      isToday && styles.weekDayCircleActive,
+                    ]}
+                  >
                     <Text
                       style={[
-                        styles.weekDayText,
-                        isToday && { color: theme.primary.main },
+                        styles.weekDayNumber,
+                        isToday && styles.weekDayNumberActive,
                       ]}
                     >
-                      {isRest || (!isScheduled && day.iso >= todayISO)
-                        ? "-"
-                        : day.date.getDate()}
+                      {day.dayNum}
                     </Text>
-                  )}
+                  </View>
                 </View>
-              </View>
-            );
-          })}
+              );
+            })}
+          </View>
+
+          {/* Motivational message */}
+          <View style={styles.motivationalRow}>
+            <Image
+              source={require("../../../assets/images/OnBoarding/ManLookingUp.jpg")}
+              style={styles.motivationalAvatar}
+            />
+            <View style={styles.motivationalBubble}>
+              <Text style={styles.motivationalText}>
+                {t("home.motivationalMessage")}
+              </Text>
+            </View>
+          </View>
         </View>
 
-        {/* ── Today's Workout Card ───────────────────────────────────── */}
-        <View style={styles.workoutSectionHeader}>
-          <Ionicons
-            name="flash-outline"
-            size={18}
-            color={theme.primary.main}
-          />
-          <Text style={styles.workoutSectionTitle}>
-            {todaySchedule?.status === "rest"
-              ? t("home.restDay")
-              : t("home.todaysWorkout")}
-          </Text>
-        </View>
-
-        {todayRoutine && todaySchedule?.status !== "rest" ? (
-          <Pressable
-            style={({ pressed }) => [
-              styles.workoutCard,
-              pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
-            ]}
-            onPress={() => router.push("/schedule/" as any)}
-          >
-
-            <View style={styles.workoutCardContent}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.workoutCardTitle}>
-                  {translateRoutineName(todayRoutine.name)}
-                </Text>
-                <Text style={styles.workoutCardDesc}>
-                  {translateRoutineDescription(todayRoutine.description)}
-                </Text>
-                <View style={styles.workoutCardMeta}>
-                  <View style={styles.workoutMetaItem}>
-                    <Ionicons
-                      name="barbell-outline"
-                      size={14}
-                      color={theme.foreground.gray}
-                    />
-                    <Text style={styles.workoutMetaText}>
-                      {todayRoutine.exercises.length} {t("home.exercises")}
-                    </Text>
-                  </View>
-                  <View style={styles.workoutMetaItem}>
-                    <Ionicons
-                      name="time-outline"
-                      size={14}
-                      color={theme.foreground.gray}
-                    />
-                    <Text style={styles.workoutMetaText}>
-                      {todayRoutine.estimatedDuration} min
-                    </Text>
-                  </View>
-                  <View style={styles.workoutMetaItem}>
-                    <Ionicons
-                      name="trophy-outline"
-                      size={14}
-                      color={theme.foreground.gray}
-                    />
-                    <Text style={styles.workoutMetaText}>
-                      {todayRoutine.difficulty}
-                    </Text>
-                  </View>
-                </View>
-                {/* Muscle tags */}
-                <View style={styles.muscleTags}>
-                  {todayRoutine.targetMuscles.slice(0, 4).map((muscle) => (
-                    <View key={muscle} style={styles.muscleTag}>
-                      <Text style={styles.muscleTagText}>{muscle}</Text>
-                    </View>
-                  ))}
-                </View>
-              </View>
-              <View style={styles.workoutActions}>
-                <Pressable
-                  style={({ pressed }) => [
-                    styles.detailsButton,
-                    pressed && { opacity: 0.85, transform: [{ scale: 0.95 }] },
-                  ]}
-                  onPress={() => router.push("/schedule/" as any)}
-                >
-                  <Ionicons name="eye-outline" size={16} color={theme.primary.main} />
-                  <Text style={styles.detailsButtonText}>
-                    {t("home.viewDetails")}
+        {/* ── Challenge Section ───────────────────────────────────── */}
+        <Text style={styles.sectionTitle}>{t("home.challenge")}</Text>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.challengeScroll}
+          snapToInterval={CHALLENGE_CARD_WIDTH + 14}
+          decelerationRate="fast"
+        >
+          {challenges.map((challenge, index) => (
+            <View key={index} style={styles.challengeCard}>
+              <Image
+                source={challenge.image}
+                style={styles.challengeImage}
+                resizeMode="cover"
+              />
+              <LinearGradient
+                colors={[
+                  "transparent",
+                  "rgba(0,0,0,0.3)",
+                  challenge.color + "E6",
+                ]}
+                style={styles.challengeGradient}
+              />
+              <View style={styles.challengeContent}>
+                <View style={styles.challengeDaysBadge}>
+                  <Text style={styles.challengeDaysText}>
+                    {challenge.days} {t("home.days")}
                   </Text>
-                </Pressable>
+                </View>
+                <Text style={styles.challengeTitle}>{challenge.title}</Text>
+                <Text style={styles.challengeDesc} numberOfLines={3}>
+                  {challenge.desc}
+                </Text>
                 <Pressable
                   style={({ pressed }) => [
-                    styles.startButton,
-                    pressed && { opacity: 0.85, transform: [{ scale: 0.95 }] },
+                    styles.challengeStartBtn,
+                    pressed && { opacity: 0.9, transform: [{ scale: 0.97 }] },
                   ]}
-                  onPress={handleStartWorkout}
                 >
-                  <Ionicons name="play" size={20} color="#fff" />
+                  <Text style={styles.challengeStartText}>
+                    {t("home.start").toUpperCase()}
+                  </Text>
                 </Pressable>
               </View>
             </View>
-          </Pressable>
-        ) : (
-          <View style={styles.restDayCard}>
-            <Ionicons
-              name="moon-outline"
-              size={36}
-              color={theme.primary.main}
-            />
-            <Text style={styles.restDayTitle}>{t("home.restDayTitle")}</Text>
-            <Text style={styles.restDaySubtext}>
-              {t("home.restDayMessage")}
+          ))}
+        </ScrollView>
+
+        {/* ── Body Focus Section ──────────────────────────────────── */}
+        <Text style={styles.sectionTitle}>{t("home.bodyFocus")}</Text>
+
+        {/* Filter Chips */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.chipsScroll}
+        >
+          {bodyFocusOptions.map((option, index) => (
+            <Pressable
+              key={index}
+              style={[
+                styles.chip,
+                selectedBodyFocus === index && styles.chipActive,
+              ]}
+              onPress={() => setSelectedBodyFocus(index)}
+            >
+              <Text
+                style={[
+                  styles.chipText,
+                  selectedBodyFocus === index && styles.chipTextActive,
+                ]}
+              >
+                {option}
+              </Text>
+            </Pressable>
+          ))}
+        </ScrollView>
+
+        {/* Exercise List */}
+        <View style={styles.exerciseList}>
+          {bodyFocusExercises.map((exercise, index) => (
+            <Pressable
+              key={index}
+              style={({ pressed }) => [
+                styles.exerciseRow,
+                pressed && { opacity: 0.8 },
+              ]}
+            >
+              <Image
+                source={exercise.image}
+                style={styles.exerciseImage}
+                resizeMode="cover"
+              />
+              <View style={styles.exerciseInfo}>
+                <Text style={styles.exerciseName}>{exercise.name}</Text>
+                <Text style={styles.exerciseMeta}>
+                  {exercise.duration} · {exercise.exercises}{" "}
+                  {t("home.exercises")}
+                </Text>
+                <DifficultyBolts level={exercise.difficulty} theme={theme} />
+              </View>
+            </Pressable>
+          ))}
+        </View>
+
+        {/* ── Category Tags ───────────────────────────────────────── */}
+        <View style={styles.categoryTagsContainer}>
+          {categoryTags.map((tag, index) => (
+            <Pressable
+              key={index}
+              style={({ pressed }) => [
+                styles.categoryTag,
+                pressed && { opacity: 0.8 },
+              ]}
+            >
+              <Ionicons
+                name={tag.icon}
+                size={18}
+                color={theme.primary.main}
+              />
+              <Text style={styles.categoryTagText}>{tag.label}</Text>
+            </Pressable>
+          ))}
+        </View>
+
+        {/* ── Custom Workout Section ──────────────────────────────── */}
+        <Text style={styles.sectionTitle}>{t("home.customWorkout")}</Text>
+        <Pressable
+          style={({ pressed }) => [
+            styles.customWorkoutCard,
+            pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
+          ]}
+          onPress={() => router.navigate("/create-routine" as any)}
+        >
+          <LinearGradient
+            colors={["#4A90D9", "#2563EB"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.customWorkoutGradient}
+          >
+            <View style={styles.customWorkoutContent}>
+              <Text style={styles.customWorkoutTitle}>
+                {t("home.createYourOwn")}
+              </Text>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.goButton,
+                  pressed && { opacity: 0.9, transform: [{ scale: 0.95 }] },
+                ]}
+                onPress={() => router.navigate("/create-routine" as any)}
+              >
+                <Text style={styles.goButtonText}>GO</Text>
+              </Pressable>
+            </View>
+            <View style={styles.customWorkoutIconContainer}>
+              <MaterialCommunityIcons
+                name="pencil-ruler"
+                size={56}
+                color="rgba(255,255,255,0.25)"
+              />
+            </View>
+          </LinearGradient>
+        </Pressable>
+
+        {/* ── Just For You Section ─────────────────────────────────── */}
+        <View style={styles.sectionHeaderRow}>
+          <Text style={styles.sectionTitle}>{t("home.justForYou")}</Text>
+          <Pressable
+            onPress={() => router.navigate("/search" as any)}
+            style={({ pressed }) => pressed && { opacity: 0.7 }}
+          >
+            <Text style={styles.moreLink}>
+              {t("home.more")} {">"}
             </Text>
-          </View>
-        )}
+          </Pressable>
+        </View>
+        <View style={styles.justForYouList}>
+          {justForYouWorkouts.map((workout, index) => (
+            <Pressable
+              key={index}
+              style={({ pressed }) => [
+                styles.justForYouRow,
+                pressed && { opacity: 0.8 },
+              ]}
+            >
+              <Image
+                source={workout.image}
+                style={styles.justForYouImage}
+                resizeMode="cover"
+              />
+              <View style={styles.justForYouInfo}>
+                <Text style={styles.justForYouName}>{workout.name}</Text>
+                <Text style={styles.justForYouMeta}>
+                  {workout.duration} · {workout.level}
+                </Text>
+              </View>
+            </Pressable>
+          ))}
+        </View>
+
+        {/* ── Stretch & Warm Up Section ────────────────────────────── */}
+        <View style={styles.sectionHeaderRow}>
+          <Text style={styles.sectionTitle}>
+            {t("home.stretchAndWarmUp")}
+          </Text>
+          <Pressable
+            onPress={() => router.navigate("/search" as any)}
+            style={({ pressed }) => pressed && { opacity: 0.7 }}
+          >
+            <Text style={styles.moreLink}>
+              {t("home.more")} {">"}
+            </Text>
+          </Pressable>
+        </View>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.stretchScroll}
+        >
+          {stretchWorkouts.map((workout, index) => (
+            <Pressable
+              key={index}
+              style={({ pressed }) => [
+                styles.stretchCard,
+                pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
+              ]}
+            >
+              <Image
+                source={workout.image}
+                style={styles.stretchImage}
+                resizeMode="cover"
+              />
+              <LinearGradient
+                colors={["transparent", "rgba(0,0,0,0.6)"]}
+                style={styles.stretchGradient}
+              />
+              <Text style={styles.stretchName} numberOfLines={2}>
+                {workout.name}
+              </Text>
+            </Pressable>
+          ))}
+        </ScrollView>
       </ScrollView>
     </View>
   );
@@ -494,273 +527,446 @@ function createStyles(theme: Theme) {
       flex: 1,
       backgroundColor: theme.background.dark,
     },
+
+    // ── Header ────────────────────────────────
     header: {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      paddingHorizontal: 16,
+      paddingHorizontal: 20,
+      paddingTop: 4,
       paddingBottom: 12,
     },
-    headerLeft: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 10,
-    },
-    iconButton: {
-      width: 36,
-      height: 36,
-      borderRadius: 10,
-      alignItems: "center",
-      justifyContent: "center",
-      backgroundColor: theme.background.accent,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: "rgba(0,0,0,0.08)",
-    },
-    greetingAvatar: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      borderWidth: 2,
-      borderColor: theme.primary.main,
-    },
-    greetingText: {
-      fontFamily: FONTS.bold,
-      fontSize: 16,
-      color: theme.foreground.white,
-    },
-    greetingSubtext: {
-      fontFamily: FONTS.regular,
-      fontSize: 11,
-      color: theme.foreground.gray,
-    },
-
-    // Section headers
-    sectionHeader: {
-      flexDirection: "row",
-      alignItems: "center",
-      paddingHorizontal: 16,
-      paddingTop: 20,
-      paddingBottom: 10,
-      gap: 6,
-    },
-    sectionTitle: {
-      fontFamily: FONTS.bold,
-      fontSize: 12,
+    headerTitle: {
+      fontFamily: FONTS.extraBold,
+      fontSize: 22,
       color: theme.foreground.white,
       letterSpacing: 0.5,
-      textTransform: "uppercase",
+    },
+    headerRight: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+    },
+    proBadge: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      backgroundColor: "#F5A623",
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 20,
+    },
+    proBadgeText: {
+      fontFamily: FONTS.bold,
+      fontSize: 12,
+      color: "#fff",
+      letterSpacing: 0.5,
     },
 
-    // Stats list
-    statsList: {
+    // ── Search Bar ────────────────────────────
+    searchBar: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: theme.background.darker,
+      marginHorizontal: 20,
+      borderRadius: 28,
       paddingHorizontal: 16,
-      gap: 8,
+      paddingVertical: Platform.OS === "ios" ? 12 : 8,
+      gap: 10,
+      marginBottom: 20,
     },
-    statRow: {
+    searchInput: {
+      flex: 1,
+      fontFamily: FONTS.regular,
+      fontSize: 14,
+      color: theme.foreground.white,
+      padding: 0,
+    },
+
+    // ── Weekly Goal ───────────────────────────
+    weeklyGoalCard: {
+      marginHorizontal: 20,
+      backgroundColor: theme.background.darker,
+      borderRadius: 16,
+      padding: 18,
+      marginBottom: 24,
+    },
+    weeklyGoalHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 18,
+    },
+    weeklyGoalTitle: {
+      fontFamily: FONTS.bold,
+      fontSize: 17,
+      color: theme.foreground.white,
+    },
+    weeklyGoalRight: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+    },
+    weeklyGoalCount: {
+      fontFamily: FONTS.medium,
+      fontSize: 16,
+      color: theme.foreground.gray,
+    },
+    weeklyGoalCountBold: {
+      fontFamily: FONTS.bold,
+      fontSize: 20,
+      color: theme.primary.main,
+    },
+
+    // ── Week Days Row ─────────────────────────
+    weekDaysRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 18,
+    },
+    weekDayItem: {
+      alignItems: "center",
+    },
+    weekDayCircle: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    weekDayCircleActive: {
+      borderWidth: 2,
+      borderColor: theme.primary.main,
+      backgroundColor: theme.primary.main + "10",
+    },
+    weekDayNumber: {
+      fontFamily: FONTS.medium,
+      fontSize: 14,
+      color: theme.foreground.gray,
+    },
+    weekDayNumberActive: {
+      fontFamily: FONTS.bold,
+      color: theme.primary.main,
+    },
+
+    // ── Motivational Row ──────────────────────
+    motivationalRow: {
       flexDirection: "row",
       alignItems: "center",
       backgroundColor: theme.background.accent,
       borderRadius: 12,
       padding: 12,
       gap: 12,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: "rgba(0,0,0,0.06)",
     },
-    statIconBox: {
-      width: 32,
-      height: 32,
-      borderRadius: 8,
-      alignItems: "center",
-      justifyContent: "center",
+    motivationalAvatar: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
     },
-    statInfo: {
+    motivationalBubble: {
       flex: 1,
-      gap: 4,
     },
-    statTextRow: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-    },
-    statLabel: {
+    motivationalText: {
       fontFamily: FONTS.medium,
-      fontSize: 12,
+      fontSize: 13,
       color: theme.foreground.white,
-    },
-    statValue: {
-      fontFamily: FONTS.bold,
-      fontSize: 12,
-    },
-    progressBarBg: {
-      height: 4,
-      borderRadius: 2,
-      backgroundColor: "rgba(0,0,0,0.08)",
-      overflow: "hidden",
-    },
-    progressBarFill: {
-      height: 4,
-      borderRadius: 2,
+      lineHeight: 18,
     },
 
-    // Week row
-    weekRow: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      paddingHorizontal: 16,
-      paddingBottom: 4,
+    // ── Section Title ─────────────────────────
+    sectionTitle: {
+      fontFamily: FONTS.bold,
+      fontSize: 18,
+      color: theme.foreground.white,
+      paddingHorizontal: 20,
+      marginBottom: 14,
     },
-    weekDayCol: {
+
+    // ── Challenge Cards ───────────────────────
+    challengeScroll: {
+      paddingLeft: 20,
+      paddingRight: 6,
+      paddingBottom: 24,
+    },
+    challengeCard: {
+      width: CHALLENGE_CARD_WIDTH,
+      height: 340,
+      borderRadius: 20,
+      overflow: "hidden",
+      marginRight: 14,
+      backgroundColor: "#1565C0",
+    },
+    challengeImage: {
+      width: "100%",
+      height: "100%",
+      position: "absolute",
+    },
+    challengeGradient: {
+      position: "absolute",
+      left: 0,
+      right: 0,
+      bottom: 0,
+      height: "75%",
+    },
+    challengeContent: {
+      position: "absolute",
+      bottom: 0,
+      left: 0,
+      right: 0,
+      padding: 20,
+    },
+    challengeDaysBadge: {
+      alignSelf: "flex-start",
+      marginBottom: 6,
+    },
+    challengeDaysText: {
+      fontFamily: FONTS.bold,
+      fontSize: 13,
+      color: "#4FC3F7",
+      letterSpacing: 1,
+    },
+    challengeTitle: {
+      fontFamily: FONTS.extraBold,
+      fontSize: 26,
+      color: "#fff",
+      lineHeight: 30,
+      marginBottom: 8,
+    },
+    challengeDesc: {
+      fontFamily: FONTS.regular,
+      fontSize: 12,
+      color: "rgba(255,255,255,0.8)",
+      lineHeight: 17,
+      marginBottom: 16,
+    },
+    challengeStartBtn: {
+      backgroundColor: "#fff",
+      borderRadius: 28,
+      paddingVertical: 12,
       alignItems: "center",
-      gap: 4,
     },
-    weekDayLabel: {
+    challengeStartText: {
+      fontFamily: FONTS.bold,
+      fontSize: 14,
+      color: "#1a1a1a",
+      letterSpacing: 1,
+    },
+
+    // ── Body Focus Chips ──────────────────────
+    chipsScroll: {
+      paddingHorizontal: 20,
+      gap: 8,
+      marginBottom: 16,
+    },
+    chip: {
+      paddingHorizontal: 20,
+      paddingVertical: 9,
+      borderRadius: 22,
+      borderWidth: 1.5,
+      borderColor: theme.background.accent,
+      backgroundColor: theme.background.dark,
+    },
+    chipActive: {
+      backgroundColor: theme.foreground.white,
+      borderColor: theme.foreground.white,
+    },
+    chipText: {
       fontFamily: FONTS.medium,
-      fontSize: 10,
+      fontSize: 13,
       color: theme.foreground.gray,
     },
-    weekDayCircle: {
-      width: 32,
-      height: 32,
-      borderRadius: 16,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    weekDayText: {
+    chipTextActive: {
+      color: theme.background.dark,
       fontFamily: FONTS.semiBold,
-      fontSize: 11,
-      color: theme.foreground.gray,
     },
 
-    // Workout section header (larger than compact sections above)
-    workoutSectionHeader: {
+    // ── Exercise List ─────────────────────────
+    exerciseList: {
+      paddingHorizontal: 20,
+      marginBottom: 24,
+    },
+    exerciseRow: {
       flexDirection: "row",
       alignItems: "center",
-      paddingHorizontal: 16,
-      paddingTop: 20,
-      paddingBottom: 10,
-      gap: 6,
+      paddingVertical: 14,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: "rgba(0,0,0,0.08)",
     },
-    workoutSectionTitle: {
-      fontFamily: FONTS.bold,
-      fontSize: 12,
-      color: theme.foreground.white,
-      letterSpacing: 0.5,
-      textTransform: "uppercase",
+    exerciseImage: {
+      width: 100,
+      height: 80,
+      borderRadius: 12,
     },
-
-    // Workout card
-    workoutCard: {
-      marginHorizontal: 16,
-      borderRadius: 14,
-      backgroundColor: theme.background.accent,
-      overflow: "hidden",
-      borderWidth: 1,
-      borderColor: theme.primary.main + "33",
-      ...controlShadow,
+    exerciseInfo: {
+      flex: 1,
+      marginLeft: 14,
     },
-    workoutCardContent: {
-      padding: 14,
-    },
-    workoutCardTitle: {
+    exerciseName: {
       fontFamily: FONTS.bold,
       fontSize: 15,
       color: theme.foreground.white,
-      textTransform: "uppercase",
     },
-    workoutCardDesc: {
+    exerciseMeta: {
       fontFamily: FONTS.regular,
-      fontSize: 12,
+      fontSize: 13,
       color: theme.foreground.gray,
-      marginTop: 4,
+      marginTop: 3,
     },
-    workoutCardMeta: {
-      flexDirection: "row",
-      gap: 12,
-      marginTop: 8,
-    },
-    workoutMetaItem: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 4,
-    },
-    workoutMetaText: {
-      fontFamily: FONTS.medium,
-      fontSize: 12,
-      color: theme.foreground.gray,
-    },
-    muscleTags: {
+
+    // ── Category Tags ─────────────────────────
+    categoryTagsContainer: {
       flexDirection: "row",
       flexWrap: "wrap",
-      gap: 4,
-      marginTop: 8,
+      paddingHorizontal: 20,
+      gap: 10,
+      marginBottom: 28,
     },
-    muscleTag: {
-      backgroundColor: theme.primary.main + "1A",
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-      borderRadius: 6,
+    categoryTag: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      backgroundColor: theme.background.darker,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderRadius: 28,
+      borderWidth: 1,
+      borderColor: "rgba(0,0,0,0.06)",
     },
-    muscleTagText: {
+    categoryTagText: {
       fontFamily: FONTS.medium,
-      fontSize: 10,
-      color: theme.primary.main,
-      textTransform: "capitalize",
+      fontSize: 13,
+      color: theme.foreground.white,
     },
-    workoutActions: {
+
+    // ── Custom Workout Card ───────────────────
+    customWorkoutCard: {
+      marginHorizontal: 20,
+      borderRadius: 18,
+      overflow: "hidden",
+      marginBottom: 20,
+    },
+    customWorkoutGradient: {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      marginTop: 12,
+      padding: 24,
+      minHeight: 120,
     },
-    detailsButton: {
+    customWorkoutContent: {
       flex: 1,
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: 6,
-      backgroundColor: theme.primary.main + "1A",
-      height: 44,
-      marginRight: 10,
-      borderRadius: 12,
-      borderWidth: 1,
-      borderColor: theme.primary.main + "40",
     },
-    detailsButtonText: {
-      fontFamily: FONTS.bold,
+    customWorkoutTitle: {
+      fontFamily: FONTS.extraBold,
+      fontSize: 24,
+      color: "#fff",
+      lineHeight: 30,
+    },
+    customWorkoutSubtitle: {
+      fontFamily: FONTS.regular,
       fontSize: 13,
-      color: theme.primary.main,
+      color: "rgba(255,255,255,0.8)",
+      marginTop: 6,
     },
-    startButton: {
-      width: 44,
-      height: 44,
-      borderRadius: 22,
-      backgroundColor: theme.primary.main,
-      alignItems: "center",
-      justifyContent: "center",
+    customWorkoutIconContainer: {
+      marginLeft: 16,
+    },
+    goButton: {
+      backgroundColor: "#fff",
+      borderRadius: 24,
+      paddingHorizontal: 28,
+      paddingVertical: 10,
+      alignSelf: "flex-start",
+      marginTop: 14,
+    },
+    goButtonText: {
+      fontFamily: FONTS.bold,
+      fontSize: 15,
+      color: "#2563EB",
     },
 
-    // Rest day
-    restDayCard: {
-      marginHorizontal: 16,
-      borderRadius: 14,
-      backgroundColor: theme.background.accent,
-      padding: 20,
+    // ── Section Header Row (with More link) ───
+    sectionHeaderRow: {
+      flexDirection: "row",
       alignItems: "center",
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: "rgba(0,0,0,0.06)",
+      justifyContent: "space-between",
+      paddingRight: 20,
+      marginBottom: 0,
     },
-    restDayTitle: {
+    moreLink: {
+      fontFamily: FONTS.semiBold,
+      fontSize: 14,
+      color: theme.primary.main,
+    },
+
+    // ── Just For You ──────────────────────────
+    justForYouList: {
+      paddingHorizontal: 20,
+      marginBottom: 24,
+    },
+    justForYouRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: 14,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: "rgba(0,0,0,0.08)",
+    },
+    justForYouImage: {
+      width: 100,
+      height: 80,
+      borderRadius: 12,
+    },
+    justForYouInfo: {
+      flex: 1,
+      marginLeft: 14,
+    },
+    justForYouName: {
       fontFamily: FONTS.bold,
       fontSize: 15,
       color: theme.foreground.white,
-      marginTop: 8,
     },
-    restDaySubtext: {
+    justForYouMeta: {
       fontFamily: FONTS.regular,
       fontSize: 13,
       color: theme.foreground.gray,
-      marginTop: 6,
-      textAlign: "center",
+      marginTop: 3,
+    },
+
+    // ── Stretch & Warm Up ─────────────────────
+    stretchScroll: {
+      paddingLeft: 20,
+      paddingRight: 6,
+      paddingBottom: 20,
+    },
+    stretchCard: {
+      width: SCREEN_WIDTH * 0.42,
+      height: 180,
+      borderRadius: 14,
+      overflow: "hidden",
+      marginRight: 12,
+      backgroundColor: theme.background.accent,
+    },
+    stretchImage: {
+      width: "100%",
+      height: "100%",
+      position: "absolute",
+    },
+    stretchGradient: {
+      position: "absolute",
+      left: 0,
+      right: 0,
+      bottom: 0,
+      height: "50%",
+    },
+    stretchName: {
+      position: "absolute",
+      bottom: 12,
+      left: 12,
+      right: 12,
+      fontFamily: FONTS.bold,
+      fontSize: 14,
+      color: "#fff",
     },
   });
 }
