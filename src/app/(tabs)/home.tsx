@@ -6,14 +6,13 @@ import { useTranslation } from "react-i18next";
 import {
   Dimensions,
   Image,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from "react-native";
+import { BarChart, LineChart, PieChart } from "react-native-gifted-charts";
 import { FONTS } from "../../constants/fonts";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -32,6 +31,28 @@ const bodyFocusImages = [
   require("../../../assets/images/OnBoarding/ManWithOneWeights.jpg"),
   require("../../../assets/images/AuthPage/OneKneeOnTheGround.jpg"),
   require("../../../assets/images/AuthPage/PullUp.jpg"),
+];
+
+// ── Mock calorie data ──────────────────────────────────────────────────────
+const CALORIE_GOAL = 2200;
+const CALORIES_CONSUMED = 1450;
+const CALORIES_BURNED = 380;
+const CALORIES_REMAINING = CALORIE_GOAL - CALORIES_CONSUMED + CALORIES_BURNED;
+
+const MACROS = {
+  protein: { current: 95, goal: 150, color: "#4A90D9" },
+  carbs: { current: 180, goal: 250, color: "#F5A623" },
+  fat: { current: 45, goal: 70, color: "#ED6665" },
+};
+
+const WEEKLY_BURNED = [
+  { value: 320, label: "L" },
+  { value: 450, label: "M" },
+  { value: 280, label: "M" },
+  { value: 500, label: "J" },
+  { value: 390, label: "V" },
+  { value: 600, label: "S" },
+  { value: 380, label: "D" },
 ];
 
 function getWeekDays(): { date: Date; dayNum: number }[] {
@@ -75,6 +96,20 @@ export default function Home() {
   const styles = createStyles(theme);
   const weekDays = getWeekDays();
   const todayDate = new Date().getDate();
+
+  const consumedPercent = Math.round((CALORIES_CONSUMED / CALORIE_GOAL) * 100);
+
+  const donutData = [
+    {
+      value: CALORIES_CONSUMED,
+      color: theme.primary.main,
+      gradientCenterColor: theme.primary.light,
+    },
+    {
+      value: CALORIE_GOAL - CALORIES_CONSUMED,
+      color: theme.background.accent,
+    },
+  ];
 
   const bodyFocusOptions = [
     t("home.abs"),
@@ -188,20 +223,146 @@ export default function Home() {
           </View>
         </View>
 
-        {/* ── Search Bar ──────────────────────────────────────────── */}
-        <Pressable
-          style={styles.searchBar}
-          onPress={() => router.navigate("/search" as any)}
-        >
-          <Ionicons name="search" size={18} color={theme.foreground.gray} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder={t("home.searchPlaceholder")}
-            placeholderTextColor={theme.foreground.gray}
-            editable={false}
-            pointerEvents="none"
-          />
-        </Pressable>
+        {/* ── Calorie Summary (Donut + Stats) ─────────────────────── */}
+        <View style={styles.calorieCard}>
+          <View style={styles.calorieCardHeader}>
+            <Text style={styles.calorieCardTitle}>
+              {t("home.caloriesSummary")}
+            </Text>
+            <View style={styles.calorieGoalBadge}>
+              <Ionicons name="flag" size={12} color={theme.primary.main} />
+              <Text style={styles.calorieGoalText}>
+                {CALORIE_GOAL} kcal
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.donutRow}>
+            <PieChart
+              data={donutData}
+              donut
+              showGradient
+              radius={62}
+              innerRadius={46}
+              innerCircleColor={theme.background.darker}
+              centerLabelComponent={() => (
+                <View style={{ alignItems: "center" }}>
+                  <Text style={styles.donutCenterValue}>
+                    {CALORIES_REMAINING}
+                  </Text>
+                  <Text style={styles.donutCenterLabel}>
+                    {t("home.remaining")}
+                  </Text>
+                </View>
+              )}
+            />
+            <View style={styles.calorieStatsCol}>
+              <View style={styles.calorieMiniCard}>
+                <View
+                  style={[
+                    styles.calorieMiniIcon,
+                    { backgroundColor: theme.primary.main + "15" },
+                  ]}
+                >
+                  <MaterialCommunityIcons
+                    name="food-apple"
+                    size={18}
+                    color={theme.primary.main}
+                  />
+                </View>
+                <View>
+                  <Text style={styles.calorieMiniValue}>
+                    {CALORIES_CONSUMED}
+                  </Text>
+                  <Text style={styles.calorieMiniLabel}>
+                    {t("home.consumed")}
+                  </Text>
+                </View>
+              </View>
+              <View style={styles.calorieMiniCard}>
+                <View
+                  style={[
+                    styles.calorieMiniIcon,
+                    { backgroundColor: "#4CD964" + "15" },
+                  ]}
+                >
+                  <MaterialCommunityIcons
+                    name="fire"
+                    size={18}
+                    color="#4CD964"
+                  />
+                </View>
+                <View>
+                  <Text style={styles.calorieMiniValue}>
+                    {CALORIES_BURNED}
+                  </Text>
+                  <Text style={styles.calorieMiniLabel}>
+                    {t("home.burned")}
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </View>
+
+          {/* Progress bar */}
+          <View style={styles.progressBarBg}>
+            <View
+              style={[
+                styles.progressBarFill,
+                {
+                  width: `${Math.min(consumedPercent, 100)}%`,
+                  backgroundColor:
+                    consumedPercent > 100 ? "#ED6665" : theme.primary.main,
+                },
+              ]}
+            />
+          </View>
+          <Text style={styles.progressText}>
+            {consumedPercent}% {t("home.ofDailyGoal")}
+          </Text>
+        </View>
+
+        {/* ── Macros Row ──────────────────────────────────────────── */}
+        <View style={styles.macrosContainer}>
+          {Object.entries(MACROS).map(([key, macro]) => {
+            const percent = Math.round((macro.current / macro.goal) * 100);
+            const label =
+              key === "protein"
+                ? t("home.protein")
+                : key === "carbs"
+                  ? t("home.carbs")
+                  : t("home.fat");
+            return (
+              <View key={key} style={styles.macroCard}>
+                <PieChart
+                  data={[
+                    { value: macro.current, color: macro.color },
+                    {
+                      value: Math.max(macro.goal - macro.current, 0),
+                      color: macro.color + "20",
+                    },
+                  ]}
+                  donut
+                  radius={26}
+                  innerRadius={20}
+                  innerCircleColor={theme.background.darker}
+                  centerLabelComponent={() => (
+                    <Text
+                      style={[styles.macroPercent, { color: macro.color }]}
+                    >
+                      {percent}%
+                    </Text>
+                  )}
+                />
+                <Text style={styles.macroLabel}>{label}</Text>
+                <Text style={styles.macroGrams}>
+                  {macro.current}
+                  <Text style={styles.macroGramsGoal}>/{macro.goal}g</Text>
+                </Text>
+              </View>
+            );
+          })}
+        </View>
 
         {/* ── Weekly Goal ─────────────────────────────────────────── */}
         <View style={styles.weeklyGoalCard}>
@@ -257,6 +418,64 @@ export default function Home() {
                 {t("home.motivationalMessage")}
               </Text>
             </View>
+          </View>
+        </View>
+
+        {/* ── Calories Burned Chart ───────────────────────────────── */}
+        <View style={styles.chartCard}>
+          <View style={styles.chartCardHeader}>
+            <Text style={styles.chartCardTitle}>
+              {t("home.caloriesBurned")}
+            </Text>
+            <View style={styles.chartTotalBadge}>
+              <MaterialCommunityIcons
+                name="fire"
+                size={14}
+                color="#FF6B35"
+              />
+              <Text style={styles.chartTotalText}>
+                {WEEKLY_BURNED.reduce((s, d) => s + d.value, 0)} kcal
+              </Text>
+            </View>
+          </View>
+          <View style={{ alignItems: "center", marginTop: 4 }}>
+            <BarChart
+              data={WEEKLY_BURNED.map((item, i) => ({
+                ...item,
+                frontColor:
+                  i === WEEKLY_BURNED.length - 1
+                    ? theme.primary.main
+                    : theme.primary.main + "50",
+                topLabelComponent:
+                  i === WEEKLY_BURNED.length - 1
+                    ? () => (
+                        <Text
+                          style={[
+                            styles.barTopLabel,
+                            { color: theme.primary.main },
+                          ]}
+                        >
+                          {item.value}
+                        </Text>
+                      )
+                    : undefined,
+              }))}
+              width={SCREEN_WIDTH - 100}
+              height={120}
+              barWidth={24}
+              spacing={18}
+              initialSpacing={8}
+              noOfSections={3}
+              maxValue={700}
+              yAxisColor="transparent"
+              xAxisColor="transparent"
+              yAxisTextStyle={styles.chartAxisText}
+              xAxisLabelTextStyle={styles.chartXLabel}
+              hideRules
+              isAnimated
+              animationDuration={600}
+              barBorderRadius={8}
+            />
           </View>
         </View>
 
@@ -532,24 +751,189 @@ function createStyles(theme: Theme) {
       letterSpacing: 0.5,
     },
 
-    // ── Search Bar ────────────────────────────
-    searchBar: {
+    // ── Calorie Summary Card ──────────────────
+    calorieCard: {
+      marginHorizontal: 20,
+      backgroundColor: theme.background.darker,
+      borderRadius: 20,
+      padding: 18,
+      marginBottom: 14,
+    },
+    calorieCardHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 16,
+    },
+    calorieCardTitle: {
+      fontFamily: FONTS.bold,
+      fontSize: 17,
+      color: theme.foreground.white,
+    },
+    calorieGoalBadge: {
       flexDirection: "row",
       alignItems: "center",
-      backgroundColor: theme.background.darker,
-      marginHorizontal: 20,
-      borderRadius: 28,
-      paddingHorizontal: 16,
-      paddingVertical: Platform.OS === "ios" ? 12 : 8,
-      gap: 10,
-      marginBottom: 20,
+      gap: 4,
+      backgroundColor: theme.primary.main + "12",
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 12,
     },
-    searchInput: {
-      flex: 1,
-      fontFamily: FONTS.regular,
-      fontSize: 14,
+    calorieGoalText: {
+      fontFamily: FONTS.semiBold,
+      fontSize: 12,
+      color: theme.primary.main,
+    },
+    donutRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingHorizontal: 8,
+    },
+    donutCenterValue: {
+      fontFamily: FONTS.extraBold,
+      fontSize: 20,
       color: theme.foreground.white,
-      padding: 0,
+    },
+    donutCenterLabel: {
+      fontFamily: FONTS.regular,
+      fontSize: 10,
+      color: theme.foreground.gray,
+      marginTop: -2,
+    },
+    calorieStatsCol: {
+      gap: 12,
+      flex: 1,
+      marginLeft: 20,
+    },
+    calorieMiniCard: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+      backgroundColor: theme.background.accent + "60",
+      borderRadius: 14,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+    },
+    calorieMiniIcon: {
+      width: 36,
+      height: 36,
+      borderRadius: 10,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    calorieMiniValue: {
+      fontFamily: FONTS.bold,
+      fontSize: 16,
+      color: theme.foreground.white,
+    },
+    calorieMiniLabel: {
+      fontFamily: FONTS.regular,
+      fontSize: 11,
+      color: theme.foreground.gray,
+    },
+    progressBarBg: {
+      height: 6,
+      borderRadius: 3,
+      backgroundColor: theme.background.accent,
+      marginTop: 18,
+      overflow: "hidden",
+    },
+    progressBarFill: {
+      height: "100%",
+      borderRadius: 3,
+    },
+    progressText: {
+      fontFamily: FONTS.regular,
+      fontSize: 11,
+      color: theme.foreground.gray,
+      marginTop: 6,
+      textAlign: "right",
+    },
+
+    // ── Macros Row ────────────────────────────
+    macrosContainer: {
+      flexDirection: "row",
+      marginHorizontal: 20,
+      gap: 10,
+      marginBottom: 18,
+    },
+    macroCard: {
+      flex: 1,
+      alignItems: "center",
+      backgroundColor: theme.background.darker,
+      borderRadius: 16,
+      paddingVertical: 14,
+      paddingHorizontal: 6,
+      gap: 6,
+    },
+    macroPercent: {
+      fontFamily: FONTS.bold,
+      fontSize: 10,
+    },
+    macroLabel: {
+      fontFamily: FONTS.semiBold,
+      fontSize: 12,
+      color: theme.foreground.white,
+    },
+    macroGrams: {
+      fontFamily: FONTS.bold,
+      fontSize: 13,
+      color: theme.foreground.white,
+    },
+    macroGramsGoal: {
+      fontFamily: FONTS.regular,
+      fontSize: 11,
+      color: theme.foreground.gray,
+    },
+
+    // ── Chart Card ────────────────────────────
+    chartCard: {
+      marginHorizontal: 20,
+      backgroundColor: theme.background.darker,
+      borderRadius: 20,
+      padding: 18,
+      marginBottom: 24,
+    },
+    chartCardHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 8,
+    },
+    chartCardTitle: {
+      fontFamily: FONTS.bold,
+      fontSize: 17,
+      color: theme.foreground.white,
+    },
+    chartTotalBadge: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      backgroundColor: "#FF6B35" + "12",
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 12,
+    },
+    chartTotalText: {
+      fontFamily: FONTS.semiBold,
+      fontSize: 12,
+      color: "#FF6B35",
+    },
+    chartAxisText: {
+      fontFamily: FONTS.regular,
+      fontSize: 9,
+      color: theme.foreground.gray,
+    },
+    chartXLabel: {
+      fontFamily: FONTS.semiBold,
+      fontSize: 11,
+      color: theme.foreground.gray,
+    },
+    barTopLabel: {
+      fontFamily: FONTS.bold,
+      fontSize: 10,
+      marginBottom: 4,
     },
 
     // ── Weekly Goal ───────────────────────────
@@ -782,7 +1166,6 @@ function createStyles(theme: Theme) {
       color: theme.foreground.gray,
       marginTop: 3,
     },
-
 
     // ── Custom Workout Card ───────────────────
     customWorkoutCard: {
