@@ -205,7 +205,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       left: 0,
       right: 0,
       top: 0,
-      backgroundColor: theme.background.dark,
+      backgroundColor: "#000000",
       opacity: 0.7,
     },
     contentContainer: {
@@ -219,7 +219,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     title: {
       fontSize: 32,
       fontFamily: FONTS.regular,
-      color: theme.foreground.white,
+      color: "#FFFFFF",
       marginBottom: 16,
       lineHeight: 30,
       textAlign: "left",
@@ -236,7 +236,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     subtitle: {
       fontSize: 15,
-      color: theme.foreground.gray,
+      color: "#FFFFFF",
       lineHeight: 24,
       textAlign: "left",
     },

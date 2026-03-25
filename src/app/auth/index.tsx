@@ -34,7 +34,7 @@ function createStyles(theme: Theme) {
   return StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: theme.background.dark,
+      backgroundColor: "#000000",
     },
     backgroundImage: {
       position: "absolute",
@@ -67,7 +67,7 @@ function createStyles(theme: Theme) {
     title: {
       fontSize: 24,
       fontFamily: FONTS.bold,
-      color: theme.foreground.white,
+      color: "#FFFFFF",
       textAlign: "center",
       marginBottom: 24,
     },
@@ -77,7 +77,7 @@ function createStyles(theme: Theme) {
       alignItems: "center",
     },
     signInText: {
-      color: theme.foreground.white,
+      color: "#FFFFFF",
       fontSize: 13,
     },
     signInLink: {
@@ -120,7 +120,7 @@ export default function AuthLanding() {
     return () => clearInterval(interval);
   }, [fadeAnim]);
 
-  const { user, signInWithGoogle, hasCompletedGetStarted } = useAuth();
+  const { user, signIn, signInWithGoogle, hasCompletedGetStarted } = useAuth();
   const hasNavigated = useRef(false);
 
   // Android/Expo Go: Chrome Custom Tabs redirects to exp://... which it can't load
@@ -169,8 +169,14 @@ export default function AuthLanding() {
     }
   };
 
-  const handleSignIn = () => {
-    router.navigate("/auth/signin");
+  const handleSignIn = async () => {
+    try {
+      await signIn("mohameddn988@gmail.com", "mohamed2003");
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "Auto sign in failed";
+      Alert.alert("Error", message);
+    }
   };
 
   return (
