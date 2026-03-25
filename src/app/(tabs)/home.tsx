@@ -1,7 +1,7 @@
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Dimensions,
@@ -12,13 +12,17 @@ import {
   Text,
   View,
 } from "react-native";
-import { BarChart, LineChart, PieChart } from "react-native-gifted-charts";
+import { BarChart, PieChart } from "react-native-gifted-charts";
 import { FONTS } from "../../constants/fonts";
 import { Theme } from "../../constants/themes";
+import { useHealth } from "../../contexts/HealthContext";
+import { useNutrition } from "../../contexts/NutritionContext";
 import { useTheme } from "../../contexts/ThemeContext";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CHALLENGE_CARD_WIDTH = SCREEN_WIDTH * 0.78;
+
+const DAY_LABELS = ["L", "M", "M", "J", "V", "S", "D"];
 
 const challengeImages = [
   require("../../../assets/images/OnBoarding/ManWithTwoWeights.jpg"),
@@ -31,28 +35,6 @@ const bodyFocusImages = [
   require("../../../assets/images/OnBoarding/ManWithOneWeights.jpg"),
   require("../../../assets/images/AuthPage/OneKneeOnTheGround.jpg"),
   require("../../../assets/images/AuthPage/PullUp.jpg"),
-];
-
-// ── Mock calorie data ──────────────────────────────────────────────────────
-const CALORIE_GOAL = 2200;
-const CALORIES_CONSUMED = 1450;
-const CALORIES_BURNED = 380;
-const CALORIES_REMAINING = CALORIE_GOAL - CALORIES_CONSUMED + CALORIES_BURNED;
-
-const MACROS = {
-  protein: { current: 95, goal: 150, color: "#4A90D9" },
-  carbs: { current: 180, goal: 250, color: "#F5A623" },
-  fat: { current: 45, goal: 70, color: "#ED6665" },
-};
-
-const WEEKLY_BURNED = [
-  { value: 320, label: "L" },
-  { value: 450, label: "M" },
-  { value: 280, label: "M" },
-  { value: 500, label: "J" },
-  { value: 390, label: "V" },
-  { value: 600, label: "S" },
-  { value: 380, label: "D" },
 ];
 
 function getWeekDays(): { date: Date; dayNum: number }[] {
@@ -89,6 +71,8 @@ export default function Home() {
   const router = useRouter();
   const { theme } = useTheme();
   const { t } = useTranslation();
+  const { goals, todaySummary, weekSummaries } = useNutrition();
+  const { todaySteps, todayCaloriesBurned, weeklyCaloriesBurned } = useHealth();
   const [selectedBodyFocus, setSelectedBodyFocus] = useState(0);
   const [weeklyGoal] = useState(6);
   const [completedDays] = useState(0);
@@ -97,19 +81,42 @@ export default function Home() {
   const weekDays = getWeekDays();
   const todayDate = new Date().getDate();
 
-  const consumedPercent = Math.round((CALORIES_CONSUMED / CALORIE_GOAL) * 100);
+  // ── Derived calorie data from contexts ─────────────────────────────────
+  const caloriesConsumed = todaySummary.totalCalories;
+  const caloriesBurned = todayCaloriesBurned;
+  const caloriesRemaining = goals.calorieGoal - caloriesConsumed + caloriesBurned;
+  const consumedPercent = goals.calorieGoal > 0
+    ? Math.round((caloriesConsumed / goals.calorieGoal) * 100)
+    : 0;
 
   const donutData = [
     {
-      value: CALORIES_CONSUMED,
+      value: Math.max(caloriesConsumed, 1),
       color: theme.primary.main,
       gradientCenterColor: theme.primary.light,
     },
     {
-      value: CALORIE_GOAL - CALORIES_CONSUMED,
+      value: Math.max(goals.calorieGoal - caloriesConsumed, 0),
       color: theme.background.accent,
     },
   ];
+
+  const macros = useMemo(() => ({
+    protein: { current: todaySummary.totalProtein, goal: goals.proteinGoal, color: "#4A90D9" },
+    carbs: { current: todaySummary.totalCarbs, goal: goals.carbsGoal, color: "#F5A623" },
+    fat: { current: todaySummary.totalFat, goal: goals.fatGoal, color: "#ED6665" },
+  }), [todaySummary, goals]);
+
+  // Build weekly burned data from Health context (fallback to 0 for missing days)
+  const weeklyBurnedData = useMemo(() => {
+    return DAY_LABELS.map((label, i) => {
+      const dayData = weeklyCaloriesBurned[i];
+      return {
+        value: dayData?.totalCalories ?? 0,
+        label,
+      };
+    });
+  }, [weeklyCaloriesBurned]);
 
   const bodyFocusOptions = [
     t("home.abs"),
@@ -232,7 +239,7 @@ export default function Home() {
             <View style={styles.calorieGoalBadge}>
               <Ionicons name="flag" size={12} color={theme.primary.main} />
               <Text style={styles.calorieGoalText}>
-                {CALORIE_GOAL} kcal
+                {goals.calorieGoal} kcal
               </Text>
             </View>
           </View>
@@ -248,7 +255,7 @@ export default function Home() {
               centerLabelComponent={() => (
                 <View style={{ alignItems: "center" }}>
                   <Text style={styles.donutCenterValue}>
-                    {CALORIES_REMAINING}
+                    {caloriesRemaining}
                   </Text>
                   <Text style={styles.donutCenterLabel}>
                     {t("home.remaining")}
@@ -272,7 +279,7 @@ export default function Home() {
                 </View>
                 <View>
                   <Text style={styles.calorieMiniValue}>
-                    {CALORIES_CONSUMED}
+                    {caloriesConsumed}
                   </Text>
                   <Text style={styles.calorieMiniLabel}>
                     {t("home.consumed")}
@@ -294,7 +301,7 @@ export default function Home() {
                 </View>
                 <View>
                   <Text style={styles.calorieMiniValue}>
-                    {CALORIES_BURNED}
+                    {caloriesBurned}
                   </Text>
                   <Text style={styles.calorieMiniLabel}>
                     {t("home.burned")}
@@ -324,7 +331,7 @@ export default function Home() {
 
         {/* ── Macros Row ──────────────────────────────────────────── */}
         <View style={styles.macrosContainer}>
-          {Object.entries(MACROS).map(([key, macro]) => {
+          {Object.entries(macros).map(([key, macro]) => {
             const percent = Math.round((macro.current / macro.goal) * 100);
             const label =
               key === "protein"
@@ -434,20 +441,20 @@ export default function Home() {
                 color="#FF6B35"
               />
               <Text style={styles.chartTotalText}>
-                {WEEKLY_BURNED.reduce((s, d) => s + d.value, 0)} kcal
+                {weeklyBurnedData.reduce((s, d) => s + d.value, 0)} kcal
               </Text>
             </View>
           </View>
           <View style={{ alignItems: "center", marginTop: 4 }}>
             <BarChart
-              data={WEEKLY_BURNED.map((item, i) => ({
+              data={weeklyBurnedData.map((item, i) => ({
                 ...item,
                 frontColor:
-                  i === WEEKLY_BURNED.length - 1
+                  i === weeklyBurnedData.length - 1
                     ? theme.primary.main
                     : theme.primary.main + "50",
                 topLabelComponent:
-                  i === WEEKLY_BURNED.length - 1
+                  i === weeklyBurnedData.length - 1
                     ? () => (
                         <Text
                           style={[

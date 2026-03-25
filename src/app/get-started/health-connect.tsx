@@ -1,8 +1,9 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -11,6 +12,7 @@ import {
 } from "react-native";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
+import { useHealth } from "../../contexts/HealthContext";
 
 import { FONTS } from "../../constants/fonts";
 import ChipButton from "../../components/ui/ChipButton";
@@ -19,11 +21,42 @@ export default function HealthConnect() {
   const router = useRouter();
   const { theme } = useTheme();
   const { t } = useTranslation();
+  const { initialize, requestPermissions } = useHealth();
+  const [isConnecting, setIsConnecting] = useState(false);
   const styles = createStyles(theme);
 
-  const handleEnableHealthConnect = () => {
-    // TODO: Enable Health Connect integration
-    router.navigate("/get-started/email-preferences");
+  const handleEnableHealthConnect = async () => {
+    try {
+      setIsConnecting(true);
+
+      // Initialize the health platform
+      const available = await initialize();
+      if (!available) {
+        Alert.alert(
+          t("onboarding.healthConnect.unavailableTitle"),
+          t("onboarding.healthConnect.unavailableMessage")
+        );
+        router.navigate("/get-started/email-preferences");
+        return;
+      }
+
+      // Request permissions
+      const granted = await requestPermissions();
+      if (!granted) {
+        // User denied — still continue, they can enable later
+        Alert.alert(
+          t("onboarding.healthConnect.permissionDeniedTitle"),
+          t("onboarding.healthConnect.permissionDeniedMessage")
+        );
+      }
+
+      router.navigate("/get-started/email-preferences");
+    } catch (error) {
+      console.warn("[HealthConnect] Setup failed:", error);
+      router.navigate("/get-started/email-preferences");
+    } finally {
+      setIsConnecting(false);
+    }
   };
 
   const handleNotNow = () => {
@@ -103,11 +136,12 @@ export default function HealthConnect() {
 
       <View style={styles.buttonsContainer}>
         <ChipButton
-          title={t("onboarding.healthConnect.enable")}
+          title={isConnecting ? t("common.continue") + "..." : t("onboarding.healthConnect.enable")}
           onPress={handleEnableHealthConnect}
           variant="primary"
           size="lg"
           fullWidth
+          disabled={isConnecting}
         />
 
         <TouchableOpacity

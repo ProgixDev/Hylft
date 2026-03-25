@@ -208,7 +208,11 @@
       "recommendations": "Recommandations personnalisées",
       "insights": "Meilleur suivi des progrès",
       "enable": "Activer Health Connect",
-      "notNow": "Pas maintenant"
+      "notNow": "Pas maintenant",
+      "unavailableTitle": "Non disponible",
+      "unavailableMessage": "Health Connect n'est pas disponible sur cet appareil. Vous pouvez toujours suivre vos données manuellement.",
+      "permissionDeniedTitle": "Permissions ignorées",
+      "permissionDeniedMessage": "Vous pouvez activer le suivi de santé plus tard dans les Paramètres."
     },
     "ready": {
       "title": "Vous êtes prêt !",

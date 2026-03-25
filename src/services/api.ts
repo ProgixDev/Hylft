@@ -30,6 +30,7 @@ async function authFetch(path: string, options: RequestInit = {}) {
 }
 
 export const api = {
+  // ── Users ────────────────────────────────────────────────
   getProfile: () => authFetch("/users/me"),
   createProfile: (data: Record<string, unknown>) =>
     authFetch("/users/me", { method: "POST", body: JSON.stringify(data) }),
@@ -40,4 +41,44 @@ export const api = {
       method: "POST",
       body: JSON.stringify(data),
     }),
+
+  // ── Nutrition ────────────────────────────────────────────
+  getMeals: (date: string) =>
+    authFetch(`/nutrition/meals?date=${date}`),
+  getMealsRange: (start: string, end: string) =>
+    authFetch(`/nutrition/meals/range?start=${start}&end=${end}`),
+  addMeal: (data: Record<string, unknown>) =>
+    authFetch("/nutrition/meals", { method: "POST", body: JSON.stringify(data) }),
+  deleteMeal: (id: string) =>
+    authFetch(`/nutrition/meals/${id}`, { method: "DELETE" }),
+  getDailySummary: (date: string) =>
+    authFetch(`/nutrition/summary/daily?date=${date}`),
+  getWeeklySummary: (start: string, end: string) =>
+    authFetch(`/nutrition/summary/weekly?start=${start}&end=${end}`),
+  getNutritionGoals: () =>
+    authFetch("/nutrition/goals"),
+  updateNutritionGoals: (data: Record<string, unknown>) =>
+    authFetch("/nutrition/goals", { method: "PATCH", body: JSON.stringify(data) }),
+  getCustomFoods: () =>
+    authFetch("/nutrition/custom-foods"),
+  createCustomFood: (data: Record<string, unknown>) =>
+    authFetch("/nutrition/custom-foods", { method: "POST", body: JSON.stringify(data) }),
+  deleteCustomFood: (id: string) =>
+    authFetch(`/nutrition/custom-foods/${id}`, { method: "DELETE" }),
+
+  // ── Health ───────────────────────────────────────────────
+  getHealthSnapshot: (date: string) =>
+    authFetch(`/health/snapshots?date=${date}`),
+  getHealthSnapshotsRange: (start: string, end: string) =>
+    authFetch(`/health/snapshots/range?start=${start}&end=${end}`),
+  upsertHealthSnapshot: (data: Record<string, unknown>) =>
+    authFetch("/health/snapshots", { method: "POST", body: JSON.stringify(data) }),
+  getWorkouts: (date: string) =>
+    authFetch(`/health/workouts?date=${date}`),
+  getWorkoutsRange: (start: string, end: string) =>
+    authFetch(`/health/workouts/range?start=${start}&end=${end}`),
+  addWorkout: (data: Record<string, unknown>) =>
+    authFetch("/health/workouts", { method: "POST", body: JSON.stringify(data) }),
+  deleteWorkout: (id: string) =>
+    authFetch(`/health/workouts/${id}`, { method: "DELETE" }),
 };

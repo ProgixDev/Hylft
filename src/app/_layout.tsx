@@ -15,7 +15,9 @@ import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { ActiveWorkoutProvider } from "../contexts/ActiveWorkoutContext";
 import { AuthProvider } from "../contexts/AuthContext";
 import { CreateRoutineProvider } from "../contexts/CreateRoutineContext";
+import { HealthProvider } from "../contexts/HealthContext";
 import { I18nProvider, useI18n } from "../contexts/I18nContext";
+import { NutritionProvider } from "../contexts/NutritionContext";
 import { ThemeProvider } from "../contexts/ThemeContext";
 
 SplashScreen.preventAutoHideAsync().catch(() => {
@@ -107,6 +109,8 @@ export default function RootLayout() {
         <I18nProvider>
           <ThemeProvider>
             <AuthProvider>
+              <HealthProvider>
+              <NutritionProvider>
               <ActiveWorkoutProvider>
                 <CreateRoutineProvider>
                 <SafeAreaProvider>
@@ -116,6 +120,8 @@ export default function RootLayout() {
                 </SafeAreaProvider>
                 </CreateRoutineProvider>
               </ActiveWorkoutProvider>
+              </NutritionProvider>
+              </HealthProvider>
             </AuthProvider>
           </ThemeProvider>
         </I18nProvider>

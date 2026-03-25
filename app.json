@@ -19,7 +19,13 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.anonymous.hylift",
       "infoPlist": {
-        "UIViewControllerBasedStatusBarAppearance": true
+        "UIViewControllerBasedStatusBarAppearance": true,
+        "NSHealthShareUsageDescription": "Hylift needs access to your health data to track your calories burned, steps, and workouts.",
+        "NSHealthUpdateUsageDescription": "Hylift needs to save your workout and nutrition data to Apple Health."
+      },
+      "entitlements": {
+        "com.apple.developer.healthkit": true,
+        "com.apple.developer.healthkit.background-delivery": true
       }
     },
     "androidStatusBar": {
@@ -51,7 +57,29 @@
           "root": "./src/app"
         }
       ],
-      "expo-font"
+      "expo-font",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 36,
+            "targetSdkVersion": 35,
+            "minSdkVersion": 26
+          }
+        }
+      ],
+      [
+        "react-native-health-connect",
+        {
+          "requestPermissionsOnStart": false
+        }
+      ],
+      [
+        "react-native-health",
+        {
+          "isClinicalDataEnabled": false
+        }
+      ]
     ]
   }
 }

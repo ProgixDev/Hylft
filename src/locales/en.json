@@ -208,7 +208,11 @@
       "recommendations": "Personalized recommendations",
       "insights": "Better progress insights",
       "enable": "Enable Health Connect",
-      "notNow": "Not Now"
+      "notNow": "Not Now",
+      "unavailableTitle": "Not Available",
+      "unavailableMessage": "Health Connect is not available on this device. You can still track your data manually.",
+      "permissionDeniedTitle": "Permissions Skipped",
+      "permissionDeniedMessage": "You can enable health tracking later in Settings."
     },
     "ready": {
       "title": "You're Ready!",
