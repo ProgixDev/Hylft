@@ -5,7 +5,7 @@ const API_BASE = __DEV__
   ? Platform.OS === "android"
     ? "http://10.0.2.2:3000/api"
     : "http://localhost:3000/api"
-  : "https://your-production-url.com/api";
+  : "https://hylft2-0.onrender.com/api";
 
 async function authFetch(path: string, options: RequestInit = {}) {
   const {
