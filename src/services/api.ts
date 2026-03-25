@@ -66,6 +66,20 @@ export const api = {
   deleteCustomFood: (id: string) =>
     authFetch(`/nutrition/custom-foods/${id}`, { method: "DELETE" }),
 
+  // ── Routines ─────────────────────────────────────────────
+  getRoutines: () =>
+    authFetch("/routines"),
+  getRoutine: (id: string) =>
+    authFetch(`/routines/${id}`),
+  createRoutine: (data: Record<string, unknown>) =>
+    authFetch("/routines", { method: "POST", body: JSON.stringify(data) }),
+  updateRoutine: (id: string, data: Record<string, unknown>) =>
+    authFetch(`/routines/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+  deleteRoutine: (id: string) =>
+    authFetch(`/routines/${id}`, { method: "DELETE" }),
+  incrementRoutineCompleted: (id: string) =>
+    authFetch(`/routines/${id}/completed`, { method: "POST" }),
+
   // ── Health ───────────────────────────────────────────────
   getHealthSnapshot: (date: string) =>
     authFetch(`/health/snapshots?date=${date}`),

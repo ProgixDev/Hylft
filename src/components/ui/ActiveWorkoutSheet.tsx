@@ -111,6 +111,8 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
     const styles = createStyles(theme);
     const {
       activeWorkout,
+      isPaused,
+      togglePause,
       discardWorkout,
       setIsExpanded,
       removeExerciseFromWorkout,
@@ -197,12 +199,27 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
         notes: undefined,
       };
 
-      // Persist in-memory
+      // Persist to server
       try {
-        // lazy-import to avoid circulars
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const { addWorkout } = require("../../data/mockData");
-        addWorkout(toSave);
+        const { api } = require("../../services/api");
+        api.addWorkout({
+          name: tempWorkoutName,
+          workout_type: "strength",
+          date: new Date().toISOString().split("T")[0],
+          start_time: new Date(Date.now() - durationMins * 60000).toISOString(),
+          end_time: new Date().toISOString(),
+          duration_minutes: durationMins,
+          calories_burned: Math.round(durationMins * 6),
+          source: "manual",
+          exercises: activeWorkout.exercises.map((ex) => ({
+            name: ex.name,
+            sets: ex.sets.map((s) => ({
+              kg: s.kg,
+              reps: s.reps,
+              completed: s.isCompleted,
+            })),
+          })),
+        }).catch((err: any) => console.warn("Server save failed:", err));
       } catch (err) {
         console.warn("addWorkout failed:", err);
       }
@@ -501,7 +518,37 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
         >
           {/* ── Header ───────────────────────────────────────────────────── */}
           <View style={styles.header}>
-            <Text style={styles.title}>{t("workout.activeWorkout")}</Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+              <TouchableOpacity
+                style={{
+                  width: 34,
+                  height: 34,
+                  borderRadius: 17,
+                  backgroundColor: theme.primary.main,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+                onPress={togglePause}
+              >
+                <Ionicons
+                  name={isPaused ? "play" : "pause"}
+                  size={16}
+                  color="#fff"
+                />
+              </TouchableOpacity>
+              <View>
+                <Text style={styles.title}>
+                  {isPaused ? t("workout.paused") : t("workout.activeWorkout")}
+                </Text>
+                <Text style={{
+                  fontSize: 12,
+                  fontFamily: "Zain_700Bold",
+                  color: isPaused ? theme.primary.main : theme.foreground.gray,
+                }}>
+                  {formatDuration(activeWorkout.duration)}
+                </Text>
+              </View>
+            </View>
             <View style={styles.headerButtons}>
               <TouchableOpacity
                 style={styles.headerButton}

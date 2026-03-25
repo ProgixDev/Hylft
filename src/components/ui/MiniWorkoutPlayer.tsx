@@ -15,14 +15,14 @@ export const MiniWorkoutPlayer: React.FC<MiniWorkoutPlayerProps> = ({
   onExpand,
 }) => {
   const { theme } = useTheme();
-  const { activeWorkout, discardWorkout } = useActiveWorkout();
+  const { activeWorkout, isPaused, togglePause, discardWorkout } =
+    useActiveWorkout();
   const styles = createStyles(theme);
 
   if (!activeWorkout) {
     return null;
   }
 
-  // Format duration as mm:ss
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -34,44 +34,75 @@ export const MiniWorkoutPlayer: React.FC<MiniWorkoutPlayerProps> = ({
     discardWorkout();
   };
 
+  const handleTogglePause = (e: any) => {
+    e.stopPropagation();
+    togglePause();
+  };
+
+  const completedSets = activeWorkout.exercises.reduce(
+    (count, ex) => count + ex.sets.filter((s) => s.isCompleted).length,
+    0,
+  );
+
   return (
     <TouchableOpacity
-      style={[styles.container, { bottom: 60 + 16 }]}
+      style={styles.container}
       onPress={onExpand}
+      activeOpacity={0.85}
     >
-      <View style={styles.content}>
-        <View style={styles.iconContainer}>
-          <Ionicons name="fitness" size={16} color={theme.primary.main} />
-        </View>
+      {/* Play/Pause Button */}
+      <TouchableOpacity style={styles.playPauseBtn} onPress={handleTogglePause}>
+        <Ionicons
+          name={isPaused ? "play" : "pause"}
+          size={18}
+          color="#fff"
+        />
+      </TouchableOpacity>
 
-        <View style={styles.info}>
-          <Text style={styles.title}>Active Workout</Text>
-          <View style={styles.statsRow}>
-            <View style={styles.statItem}>
-              <Ionicons
-                name="time-outline"
-                size={12}
-                color={theme.foreground.gray}
-              />
-              <Text style={styles.stat}>
-                {formatDuration(activeWorkout.duration)}
-              </Text>
-            </View>
-            <Text style={styles.statSeparator}>•</Text>
-            <View style={styles.statItem}>
-              <Ionicons
-                name="repeat-outline"
-                size={12}
-                color={theme.foreground.gray}
-              />
-              <Text style={styles.stat}>{activeWorkout.sets}</Text>
-            </View>
+      {/* Info */}
+      <View style={styles.info}>
+        <Text style={styles.title} numberOfLines={1}>
+          {isPaused ? "Paused" : "Active Workout"}
+        </Text>
+        <View style={styles.statsRow}>
+          <View style={styles.statItem}>
+            <Ionicons
+              name="time-outline"
+              size={12}
+              color={isPaused ? theme.primary.main : theme.foreground.gray}
+            />
+            <Text style={[styles.stat, isPaused && { color: theme.primary.main }]}>
+              {formatDuration(activeWorkout.duration)}
+            </Text>
+          </View>
+          <Text style={styles.statSeparator}>·</Text>
+          <View style={styles.statItem}>
+            <Ionicons
+              name="checkmark-circle-outline"
+              size={12}
+              color={theme.foreground.gray}
+            />
+            <Text style={styles.stat}>
+              {completedSets} sets
+            </Text>
+          </View>
+          <Text style={styles.statSeparator}>·</Text>
+          <View style={styles.statItem}>
+            <Ionicons
+              name="barbell-outline"
+              size={12}
+              color={theme.foreground.gray}
+            />
+            <Text style={styles.stat}>
+              {activeWorkout.exercises.length} ex
+            </Text>
           </View>
         </View>
       </View>
 
+      {/* Delete Button */}
       <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
-        <Ionicons name="trash-outline" size={20} color="#FF4444" />
+        <Ionicons name="close-circle" size={22} color="#FF4444" />
       </TouchableOpacity>
     </TouchableOpacity>
   );
@@ -87,32 +118,24 @@ const createStyles = (theme: Theme) =>
       bottom: 90,
       left: 12,
       right: 12,
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-      borderRadius: 18,
-      overflow: "hidden",
-      shadowColor: "#000",
-      shadowOffset: {
-        width: 0,
-        height: -2,
-      },
-      shadowOpacity: 0.35,
-      shadowRadius: 8,
-    },
-    content: {
-      flex: 1,
+      paddingHorizontal: 10,
+      paddingVertical: 10,
       flexDirection: "row",
       alignItems: "center",
       gap: 10,
+      borderRadius: 18,
+      overflow: "hidden",
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: -2 },
+      shadowOpacity: 0.35,
+      shadowRadius: 8,
+      elevation: 8,
     },
-    iconContainer: {
-      width: 32,
-      height: 32,
-      borderRadius: 7,
-      backgroundColor: theme.background.dark,
+    playPauseBtn: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: theme.primary.main,
       alignItems: "center",
       justifyContent: "center",
     },
@@ -120,7 +143,7 @@ const createStyles = (theme: Theme) =>
       flex: 1,
     },
     title: {
-      fontSize: 12,
+      fontSize: 13,
       fontFamily: FONTS.bold,
       color: theme.foreground.white,
       marginBottom: 2,
@@ -146,7 +169,7 @@ const createStyles = (theme: Theme) =>
       marginHorizontal: 1,
     },
     deleteButton: {
-      padding: 6,
+      padding: 4,
       borderRadius: 7,
       justifyContent: "center",
       alignItems: "center",

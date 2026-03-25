@@ -82,12 +82,21 @@ export interface Workout {
   notes?: string;
 }
 
+export interface SetTarget {
+  setNumber: number;
+  targetKg: number;
+  targetReps: string;
+}
+
 export interface RoutineExercise {
   id: string;
   name: string;
   sets: number;
   reps: string;
   restTime: number; // in seconds
+  trainingTime?: number; // seconds per set (0 = no timer)
+  targetWeight?: number; // default kg for all sets
+  setTargets?: SetTarget[]; // per-set weight/reps overrides
   notes?: string;
 }
 

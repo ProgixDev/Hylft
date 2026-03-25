@@ -67,12 +67,20 @@ export const CreateRoutineProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   const addExercisesToRoutine = (exercises: ExerciseDbExercise[]) => {
+    const defaultSets = 3;
     const mapped: RoutineExercise[] = exercises.map((ex) => ({
       id: ex.id,
       name: ex.name,
-      sets: 3,
+      sets: defaultSets,
       reps: "8-12",
       restTime: 90,
+      trainingTime: 0,
+      targetWeight: 0,
+      setTargets: Array.from({ length: defaultSets }, (_, i) => ({
+        setNumber: i + 1,
+        targetKg: 0,
+        targetReps: "8-12",
+      })),
     }));
 
     setDraft((prev) => {
@@ -105,9 +113,25 @@ export const CreateRoutineProvider: React.FC<{ children: ReactNode }> = ({
   ) => {
     setDraft((prev) => ({
       ...prev,
-      exercises: prev.exercises.map((e) =>
-        e.id === id ? { ...e, ...updates } : e,
-      ),
+      exercises: prev.exercises.map((e) => {
+        if (e.id !== id) return e;
+        const updated = { ...e, ...updates };
+
+        // Sync setTargets when sets count changes
+        if (updates.sets !== undefined && updates.sets !== e.sets) {
+          const currentTargets = updated.setTargets ?? [];
+          updated.setTargets = Array.from({ length: updates.sets }, (_, i) => {
+            if (i < currentTargets.length) return currentTargets[i];
+            return {
+              setNumber: i + 1,
+              targetKg: updated.targetWeight ?? 0,
+              targetReps: updated.reps ?? "8-12",
+            };
+          });
+        }
+
+        return updated;
+      }),
     }));
   };
 

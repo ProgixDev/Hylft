@@ -15,7 +15,7 @@ import { translateExerciseName } from "../../utils/exerciseTranslator";
 import { Theme } from "../../constants/themes";
 import { useCreateRoutine } from "../../contexts/CreateRoutineContext";
 import { useTheme } from "../../contexts/ThemeContext";
-import { addRoutine, RoutineExercise } from "../../data/mockData";
+import { addRoutine, RoutineExercise, SetTarget } from "../../data/mockData";
 
 import { FONTS } from "../../constants/fonts";
 
@@ -261,6 +261,19 @@ function ExerciseRow({
   t,
   i18n,
 }: ExerciseRowProps & { t: (key: string) => string; i18n: { language: string } }) {
+  const [showSetDetails, setShowSetDetails] = React.useState(false);
+
+  const handleSetTargetUpdate = (
+    setIndex: number,
+    updates: Partial<SetTarget>,
+  ) => {
+    const currentTargets = exercise.setTargets ?? [];
+    const updated = currentTargets.map((st, i) =>
+      i === setIndex ? { ...st, ...updates } : st,
+    );
+    onUpdate({ setTargets: updated });
+  };
+
   return (
     <View style={styles.exerciseCard}>
       <View style={styles.exerciseCardHeader}>
@@ -278,8 +291,8 @@ function ExerciseRow({
         </TouchableOpacity>
       </View>
 
+      {/* Row 1: Sets, Reps, Rest */}
       <View style={styles.exerciseFields}>
-        {/* Sets */}
         <View style={styles.field}>
           <Text style={styles.fieldLabel}>{t("createRoutine.sets")}</Text>
           <TextInput
@@ -290,23 +303,19 @@ function ExerciseRow({
             maxLength={2}
           />
         </View>
-
-        {/* Reps */}
         <View style={styles.field}>
           <Text style={styles.fieldLabel}>{t("createRoutine.reps")}</Text>
           <TextInput
             style={styles.fieldInput}
-            placeholder="e.g. 8-12"
+            placeholder="8-12"
             placeholderTextColor={theme.foreground.gray}
             value={exercise.reps}
             onChangeText={(v) => onUpdate({ reps: v })}
             maxLength={8}
           />
         </View>
-
-        {/* Rest */}
         <View style={styles.field}>
-          <Text style={styles.fieldLabel}>{t("createRoutine.rest")}</Text>
+          <Text style={styles.fieldLabel}>{t("createRoutine.rest")} (s)</Text>
           <TextInput
             style={styles.fieldInput}
             keyboardType="numeric"
@@ -316,6 +325,85 @@ function ExerciseRow({
           />
         </View>
       </View>
+
+      {/* Row 2: Weight, Training Time */}
+      <View style={styles.exerciseFields}>
+        <View style={styles.field}>
+          <Text style={styles.fieldLabel}>{t("createRoutine.weight")} (kg)</Text>
+          <TextInput
+            style={styles.fieldInput}
+            keyboardType="numeric"
+            placeholder="0"
+            placeholderTextColor={theme.foreground.gray}
+            value={exercise.targetWeight ? String(exercise.targetWeight) : ""}
+            onChangeText={(v) => onUpdate({ targetWeight: parseFloat(v) || 0 })}
+            maxLength={5}
+          />
+        </View>
+        <View style={styles.field}>
+          <Text style={styles.fieldLabel}>{t("createRoutine.trainingTime")} (s)</Text>
+          <TextInput
+            style={styles.fieldInput}
+            keyboardType="numeric"
+            placeholder="0"
+            placeholderTextColor={theme.foreground.gray}
+            value={exercise.trainingTime ? String(exercise.trainingTime) : ""}
+            onChangeText={(v) => onUpdate({ trainingTime: parseInt(v) || 0 })}
+            maxLength={4}
+          />
+        </View>
+        <View style={styles.field}>
+          <TouchableOpacity
+            style={styles.setDetailsToggle}
+            onPress={() => setShowSetDetails(!showSetDetails)}
+          >
+            <Ionicons
+              name={showSetDetails ? "chevron-up" : "chevron-down"}
+              size={14}
+              color={theme.primary.main}
+            />
+            <Text style={[styles.fieldLabel, { color: theme.primary.main, marginBottom: 0 }]}>
+              {t("createRoutine.perSet")}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Per-set targets (expandable) */}
+      {showSetDetails && exercise.setTargets && exercise.setTargets.length > 0 && (
+        <View style={styles.setTargetsContainer}>
+          {/* Header */}
+          <View style={styles.setTargetRow}>
+            <Text style={[styles.setTargetHeader, { flex: 0.5 }]}>#</Text>
+            <Text style={styles.setTargetHeader}>{t("createRoutine.weight")} (kg)</Text>
+            <Text style={styles.setTargetHeader}>{t("createRoutine.reps")}</Text>
+          </View>
+          {exercise.setTargets.map((st, i) => (
+            <View key={i} style={styles.setTargetRow}>
+              <Text style={[styles.setTargetNum, { flex: 0.5 }]}>{i + 1}</Text>
+              <TextInput
+                style={styles.setTargetInput}
+                keyboardType="numeric"
+                placeholder={String(exercise.targetWeight || 0)}
+                placeholderTextColor={theme.foreground.gray + "80"}
+                value={st.targetKg ? String(st.targetKg) : ""}
+                onChangeText={(v) =>
+                  handleSetTargetUpdate(i, { targetKg: parseFloat(v) || 0 })
+                }
+              />
+              <TextInput
+                style={styles.setTargetInput}
+                placeholder={exercise.reps}
+                placeholderTextColor={theme.foreground.gray + "80"}
+                value={st.targetReps !== exercise.reps ? st.targetReps : ""}
+                onChangeText={(v) =>
+                  handleSetTargetUpdate(i, { targetReps: v || exercise.reps })
+                }
+              />
+            </View>
+          ))}
+        </View>
+      )}
 
       {/* Notes */}
       <TextInput
@@ -507,6 +595,60 @@ const createStyles = (theme: Theme) =>
       borderWidth: 1,
       borderColor: theme.background.accent,
     },
+    setDetailsToggle: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 4,
+      paddingVertical: 8,
+      borderRadius: 7,
+      borderWidth: 1,
+      borderColor: theme.primary.main + "30",
+      backgroundColor: theme.primary.main + "08",
+      marginTop: 15,
+    },
+    setTargetsContainer: {
+      backgroundColor: theme.background.dark,
+      borderRadius: 8,
+      padding: 8,
+      marginTop: 6,
+      marginBottom: 4,
+      borderWidth: 1,
+      borderColor: theme.background.accent,
+    },
+    setTargetRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      marginBottom: 4,
+    },
+    setTargetHeader: {
+      flex: 1,
+      fontSize: 9,
+      fontFamily: FONTS.semiBold,
+      color: theme.foreground.gray,
+      textAlign: "center",
+      textTransform: "uppercase",
+    },
+    setTargetNum: {
+      fontSize: 12,
+      fontFamily: FONTS.bold,
+      color: theme.primary.main,
+      textAlign: "center",
+    },
+    setTargetInput: {
+      flex: 1,
+      backgroundColor: theme.background.darker,
+      borderRadius: 6,
+      paddingHorizontal: 6,
+      paddingVertical: 5,
+      fontSize: 12,
+      fontFamily: FONTS.semiBold,
+      color: theme.foreground.white,
+      textAlign: "center",
+      borderWidth: 1,
+      borderColor: theme.background.accent,
+    },
     notesInput: {
       backgroundColor: theme.background.dark,
       borderRadius: 7,
@@ -516,6 +658,7 @@ const createStyles = (theme: Theme) =>
       color: theme.foreground.white,
       borderWidth: 1,
       borderColor: theme.background.accent,
+      marginTop: 6,
     },
     muscleChips: {
       flexDirection: "row",

@@ -1,4 +1,13 @@
-import React, { createContext, ReactNode, useContext, useState } from "react";
+import React, {
+  createContext,
+  ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import { api } from "../services/api";
 
 export interface ExerciseSet {
   id: string;
@@ -12,14 +21,14 @@ export interface ExerciseSet {
 
 /** Exercise entry within a workout session */
 export interface WorkoutExerciseEntry {
-  id: string; // unique id for this entry in the workout
-  exerciseId: number; // wger exercise id
+  id: string;
+  exerciseId: number;
   name: string;
   muscles: { id: number; name: string; name_en: string }[];
   equipment: { id: number; name: string }[];
   sets: ExerciseSet[];
   notes?: string;
-  addedAt: number; // timestamp
+  addedAt: number;
 }
 
 interface ActiveWorkout {
@@ -32,10 +41,15 @@ interface ActiveWorkout {
 
 interface ActiveWorkoutContextType {
   activeWorkout: ActiveWorkout | null;
+  isPaused: boolean;
   startWorkout: (workout: ActiveWorkout) => void;
   updateWorkout: (updates: Partial<ActiveWorkout>) => void;
   discardWorkout: () => void;
-  addExerciseToWorkout: (exercise: any) => void; // from wgerApi
+  pauseWorkout: () => void;
+  resumeWorkout: () => void;
+  togglePause: () => void;
+  saveWorkout: (name?: string) => Promise<void>;
+  addExerciseToWorkout: (exercise: any) => void;
   removeExerciseFromWorkout: (exerciseEntryId: string) => void;
   updateExerciseEntry: (
     exerciseEntryId: string,
@@ -78,28 +92,105 @@ export const ActiveWorkoutProvider: React.FC<ActiveWorkoutProviderProps> = ({
     null,
   );
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isPaused, setIsPaused] = useState(true); // starts paused — user presses play
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const startTimeRef = useRef<number>(0);
 
-  const startWorkout = (workout: ActiveWorkout) => {
+  // ── Timer logic ──────────────────────────────────────────────────────
+  useEffect(() => {
+    if (activeWorkout && !isPaused) {
+      timerRef.current = setInterval(() => {
+        setActiveWorkout((prev) => {
+          if (!prev) return prev;
+          return { ...prev, duration: prev.duration + 1 };
+        });
+      }, 1000);
+    }
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [activeWorkout !== null, isPaused]);
+
+  const startWorkout = useCallback((workout: ActiveWorkout) => {
     const workoutWithExercises = {
       ...workout,
       exercises: workout.exercises || [],
     };
     setActiveWorkout(workoutWithExercises);
     setIsExpanded(true);
-  };
+    setIsPaused(true); // paused until user presses play
+    startTimeRef.current = Date.now();
+  }, []);
 
-  const updateWorkout = (updates: Partial<ActiveWorkout>) => {
-    if (activeWorkout) {
-      setActiveWorkout({ ...activeWorkout, ...updates });
-    }
-  };
+  const updateWorkout = useCallback((updates: Partial<ActiveWorkout>) => {
+    setActiveWorkout((prev) => {
+      if (!prev) return prev;
+      return { ...prev, ...updates };
+    });
+  }, []);
 
-  const discardWorkout = () => {
+  const discardWorkout = useCallback(() => {
     setActiveWorkout(null);
     setIsExpanded(false);
-  };
+    setIsPaused(false);
+  }, []);
 
-  const addExerciseToWorkout = (exercise: any) => {
+  const pauseWorkout = useCallback(() => setIsPaused(true), []);
+  const resumeWorkout = useCallback(() => setIsPaused(false), []);
+  const togglePause = useCallback(() => setIsPaused((p) => !p), []);
+
+  // ── Save workout to server ───────────────────────────────────────────
+  const saveWorkout = useCallback(async (name?: string) => {
+    if (!activeWorkout) return;
+
+    const totalVolume = activeWorkout.exercises.reduce((vol, ex) => {
+      return vol + ex.sets
+        .filter((s) => s.isCompleted)
+        .reduce((sv, s) => sv + (parseFloat(s.kg) || 0) * (parseFloat(s.reps) || 0), 0);
+    }, 0);
+
+    const completedSets = activeWorkout.exercises.reduce(
+      (count, ex) => count + ex.sets.filter((s) => s.isCompleted).length,
+      0,
+    );
+
+    const today = new Date().toISOString().split("T")[0];
+
+    try {
+      await api.addWorkout({
+        name: name || "Workout",
+        workout_type: "strength",
+        date: today,
+        start_time: new Date(startTimeRef.current).toISOString(),
+        end_time: new Date().toISOString(),
+        duration_minutes: Math.round(activeWorkout.duration / 60),
+        calories_burned: Math.round(activeWorkout.duration * 0.1), // rough estimate
+        source: "manual",
+        exercises: activeWorkout.exercises.map((ex) => ({
+          name: ex.name,
+          sets: ex.sets.map((s) => ({
+            kg: s.kg,
+            reps: s.reps,
+            completed: s.isCompleted,
+          })),
+        })),
+        notes: `Volume: ${Math.round(totalVolume)}kg | Sets: ${completedSets}`,
+      });
+    } catch (error) {
+      console.warn("[ActiveWorkout] Save to server failed:", error);
+    }
+
+    setActiveWorkout(null);
+    setIsExpanded(false);
+    setIsPaused(false);
+  }, [activeWorkout]);
+
+  // ── Exercise/set management ──────────────────────────────────────────
+  const addExerciseToWorkout = useCallback((exercise: any) => {
     setActiveWorkout((prev) => {
       if (!prev) return prev;
 
@@ -112,7 +203,7 @@ export const ActiveWorkoutProvider: React.FC<ActiveWorkoutProviderProps> = ({
       };
 
       const entry: WorkoutExerciseEntry = {
-        id: `${Date.now()}-${Math.random()}`, // unique entry id
+        id: `${Date.now()}-${Math.random()}`,
         exerciseId: exercise.id,
         name: exercise.name,
         muscles: exercise.muscles || [],
@@ -127,9 +218,9 @@ export const ActiveWorkoutProvider: React.FC<ActiveWorkoutProviderProps> = ({
         sets: prev.sets + 1,
       };
     });
-  };
+  }, []);
 
-  const addSetToExercise = (exerciseEntryId: string) => {
+  const addSetToExercise = useCallback((exerciseEntryId: string) => {
     setActiveWorkout((prev) => {
       if (!prev) return prev;
       return {
@@ -154,31 +245,30 @@ export const ActiveWorkoutProvider: React.FC<ActiveWorkoutProviderProps> = ({
         }),
       };
     });
-  };
+  }, []);
 
-  const updateSet = (
-    exerciseEntryId: string,
-    setId: string,
-    updates: Partial<ExerciseSet>,
-  ) => {
-    setActiveWorkout((prev) => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        exercises: prev.exercises.map((ex) => {
-          if (ex.id !== exerciseEntryId) return ex;
-          return {
-            ...ex,
-            sets: ex.sets.map((s) =>
-              s.id === setId ? { ...s, ...updates } : s,
-            ),
-          };
-        }),
-      };
-    });
-  };
+  const updateSet = useCallback(
+    (exerciseEntryId: string, setId: string, updates: Partial<ExerciseSet>) => {
+      setActiveWorkout((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          exercises: prev.exercises.map((ex) => {
+            if (ex.id !== exerciseEntryId) return ex;
+            return {
+              ...ex,
+              sets: ex.sets.map((s) =>
+                s.id === setId ? { ...s, ...updates } : s,
+              ),
+            };
+          }),
+        };
+      });
+    },
+    [],
+  );
 
-  const removeSet = (exerciseEntryId: string, setId: string) => {
+  const removeSet = useCallback((exerciseEntryId: string, setId: string) => {
     setActiveWorkout((prev) => {
       if (!prev) return prev;
       return {
@@ -193,9 +283,9 @@ export const ActiveWorkoutProvider: React.FC<ActiveWorkoutProviderProps> = ({
         }),
       };
     });
-  };
+  }, []);
 
-  const reorderExercise = (fromIndex: number, toIndex: number) => {
+  const reorderExercise = useCallback((fromIndex: number, toIndex: number) => {
     setActiveWorkout((prev) => {
       if (!prev) return prev;
       if (
@@ -210,39 +300,46 @@ export const ActiveWorkoutProvider: React.FC<ActiveWorkoutProviderProps> = ({
       exercises.splice(toIndex, 0, removed);
       return { ...prev, exercises };
     });
-  };
+  }, []);
 
-  const removeExerciseFromWorkout = (exerciseEntryId: string) => {
-    if (!activeWorkout) return;
-    setActiveWorkout({
-      ...activeWorkout,
-      exercises: activeWorkout.exercises.filter(
-        (ex) => ex.id !== exerciseEntryId,
-      ),
-      sets: Math.max(0, activeWorkout.sets - 1),
+  const removeExerciseFromWorkout = useCallback((exerciseEntryId: string) => {
+    setActiveWorkout((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        exercises: prev.exercises.filter((ex) => ex.id !== exerciseEntryId),
+        sets: Math.max(0, prev.sets - 1),
+      };
     });
-  };
+  }, []);
 
-  const updateExerciseEntry = (
-    exerciseEntryId: string,
-    updates: Partial<WorkoutExerciseEntry>,
-  ) => {
-    if (!activeWorkout) return;
-    setActiveWorkout({
-      ...activeWorkout,
-      exercises: activeWorkout.exercises.map((ex) =>
-        ex.id === exerciseEntryId ? { ...ex, ...updates } : ex,
-      ),
-    });
-  };
+  const updateExerciseEntry = useCallback(
+    (exerciseEntryId: string, updates: Partial<WorkoutExerciseEntry>) => {
+      setActiveWorkout((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          exercises: prev.exercises.map((ex) =>
+            ex.id === exerciseEntryId ? { ...ex, ...updates } : ex,
+          ),
+        };
+      });
+    },
+    [],
+  );
 
   return (
     <ActiveWorkoutContext.Provider
       value={{
         activeWorkout,
+        isPaused,
         startWorkout,
         updateWorkout,
         discardWorkout,
+        pauseWorkout,
+        resumeWorkout,
+        togglePause,
+        saveWorkout,
         addExerciseToWorkout,
         removeExerciseFromWorkout,
         updateExerciseEntry,
