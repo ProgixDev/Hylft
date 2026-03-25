@@ -221,9 +221,10 @@
   },
   "tabs": {
     "home": "Accueil",
-    "schedule": "Calendrier",
-    "workout": "Entraînement",
+    "alimentation": "Aliment",
+    "workout": "Entraîn.",
     "feed": "Fil",
+    "schedule": "Calendrier",
     "profile": "Profil"
   },
   "workout": {
@@ -325,6 +326,34 @@
   },
   "feed": {
     "title": "Fil"
+  },
+  "food": {
+    "title": "Journal alimentaire",
+    "left": "restant",
+    "goalLabel": "Objectif",
+    "eaten": "Mangé",
+    "remaining": "Restant",
+    "protein": "Protéines",
+    "carbs": "Glucides",
+    "fat": "Lipides",
+    "breakfast": "Petit-déjeuner",
+    "lunch": "Déjeuner",
+    "dinner": "Dîner",
+    "snack": "Collation",
+    "addFood": "Ajouter un aliment",
+    "searchFood": "Rechercher un aliment",
+    "searchPlaceholder": "Rechercher aliments, marques...",
+    "quickAdd": "Ajout rapide",
+    "foodName": "Nom de l'aliment",
+    "searching": "Recherche",
+    "noResults": "Aucun résultat. Essayez une autre recherche.",
+    "generic": "Générique",
+    "removeMeal": "Supprimer l'aliment",
+    "removeMealConfirm": "Supprimer",
+    "water": "Eau",
+    "glasses": "verres",
+    "dailyTotal": "Total journalier",
+    "popular": "Aliments populaires"
   },
   "home": {
     "dashboard": "Tableau de bord",

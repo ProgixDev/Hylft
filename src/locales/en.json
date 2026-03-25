@@ -221,9 +221,10 @@
   },
   "tabs": {
     "home": "Home",
-    "schedule": "Schedule",
-    "workout": "Workout",
+    "alimentation": "Food",
+    "workout": "Training",
     "feed": "Feed",
+    "schedule": "Schedule",
     "profile": "Profile"
   },
   "workout": {
@@ -325,6 +326,34 @@
   },
   "feed": {
     "title": "Feed"
+  },
+  "food": {
+    "title": "Food Diary",
+    "left": "left",
+    "goalLabel": "Goal",
+    "eaten": "Eaten",
+    "remaining": "Left",
+    "protein": "Protein",
+    "carbs": "Carbs",
+    "fat": "Fat",
+    "breakfast": "Breakfast",
+    "lunch": "Lunch",
+    "dinner": "Dinner",
+    "snack": "Snack",
+    "addFood": "Add Food",
+    "searchFood": "Search Food",
+    "searchPlaceholder": "Search foods, brands...",
+    "quickAdd": "Quick Add",
+    "foodName": "Food name",
+    "searching": "Searching",
+    "noResults": "No results found. Try a different search.",
+    "generic": "Generic",
+    "removeMeal": "Remove Food",
+    "removeMealConfirm": "Remove",
+    "water": "Water",
+    "glasses": "glasses",
+    "dailyTotal": "Daily Total",
+    "popular": "Popular Foods"
   },
   "home": {
     "dashboard": "Dashboard",

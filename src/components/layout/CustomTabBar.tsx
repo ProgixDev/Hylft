@@ -15,9 +15,8 @@ type IconName = keyof typeof Ionicons.glyphMap;
 
 const ICON_MAP: Record<string, { default: IconName; focused: IconName }> = {
   home: { default: "home-outline", focused: "home" },
-  feed: { default: "flame-outline", focused: "flame" },
+  alimentation: { default: "restaurant-outline", focused: "restaurant" },
   workout: { default: "barbell-outline", focused: "barbell" },
-  schedule: { default: "calendar-outline", focused: "calendar" },
   profile: { default: "person-outline", focused: "person" },
 };
 

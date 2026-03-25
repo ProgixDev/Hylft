@@ -1,22 +1,25 @@
 /**
- * Open Food Facts API Service
- * Free, open-source nutrition database with 3M+ products.
- * No API key required. Rate limit: 100 req/min.
- * Docs: https://openfoodfacts.github.io/openfoodfacts-server/api/
+ * Nutrition API Service — USDA FoodData Central
+ * https://fdc.nal.usda.gov/api-guide
+ *
+ * 100% free, 300K+ lab-verified foods, full nutrition data.
+ * DEMO_KEY: 30 req/hour | Free signup key: 1000 req/hour
+ * Get your key: https://fdc.nal.usda.gov/api-key-signup.html
  */
 
-const BASE_URL = "https://world.openfoodfacts.org";
+const USDA_BASE = "https://api.nal.usda.gov/fdc/v1";
+const USDA_API_KEY = "TIk2lrHzI3mT37W9C4DgoXb4BZ3YeDK5TmFRe1fu";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 export interface NutritionInfo {
-  calories: number; // kcal per 100g
-  protein: number; // g per 100g
-  carbs: number; // g per 100g
-  fat: number; // g per 100g
-  fiber: number; // g per 100g
-  sugar: number; // g per 100g
-  sodium: number; // g per 100g
-  servingSize: string; // e.g. "30g", "1 cup"
+  calories: number;      // kcal per serving
+  protein: number;       // g
+  carbs: number;         // g
+  fat: number;           // g
+  fiber: number;         // g
+  sugar: number;         // g
+  sodium: number;        // g
+  servingSize: string;
   caloriesPerServing: number;
   proteinPerServing: number;
   carbsPerServing: number;
@@ -24,14 +27,14 @@ export interface NutritionInfo {
 }
 
 export interface FoodProduct {
-  id: string; // barcode or internal id
+  id: string;
   name: string;
   brand: string;
   imageUrl: string | null;
   nutrition: NutritionInfo;
   categories: string;
-  nutriScore: string | null; // A, B, C, D, E
-  novaGroup: number | null; // 1-4
+  nutriScore: string | null;
+  novaGroup: number | null;
 }
 
 export interface FoodSearchResult {
@@ -41,7 +44,6 @@ export interface FoodSearchResult {
   pageSize: number;
 }
 
-// ── Custom Food (manual entry) ─────────────────────────────────────────────
 export interface CustomFood {
   id: string;
   name: string;
@@ -52,103 +54,114 @@ export interface CustomFood {
   servingSize: string;
 }
 
-// ── Meal Log Entry ─────────────────────────────────────────────────────────
 export type MealType = "breakfast" | "lunch" | "snack" | "dinner";
 
 export interface MealEntry {
   id: string;
   userId: string;
-  date: string; // YYYY-MM-DD
+  date: string;
   mealType: MealType;
-  foodId: string | null; // null for custom entries
+  foodId: string | null;
   foodName: string;
   servings: number;
   calories: number;
   protein: number;
   carbs: number;
   fat: number;
-  loggedAt: string; // ISO timestamp
+  loggedAt: string;
 }
 
-// ── Helpers ────────────────────────────────────────────────────────────────
-function parseNutrition(nutriments: any, product: any): NutritionInfo {
-  const caloriesPer100g = nutriments?.["energy-kcal_100g"] ?? 0;
-  const proteinPer100g = nutriments?.proteins_100g ?? 0;
-  const carbsPer100g = nutriments?.carbohydrates_100g ?? 0;
-  const fatPer100g = nutriments?.fat_100g ?? 0;
-  const fiberPer100g = nutriments?.fiber_100g ?? 0;
-  const sugarPer100g = nutriments?.sugars_100g ?? 0;
-  const sodiumPer100g = nutriments?.sodium_100g ?? 0;
+// ── USDA Nutrient IDs ──────────────────────────────────────────────────────
+// 1008 = Energy (kcal)
+// 1003 = Protein (g)
+// 1005 = Carbohydrate (g)
+// 1004 = Total fat (g)
+// 1079 = Fiber (g)
+// 2000 = Total sugars (g)
+// 1093 = Sodium (mg)
 
-  const servingSize = product?.serving_size ?? "100g";
-  const servingQuantity = product?.serving_quantity ?? 100;
-  const factor = servingQuantity / 100;
-
-  return {
-    calories: Math.round(caloriesPer100g),
-    protein: Math.round(proteinPer100g * 10) / 10,
-    carbs: Math.round(carbsPer100g * 10) / 10,
-    fat: Math.round(fatPer100g * 10) / 10,
-    fiber: Math.round(fiberPer100g * 10) / 10,
-    sugar: Math.round(sugarPer100g * 10) / 10,
-    sodium: Math.round(sodiumPer100g * 1000) / 1000,
-    servingSize,
-    caloriesPerServing: Math.round(caloriesPer100g * factor),
-    proteinPerServing: Math.round(proteinPer100g * factor * 10) / 10,
-    carbsPerServing: Math.round(carbsPer100g * factor * 10) / 10,
-    fatPerServing: Math.round(fatPer100g * factor * 10) / 10,
-  };
+function getNutrient(nutrients: any[], id: number): number {
+  return nutrients?.find((n: any) => n.nutrientId === id)?.value ?? 0;
 }
 
-function parseProduct(raw: any): FoodProduct {
+function parseUSDAFood(food: any): FoodProduct {
+  const nutrients = food.foodNutrients ?? [];
+
+  const calories = Math.round(getNutrient(nutrients, 1008));
+  const protein = Math.round(getNutrient(nutrients, 1003) * 10) / 10;
+  const carbs = Math.round(getNutrient(nutrients, 1005) * 10) / 10;
+  const fat = Math.round(getNutrient(nutrients, 1004) * 10) / 10;
+  const fiber = Math.round(getNutrient(nutrients, 1079) * 10) / 10;
+  const sugar = Math.round(getNutrient(nutrients, 2000) * 10) / 10;
+  const sodiumMg = getNutrient(nutrients, 1093);
+
+  const servingSizeNum = food.servingSize ?? 100;
+  const servingSizeUnit = food.servingSizeUnit ?? "g";
+  const servingSize = `${servingSizeNum}${servingSizeUnit}`;
+
+  // Capitalize first letter of each word for cleaner display
+  const name = (food.description ?? "Unknown")
+    .toLowerCase()
+    .replace(/\b\w/g, (c: string) => c.toUpperCase());
+
   return {
-    id: raw.code ?? raw._id ?? "",
-    name: raw.product_name ?? raw.product_name_fr ?? "Unknown",
-    brand: raw.brands ?? "",
-    imageUrl: raw.image_small_url ?? raw.image_url ?? null,
-    nutrition: parseNutrition(raw.nutriments, raw),
-    categories: raw.categories ?? "",
-    nutriScore: raw.nutriscore_grade ?? null,
-    novaGroup: raw.nova_group ?? null,
+    id: String(food.fdcId ?? Date.now()),
+    name,
+    brand: food.brandName ?? food.brandOwner ?? "",
+    imageUrl: null,
+    nutrition: {
+      calories,
+      protein,
+      carbs,
+      fat,
+      fiber,
+      sugar,
+      sodium: Math.round(sodiumMg) / 1000,
+      servingSize,
+      caloriesPerServing: calories,
+      proteinPerServing: protein,
+      carbsPerServing: carbs,
+      fatPerServing: fat,
+    },
+    categories: food.foodCategory ?? "",
+    nutriScore: null,
+    novaGroup: null,
   };
 }
 
 // ── API Methods ────────────────────────────────────────────────────────────
 export const NutritionApi = {
   /**
-   * Search for food products by name.
-   * @param query - search term (e.g. "chicken breast", "yaourt")
-   * @param page - page number (1-indexed)
-   * @param pageSize - results per page (max 100)
-   * @param lang - language code ("en" or "fr")
+   * Search for foods by name.
+   * Uses USDA Foundation + SR Legacy (generic whole foods) and Branded foods.
    */
   async searchFood(
     query: string,
     page: number = 1,
     pageSize: number = 20,
-    lang: string = "en"
+    _lang: string = "en"
   ): Promise<FoodSearchResult> {
     try {
-      const url = `${BASE_URL}/cgi/search.pl?search_terms=${encodeURIComponent(
-        query
-      )}&search_simple=1&action=process&json=1&page=${page}&page_size=${pageSize}&lc=${lang}&fields=code,product_name,product_name_fr,brands,image_small_url,image_url,nutriments,serving_size,serving_quantity,categories,nutriscore_grade,nova_group`;
+      const url =
+        `${USDA_BASE}/foods/search?api_key=${USDA_API_KEY}` +
+        `&query=${encodeURIComponent(query)}` +
+        `&pageSize=${pageSize}` +
+        `&pageNumber=${page}` +
+        `&dataType=Foundation,SR%20Legacy,Branded`;
 
-      const response = await fetch(url, {
-        headers: {
-          "User-Agent": "Hylift/1.0 (hylift@app.com)",
-        },
-      });
+      const response = await fetch(url);
 
       if (!response.ok) {
-        throw new Error(`API error: ${response.status}`);
+        throw new Error(`USDA API error: ${response.status}`);
       }
 
       const data = await response.json();
+      const foods: any[] = data.foods ?? [];
 
       return {
-        products: (data.products ?? []).map(parseProduct),
-        totalCount: data.count ?? 0,
-        page: data.page ?? 1,
+        products: foods.map(parseUSDAFood),
+        totalCount: data.totalHits ?? 0,
+        page: data.currentPage ?? 1,
         pageSize,
       };
     } catch (error) {
@@ -158,35 +171,30 @@ export const NutritionApi = {
   },
 
   /**
-   * Get a product by barcode.
-   * Useful for scanning barcodes with the camera.
+   * Get a single food by its FDC ID.
    */
-  async getProductByBarcode(barcode: string): Promise<FoodProduct | null> {
+  async getFoodById(fdcId: string): Promise<FoodProduct | null> {
     try {
-      const url = `${BASE_URL}/api/v2/product/${barcode}?fields=code,product_name,product_name_fr,brands,image_small_url,image_url,nutriments,serving_size,serving_quantity,categories,nutriscore_grade,nova_group`;
-
-      const response = await fetch(url, {
-        headers: {
-          "User-Agent": "Hylift/1.0 (hylift@app.com)",
-        },
-      });
-
+      const url = `${USDA_BASE}/food/${fdcId}?api_key=${USDA_API_KEY}`;
+      const response = await fetch(url);
       if (!response.ok) return null;
-
       const data = await response.json();
-      if (data.status !== 1 || !data.product) return null;
-
-      return parseProduct(data.product);
-    } catch (error) {
-      console.warn("[NutritionApi] Barcode lookup failed:", error);
+      return parseUSDAFood(data);
+    } catch {
       return null;
     }
   },
 
   /**
+   * Barcode lookup — not supported by USDA.
+   */
+  async getProductByBarcode(_barcode: string): Promise<FoodProduct | null> {
+    return null;
+  },
+
+  /**
    * Calculate nutrition for a given serving amount.
-   * @param nutrition - base nutrition info (per 100g)
-   * @param grams - amount in grams
+   * USDA data is per 100g, so we scale.
    */
   calculateForServing(
     nutrition: NutritionInfo,

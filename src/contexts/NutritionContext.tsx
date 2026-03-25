@@ -166,41 +166,35 @@ export function NutritionProvider({ children }: { children: React.ReactNode }) {
   // ── Actions ────────────────────────────────────────────────────────────
   const addMeal = useCallback(
     async (meal: Omit<MealEntry, "id" | "userId" | "loggedAt">) => {
-      try {
-        const serverMeal = await api.addMeal({
-          date: meal.date,
-          meal_type: meal.mealType,
-          food_id: meal.foodId,
-          food_name: meal.foodName,
-          servings: meal.servings,
-          calories: meal.calories,
-          protein: meal.protein,
-          carbs: meal.carbs,
-          fat: meal.fat,
-        });
+      // Optimistic: update UI instantly
+      const localId = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+      const localMeal: MealEntry = {
+        ...meal,
+        id: localId,
+        userId: "local",
+        loggedAt: new Date().toISOString(),
+      };
 
-        const mapped = mapServerMeal(serverMeal);
+      setTodayMeals((prev) => {
+        const updated = [...prev, localMeal];
+        AsyncStorage.setItem(STORAGE_KEYS.todayMeals, JSON.stringify(updated));
+        return updated;
+      });
 
-        setTodayMeals((prev) => {
-          const updated = [...prev, mapped];
-          AsyncStorage.setItem(STORAGE_KEYS.todayMeals, JSON.stringify(updated));
-          return updated;
-        });
-      } catch (error) {
-        console.warn("[NutritionContext] addMeal failed:", error);
-        // Offline fallback: add locally
-        const localMeal: MealEntry = {
-          ...meal,
-          id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
-          userId: "local",
-          loggedAt: new Date().toISOString(),
-        };
-        setTodayMeals((prev) => {
-          const updated = [...prev, localMeal];
-          AsyncStorage.setItem(STORAGE_KEYS.todayMeals, JSON.stringify(updated));
-          return updated;
-        });
-      }
+      // Sync to server in background (don't block UI)
+      api.addMeal({
+        date: meal.date,
+        meal_type: meal.mealType,
+        food_id: meal.foodId,
+        food_name: meal.foodName,
+        servings: meal.servings,
+        calories: meal.calories,
+        protein: meal.protein,
+        carbs: meal.carbs,
+        fat: meal.fat,
+      }).catch((error) => {
+        console.warn("[NutritionContext] Server sync failed (data saved locally):", error);
+      });
     },
     []
   );
