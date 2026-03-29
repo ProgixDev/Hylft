@@ -49,7 +49,8 @@
     "age": {
       "title": "How old are you?",
       "subtitle": "This helps us personalize your fitness plan",
-      "unit": "years"
+      "unit": "years",
+      "years": "years"
     },
     "height": {
       "title": "What's your height?",
@@ -64,7 +65,12 @@
     "targetWeight": {
       "title": "What's your target weight?",
       "subtitle": "This is optional — you can always change it later",
-      "unit": "kg"
+      "unit": "kg",
+      "current": "Current",
+      "target": "Target",
+      "calToBurn": "cal to burn",
+      "calToGain": "cal to gain",
+      "weeks": "weeks"
     },
     "fitnessGoal": {
       "title": "What are your goals?",

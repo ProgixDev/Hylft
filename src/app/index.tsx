@@ -42,7 +42,7 @@ export default function Index() {
   useEffect(() => {
     if (!splashDone || !destination || hasNavigated.current) return;
     hasNavigated.current = true;
-    router.navigate(destination as any);
+    router.replace(destination as any);
   }, [splashDone, destination]);
 
   // Always keep the splash visible — after its animation it's just a dark background,

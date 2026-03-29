@@ -67,10 +67,19 @@ function AppContent() {
         <Stack.Screen name="user/follows/[id]" />
         <Stack.Screen name="schedule/[date]" />
         <Stack.Screen name="get-started/language" />
+        <Stack.Screen name="get-started/gender" />
+        <Stack.Screen name="get-started/units" />
+        <Stack.Screen name="get-started/age" />
+        <Stack.Screen name="get-started/height" />
+        <Stack.Screen name="get-started/weight" />
+        <Stack.Screen name="get-started/target-weight" />
         <Stack.Screen name="get-started/fitness-goal" />
         <Stack.Screen name="get-started/experience-level" />
         <Stack.Screen name="get-started/workout-frequency" />
         <Stack.Screen name="get-started/focus-areas" />
+        <Stack.Screen name="get-started/health-connect" />
+        <Stack.Screen name="get-started/ready" />
+        <Stack.Screen name="get-started/email-preferences" />
         <Stack.Screen name="share-workout/index" />
       </Stack>
     </>
