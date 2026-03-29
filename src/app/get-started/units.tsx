@@ -26,7 +26,7 @@ export default function UnitsSelection() {
   const { t } = useTranslation();
   const styles = createStyles(theme);
   const [selectedWeight, setSelectedWeight] = useState<string>("kg");
-  const [selectedDistance, setSelectedDistance] = useState<string>("km");
+  const [selectedDistance, setSelectedDistance] = useState<string>("m");
   const [selectedHeight, setSelectedHeight] = useState<string>("cm");
 
   const weightOptions: UnitOption[] = [
@@ -35,7 +35,7 @@ export default function UnitsSelection() {
   ];
 
   const distanceOptions: UnitOption[] = [
-    { label: t("onboarding.units.kilometers"), value: "km" },
+    { label: t("onboarding.units.meters"), value: "m" },
     { label: t("onboarding.units.miles"), value: "mi" },
   ];
 

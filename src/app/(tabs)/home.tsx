@@ -121,7 +121,7 @@ export default function Home() {
   const bodyFocusOptions = [
     t("home.abs"),
     t("home.arm"),
-    t("home.chest"),
+    t("home.back"),
     t("home.leg"),
     t("home.shoulder"),
   ];
@@ -231,102 +231,109 @@ export default function Home() {
         </View>
 
         {/* ── Calorie Summary (Donut + Stats) ─────────────────────── */}
-        <View style={styles.calorieCard}>
-          <View style={styles.calorieCardHeader}>
-            <Text style={styles.calorieCardTitle}>
-              {t("home.caloriesSummary")}
-            </Text>
-            <View style={styles.calorieGoalBadge}>
-              <Ionicons name="flag" size={12} color={theme.primary.main} />
-              <Text style={styles.calorieGoalText}>
-                {goals.calorieGoal} kcal
-              </Text>
+{/* ── Résumé Santé (Compact & Blanc) ───────────────────────── */}
+        <Text style={styles.sectionTitle}>{t("home.healthSummary", "RÉSUMÉ SANTÉ")}</Text>
+        <View style={styles.healthSummaryRow}>
+          
+          {/* Brûlées */}
+          <View style={styles.healthMiniCard}>
+            <MaterialCommunityIcons name="fire" size={24} color="#FF6B35" />
+            <Text style={styles.healthCardLabel} numberOfLines={1}>{t("home.burned", "Brûlées :")}</Text>
+            <Text style={styles.healthCardValue} numberOfLines={1}>{caloriesBurned} / 1000</Text>
+            <Text style={styles.healthCardGoal} numberOfLines={1}>kcal</Text>
+            <View style={{ marginTop: 8 }}>
+              <PieChart
+                donut
+                radius={22}
+                innerRadius={15}
+                innerCircleColor="#FFFFFF"
+                data={[
+                  { value: Math.min(caloriesBurned, 1000), color: "#FF6B35" },
+                  { value: Math.max(1000 - caloriesBurned, 0), color: "#F3F4F6" },
+                ]}
+                centerLabelComponent={() => (
+                  <Text style={[styles.healthCardPercent, { color: "#FF6B35" }]}>
+                    {Math.round((caloriesBurned / 1000) * 100)}%
+                  </Text>
+                )}
+              />
             </View>
           </View>
 
-          <View style={styles.donutRow}>
-            <PieChart
-              data={donutData}
-              donut
-              showGradient
-              radius={62}
-              innerRadius={46}
-              innerCircleColor={theme.background.darker}
-              centerLabelComponent={() => (
-                <View style={{ alignItems: "center" }}>
-                  <Text style={styles.donutCenterValue}>
-                    {caloriesRemaining}
+          {/* Pas */}
+          <View style={styles.healthMiniCard}>
+            <MaterialCommunityIcons name="shoe-sneaker" size={24} color="#4A90D9" />
+            <Text style={styles.healthCardLabel} numberOfLines={1}>{t("home.steps", "Pas :")}</Text>
+            <Text style={styles.healthCardValue} numberOfLines={1}>{todaySteps || 0} / 10k</Text>
+            <Text style={styles.healthCardGoal} numberOfLines={1}>pas</Text>
+            <View style={{ marginTop: 8 }}>
+              <PieChart
+                donut
+                radius={22}
+                innerRadius={15}
+                innerCircleColor="#FFFFFF"
+                data={[
+                  { value: Math.min(todaySteps || 0, 10000), color: "#4A90D9" },
+                  { value: Math.max(10000 - (todaySteps || 0), 0), color: "#F3F4F6" },
+                ]}
+                centerLabelComponent={() => (
+                  <Text style={[styles.healthCardPercent, { color: "#4A90D9" }]}>
+                    {Math.round(((todaySteps || 0) / 10000) * 100)}%
                   </Text>
-                  <Text style={styles.donutCenterLabel}>
-                    {t("home.remaining")}
-                  </Text>
-                </View>
-              )}
-            />
-            <View style={styles.calorieStatsCol}>
-              <View style={styles.calorieMiniCard}>
-                <View
-                  style={[
-                    styles.calorieMiniIcon,
-                    { backgroundColor: theme.primary.main + "15" },
-                  ]}
-                >
-                  <MaterialCommunityIcons
-                    name="food-apple"
-                    size={18}
-                    color={theme.primary.main}
-                  />
-                </View>
-                <View>
-                  <Text style={styles.calorieMiniValue}>
-                    {caloriesConsumed}
-                  </Text>
-                  <Text style={styles.calorieMiniLabel}>
-                    {t("home.consumed")}
-                  </Text>
-                </View>
-              </View>
-              <View style={styles.calorieMiniCard}>
-                <View
-                  style={[
-                    styles.calorieMiniIcon,
-                    { backgroundColor: "#4CD964" + "15" },
-                  ]}
-                >
-                  <MaterialCommunityIcons
-                    name="fire"
-                    size={18}
-                    color="#4CD964"
-                  />
-                </View>
-                <View>
-                  <Text style={styles.calorieMiniValue}>
-                    {caloriesBurned}
-                  </Text>
-                  <Text style={styles.calorieMiniLabel}>
-                    {t("home.burned")}
-                  </Text>
-                </View>
-              </View>
+                )}
+              />
             </View>
           </View>
 
-          {/* Progress bar */}
-          <View style={styles.progressBarBg}>
-            <View
-              style={[
-                styles.progressBarFill,
-                {
-                  width: `${Math.min(consumedPercent, 100)}%`,
-                  backgroundColor:
-                    consumedPercent > 100 ? "#ED6665" : theme.primary.main,
-                },
-              ]}
-            />
+          {/* Mangées */}
+          <View style={styles.healthMiniCard}>
+            <MaterialCommunityIcons name="food-apple" size={24} color="#4CD964" />
+            <Text style={styles.healthCardLabel} numberOfLines={1}>{t("home.eaten", "Mangées :")}</Text>
+            <Text style={styles.healthCardValue} numberOfLines={1}>{caloriesConsumed} / {goals.calorieGoal}</Text>
+            <Text style={styles.healthCardGoal} numberOfLines={1}>kcal</Text>
+            <View style={{ marginTop: 8 }}>
+              <PieChart
+                donut
+                radius={22}
+                innerRadius={15}
+                innerCircleColor="#FFFFFF"
+                data={[
+                  { value: Math.min(caloriesConsumed, goals.calorieGoal), color: "#4CD964" },
+                  { value: Math.max(goals.calorieGoal - caloriesConsumed, 0), color: "#F3F4F6" },
+                ]}
+                centerLabelComponent={() => (
+                  <Text style={[styles.healthCardPercent, { color: "#4CD964" }]}>
+                    {consumedPercent}%
+                  </Text>
+                )}
+              />
+            </View>
           </View>
-          <Text style={styles.progressText}>
-            {consumedPercent}% {t("home.ofDailyGoal")}
-          </Text>
+
+          {/* Activité */}
+          <View style={styles.healthMiniCard}>
+            <Ionicons name="timer-outline" size={24} color="#F5A623" />
+            <Text style={styles.healthCardLabel} numberOfLines={1}>{t("home.activity", "Activité :")}</Text>
+            <Text style={styles.healthCardValue} numberOfLines={1}>45 / 60</Text>
+            <Text style={styles.healthCardGoal} numberOfLines={1}>min</Text>
+            <View style={{ marginTop: 8 }}>
+              <PieChart
+                donut
+                radius={22}
+                innerRadius={15}
+                innerCircleColor="#FFFFFF"
+                data={[
+                  { value: 45, color: "#F5A623" },
+                  { value: 15, color: "#F3F4F6" },
+                ]}
+                centerLabelComponent={() => (
+                  <Text style={[styles.healthCardPercent, { color: "#F5A623" }]}>
+                    75%
+                  </Text>
+                )}
+              />
+            </View>
+          </View>
         </View>
 
         {/* ── Macros Row ──────────────────────────────────────────── */}
@@ -1219,7 +1226,47 @@ function createStyles(theme: Theme) {
       fontSize: 15,
       color: "#2563EB",
     },
-
+// ── Résumé Santé (Nouveaux Styles) ─────────────────────────
+    healthSummaryRow: {
+      flexDirection: "row",
+      marginHorizontal: 20,
+      gap: 8,
+      marginBottom: 20,
+    },
+    healthMiniCard: {
+      flex: 1,
+      backgroundColor: "#FFFFFF", // Le fameux blanc !
+      borderRadius: 14,
+      paddingVertical: 12,
+      paddingHorizontal: 2,
+      alignItems: "center",
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 2,
+    },
+    healthCardLabel: {
+      fontFamily: FONTS.bold,
+      fontSize: 10,
+      color: "#374151", // Gris foncé pour bien contraster avec le blanc
+      marginTop: 6,
+      marginBottom: 2,
+    },
+    healthCardValue: {
+      fontFamily: FONTS.bold,
+      fontSize: 10,
+      color: "#111827",
+    },
+    healthCardGoal: {
+      fontFamily: FONTS.medium,
+      fontSize: 9,
+      color: "#9CA3AF",
+    },
+    healthCardPercent: {
+      fontFamily: FONTS.bold,
+      fontSize: 10,
+    },
     // ── Section Header Row (with More link) ───
     sectionHeaderRow: {
       flexDirection: "row",

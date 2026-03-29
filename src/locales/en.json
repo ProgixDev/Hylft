@@ -190,7 +190,7 @@
       "height": "Height",
       "kilograms": "Kilograms",
       "pounds": "Pounds",
-      "kilometers": "Kilometers",
+      "meters": "Meters",
       "miles": "Miles",
       "centimeters": "Centimeters",
       "inches": "Inches"
@@ -391,7 +391,7 @@
     "bodyFocus": "Body Focus",
     "abs": "Abs",
     "arm": "Arm",
-    "chest": "Chest",
+    "back": "Back",
     "leg": "Leg",
     "shoulder": "Shoulder",
     "pro": "PRO",

@@ -1,5 +1,5 @@
 import * as Haptics from "expo-haptics";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState, forwardRef } from "react";
 import {
   Animated,
   FlatList,
@@ -24,13 +24,17 @@ interface ScrollWheelPickerProps {
   onChange: (value: number) => void;
 }
 
-export default function ScrollWheelPicker({
+export interface ScrollWheelPickerRef {
+  scrollToValue: (value: number) => void;
+}
+
+const ScrollWheelPicker = forwardRef<ScrollWheelPickerRef, ScrollWheelPickerProps>(({
   min,
   max,
   step,
   defaultValue,
   onChange,
-}: ScrollWheelPickerProps) {
+}, ref) => {
   const { theme } = useTheme();
   const styles = createStyles(theme);
   const flatListRef = useRef<FlatList<number>>(null);
@@ -52,6 +56,21 @@ export default function ScrollWheelPicker({
   }, [values, defaultValue]);
 
   const hasDecimal = step % 1 !== 0;
+
+  useImperativeHandle(ref, () => ({
+    scrollToValue: (val: number) => {
+      const idx = values.findIndex((v) => v === val);
+      if (idx >= 0) {
+        flatListRef.current?.scrollToOffset({
+          offset: idx * ITEM_HEIGHT,
+          animated: false,
+        });
+        setCenterIndex(idx);
+        prevCenterRef.current = idx;
+        Haptics.selectionAsync();
+      }
+    },
+  }));
 
   useEffect(() => {
     setCenterIndex(defaultIndex);
@@ -185,7 +204,11 @@ export default function ScrollWheelPicker({
       />
     </View>
   );
-}
+});
+
+ScrollWheelPicker.displayName = "ScrollWheelPicker";
+
+export default ScrollWheelPicker;
 
 function createStyles(theme: Theme) {
   return StyleSheet.create({

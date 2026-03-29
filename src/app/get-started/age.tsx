@@ -1,9 +1,10 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { StyleSheet, Text, View } from "react-native";
-import ScrollWheelPicker from "../../components/ui/ScrollWheelPicker";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import ScrollWheelPicker, { ScrollWheelPickerRef } from "../../components/ui/ScrollWheelPicker";
+import { Ionicons } from "@expo/vector-icons";
 import { FONTS } from "../../constants/fonts";
 import { Theme } from "../../constants/themes";
 import ChipButton from "../../components/ui/ChipButton";
@@ -15,6 +16,7 @@ export default function AgeScreen() {
   const { t } = useTranslation();
   const styles = createStyles(theme);
   const [value, setValue] = useState(25);
+  const pickerRef = useRef<ScrollWheelPickerRef>(null);
 
   const handleContinue = async () => {
     await AsyncStorage.setItem("@hylift_age", value.toString());
@@ -45,13 +47,38 @@ export default function AgeScreen() {
         <Text style={styles.subtitle}>{t("onboarding.age.subtitle")}</Text>
 
         <View style={styles.pickerContainer}>
+          <TouchableOpacity
+            style={styles.pmButton}
+            onPress={() => {
+              const newVal = Math.min(80, value + 1);
+              setValue(newVal);
+              pickerRef.current?.scrollToValue(newVal);
+            }}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="add" size={28} color={theme.primary.main} />
+          </TouchableOpacity>
+
           <ScrollWheelPicker
+            ref={pickerRef}
             min={13}
             max={80}
             step={1}
             defaultValue={25}
             onChange={setValue}
           />
+
+          <TouchableOpacity
+            style={styles.pmButton}
+            onPress={() => {
+              const newVal = Math.max(13, value - 1);
+              setValue(newVal);
+              pickerRef.current?.scrollToValue(newVal);
+            }}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="remove" size={28} color={theme.primary.main} />
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -107,6 +134,15 @@ function createStyles(theme: Theme) {
     },
     pickerContainer: {
       flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    pmButton: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      borderWidth: 2,
+      borderColor: theme.primary.main,
       justifyContent: "center",
       alignItems: "center",
     },
