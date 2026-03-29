@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -51,27 +51,35 @@ function createStyles(theme: Theme) {
       borderRadius: 2,
     },
     optionsContainer: {
-      gap: 12,
+      gap: 14,
     },
-    genderButton: {
-      paddingVertical: 18,
-      borderRadius: 10,
+    genderCard: {
+      borderRadius: 16,
       borderWidth: 2,
-      borderColor: theme.foreground.gray,
+      borderColor: theme.background.accent,
       backgroundColor: theme.background.darker,
-      alignItems: "center",
+      height: 200,
+      overflow: "hidden",
     },
-    genderButtonSelected: {
+    genderCardSelected: {
       borderColor: theme.primary.main,
-      backgroundColor: theme.background.accent,
+    },
+    genderImage: {
+      width: "100%",
+      height: "100%",
+      position: "absolute",
     },
     genderText: {
       fontSize: 17,
-      fontFamily: FONTS.semiBold,
-      color: theme.foreground.gray,
+      fontFamily: FONTS.bold,
+      color: "#000000",
+      position: "absolute",
+      bottom: 12,
+      left: 16,
+      zIndex: 1,
     },
     genderTextSelected: {
-      color: theme.primary.main,
+      color: "#000000",
     },
   });
 }
@@ -119,11 +127,11 @@ export default function GenderSelection() {
         <View style={styles.optionsContainer}>
           <TouchableOpacity
             style={[
-              styles.genderButton,
-              selectedGender === "male" && styles.genderButtonSelected,
+              styles.genderCard,
+              selectedGender === "male" && styles.genderCardSelected,
             ]}
             onPress={() => setSelectedGender("male")}
-            activeOpacity={0.7}
+            activeOpacity={0.8}
           >
             <Text
               style={[
@@ -133,15 +141,20 @@ export default function GenderSelection() {
             >
               {t("onboarding.gender.male")}
             </Text>
+            <Image
+              source={require("../../../assets/images/frameboy.png")}
+              style={styles.genderImage}
+              resizeMode="cover"
+            />
           </TouchableOpacity>
 
           <TouchableOpacity
             style={[
-              styles.genderButton,
-              selectedGender === "female" && styles.genderButtonSelected,
+              styles.genderCard,
+              selectedGender === "female" && styles.genderCardSelected,
             ]}
             onPress={() => setSelectedGender("female")}
-            activeOpacity={0.7}
+            activeOpacity={0.8}
           >
             <Text
               style={[
@@ -151,6 +164,11 @@ export default function GenderSelection() {
             >
               {t("onboarding.gender.female")}
             </Text>
+            <Image
+              source={require("../../../assets/images/framegirl.png")}
+              style={[styles.genderImage, { top: 0 }]}
+              resizeMode="cover"
+            />
           </TouchableOpacity>
         </View>
       </View>

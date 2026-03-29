@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import {
   Dimensions,
   Image,
+  ImageBackground,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -74,7 +75,7 @@ export default function Home() {
   const { goals, todaySummary, weekSummaries } = useNutrition();
   const { todaySteps, todayCaloriesBurned, weeklyCaloriesBurned } = useHealth();
   const [selectedBodyFocus, setSelectedBodyFocus] = useState(0);
-  const [weeklyGoal] = useState(6);
+  const [weeklyGoal] = useState(7);
   const [completedDays] = useState(0);
 
   const styles = createStyles(theme);
@@ -231,109 +232,89 @@ export default function Home() {
         </View>
 
         {/* ── Calorie Summary (Donut + Stats) ─────────────────────── */}
-{/* ── Résumé Santé (Compact & Blanc) ───────────────────────── */}
+{/* ── Résumé Santé (Bento Grid) ───────────────────────── */}
         <Text style={styles.sectionTitle}>{t("home.healthSummary", "RÉSUMÉ SANTÉ")}</Text>
-        <View style={styles.healthSummaryRow}>
-          
-          {/* Brûlées */}
-          <View style={styles.healthMiniCard}>
-            <MaterialCommunityIcons name="fire" size={24} color="#FF6B35" />
-            <Text style={styles.healthCardLabel} numberOfLines={1}>{t("home.burned", "Brûlées :")}</Text>
-            <Text style={styles.healthCardValue} numberOfLines={1}>{caloriesBurned} / 1000</Text>
-            <Text style={styles.healthCardGoal} numberOfLines={1}>kcal</Text>
-            <View style={{ marginTop: 8 }}>
-              <PieChart
-                donut
-                radius={22}
-                innerRadius={15}
-                innerCircleColor="#FFFFFF"
-                data={[
-                  { value: Math.min(caloriesBurned, 1000), color: "#FF6B35" },
-                  { value: Math.max(1000 - caloriesBurned, 0), color: "#F3F4F6" },
-                ]}
-                centerLabelComponent={() => (
-                  <Text style={[styles.healthCardPercent, { color: "#FF6B35" }]}>
-                    {Math.round((caloriesBurned / 1000) * 100)}%
+        <View style={styles.healthGrid}>
+          {[
+            {
+              icon: "fire" as const,
+              iconType: "mci" as const,
+              color: "#FF6B35",
+              gradient: ["rgba(0,0,0,0.4)", "rgba(0,0,0,0.6)"] as const,
+              image: require("../../../assets/images/health/calories.jpg"),
+              label: t("home.burned", "Brûlées"),
+              value: caloriesBurned,
+              goal: 1000,
+              unit: "kcal",
+            },
+            {
+              icon: "shoe-sneaker" as const,
+              iconType: "mci" as const,
+              color: "#4A90D9",
+              gradient: ["rgba(0,0,0,0.4)", "rgba(0,0,0,0.6)"] as const,
+              image: require("../../../assets/images/health/steps.jpg"),
+              label: t("home.steps", "Pas"),
+              value: todaySteps || 0,
+              goal: 10000,
+              unit: "",
+            },
+            {
+              icon: "food-apple" as const,
+              iconType: "mci" as const,
+              color: "#34C759",
+              gradient: ["rgba(0,0,0,0.4)", "rgba(0,0,0,0.6)"] as const,
+              image: require("../../../assets/images/health/food.jpg"),
+              label: t("home.eaten", "Mangées"),
+              value: caloriesConsumed,
+              goal: goals.calorieGoal,
+              unit: "kcal",
+            },
+            {
+              icon: "timer-outline" as const,
+              iconType: "ion" as const,
+              color: "#F5A623",
+              gradient: ["rgba(0,0,0,0.4)", "rgba(0,0,0,0.6)"] as const,
+              image: require("../../../assets/images/health/activity.jpg"),
+              label: t("home.activity", "Activité"),
+              value: 45,
+              goal: 60,
+              unit: "min",
+            },
+          ].map((item, index) => {
+            const percent = Math.min(Math.round((item.value / item.goal) * 100), 100);
+            return (
+              <ImageBackground
+                key={index}
+                source={item.image}
+                style={styles.healthTile}
+                imageStyle={styles.healthTileImage}
+                resizeMode="cover"
+              >
+                <LinearGradient
+                  colors={[item.gradient[0], item.gradient[1]]}
+                  style={styles.healthTileOverlay}
+                >
+                  <View style={styles.healthTileTop}>
+                    <View style={styles.healthTileIcon}>
+                      {item.iconType === "mci" ? (
+                        <MaterialCommunityIcons name={item.icon as any} size={18} color="#FFF" />
+                      ) : (
+                        <Ionicons name={item.icon as any} size={18} color="#FFF" />
+                      )}
+                    </View>
+                    <Text style={styles.healthTilePercent}>{percent}%</Text>
+                  </View>
+                  <Text style={styles.healthTileValue}>
+                    {item.goal >= 10000 ? `${(item.value / 1000).toFixed(1)}k` : item.value}
                   </Text>
-                )}
-              />
-            </View>
-          </View>
-
-          {/* Pas */}
-          <View style={styles.healthMiniCard}>
-            <MaterialCommunityIcons name="shoe-sneaker" size={24} color="#4A90D9" />
-            <Text style={styles.healthCardLabel} numberOfLines={1}>{t("home.steps", "Pas :")}</Text>
-            <Text style={styles.healthCardValue} numberOfLines={1}>{todaySteps || 0} / 10k</Text>
-            <Text style={styles.healthCardGoal} numberOfLines={1}>pas</Text>
-            <View style={{ marginTop: 8 }}>
-              <PieChart
-                donut
-                radius={22}
-                innerRadius={15}
-                innerCircleColor="#FFFFFF"
-                data={[
-                  { value: Math.min(todaySteps || 0, 10000), color: "#4A90D9" },
-                  { value: Math.max(10000 - (todaySteps || 0), 0), color: "#F3F4F6" },
-                ]}
-                centerLabelComponent={() => (
-                  <Text style={[styles.healthCardPercent, { color: "#4A90D9" }]}>
-                    {Math.round(((todaySteps || 0) / 10000) * 100)}%
+                  <Text style={styles.healthTileLabel}>{item.label}</Text>
+                  <Text style={styles.healthTileGoal}>
+                    / {item.goal >= 10000 ? `${item.goal / 1000}k` : item.goal} {item.unit}
                   </Text>
-                )}
-              />
-            </View>
-          </View>
-
-          {/* Mangées */}
-          <View style={styles.healthMiniCard}>
-            <MaterialCommunityIcons name="food-apple" size={24} color="#4CD964" />
-            <Text style={styles.healthCardLabel} numberOfLines={1}>{t("home.eaten", "Mangées :")}</Text>
-            <Text style={styles.healthCardValue} numberOfLines={1}>{caloriesConsumed} / {goals.calorieGoal}</Text>
-            <Text style={styles.healthCardGoal} numberOfLines={1}>kcal</Text>
-            <View style={{ marginTop: 8 }}>
-              <PieChart
-                donut
-                radius={22}
-                innerRadius={15}
-                innerCircleColor="#FFFFFF"
-                data={[
-                  { value: Math.min(caloriesConsumed, goals.calorieGoal), color: "#4CD964" },
-                  { value: Math.max(goals.calorieGoal - caloriesConsumed, 0), color: "#F3F4F6" },
-                ]}
-                centerLabelComponent={() => (
-                  <Text style={[styles.healthCardPercent, { color: "#4CD964" }]}>
-                    {consumedPercent}%
-                  </Text>
-                )}
-              />
-            </View>
-          </View>
-
-          {/* Activité */}
-          <View style={styles.healthMiniCard}>
-            <Ionicons name="timer-outline" size={24} color="#F5A623" />
-            <Text style={styles.healthCardLabel} numberOfLines={1}>{t("home.activity", "Activité :")}</Text>
-            <Text style={styles.healthCardValue} numberOfLines={1}>45 / 60</Text>
-            <Text style={styles.healthCardGoal} numberOfLines={1}>min</Text>
-            <View style={{ marginTop: 8 }}>
-              <PieChart
-                donut
-                radius={22}
-                innerRadius={15}
-                innerCircleColor="#FFFFFF"
-                data={[
-                  { value: 45, color: "#F5A623" },
-                  { value: 15, color: "#F3F4F6" },
-                ]}
-                centerLabelComponent={() => (
-                  <Text style={[styles.healthCardPercent, { color: "#F5A623" }]}>
-                    75%
-                  </Text>
-                )}
-              />
-            </View>
-          </View>
+                </LinearGradient>
+              </ImageBackground>
+            );
+          })}
         </View>
 
         {/* ── Macros Row ──────────────────────────────────────────── */}
@@ -1226,46 +1207,61 @@ function createStyles(theme: Theme) {
       fontSize: 15,
       color: "#2563EB",
     },
-// ── Résumé Santé (Nouveaux Styles) ─────────────────────────
-    healthSummaryRow: {
+// ── Résumé Santé (Bento Grid) ─────────────────────────
+    healthGrid: {
       flexDirection: "row",
+      flexWrap: "wrap",
       marginHorizontal: 20,
-      gap: 8,
+      gap: 10,
       marginBottom: 20,
     },
-    healthMiniCard: {
-      flex: 1,
-      backgroundColor: "#FFFFFF", // Le fameux blanc !
-      borderRadius: 14,
-      paddingVertical: 12,
-      paddingHorizontal: 2,
+    healthTile: {
+      width: (SCREEN_WIDTH - 50) / 2,
+      borderRadius: 18,
+      overflow: "hidden",
+    },
+    healthTileImage: {
+      borderRadius: 18,
+    },
+    healthTileOverlay: {
+      padding: 14,
+      borderRadius: 18,
+    },
+    healthTileTop: {
+      flexDirection: "row",
+      justifyContent: "space-between",
       alignItems: "center",
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-      elevation: 2,
+      marginBottom: 12,
     },
-    healthCardLabel: {
+    healthTileIcon: {
+      width: 36,
+      height: 36,
+      borderRadius: 12,
+      backgroundColor: "rgba(255,255,255,0.25)",
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    healthTilePercent: {
       fontFamily: FONTS.bold,
-      fontSize: 10,
-      color: "#374151", // Gris foncé pour bien contraster avec le blanc
-      marginTop: 6,
-      marginBottom: 2,
+      fontSize: 13,
+      color: "rgba(255,255,255,0.9)",
     },
-    healthCardValue: {
-      fontFamily: FONTS.bold,
-      fontSize: 10,
-      color: "#111827",
+    healthTileValue: {
+      fontFamily: FONTS.extraBold,
+      fontSize: 24,
+      color: "#FFFFFF",
     },
-    healthCardGoal: {
+    healthTileLabel: {
+      fontFamily: FONTS.semiBold,
+      fontSize: 12,
+      color: "rgba(255,255,255,0.85)",
+      marginTop: 2,
+    },
+    healthTileGoal: {
       fontFamily: FONTS.medium,
-      fontSize: 9,
-      color: "#9CA3AF",
-    },
-    healthCardPercent: {
-      fontFamily: FONTS.bold,
-      fontSize: 10,
+      fontSize: 11,
+      color: "rgba(255,255,255,0.7)",
+      marginTop: 1,
     },
     // ── Section Header Row (with More link) ───
     sectionHeaderRow: {
