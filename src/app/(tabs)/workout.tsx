@@ -19,6 +19,7 @@ import { Theme } from "../../constants/themes";
 import { useActiveWorkout } from "../../contexts/ActiveWorkoutContext";
 import { useCreateRoutine } from "../../contexts/CreateRoutineContext";
 import { useTheme } from "../../contexts/ThemeContext";
+import { useGenderedImages } from "../../hooks/useGenderedImages";
 import {
   getRoutinesByUserId,
   getWorkoutsByUserId,
@@ -34,14 +35,6 @@ import {
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const ROUTINE_CARD_W = SCREEN_WIDTH * 0.65;
 
-const routineImages = [
-  require("../../../assets/images/AuthPage/PullUp.jpg"),
-  require("../../../assets/images/OnBoarding/ManWithTwoWeights.jpg"),
-  require("../../../assets/images/AuthPage/HoldingTwoWeights.jpg"),
-  require("../../../assets/images/OnBoarding/ManWithOneWeights.jpg"),
-  require("../../../assets/images/AuthPage/DeadLiftIGuess.jpg"),
-  require("../../../assets/images/OnBoarding/ManLookingUp.jpg"),
-];
 
 const diffColors: Record<string, { bg: string; text: string }> = {
   beginner: { bg: "#4CAF5030", text: "#4CAF50" },
@@ -63,8 +56,10 @@ const surfaceShadow = Platform.select({
 export default function Workout() {
   const { t } = useTranslation();
   const { theme } = useTheme();
+  const genderedImages = useGenderedImages();
   const router = useRouter();
   const styles = createStyles(theme);
+  const routineImages = genderedImages.routine;
 
   const [workouts, setWorkouts] = useState<WorkoutData[]>([]);
   const [routines, setRoutines] = useState<Routine[]>([]);

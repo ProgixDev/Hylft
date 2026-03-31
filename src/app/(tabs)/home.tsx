@@ -19,38 +19,16 @@ import { Theme } from "../../constants/themes";
 import { useHealth } from "../../contexts/HealthContext";
 import { useNutrition } from "../../contexts/NutritionContext";
 import { useTheme } from "../../contexts/ThemeContext";
+import { useGenderedImages } from "../../hooks/useGenderedImages";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CHALLENGE_CARD_WIDTH = SCREEN_WIDTH * 0.78;
 
 const DAY_LABELS = ["L", "M", "M", "J", "V", "S", "D"];
+const DAY_LABELS_SHORT = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
 
-const challengeImages = [
-  require("../../../assets/images/OnBoarding/ManWithTwoWeights.jpg"),
-  require("../../../assets/images/AuthPage/PullUp.jpg"),
-  require("../../../assets/images/AuthPage/HoldingTwoWeights.jpg"),
-];
+type DayStatus = "completed" | "missed" | "pending";
 
-const bodyFocusImages = [
-  require("../../../assets/images/AuthPage/DeadLiftIGuess.jpg"),
-  require("../../../assets/images/OnBoarding/ManWithOneWeights.jpg"),
-  require("../../../assets/images/AuthPage/OneKneeOnTheGround.jpg"),
-  require("../../../assets/images/AuthPage/PullUp.jpg"),
-];
-
-function getWeekDays(): { date: Date; dayNum: number }[] {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const day = today.getDay();
-  const monday = new Date(today);
-  monday.setDate(today.getDate() - ((day + 6) % 7));
-
-  return Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(monday);
-    d.setDate(monday.getDate() + i);
-    return { date: d, dayNum: d.getDate() };
-  });
-}
 
 // Difficulty bolts component
 function DifficultyBolts({ level, theme }: { level: number; theme: Theme }) {
@@ -74,13 +52,29 @@ export default function Home() {
   const { t } = useTranslation();
   const { goals, todaySummary, weekSummaries } = useNutrition();
   const { todaySteps, todayCaloriesBurned, weeklyCaloriesBurned } = useHealth();
+  const genderedImages = useGenderedImages();
   const [selectedBodyFocus, setSelectedBodyFocus] = useState(0);
-  const [weeklyGoal] = useState(7);
-  const [completedDays] = useState(0);
+
+  // Weekly sessions: determine status for each day based on current day of week
+  const todayDayIndex = (() => {
+    const d = new Date().getDay();
+    return (d + 6) % 7; // Convert Sun=0 to Mon=0 based
+  })();
+
+  const [weekDayStatuses] = useState<DayStatus[]>(() => {
+    // Mock data: some completed, some missed, rest pending
+    return DAY_LABELS_SHORT.map((_, i) => {
+      if (i < todayDayIndex) {
+        // Past days: randomly completed or missed (mock)
+        return i === 1 ? "missed" : "completed";
+      } else if (i === todayDayIndex) {
+        return "completed";
+      }
+      return "pending";
+    });
+  });
 
   const styles = createStyles(theme);
-  const weekDays = getWeekDays();
-  const todayDate = new Date().getDate();
 
   // ── Derived calorie data from contexts ─────────────────────────────────
   const caloriesConsumed = todaySummary.totalCalories;
@@ -132,21 +126,21 @@ export default function Home() {
       days: 28,
       title: t("home.fullBodyChallenge"),
       desc: t("home.fullBodyChallengeDesc"),
-      image: challengeImages[0],
+      image: genderedImages.challenge[0],
       color: "#1565C0",
     },
     {
       days: 28,
       title: t("home.sculptUpperBody"),
       desc: t("home.sculptUpperBodyDesc"),
-      image: challengeImages[1],
+      image: genderedImages.challenge[1],
       color: "#2E7D9A",
     },
     {
       days: 21,
       title: t("home.lowerBodyBlast"),
       desc: t("home.lowerBodyBlastDesc"),
-      image: challengeImages[2],
+      image: genderedImages.challenge[2],
       color: "#6A1B9A",
     },
   ];
@@ -159,21 +153,21 @@ export default function Home() {
       duration: "15 mins",
       exercises: 16,
       difficulty: 1,
-      image: bodyFocusImages[selectedBodyFocus % bodyFocusImages.length],
+      image: genderedImages.bodyFocus[selectedBodyFocus % genderedImages.bodyFocus.length],
     },
     {
       name: selectedLabel + " " + t("home.intermediate"),
       duration: "24 mins",
       exercises: 21,
       difficulty: 2,
-      image: bodyFocusImages[(selectedBodyFocus + 1) % bodyFocusImages.length],
+      image: genderedImages.bodyFocus[(selectedBodyFocus + 1) % genderedImages.bodyFocus.length],
     },
     {
       name: selectedLabel + " " + t("home.advanced"),
       duration: "27 mins",
       exercises: 21,
       difficulty: 3,
-      image: bodyFocusImages[(selectedBodyFocus + 2) % bodyFocusImages.length],
+      image: genderedImages.bodyFocus[(selectedBodyFocus + 2) % genderedImages.bodyFocus.length],
     },
   ];
 
@@ -182,28 +176,28 @@ export default function Home() {
       name: t("home.killerChestRoutine"),
       duration: "10 min",
       level: t("home.intermediate"),
-      image: bodyFocusImages[0],
+      image: genderedImages.bodyFocus[0],
     },
     {
       name: t("home.sevenMinAbs"),
       duration: "7 min",
       level: t("home.beginner"),
-      image: bodyFocusImages[1],
+      image: genderedImages.bodyFocus[1],
     },
   ];
 
   const stretchWorkouts = [
     {
       name: t("home.sleepyTimeStretching"),
-      image: bodyFocusImages[2],
+      image: genderedImages.bodyFocus[2],
     },
     {
       name: t("home.fourMinTabata"),
-      image: bodyFocusImages[3],
+      image: genderedImages.bodyFocus[3],
     },
     {
       name: t("home.morningStretch"),
-      image: bodyFocusImages[0],
+      image: genderedImages.bodyFocus[0],
     },
   ];
 
@@ -241,7 +235,7 @@ export default function Home() {
               iconType: "mci" as const,
               color: "#FF6B35",
               gradient: ["rgba(0,0,0,0.4)", "rgba(0,0,0,0.6)"] as const,
-              image: require("../../../assets/images/health/calories.jpg"),
+              image: genderedImages.health.calories,
               label: t("home.burned", "Brûlées"),
               value: caloriesBurned,
               goal: 1000,
@@ -252,7 +246,7 @@ export default function Home() {
               iconType: "mci" as const,
               color: "#4A90D9",
               gradient: ["rgba(0,0,0,0.4)", "rgba(0,0,0,0.6)"] as const,
-              image: require("../../../assets/images/health/steps.jpg"),
+              image: genderedImages.health.steps,
               label: t("home.steps", "Pas"),
               value: todaySteps || 0,
               goal: 10000,
@@ -263,8 +257,8 @@ export default function Home() {
               iconType: "mci" as const,
               color: "#34C759",
               gradient: ["rgba(0,0,0,0.4)", "rgba(0,0,0,0.6)"] as const,
-              image: require("../../../assets/images/health/food.jpg"),
-              label: t("home.eaten", "Mangées"),
+              image: genderedImages.health.food,
+              label: t("home.eaten", "Consommées"),
               value: caloriesConsumed,
               goal: goals.calorieGoal,
               unit: "kcal",
@@ -274,7 +268,7 @@ export default function Home() {
               iconType: "ion" as const,
               color: "#F5A623",
               gradient: ["rgba(0,0,0,0.4)", "rgba(0,0,0,0.6)"] as const,
-              image: require("../../../assets/images/health/activity.jpg"),
+              image: genderedImages.health.activity,
               label: t("home.activity", "Activité"),
               value: 45,
               goal: 60,
@@ -317,103 +311,90 @@ export default function Home() {
           })}
         </View>
 
-        {/* ── Macros Row ──────────────────────────────────────────── */}
-        <View style={styles.macrosContainer}>
-          {Object.entries(macros).map(([key, macro]) => {
-            const percent = Math.round((macro.current / macro.goal) * 100);
-            const label =
-              key === "protein"
-                ? t("home.protein")
-                : key === "carbs"
-                  ? t("home.carbs")
-                  : t("home.fat");
-            return (
-              <View key={key} style={styles.macroCard}>
-                <PieChart
-                  data={[
-                    { value: macro.current, color: macro.color },
-                    {
-                      value: Math.max(macro.goal - macro.current, 0),
-                      color: macro.color + "20",
-                    },
-                  ]}
-                  donut
-                  radius={26}
-                  innerRadius={20}
-                  innerCircleColor={theme.background.darker}
-                  centerLabelComponent={() => (
-                    <Text
-                      style={[styles.macroPercent, { color: macro.color }]}
-                    >
-                      {percent}%
-                    </Text>
-                  )}
-                />
-                <Text style={styles.macroLabel}>{label}</Text>
-                <Text style={styles.macroGrams}>
-                  {macro.current}
-                  <Text style={styles.macroGramsGoal}>/{macro.goal}g</Text>
-                </Text>
-              </View>
-            );
-          })}
-        </View>
 
-        {/* ── Weekly Goal ─────────────────────────────────────────── */}
-        <View style={styles.weeklyGoalCard}>
-          <View style={styles.weeklyGoalHeader}>
-            <Text style={styles.weeklyGoalTitle}>{t("home.weeklyGoal")}</Text>
-            <View style={styles.weeklyGoalRight}>
-              <Text style={styles.weeklyGoalCount}>
-                <Text style={styles.weeklyGoalCountBold}>{completedDays}</Text>
-                /{weeklyGoal}
-              </Text>
-              <Ionicons
-                name="pencil"
-                size={14}
-                color={theme.foreground.gray}
-              />
-            </View>
-          </View>
+        {/* ── Séances de la semaine ─────────────────────────────── */}
+        <View style={styles.weekSessionsCard}>
+          <Text style={styles.weekSessionsTitle}>
+            {t("home.weekSessions", "SÉANCES DE LA SEMAINE")}
+          </Text>
 
-          {/* Day numbers row */}
-          <View style={styles.weekDaysRow}>
-            {weekDays.map((day, index) => {
-              const isToday = day.dayNum === todayDate;
+          {/* Day chips row */}
+          <View style={styles.weekChipsRow}>
+            {DAY_LABELS_SHORT.map((label, index) => {
+              const status = weekDayStatuses[index];
+              const isCompleted = status === "completed";
+              const isMissed = status === "missed";
               return (
-                <View key={index} style={styles.weekDayItem}>
-                  <View
+                <View
+                  key={index}
+                  style={[
+                    styles.weekChip,
+                    isCompleted && styles.weekChipCompleted,
+                    isMissed && styles.weekChipMissed,
+                    !isCompleted && !isMissed && styles.weekChipPending,
+                  ]}
+                >
+                  <Text
                     style={[
-                      styles.weekDayCircle,
-                      isToday && styles.weekDayCircleActive,
+                      styles.weekChipLabel,
+                      (isCompleted || isMissed) && styles.weekChipLabelActive,
                     ]}
                   >
-                    <Text
-                      style={[
-                        styles.weekDayNumber,
-                        isToday && styles.weekDayNumberActive,
-                      ]}
-                    >
-                      {day.dayNum}
-                    </Text>
-                  </View>
+                    {label}
+                  </Text>
+                  {isCompleted && (
+                    <Ionicons name="checkmark" size={18} color="#fff" />
+                  )}
+                  {isMissed && (
+                    <Ionicons name="close" size={18} color="#fff" />
+                  )}
+                  {!isCompleted && !isMissed && (
+                    <Text style={styles.weekChipDash}>—</Text>
+                  )}
                 </View>
               );
             })}
           </View>
 
-          {/* Motivational message */}
-          <View style={styles.motivationalRow}>
+          {/* Next workout card */}
+          <Pressable
+            style={({ pressed }) => [
+              styles.nextWorkoutCard,
+              pressed && { opacity: 0.95, transform: [{ scale: 0.98 }] },
+            ]}
+            onPress={() => router.navigate("/workout" as any)}
+          >
             <Image
-              source={require("../../../assets/images/OnBoarding/ManLookingUp.jpg")}
-              style={styles.motivationalAvatar}
+              source={genderedImages.nextWorkout}
+              style={styles.nextWorkoutImage}
+              resizeMode="cover"
             />
-            <View style={styles.motivationalBubble}>
-              <Text style={styles.motivationalText}>
-                {t("home.motivationalMessage")}
-              </Text>
+            <LinearGradient
+              colors={["rgba(0,0,0,0.1)", "rgba(0,0,0,0.7)"]}
+              style={styles.nextWorkoutGradient}
+            />
+            <View style={styles.nextWorkoutContent}>
+              <View style={styles.nextWorkoutInfo}>
+                <Text style={styles.nextWorkoutName}>
+                  {t("home.todaysWorkout", "LEGS DAY: CUISSES & MOLLETS")}
+                </Text>
+                <Text style={styles.nextWorkoutMeta}>
+                  {t("home.today", "Aujourd'hui")}, 17:30 | 50 min
+                </Text>
+              </View>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.nextWorkoutBtn,
+                  pressed && { opacity: 0.9 },
+                ]}
+                onPress={() => router.navigate("/workout" as any)}
+              >
+                <Text style={styles.nextWorkoutBtnText}>
+                  {t("home.start", "DÉMARRER")}
+                </Text>
+              </Pressable>
             </View>
-          </View>
+          </Pressable>
         </View>
 
         {/* ── Calories Burned Chart ───────────────────────────────── */}
@@ -590,7 +571,7 @@ export default function Home() {
           onPress={() => router.navigate("/create-routine" as any)}
         >
           <LinearGradient
-            colors={["#4A90D9", "#2563EB"]}
+            colors={[theme.primary.light, theme.primary.main]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.customWorkoutGradient}
@@ -931,95 +912,114 @@ function createStyles(theme: Theme) {
       marginBottom: 4,
     },
 
-    // ── Weekly Goal ───────────────────────────
-    weeklyGoalCard: {
+    // ── Week Sessions ─────────────────────────
+    weekSessionsCard: {
       marginHorizontal: 20,
       backgroundColor: theme.background.darker,
-      borderRadius: 16,
+      borderRadius: 20,
       padding: 18,
       marginBottom: 24,
     },
-    weeklyGoalHeader: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-      marginBottom: 18,
-    },
-    weeklyGoalTitle: {
-      fontFamily: FONTS.bold,
-      fontSize: 17,
-      color: theme.foreground.white,
-    },
-    weeklyGoalRight: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 6,
-    },
-    weeklyGoalCount: {
-      fontFamily: FONTS.medium,
+    weekSessionsTitle: {
+      fontFamily: FONTS.extraBold,
       fontSize: 16,
-      color: theme.foreground.gray,
+      color: theme.foreground.white,
+      letterSpacing: 0.5,
+      marginBottom: 16,
+      textTransform: "uppercase",
     },
-    weeklyGoalCountBold: {
-      fontFamily: FONTS.bold,
-      fontSize: 20,
-      color: theme.primary.main,
-    },
-
-    // ── Week Days Row ─────────────────────────
-    weekDaysRow: {
+    weekChipsRow: {
       flexDirection: "row",
       justifyContent: "space-between",
-      alignItems: "center",
+      gap: 6,
       marginBottom: 18,
     },
-    weekDayItem: {
-      alignItems: "center",
-    },
-    weekDayCircle: {
-      width: 36,
-      height: 36,
-      borderRadius: 18,
+    weekChip: {
+      flex: 1,
       alignItems: "center",
       justifyContent: "center",
+      paddingVertical: 8,
+      borderRadius: 12,
+      gap: 4,
     },
-    weekDayCircleActive: {
-      borderWidth: 2,
-      borderColor: theme.primary.main,
-      backgroundColor: theme.primary.main + "10",
+    weekChipCompleted: {
+      backgroundColor: "#22C55E",
     },
-    weekDayNumber: {
-      fontFamily: FONTS.medium,
+    weekChipMissed: {
+      backgroundColor: "#EF4444",
+    },
+    weekChipPending: {
+      backgroundColor: theme.background.accent,
+    },
+    weekChipLabel: {
+      fontFamily: FONTS.bold,
+      fontSize: 11,
+      color: theme.foreground.gray,
+      textTransform: "capitalize",
+    },
+    weekChipLabelActive: {
+      color: "#fff",
+    },
+    weekChipDash: {
+      fontFamily: FONTS.bold,
       fontSize: 14,
       color: theme.foreground.gray,
     },
-    weekDayNumberActive: {
-      fontFamily: FONTS.bold,
-      color: theme.primary.main,
-    },
 
-    // ── Motivational Row ──────────────────────
-    motivationalRow: {
+    // ── Next Workout Card ─────────────────────
+    nextWorkoutCard: {
+      height: 120,
+      borderRadius: 16,
+      overflow: "hidden",
+      borderWidth: 2,
+      borderColor: theme.primary.main + "40",
+    },
+    nextWorkoutImage: {
+      width: "100%",
+      height: "100%",
+      position: "absolute",
+    },
+    nextWorkoutGradient: {
+      position: "absolute",
+      left: 0,
+      right: 0,
+      bottom: 0,
+      height: "100%",
+    },
+    nextWorkoutContent: {
+      flex: 1,
       flexDirection: "row",
-      alignItems: "center",
-      backgroundColor: theme.background.accent,
-      borderRadius: 12,
-      padding: 12,
-      gap: 12,
+      alignItems: "flex-end",
+      justifyContent: "space-between",
+      padding: 14,
     },
-    motivationalAvatar: {
-      width: 48,
-      height: 48,
-      borderRadius: 24,
-    },
-    motivationalBubble: {
+    nextWorkoutInfo: {
       flex: 1,
     },
-    motivationalText: {
-      fontFamily: FONTS.medium,
+    nextWorkoutName: {
+      fontFamily: FONTS.extraBold,
+      fontSize: 16,
+      color: "#fff",
+      marginBottom: 4,
+    },
+    nextWorkoutMeta: {
+      fontFamily: FONTS.regular,
+      fontSize: 12,
+      color: "rgba(255,255,255,0.8)",
+      fontStyle: "italic",
+    },
+    nextWorkoutBtn: {
+      backgroundColor: theme.primary.main,
+      borderRadius: 20,
+      paddingHorizontal: 20,
+      paddingVertical: 10,
+      marginLeft: 10,
+    },
+    nextWorkoutBtnText: {
+      fontFamily: FONTS.extraBold,
       fontSize: 13,
-      color: theme.foreground.white,
-      lineHeight: 18,
+      color: "#fff",
+      letterSpacing: 0.5,
     },
 
     // ── Section Title ─────────────────────────
@@ -1205,7 +1205,7 @@ function createStyles(theme: Theme) {
     goButtonText: {
       fontFamily: FONTS.bold,
       fontSize: 15,
-      color: "#2563EB",
+      color: theme.primary.main,
     },
 // ── Résumé Santé (Bento Grid) ─────────────────────────
     healthGrid: {

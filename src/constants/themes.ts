@@ -40,14 +40,14 @@ export const femaleTheme: Theme = {
     light: "#FA4D85",
   },
   background: {
-    dark: "#FFFFFF",
-    darker: "#F2F3F5",
-    accent: "#E8EAF0",
-    purple: "#B652C7",
+    dark: "#FFF5F7",
+    darker: "#FFE8EE",
+    accent: "#FFD1DC",
+    purple: "#E040A0",
   },
   foreground: {
-    white: "#0B0D0E",
-    gray: "#5F6368",
+    white: "#1A0A10",
+    gray: "#6B4555",
   },
   logo: require("../../assets/images/LogoBlue.png"),
 };

@@ -39,15 +39,21 @@ function TabsLayoutContent() {
           }}
         />
         <Tabs.Screen
+          name="workout"
+          options={{
+            title: t("tabs.workout"),
+          }}
+        />
+        <Tabs.Screen
           name="alimentation"
           options={{
             title: t("tabs.alimentation"),
           }}
         />
         <Tabs.Screen
-          name="workout"
+          name="feed"
           options={{
-            title: t("tabs.workout"),
+            title: t("tabs.feed"),
           }}
         />
         <Tabs.Screen
@@ -55,11 +61,6 @@ function TabsLayoutContent() {
           options={{
             title: t("tabs.profile"),
           }}
-        />
-        {/* Hide unused tabs */}
-        <Tabs.Screen
-          name="feed"
-          options={{ href: null }}
         />
       </Tabs>
 

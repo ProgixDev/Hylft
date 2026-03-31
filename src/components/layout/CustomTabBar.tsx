@@ -17,6 +17,7 @@ const ICON_MAP: Record<string, { default: IconName; focused: IconName }> = {
   home: { default: "home-outline", focused: "home" },
   alimentation: { default: "restaurant-outline", focused: "restaurant" },
   workout: { default: "barbell-outline", focused: "barbell" },
+  feed: { default: "newspaper-outline", focused: "newspaper" },
   profile: { default: "person-outline", focused: "person" },
 };
 
