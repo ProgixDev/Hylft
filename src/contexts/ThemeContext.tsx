@@ -22,7 +22,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         const storedTheme = await AsyncStorage.getItem(THEME_STORAGE_KEY);
         if (
           storedTheme &&
-          (storedTheme === "male" || storedTheme === "female")
+          (storedTheme === "male" || storedTheme === "female" || storedTheme === "dark")
         ) {
           setThemeType(storedTheme);
         }

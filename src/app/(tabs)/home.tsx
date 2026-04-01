@@ -48,7 +48,7 @@ function DifficultyBolts({ level, theme }: { level: number; theme: Theme }) {
 
 export default function Home() {
   const router = useRouter();
-  const { theme } = useTheme();
+  const { theme, themeType, setTheme } = useTheme();
   const { t } = useTranslation();
   const { goals, todaySummary, weekSummaries } = useNutrition();
   const { todaySteps, todayCaloriesBurned, weeklyCaloriesBurned } = useHealth();
@@ -203,6 +203,13 @@ export default function Home() {
 
   return (
     <View style={styles.container}>
+      {themeType === "female" && (
+        <Image
+          source={require("../../../assets/girly.png")}
+          style={styles.girlBg}
+          resizeMode="cover"
+        />
+      )}
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 90 }}
@@ -211,6 +218,21 @@ export default function Home() {
         <View style={styles.header}>
           <Text style={styles.headerTitle}>{t("home.homeWorkout")}</Text>
           <View style={styles.headerRight}>
+            {(themeType === "male" || themeType === "dark") && (
+              <Pressable
+                onPress={() => setTheme(themeType === "dark" ? "male" : "dark")}
+                style={({ pressed }) => [
+                  styles.darkModeBtn,
+                  pressed && { opacity: 0.7 },
+                ]}
+              >
+                <Ionicons
+                  name={themeType === "dark" ? "sunny" : "moon"}
+                  size={20}
+                  color={themeType === "dark" ? "#D4A44C" : theme.foreground.gray}
+                />
+              </Pressable>
+            )}
             <Ionicons name="flame" size={26} color="#FF4444" />
             <Pressable
               style={({ pressed }) => [
@@ -690,6 +712,16 @@ function createStyles(theme: Theme) {
       flex: 1,
       backgroundColor: theme.background.dark,
     },
+    girlBg: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      width: "100%",
+      height: "100%",
+      opacity: 0.3,
+    },
 
     // ── Header ────────────────────────────────
     header: {
@@ -710,6 +742,14 @@ function createStyles(theme: Theme) {
       flexDirection: "row",
       alignItems: "center",
       gap: 12,
+    },
+    darkModeBtn: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: theme.background.accent,
+      alignItems: "center",
+      justifyContent: "center",
     },
     proBadge: {
       flexDirection: "row",

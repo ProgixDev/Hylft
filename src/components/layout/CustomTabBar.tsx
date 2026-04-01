@@ -30,6 +30,8 @@ export function CustomTabBar({
   descriptors,
   navigation,
 }: BottomTabBarProps) {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   return (
     <View style={styles.container}>
       {state.routes.map((route, index) => {
@@ -92,6 +94,7 @@ function TabButton({
 }: TabButtonProps) {
   const { theme } = useTheme();
   const { t } = useTranslation();
+  const styles = createStyles(theme);
 
   const flex = useSharedValue(isFocused ? ACTIVE_FLEX : INACTIVE_FLEX);
   const labelOpacity = useSharedValue(isFocused ? 1 : 0);
@@ -116,7 +119,8 @@ function TabButton({
   }));
 
   const activeColor = theme.primary.main;
-  const inactiveColor = "rgba(0,0,0,0.4)";
+  const isDark = theme.background.dark === "#0B0D0E";
+  const inactiveColor = isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)";
   const color = isFocused ? activeColor : inactiveColor;
 
   return (
@@ -154,7 +158,8 @@ function TabButton({
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) =>
+  StyleSheet.create({
   container: {
     position: "absolute",
     bottom: 0,
@@ -162,9 +167,9 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 60,
     flexDirection: "row",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: theme.background.dark,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "rgba(0,0,0,0.08)",
+    borderTopColor: theme.background.accent,
     alignItems: "center",
     paddingHorizontal: 6,
     zIndex: 50,

@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   FlatList,
+  Image,
   Platform,
   Pressable,
   RefreshControl,
@@ -78,7 +79,7 @@ function createStyles(theme: Theme) {
 
 export default function Feed() {
   const router = useRouter();
-  const { theme } = useTheme();
+  const { theme, themeType } = useTheme();
   const { t } = useTranslation();
   const [refreshing, setRefreshing] = useState(false);
   const [unreadCount] = useState(3); // Example: 3 unread messages
@@ -166,6 +167,13 @@ export default function Feed() {
 
   return (
     <View style={styles.container}>
+      {themeType === "female" && (
+        <Image
+          source={require("../../../assets/girly.png")}
+          style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, width: "100%", height: "100%", opacity: 0.3 }}
+          resizeMode="cover"
+        />
+      )}
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>{t("tabs.feed")}</Text>

@@ -34,26 +34,45 @@ export const maleTheme: Theme = {
   logo: require("../../assets/images/Logo.png"),
 };
 
-export const femaleTheme: Theme = {
+export const darkTheme: Theme = {
   primary: {
-    main: "#F91B66",
-    light: "#FA4D85",
+    main: "#D4A44C",
+    light: "#E0B86E",
   },
   background: {
-    dark: "#FFF5F7",
-    darker: "#FFE8EE",
-    accent: "#FFD1DC",
+    dark: "#0B0D0E",
+    darker: "#151719",
+    accent: "#1E2124",
+    purple: "#B652C7",
+  },
+  foreground: {
+    white: "#F0E6D3",
+    gray: "#8A7E6E",
+  },
+  logo: require("../../assets/images/Logo.png"),
+};
+
+export const femaleTheme: Theme = {
+  primary: {
+    main: "#C48A6A",
+    light: "#D4A48A",
+  },
+  background: {
+    dark: "#FFF8F3",
+    darker: "#FFEEE4",
+    accent: "#F5D6C8",
     purple: "#E040A0",
   },
   foreground: {
-    white: "#1A0A10",
-    gray: "#6B4555",
+    white: "#3D2B1F",
+    gray: "#8B7265",
   },
   logo: require("../../assets/images/LogoBlue.png"),
 };
 
 export const themes = {
   male: maleTheme,
+  dark: darkTheme,
   female: femaleTheme,
 } as const;
 

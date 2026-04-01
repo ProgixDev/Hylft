@@ -55,7 +55,7 @@ const surfaceShadow = Platform.select({
 
 export default function Workout() {
   const { t } = useTranslation();
-  const { theme } = useTheme();
+  const { theme, themeType } = useTheme();
   const genderedImages = useGenderedImages();
   const router = useRouter();
   const styles = createStyles(theme);
@@ -109,6 +109,13 @@ export default function Workout() {
 
   return (
     <View style={styles.container}>
+      {themeType === "female" && (
+        <Image
+          source={require("../../../assets/girly.png")}
+          style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, width: "100%", height: "100%", opacity: 0.3 }}
+          resizeMode="cover"
+        />
+      )}
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>WORKOUT</Text>

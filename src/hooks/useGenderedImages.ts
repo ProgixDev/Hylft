@@ -66,3 +66,7 @@ export function useGenderedImages() {
   const { themeType } = useTheme();
   return themeType === "female" ? femaleImages : maleImages;
 }
+
+export function getGenderFromTheme(themeType: string): "male" | "female" {
+  return themeType === "female" ? "female" : "male";
+}

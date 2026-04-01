@@ -492,7 +492,7 @@ function calcTotalVolume(workouts: Workout[]): string {
 
 export default function Profile() {
   const { t, i18n } = useTranslation();
-  const { theme } = useTheme();
+  const { theme, themeType } = useTheme();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const styles = createStyles(theme);
@@ -718,6 +718,13 @@ export default function Profile() {
 
   return (
     <View style={styles.container}>
+      {themeType === "female" && (
+        <Image
+          source={require("../../../assets/girly.png")}
+          style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, width: "100%", height: "100%", opacity: 0.3 }}
+          resizeMode="cover"
+        />
+      )}
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
