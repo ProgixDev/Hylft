@@ -4,32 +4,32 @@ import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  Dimensions,
-  Image,
-  Modal,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
+    Dimensions,
+    Image,
+    Modal,
+    Platform,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View,
 } from "react-native";
 import { FONTS } from "../../constants/fonts";
 import { Theme } from "../../constants/themes";
 import { useActiveWorkout } from "../../contexts/ActiveWorkoutContext";
 import { useCreateRoutine } from "../../contexts/CreateRoutineContext";
 import { useTheme } from "../../contexts/ThemeContext";
+import {
+    getRoutinesByUserId,
+    getWorkoutsByUserId,
+    Routine,
+    Workout as WorkoutData,
+} from "../../data/mockData";
 import { useGenderedImages } from "../../hooks/useGenderedImages";
 import {
-  getRoutinesByUserId,
-  getWorkoutsByUserId,
-  Routine,
-  Workout as WorkoutData,
-} from "../../data/mockData";
-import {
-  translateApiData,
-  translateRoutineDescription,
-  translateRoutineName,
+    translateApiData,
+    translateRoutineDescription,
+    translateRoutineName,
 } from "../../utils/exerciseTranslator";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
