@@ -3,32 +3,32 @@ import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  Image,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
+    Image,
+    Platform,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
 import {
-  getPostsByUserId,
-  getRoutinesByUserId,
-  getUserById,
-  getWorkoutsByUserId,
-  Post,
-  Routine,
-  User,
-  Workout,
+    getPostsByUserId,
+    getRoutinesByUserId,
+    getUserById,
+    getWorkoutsByUserId,
+    Post,
+    Routine,
+    User,
+    Workout,
 } from "../../data/mockData";
 import {
-  translateApiData,
-  translateExerciseTerm,
-  translateRoutineDescription,
-  translateRoutineName,
+    translateApiData,
+    translateExerciseTerm,
+    translateRoutineDescription,
+    translateRoutineName,
 } from "../../utils/exerciseTranslator";
 
 import { FONTS } from "../../constants/fonts";

@@ -6,16 +6,16 @@ import { useRouter } from "expo-router";
 import React, { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  Dimensions,
-  Image,
-  ImageBackground,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
+    Dimensions,
+    Image,
+    ImageBackground,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View,
 } from "react-native";
-import { BarChart, PieChart } from "react-native-gifted-charts";
+import { BarChart } from "react-native-gifted-charts";
 import { FONTS } from "../../constants/fonts";
 import { Theme } from "../../constants/themes";
 import { useHealth } from "../../contexts/HealthContext";

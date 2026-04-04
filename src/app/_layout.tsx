@@ -1,9 +1,9 @@
 import {
-  Zain_300Light,
-  Zain_400Regular,
-  Zain_700Bold,
-  Zain_800ExtraBold,
-  useFonts,
+    Zain_300Light,
+    Zain_400Regular,
+    Zain_700Bold,
+    Zain_800ExtraBold,
+    useFonts,
 } from "@expo-google-fonts/zain";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
