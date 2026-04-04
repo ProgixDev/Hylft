@@ -9,6 +9,7 @@
     "done": "Done",
     "back": "Back",
     "continue": "Continue",
+    "confirm": "Confirm",
     "or": "or",
     "seeAll": "See All"
   },
@@ -370,6 +371,9 @@
     "calories": "Calories",
     "activity": "Activity",
     "weekSessions": "Sessions This Week",
+    "objective": "Objective",
+    "objectiveQuestion": "How many times per week do you want to train?",
+    "objectiveOption": "{{count}} x week",
     "todaysWorkout": "Today's Workout",
     "restDay": "Rest Day",
     "restDayTitle": "Rest Day",

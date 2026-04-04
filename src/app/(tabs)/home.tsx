@@ -1,7 +1,9 @@
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Dimensions,
@@ -27,7 +29,7 @@ const CHALLENGE_CARD_WIDTH = SCREEN_WIDTH * 0.78;
 const DAY_LABELS = ["L", "M", "M", "J", "V", "S", "D"];
 const DAY_LABELS_SHORT = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
 
-type DayStatus = "completed" | "missed" | "pending";
+type DayStatus = "completed" | "missed" | "pending" | "off";
 
 
 // Difficulty bolts component
@@ -54,25 +56,74 @@ export default function Home() {
   const { todaySteps, todayCaloriesBurned, weeklyCaloriesBurned } = useHealth();
   const genderedImages = useGenderedImages();
   const [selectedBodyFocus, setSelectedBodyFocus] = useState(0);
+  const [weeklyObjective, setWeeklyObjective] = useState(3);
 
-  // Weekly sessions: determine status for each day based on current day of week
-  const todayDayIndex = (() => {
-    const d = new Date().getDay();
-    return (d + 6) % 7; // Convert Sun=0 to Mon=0 based
-  })();
+  const now = new Date();
+  const todayDayIndex = (now.getDay() + 6) % 7; // Convert Sun=0 to Mon=0 based
 
-  const [weekDayStatuses] = useState<DayStatus[]>(() => {
-    // Mock data: some completed, some missed, rest pending
-    return DAY_LABELS_SHORT.map((_, i) => {
-      if (i < todayDayIndex) {
-        // Past days: randomly completed or missed (mock)
-        return i === 1 ? "missed" : "completed";
-      } else if (i === todayDayIndex) {
-        return "completed";
-      }
+  useFocusEffect(
+    useCallback(() => {
+      let isMounted = true;
+
+      const loadObjective = async () => {
+        try {
+          const saved = await AsyncStorage.getItem("@hylift_home_weekly_objective");
+          const parsed = Number(saved);
+          if (
+            isMounted &&
+            Number.isFinite(parsed) &&
+            parsed >= 1 &&
+            parsed <= 7
+          ) {
+            setWeeklyObjective(parsed);
+          }
+        } catch {
+          // Keep default objective when storage is unavailable.
+        }
+      };
+
+      loadObjective();
+      return () => {
+        isMounted = false;
+      };
+    }, [])
+  );
+
+  const weekDays = useMemo(() => {
+    const monday = new Date(now);
+    monday.setHours(0, 0, 0, 0);
+    monday.setDate(now.getDate() - todayDayIndex);
+
+    return DAY_LABELS_SHORT.map((label, index) => {
+      const date = new Date(monday);
+      date.setDate(monday.getDate() + index);
+      return {
+        label,
+        dayOfMonth: date.getDate(),
+        isToday: index === todayDayIndex,
+      };
+    });
+  }, [now, todayDayIndex]);
+
+  const scheduledIndices = useMemo(() => {
+    const target = Math.min(Math.max(weeklyObjective, 1), 7);
+    const days = new Set<number>();
+
+    for (let i = 0; i < target; i += 1) {
+      days.add((todayDayIndex + i) % 7);
+    }
+
+    return days;
+  }, [todayDayIndex, weeklyObjective]);
+
+  const weekDayStatuses = useMemo<DayStatus[]>(() => {
+    return DAY_LABELS_SHORT.map((_, index) => {
+      if (!scheduledIndices.has(index)) return "off";
+      if (index < todayDayIndex) return "missed";
+      if (index === todayDayIndex) return "completed";
       return "pending";
     });
-  });
+  }, [scheduledIndices, todayDayIndex]);
 
   const styles = createStyles(theme);
 
@@ -336,16 +387,35 @@ export default function Home() {
 
         {/* ── Séances de la semaine ─────────────────────────────── */}
         <View style={styles.weekSessionsCard}>
-          <Text style={styles.weekSessionsTitle}>
-            {t("home.weekSessions", "SÉANCES DE LA SEMAINE")}
-          </Text>
+          <View style={styles.weekSessionsHeader}>
+            <Text style={styles.weekSessionsTitle}>
+              {t("home.weekSessions", "SÉANCES DE LA SEMAINE")}
+            </Text>
+            <Text style={styles.weekObjectiveText}>
+              {t("home.objectiveOption", "{{count}} x semaine", {
+                count: weeklyObjective,
+              })}
+            </Text>
+            <Pressable
+              style={({ pressed }) => [
+                styles.objectiveBtn,
+                pressed && { opacity: 0.85 },
+              ]}
+              onPress={() => router.push("/objective")}
+            >
+              <Text style={styles.objectiveBtnText}>
+                {t("home.objective", "OBJECTIVE")}
+              </Text>
+            </Pressable>
+          </View>
 
           {/* Day chips row */}
           <View style={styles.weekChipsRow}>
-            {DAY_LABELS_SHORT.map((label, index) => {
+            {weekDays.map((day, index) => {
               const status = weekDayStatuses[index];
               const isCompleted = status === "completed";
               const isMissed = status === "missed";
+              const isOff = status === "off";
               return (
                 <View
                   key={index}
@@ -353,16 +423,28 @@ export default function Home() {
                     styles.weekChip,
                     isCompleted && styles.weekChipCompleted,
                     isMissed && styles.weekChipMissed,
+                    isOff && styles.weekChipOff,
                     !isCompleted && !isMissed && styles.weekChipPending,
+                    day.isToday && styles.weekChipToday,
                   ]}
                 >
                   <Text
                     style={[
                       styles.weekChipLabel,
-                      (isCompleted || isMissed) && styles.weekChipLabelActive,
+                      (isCompleted || isMissed || day.isToday) &&
+                        styles.weekChipLabelActive,
                     ]}
                   >
-                    {label}
+                    {day.label}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.weekChipDate,
+                      (isCompleted || isMissed || day.isToday) &&
+                        styles.weekChipLabelActive,
+                    ]}
+                  >
+                    {day.dayOfMonth}
                   </Text>
                   {isCompleted && (
                     <Ionicons name="checkmark" size={18} color="#fff" />
@@ -370,9 +452,10 @@ export default function Home() {
                   {isMissed && (
                     <Ionicons name="close" size={18} color="#fff" />
                   )}
-                  {!isCompleted && !isMissed && (
+                  {!isCompleted && !isMissed && !isOff && (
                     <Text style={styles.weekChipDash}>—</Text>
                   )}
+                  {isOff && <Text style={styles.weekChipOffMark}>•</Text>}
                 </View>
               );
             })}
@@ -960,12 +1043,40 @@ function createStyles(theme: Theme) {
       padding: 18,
       marginBottom: 24,
     },
+    weekSessionsHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginBottom: 16,
+      gap: 10,
+    },
     weekSessionsTitle: {
       fontFamily: FONTS.extraBold,
       fontSize: 16,
       color: theme.foreground.white,
       letterSpacing: 0.5,
-      marginBottom: 16,
+      textTransform: "uppercase",
+      flex: 1,
+    },
+    weekObjectiveText: {
+      fontFamily: FONTS.semiBold,
+      fontSize: 11,
+      color: theme.foreground.gray,
+      textTransform: "uppercase",
+    },
+    objectiveBtn: {
+      borderWidth: 1,
+      borderColor: theme.primary.main,
+      backgroundColor: theme.primary.main + "12",
+      borderRadius: 14,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+    },
+    objectiveBtnText: {
+      fontFamily: FONTS.bold,
+      fontSize: 11,
+      color: theme.primary.main,
+      letterSpacing: 0.5,
       textTransform: "uppercase",
     },
     weekChipsRow: {
@@ -991,16 +1102,33 @@ function createStyles(theme: Theme) {
     weekChipPending: {
       backgroundColor: theme.background.accent,
     },
+    weekChipOff: {
+      backgroundColor: theme.background.accent + "66",
+    },
+    weekChipToday: {
+      borderWidth: 1,
+      borderColor: theme.primary.main,
+    },
     weekChipLabel: {
       fontFamily: FONTS.bold,
       fontSize: 11,
       color: theme.foreground.gray,
       textTransform: "capitalize",
     },
+    weekChipDate: {
+      fontFamily: FONTS.semiBold,
+      fontSize: 10,
+      color: theme.foreground.gray,
+    },
     weekChipLabelActive: {
       color: "#fff",
     },
     weekChipDash: {
+      fontFamily: FONTS.bold,
+      fontSize: 14,
+      color: theme.foreground.gray,
+    },
+    weekChipOffMark: {
       fontFamily: FONTS.bold,
       fontSize: 14,
       color: theme.foreground.gray,

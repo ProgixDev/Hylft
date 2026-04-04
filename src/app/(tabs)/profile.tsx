@@ -33,8 +33,9 @@ import {
 
 import { FONTS } from "../../constants/fonts";
 
-// The currently authenticated user
-const MY_USER_ID = "1";
+// Mock profile source per theme to keep profile content coherent.
+const MALE_PROFILE_USER_ID = "1";
+const FEMALE_PROFILE_USER_ID = "4";
 
 const surfaceShadow = Platform.select({
   ios: {
@@ -496,28 +497,30 @@ export default function Profile() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const styles = createStyles(theme);
+  const profileUserId =
+    themeType === "female" ? FEMALE_PROFILE_USER_ID : MALE_PROFILE_USER_ID;
 
   const [activeTab, setActiveTab] = useState<"posts" | "routines">("posts");
   const [user, setUser] = useState<User | undefined>(() =>
-    getUserById(MY_USER_ID),
+    getUserById(profileUserId),
   );
   const [posts, setPosts] = useState<Post[]>(() =>
-    getPostsByUserId(MY_USER_ID),
+    getPostsByUserId(profileUserId),
   );
   const [workouts, setWorkouts] = useState<Workout[]>(() =>
-    getWorkoutsByUserId(MY_USER_ID),
+    getWorkoutsByUserId(profileUserId),
   );
   const [routines, setRoutines] = useState<Routine[]>(() =>
-    getRoutinesByUserId(MY_USER_ID),
+    getRoutinesByUserId(profileUserId),
   );
 
   useFocusEffect(
     useCallback(() => {
-      setUser(getUserById(MY_USER_ID));
-      setPosts(getPostsByUserId(MY_USER_ID));
-      setWorkouts(getWorkoutsByUserId(MY_USER_ID));
-      setRoutines(getRoutinesByUserId(MY_USER_ID));
-    }, []),
+      setUser(getUserById(profileUserId));
+      setPosts(getPostsByUserId(profileUserId));
+      setWorkouts(getWorkoutsByUserId(profileUserId));
+      setRoutines(getRoutinesByUserId(profileUserId));
+    }, [profileUserId]),
   );
 
   if (!user) return null;
@@ -582,7 +585,7 @@ export default function Profile() {
             ]}
             onPress={() =>
               router.navigate(
-                `/user/posts?userId=${MY_USER_ID}&postIndex=${index}` as any,
+                `/user/posts?userId=${profileUserId}&postIndex=${index}` as any,
               )
             }
             hitSlop={4}
@@ -762,7 +765,14 @@ export default function Profile() {
               hitSlop={8}
             >
               <View style={styles.avatarFrame}>
-                <Image source={{ uri: user.avatar }} style={styles.avatar} />
+                <Image
+                  source={
+                    themeType === "female"
+                      ? require("../../../assets/images/AuthPage/female/HoldingTwoWeights.jpg")
+                      : { uri: user.avatar }
+                  }
+                  style={styles.avatar}
+                />
               </View>
               <View style={styles.avatarEditBadge}>
                 <Ionicons
