@@ -431,7 +431,11 @@ export default function Workout() {
           onPress={handleCreateRoutine}
         >
           <LinearGradient
-            colors={["#6C63FF", "#4A42D0"]}
+            colors={
+              themeType === "dark"
+                ? ["#CFA44A", "#A97B2C"]
+                : [theme.primary.light, theme.primary.main]
+            }
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.createGradient}
@@ -444,7 +448,15 @@ export default function Workout() {
                 {t("workout.browseCommunityTemplates")}
               </Text>
               <View style={styles.createBtn}>
-                <Text style={styles.createBtnText}>GO</Text>
+                <Text
+                  style={[
+                    styles.createBtnText,
+                    themeType === "dark" && { color: "#A97B2C" },
+                    themeType !== "dark" && { color: theme.primary.main },
+                  ]}
+                >
+                  GO
+                </Text>
               </View>
             </View>
             <MaterialCommunityIcons

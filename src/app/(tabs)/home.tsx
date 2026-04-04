@@ -192,7 +192,7 @@ export default function Home() {
       title: t("home.lowerBodyBlast"),
       desc: t("home.lowerBodyBlastDesc"),
       image: genderedImages.challenge[2],
-      color: "#6A1B9A",
+      color: themeType === "dark" ? "#C79A3B" : "#6A1B9A",
     },
   ];
 
