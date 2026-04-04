@@ -28,6 +28,8 @@ const CHALLENGE_CARD_WIDTH = SCREEN_WIDTH * 0.78;
 
 const DAY_LABELS = ["L", "M", "M", "J", "V", "S", "D"];
 const DAY_LABELS_SHORT = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
+const OBJECTIVE_KEY = "@hylift_home_weekly_objective";
+const OBJECTIVE_DAYS_KEY = "@hylift_home_weekly_objective_days";
 
 type DayStatus = "completed" | "missed" | "pending" | "off";
 
@@ -57,6 +59,7 @@ export default function Home() {
   const genderedImages = useGenderedImages();
   const [selectedBodyFocus, setSelectedBodyFocus] = useState(0);
   const [weeklyObjective, setWeeklyObjective] = useState(3);
+  const [weeklyObjectiveDays, setWeeklyObjectiveDays] = useState<number[]>([]);
 
   const now = new Date();
   const todayDayIndex = (now.getDay() + 6) % 7; // Convert Sun=0 to Mon=0 based
@@ -67,8 +70,12 @@ export default function Home() {
 
       const loadObjective = async () => {
         try {
-          const saved = await AsyncStorage.getItem("@hylift_home_weekly_objective");
-          const parsed = Number(saved);
+          const [savedObjective, savedDays] = await Promise.all([
+            AsyncStorage.getItem(OBJECTIVE_KEY),
+            AsyncStorage.getItem(OBJECTIVE_DAYS_KEY),
+          ]);
+
+          const parsed = Number(savedObjective);
           if (
             isMounted &&
             Number.isFinite(parsed) &&
@@ -76,6 +83,16 @@ export default function Home() {
             parsed <= 7
           ) {
             setWeeklyObjective(parsed);
+          }
+
+          if (isMounted && savedDays) {
+            const parsedDays = JSON.parse(savedDays);
+            if (Array.isArray(parsedDays)) {
+              const validDays = parsedDays
+                .filter((d) => Number.isInteger(d) && d >= 0 && d <= 6)
+                .slice(0, 7);
+              setWeeklyObjectiveDays(validDays);
+            }
           }
         } catch {
           // Keep default objective when storage is unavailable.
@@ -107,6 +124,15 @@ export default function Home() {
 
   const scheduledIndices = useMemo(() => {
     const target = Math.min(Math.max(weeklyObjective, 1), 7);
+
+    const savedDays = weeklyObjectiveDays
+      .filter((d) => Number.isInteger(d) && d >= 0 && d <= 6)
+      .slice(0, 7);
+
+    if (savedDays.length === target) {
+      return new Set<number>(savedDays);
+    }
+
     const days = new Set<number>();
 
     for (let i = 0; i < target; i += 1) {
@@ -114,7 +140,7 @@ export default function Home() {
     }
 
     return days;
-  }, [todayDayIndex, weeklyObjective]);
+  }, [todayDayIndex, weeklyObjective, weeklyObjectiveDays]);
 
   const weekDayStatuses = useMemo<DayStatus[]>(() => {
     return DAY_LABELS_SHORT.map((_, index) => {
