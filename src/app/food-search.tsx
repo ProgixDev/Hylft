@@ -44,6 +44,11 @@ export default function FoodSearchScreen() {
   const { addMeal } = useNutrition();
   const styles = createStyles(theme);
   const lang = i18n.language?.startsWith("fr") ? "fr" as const : "en" as const;
+  const isFr = lang === "fr";
+
+  const mealLabels: Record<MealType, string> = isFr
+    ? { breakfast: "Petit déjeuner", lunch: "Déjeuner", dinner: "Dîner", snack: "Collation" }
+    : { breakfast: "Breakfast", lunch: "Lunch", dinner: "Dinner", snack: "Snack" };
 
   // Get meal type from params
   const selectedMealType: MealType = (() => {
@@ -127,10 +132,10 @@ export default function FoodSearchScreen() {
         <Pressable style={styles.backBtn} onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={24} color={theme.foreground.white} />
         </Pressable>
-        <Text style={styles.title}>Search Food</Text>
+        <Text style={styles.title}>{isFr ? "Rechercher" : "Search Food"}</Text>
         {addedIds.size > 0 ? (
           <Pressable style={styles.doneBtn} onPress={() => router.back()}>
-            <Text style={styles.doneBtnText}>{addedIds.size} added</Text>
+            <Text style={styles.doneBtnText}>{addedIds.size} {isFr ? "ajouté(s)" : "added"}</Text>
             <Ionicons name="checkmark" size={16} color="#fff" />
           </Pressable>
         ) : (
@@ -140,14 +145,15 @@ export default function FoodSearchScreen() {
 
       {/* Meal Info */}
       <Text style={styles.mealInfo}>
-        Adding to: <Text style={styles.mealType}>{selectedMealType.toUpperCase()}</Text>
+        {isFr ? "Ajouter à : " : "Adding to: "}
+        <Text style={styles.mealType}>{mealLabels[selectedMealType]}</Text>
       </Text>
 
       {/* Search Bar */}
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.searchInput}
-          placeholder="Search food (chicken, rice, egg...)..."
+          placeholder={isFr ? "Rechercher un aliment (poulet, riz, oeuf...)" : "Search food (chicken, rice, egg...)"}
           placeholderTextColor={theme.foreground.gray}
           value={query}
           onChangeText={setQuery}
@@ -171,13 +177,13 @@ export default function FoodSearchScreen() {
       {isLoading && results.length === 0 ? (
         <View style={styles.loadingState}>
           <ActivityIndicator color={theme.primary.main} size="large" />
-          <Text style={styles.loadingText}>Loading popular foods...</Text>
+          <Text style={styles.loadingText}>{isFr ? "Chargement des aliments..." : "Loading popular foods..."}</Text>
         </View>
       ) : results.length === 0 ? (
         <View style={styles.emptyState}>
           <Ionicons name="close-circle" size={48} color={theme.foreground.gray} />
-          <Text style={styles.emptyText}>No foods found</Text>
-          <Text style={styles.emptySubtext}>Try searching for a different food</Text>
+          <Text style={styles.emptyText}>{isFr ? "Aucun aliment trouvé" : "No foods found"}</Text>
+          <Text style={styles.emptySubtext}>{isFr ? "Essayez un autre terme de recherche" : "Try searching for a different food"}</Text>
         </View>
       ) : (
         <FlatList
@@ -198,19 +204,19 @@ export default function FoodSearchScreen() {
                 </View>
                 <View style={styles.macrosContainer}>
                   <View style={styles.macroItem}>
-                    <Text style={styles.macroLabel}>Protein</Text>
+                    <Text style={styles.macroLabel}>{isFr ? "Prot." : "Protein"}</Text>
                     <Text style={styles.macroValue}>{item.protein.toFixed(1)}g</Text>
                   </View>
                   <View style={styles.macroItem}>
-                    <Text style={styles.macroLabel}>Carbs</Text>
+                    <Text style={styles.macroLabel}>{isFr ? "Gluc." : "Carbs"}</Text>
                     <Text style={styles.macroValue}>{item.carbs.toFixed(1)}g</Text>
                   </View>
                   <View style={styles.macroItem}>
-                    <Text style={styles.macroLabel}>Fat</Text>
+                    <Text style={styles.macroLabel}>{isFr ? "Lip." : "Fat"}</Text>
                     <Text style={styles.macroValue}>{item.fat.toFixed(1)}g</Text>
                   </View>
                 </View>
-                <Text style={styles.serveNote}>Per 100g serving</Text>
+                <Text style={styles.serveNote}>{isFr ? "Pour 100g" : "Per 100g serving"}</Text>
               </View>
 
               <Pressable
