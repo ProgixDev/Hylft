@@ -1,919 +1,655 @@
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect, useRouter } from "expo-router";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-    Image,
-    Platform,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
+  Image,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
+import { BarChart, LineChart } from "react-native-gifted-charts";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Theme } from "../../constants/themes";
-import { useTheme } from "../../contexts/ThemeContext";
-import {
-    getPostsByUserId,
-    getRoutinesByUserId,
-    getUserById,
-    getWorkoutsByUserId,
-    Post,
-    Routine,
-    User,
-    Workout,
-} from "../../data/mockData";
-import {
-    translateApiData,
-    translateExerciseTerm,
-    translateRoutineDescription,
-    translateRoutineName,
-} from "../../utils/exerciseTranslator";
-
 import { FONTS } from "../../constants/fonts";
+import { Theme } from "../../constants/themes";
+import { useHealth } from "../../contexts/HealthContext";
+import { useNutrition } from "../../contexts/NutritionContext";
+import { useTheme } from "../../contexts/ThemeContext";
+import { WeightEntry, WeightHistory } from "../../services/weightHistory";
 
-// Mock profile source per theme to keep profile content coherent.
-const MALE_PROFILE_USER_ID = "1";
-const FEMALE_PROFILE_USER_ID = "4";
+// ── Storage keys (same as onboarding / alimentation) ─────────────────────
+const KEYS = {
+  weight: "@hylift_food_weight_current",
+  targetWeight: "@hylift_food_weight_target",
+  height: "@hylift_height",
+  age: "@hylift_age",
+  gender: "@hylift_gender",
+  fitnessGoals: "@hylift_fitness_goals",
+  displayName: "@hylift_display_name",
+  username: "@hylift_username",
+};
 
-const surfaceShadow = Platform.select({
-  ios: {
-    shadowColor: "#000000",
-    shadowOpacity: 0.2,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 10 },
-  },
-  android: {
-    elevation: 8,
-  },
-  default: {},
-});
+type Period = "daily" | "weekly" | "monthly";
 
-const controlShadow = Platform.select({
-  ios: {
-    shadowColor: "#000000",
-    shadowOpacity: 0.14,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
-  },
-  android: {
-    elevation: 4,
-  },
-  default: {},
-});
-
-function createStyles(theme: Theme) {
-  return StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.background.dark,
-    },
-    header: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-      paddingHorizontal: 20,
-      paddingTop: 6,
-      paddingBottom: 4,
-    },
-    headerTitle: {
-      fontSize: 22,
-      fontFamily: FONTS.extraBold,
-      color: theme.foreground.white,
-      letterSpacing: -0.3,
-    },
-    iconBtn: {
-      width: 36,
-      height: 36,
-      borderRadius: 12,
-      alignItems: "center",
-      justifyContent: "center",
-      backgroundColor: theme.background.accent,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: "rgba(0,0,0,0.08)",
-      ...controlShadow,
-    },
-    iconBtnPressed: {
-      opacity: 0.9,
-      transform: [{ scale: 0.96 }],
-    },
-    heroCard: {
-      marginHorizontal: 20,
-      marginTop: 4,
-      borderRadius: 22,
-      paddingHorizontal: 16,
-      paddingTop: 16,
-      paddingBottom: 14,
-      backgroundColor: theme.background.accent,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: "rgba(0,0,0,0.08)",
-      overflow: "hidden",
-      ...surfaceShadow,
-    },
-    heroGlow: {
-      position: "absolute",
-      width: 150,
-      height: 150,
-      borderRadius: 75,
-      backgroundColor: theme.primary.main,
-      opacity: 0.12,
-      top: -60,
-      right: -20,
-    },
-    hero: {
-      alignItems: "center",
-    },
-    avatarButton: {
-      position: "relative",
-      marginBottom: 10,
-      borderRadius: 46,
-    },
-    avatarButtonPressed: {
-      opacity: 0.92,
-      transform: [{ scale: 0.97 }],
-    },
-    avatarFrame: {
-      padding: 3,
-      borderRadius: 46,
-      backgroundColor: "rgba(0,0,0,0.06)",
-    },
-    avatar: {
-      width: 82,
-      height: 82,
-      borderRadius: 41,
-      borderWidth: 2,
-      borderColor: theme.primary.main,
-      backgroundColor: theme.background.darker,
-    },
-    avatarEditBadge: {
-      position: "absolute",
-      bottom: 2,
-      right: 2,
-      width: 26,
-      height: 26,
-      borderRadius: 13,
-      backgroundColor: theme.foreground.white,
-      alignItems: "center",
-      justifyContent: "center",
-      ...controlShadow,
-    },
-    username: {
-      fontSize: 20,
-      fontFamily: FONTS.bold,
-      color: theme.foreground.white,
-      marginBottom: 4,
-      letterSpacing: -0.4,
-    },
-    bio: {
-      fontSize: 12,
-      color: theme.foreground.gray,
-      textAlign: "center",
-      lineHeight: 17,
-      paddingHorizontal: 10,
-      marginBottom: 12,
-    },
-    heroActions: {
-      flexDirection: "row",
-      justifyContent: "center",
-    },
-    primaryAction: {
-      minHeight: 38,
-      borderRadius: 19,
-      paddingHorizontal: 16,
-      backgroundColor: theme.primary.main,
-      alignItems: "center",
-      justifyContent: "center",
-      flexDirection: "row",
-      gap: 6,
-      ...controlShadow,
-    },
-    primaryActionPressed: {
-      opacity: 0.94,
-      transform: [{ scale: 0.98 }],
-    },
-    primaryActionText: {
-      fontSize: 13,
-      fontFamily: FONTS.bold,
-      color: theme.background.dark,
-    },
-    statsRow: {
-      flexDirection: "row",
-      gap: 8,
-      marginHorizontal: 20,
-      marginTop: 10,
-    },
-    statBox: {
-      flex: 1,
-      minHeight: 62,
-      alignItems: "center",
-      justifyContent: "center",
-      paddingHorizontal: 6,
-      paddingVertical: 10,
-      backgroundColor: theme.background.darker,
-      borderRadius: 16,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: "rgba(0,0,0,0.07)",
-      ...surfaceShadow,
-    },
-    statBoxPressed: {
-      opacity: 0.92,
-      transform: [{ scale: 0.98 }],
-    },
-    statNumber: {
-      fontSize: 16,
-      fontFamily: FONTS.bold,
-      color: theme.foreground.white,
-      letterSpacing: -0.3,
-    },
-    statLabel: {
-      fontSize: 11,
-      color: theme.foreground.gray,
-      marginTop: 2,
-      textAlign: "center",
-    },
-    fitnessBar: {
-      flexDirection: "row",
-      marginTop: 12,
-      paddingTop: 10,
-      borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: "rgba(0,0,0,0.08)",
-      alignItems: "center",
-    },
-    fitnessStatItem: {
-      flex: 1,
-      alignItems: "center",
-      gap: 3,
-      paddingVertical: 2,
-    },
-    fitnessIconBadge: {
-      width: 26,
-      height: 26,
-      borderRadius: 8,
-      alignItems: "center",
-      justifyContent: "center",
-      marginBottom: 1,
-    },
-    fitnessStatDivider: {
-      width: StyleSheet.hairlineWidth,
-      height: 32,
-      backgroundColor: "rgba(0,0,0,0.08)",
-    },
-    fitnessValue: {
-      fontSize: 15,
-      fontFamily: FONTS.extraBold,
-      letterSpacing: -0.4,
-    },
-    fitnessLabel: {
-      fontSize: 9,
-      color: theme.foreground.gray,
-      textTransform: "uppercase",
-      letterSpacing: 0.5,
-      textAlign: "center",
-    },
-    tabBar: {
-      flexDirection: "row",
-      marginHorizontal: 20,
-      marginTop: 12,
-      padding: 3,
-      borderRadius: 16,
-      backgroundColor: theme.background.accent,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: "rgba(0,0,0,0.07)",
-    },
-    tab: {
-      flex: 1,
-      alignItems: "center",
-      justifyContent: "center",
-      minHeight: 34,
-      borderRadius: 13,
-    },
-    tabActive: {
-      backgroundColor: theme.background.darker,
-      ...controlShadow,
-    },
-    tabPressed: {
-      opacity: 0.92,
-    },
-    tabText: {
-      fontSize: 12,
-      fontFamily: FONTS.semiBold,
-      color: theme.foreground.gray,
-      letterSpacing: 0.1,
-    },
-    tabTextActive: {
-      color: theme.foreground.white,
-    },
-    postsGrid: {
-      flexDirection: "row",
-      flexWrap: "wrap",
-      gap: 3,
-      paddingHorizontal: 20,
-      paddingTop: 12,
-    },
-    gridItem: {
-      width: "32%",
-      aspectRatio: 1,
-      borderRadius: 12,
-      overflow: "hidden",
-      marginBottom: 3,
-      backgroundColor: theme.background.accent,
-    },
-    gridItemPressed: {
-      opacity: 0.94,
-      transform: [{ scale: 0.98 }],
-    },
-    gridImage: {
-      width: "100%",
-      height: "100%",
-    },
-    multipleIndicator: {
-      position: "absolute",
-      top: 6,
-      right: 6,
-      borderRadius: 999,
-      backgroundColor: "rgba(0,0,0,0.55)",
-      paddingHorizontal: 5,
-      paddingVertical: 3,
-    },
-    emptyState: {
-      alignItems: "center",
-      marginHorizontal: 20,
-      marginTop: 12,
-      borderRadius: 20,
-      paddingVertical: 32,
-      paddingHorizontal: 20,
-      backgroundColor: theme.background.accent,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: "rgba(0,0,0,0.07)",
-      ...surfaceShadow,
-    },
-    emptyText: {
-      fontSize: 15,
-      fontFamily: FONTS.semiBold,
-      color: theme.foreground.white,
-      marginTop: 10,
-      marginBottom: 4,
-    },
-    emptySubtext: {
-      fontSize: 12,
-      color: theme.foreground.gray,
-      textAlign: "center",
-      lineHeight: 17,
-    },
-    routinesList: {
-      paddingHorizontal: 20,
-      paddingTop: 12,
-      paddingBottom: 4,
-    },
-    routineCard: {
-      backgroundColor: theme.background.accent,
-      borderRadius: 18,
-      padding: 12,
-      marginBottom: 8,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: "rgba(0,0,0,0.08)",
-      ...surfaceShadow,
-    },
-    routineCardPressed: {
-      opacity: 0.94,
-      transform: [{ scale: 0.985 }],
-    },
-    routineHeader: {
-      flexDirection: "row",
-      alignItems: "flex-start",
-      marginBottom: 8,
-    },
-    routineInfo: {
-      flex: 1,
-      paddingRight: 10,
-    },
-    routineHeaderRight: {
-      alignItems: "flex-end",
-      gap: 8,
-    },
-    routineName: {
-      fontSize: 14,
-      fontFamily: FONTS.bold,
-      color: theme.foreground.white,
-      marginBottom: 3,
-      letterSpacing: -0.3,
-    },
-    routineDesc: {
-      fontSize: 12,
-      color: theme.foreground.gray,
-      lineHeight: 17,
-    },
-    difficultyBadge: {
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-      borderRadius: 16,
-    },
-    difficultyText: {
-      fontSize: 10,
-      fontFamily: FONTS.bold,
-    },
-    routineChevron: {
-      width: 26,
-      height: 26,
-      borderRadius: 13,
-      alignItems: "center",
-      justifyContent: "center",
-      backgroundColor: theme.background.darker,
-    },
-    routineMeta: {
-      flexDirection: "row",
-      flexWrap: "wrap",
-      gap: 8,
-    },
-    routineMetaItem: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 4,
-      paddingHorizontal: 8,
-      paddingVertical: 5,
-      borderRadius: 999,
-      backgroundColor: theme.background.darker,
-    },
-    routineMetaText: {
-      fontSize: 11,
-      color: theme.foreground.gray,
-    },
-    muscleTagsRow: {
-      flexDirection: "row",
-      flexWrap: "wrap",
-      gap: 5,
-      marginTop: 8,
-    },
-    muscleTag: {
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-      borderRadius: 999,
-      backgroundColor: "rgba(0,0,0,0.05)",
-    },
-    muscleTagText: {
-      fontSize: 10,
-      color: theme.foreground.gray,
-      textTransform: "capitalize",
-    },
-  });
+// ── Helpers ──────────────────────────────────────────────────────────────
+function calcBMI(weightKg: number, heightCm: number): number {
+  if (heightCm <= 0) return 0;
+  const heightM = heightCm / 100;
+  return weightKg / (heightM * heightM);
 }
 
-// â”€â”€â”€ helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
-function formatCount(n: number) {
-  if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
-  return `${n}`;
+function bmiCategory(bmi: number): { label: string; color: string } {
+  if (bmi < 18.5) return { label: "Insuffisant", color: "#4A90D9" };
+  if (bmi < 25) return { label: "Normal", color: "#34C759" };
+  if (bmi < 30) return { label: "Surpoids", color: "#F5A623" };
+  return { label: "Obésité", color: "#ED6665" };
 }
 
-function difficultyColor(
-  d: Routine["difficulty"],
-): { bg: string; text: string } {
-  if (d === "beginner") return { bg: "#d1fae5", text: "#16a34a" };
-  if (d === "intermediate") return { bg: "#fef3c7", text: "#d97706" };
-  return { bg: "#fee2e2", text: "#dc2626" };
+function calcBMR(weight: number, height: number, age: number, gender: string): number {
+  // Mifflin-St Jeor
+  if (gender === "female") return 10 * weight + 6.25 * height - 5 * age - 161;
+  return 10 * weight + 6.25 * height - 5 * age + 5;
 }
 
-function calcTotalVolume(workouts: Workout[]): string {
-  const total = workouts.reduce(
-    (sum, w) =>
-      sum +
-      w.exercises.reduce((es, e) => {
-        const kg = parseFloat(e.weight?.replace(/[^0-9.]/g, "") || "0");
-        const reps = parseInt(e.reps.split("-")[0]) || 0;
-        return es + kg * e.sets * reps;
-      }, 0),
-    0,
-  );
-  if (total >= 1000) return `${(total / 1000).toFixed(1)}k`;
-  return `${Math.round(total)}`;
-}
+const DAY_LABELS_FR = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
+const DAY_LABELS_EN = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-// â”€â”€â”€ Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
+// ── Component ────────────────────────────────────────────────────────────
 export default function Profile() {
   const { t, i18n } = useTranslation();
   const { theme, themeType } = useTheme();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const styles = createStyles(theme);
-  const profileUserId =
-    themeType === "female" ? FEMALE_PROFILE_USER_ID : MALE_PROFILE_USER_ID;
+  const isFr = i18n.language?.startsWith("fr");
+  const dayLabels = isFr ? DAY_LABELS_FR : DAY_LABELS_EN;
 
-  const [activeTab, setActiveTab] = useState<"posts" | "routines">("posts");
-  const [user, setUser] = useState<User | undefined>(() =>
-    getUserById(profileUserId),
-  );
-  const [posts, setPosts] = useState<Post[]>(() =>
-    getPostsByUserId(profileUserId),
-  );
-  const [workouts, setWorkouts] = useState<Workout[]>(() =>
-    getWorkoutsByUserId(profileUserId),
-  );
-  const [routines, setRoutines] = useState<Routine[]>(() =>
-    getRoutinesByUserId(profileUserId),
-  );
+  // Health & Nutrition data
+  const { todayCaloriesBurned, weeklyCaloriesBurned } = useHealth();
+  const { goals, todaySummary, weekSummaries } = useNutrition();
 
+  // Local state from AsyncStorage
+  const [weight, setWeight] = useState(70);
+  const [targetWeight, setTargetWeight] = useState(65);
+  const [height, setHeight] = useState(175);
+  const [age, setAge] = useState(25);
+  const [gender, setGender] = useState("male");
+  const [fitnessGoals, setFitnessGoals] = useState<string[]>([]);
+  const [displayName, setDisplayName] = useState("");
+  const [weightHistory, setWeightHistory] = useState<WeightEntry[]>([]);
+
+  // Period tabs
+  const [caloriesPeriod, setCaloriesPeriod] = useState<Period>("weekly");
+  const [weightPeriod, setWeightPeriod] = useState<Period>("weekly");
+  const [nutritionPeriod, setNutritionPeriod] = useState<Period>("weekly");
+
+  // Load data on focus
   useFocusEffect(
     useCallback(() => {
-      setUser(getUserById(profileUserId));
-      setPosts(getPostsByUserId(profileUserId));
-      setWorkouts(getWorkoutsByUserId(profileUserId));
-      setRoutines(getRoutinesByUserId(profileUserId));
-    }, [profileUserId]),
+      (async () => {
+        const [w, tw, h, a, g, fg, dn, wh] = await Promise.all([
+          AsyncStorage.getItem(KEYS.weight),
+          AsyncStorage.getItem(KEYS.targetWeight),
+          AsyncStorage.getItem(KEYS.height),
+          AsyncStorage.getItem(KEYS.age),
+          AsyncStorage.getItem(KEYS.gender),
+          AsyncStorage.getItem(KEYS.fitnessGoals),
+          AsyncStorage.getItem(KEYS.displayName),
+          WeightHistory.getLastDays(30),
+        ]);
+
+        if (w) setWeight(Number(w) || 70);
+        if (tw) setTargetWeight(Number(tw) || 65);
+        if (h) setHeight(Number(h) || 175);
+        if (a) setAge(Number(a) || 25);
+        if (g) setGender(g);
+        if (fg) {
+          try { setFitnessGoals(JSON.parse(fg)); } catch { /* */ }
+        }
+        if (dn) setDisplayName(dn);
+        setWeightHistory(wh);
+      })();
+    }, []) // Empty deps is fine — useFocusEffect re-runs on every screen focus
   );
 
-  if (!user) return null;
+  // ── Computed values ────────────────────────────────────────────────────
+  const bmi = calcBMI(weight, height);
+  const bmiInfo = bmiCategory(bmi);
+  const bmr = calcBMR(weight, height, age, gender);
+  const weightDiff = weight - targetWeight;
+  const weightProgress = targetWeight > 0
+    ? Math.min(Math.max(0, 1 - Math.abs(weightDiff) / Math.max(weight, targetWeight)), 1)
+    : 0;
 
-  const totalVolume = calcTotalVolume(workouts);
-  const goToEditProfile = () => router.push("/settings/edit-profile" as any);
+  // ── Calories Burned chart data ────────────────────────────────────────
+  const caloriesChartData = useMemo(() => {
+    if (caloriesPeriod === "daily") {
+      return [{ value: Math.round(todayCaloriesBurned), label: isFr ? "Auj." : "Today", frontColor: theme.primary.main }];
+    }
 
-  const renderSocialStat = (
-    value: string,
+    if (caloriesPeriod === "weekly") {
+      return dayLabels.map((label, i) => {
+        const entry = weeklyCaloriesBurned[i];
+        return {
+          value: entry ? Math.round(entry.totalCalories) : 0,
+          label,
+          frontColor: theme.primary.main,
+        };
+      });
+    }
+
+    // Monthly: repeat weekly data x4 as approximation
+    const weeks = [1, 2, 3, 4].map((w) => {
+      const total = weeklyCaloriesBurned.reduce((s, d) => s + d.totalCalories, 0);
+      return { value: Math.round(total), label: `S${w}`, frontColor: theme.primary.main };
+    });
+    return weeks;
+  }, [caloriesPeriod, todayCaloriesBurned, weeklyCaloriesBurned, theme.primary.main, dayLabels, isFr]);
+
+  const totalCaloriesBurned = useMemo(() => {
+    if (caloriesPeriod === "daily") return Math.round(todayCaloriesBurned);
+    return weeklyCaloriesBurned.reduce((s, d) => s + Math.round(d.totalCalories), 0);
+  }, [caloriesPeriod, todayCaloriesBurned, weeklyCaloriesBurned]);
+
+  // ── Weight chart data ─────────────────────────────────────────────────
+  const weightChartData = useMemo(() => {
+    if (weightHistory.length === 0) {
+      return [{ value: weight, label: isFr ? "Auj." : "Today" }];
+    }
+
+    let entries = weightHistory;
+    if (weightPeriod === "daily") {
+      entries = entries.slice(-7);
+    } else if (weightPeriod === "weekly") {
+      entries = entries.slice(-14);
+    } else {
+      entries = entries.slice(-30);
+    }
+
+    return entries.map((e) => ({
+      value: e.weight,
+      label: e.date.slice(5), // MM-DD
+    }));
+  }, [weightHistory, weightPeriod, weight, isFr]);
+
+  // ── Nutrition chart data ──────────────────────────────────────────────
+  const nutritionData = useMemo(() => {
+    if (nutritionPeriod === "daily") {
+      return {
+        calories: { current: Math.round(todaySummary.totalCalories), goal: goals.calorieGoal },
+        protein: { current: Math.round(todaySummary.totalProtein), goal: goals.proteinGoal },
+        carbs: { current: Math.round(todaySummary.totalCarbs), goal: goals.carbsGoal },
+        fat: { current: Math.round(todaySummary.totalFat), goal: goals.fatGoal },
+      };
+    }
+
+    // Weekly or monthly: aggregate weekSummaries
+    const multiplier = nutritionPeriod === "monthly" ? 4 : 1;
+    const totals = weekSummaries.reduce(
+      (acc, day) => ({
+        calories: acc.calories + day.totalCalories,
+        protein: acc.protein + day.totalProtein,
+        carbs: acc.carbs + day.totalCarbs,
+        fat: acc.fat + day.totalFat,
+      }),
+      { calories: 0, protein: 0, carbs: 0, fat: 0 }
+    );
+
+    const days = nutritionPeriod === "monthly" ? 30 : 7;
+    return {
+      calories: { current: Math.round(totals.calories * multiplier), goal: goals.calorieGoal * days },
+      protein: { current: Math.round(totals.protein * multiplier), goal: goals.proteinGoal * days },
+      carbs: { current: Math.round(totals.carbs * multiplier), goal: goals.carbsGoal * days },
+      fat: { current: Math.round(totals.fat * multiplier), goal: goals.fatGoal * days },
+    };
+  }, [nutritionPeriod, todaySummary, weekSummaries, goals]);
+
+  // ── Goal labels ───────────────────────────────────────────────────────
+  const goalLabels: Record<string, { icon: keyof typeof Ionicons.glyphMap; label: string }> = {
+    build_muscle: { icon: "barbell-outline", label: isFr ? "Muscle" : "Build Muscle" },
+    lose_fat: { icon: "flame-outline", label: isFr ? "Perte gras" : "Lose Fat" },
+    get_stronger: { icon: "trophy-outline", label: isFr ? "Force" : "Strength" },
+    stay_fit: { icon: "heart-outline", label: isFr ? "Forme" : "Stay Fit" },
+    athletic: { icon: "flash-outline", label: isFr ? "Athlétique" : "Athletic" },
+    body_recomp: { icon: "body-outline", label: isFr ? "Recomp" : "Recomp" },
+  };
+
+  // ── Renders ────────────────────────────────────────────────────────────
+  const renderPeriodTabs = (current: Period, setter: (p: Period) => void) => (
+    <View style={styles.periodTabs}>
+      {(["daily", "weekly", "monthly"] as Period[]).map((p) => (
+        <Pressable
+          key={p}
+          style={[styles.periodTab, current === p && styles.periodTabActive]}
+          onPress={() => setter(p)}
+        >
+          <Text style={[styles.periodTabText, current === p && styles.periodTabTextActive]}>
+            {p === "daily" ? (isFr ? "Jour" : "Day") : p === "weekly" ? (isFr ? "Semaine" : "Week") : (isFr ? "Mois" : "Month")}
+          </Text>
+        </Pressable>
+      ))}
+    </View>
+  );
+
+  const renderProgressBar = (
     label: string,
-    onPress?: () => void,
+    current: number,
+    goal: number,
+    color: string,
+    unit: string,
   ) => {
-    const content = (
-      <>
-        <Text style={styles.statNumber}>{value}</Text>
-        <Text style={styles.statLabel}>{label}</Text>
-      </>
-    );
-
-    if (!onPress) {
-      return <View style={styles.statBox}>{content}</View>;
-    }
-
+    const pct = goal > 0 ? Math.min((current / goal) * 100, 100) : 0;
     return (
-      <Pressable
-        style={({ pressed }) => [
-          styles.statBox,
-          pressed && styles.statBoxPressed,
-        ]}
-        onPress={onPress}
-        hitSlop={8}
-      >
-        {content}
-      </Pressable>
-    );
-  };
-
-  const renderPostsGrid = () => {
-    if (posts.length === 0) {
-      return (
-        <View style={styles.emptyState}>
-          <Ionicons
-            name="image-outline"
-            size={44}
-            color={theme.foreground.gray}
-          />
-          <Text style={styles.emptyText}>{t("profile.noPostsYet")}</Text>
-          <Text style={styles.emptySubtext}>
-            {t("profile.shareFirstWorkout")}
+      <View style={styles.progressItem} key={label}>
+        <View style={styles.progressHeader}>
+          <Text style={styles.progressLabel}>{label}</Text>
+          <Text style={styles.progressValue}>
+            <Text style={{ color: theme.foreground.white, fontFamily: FONTS.bold }}>
+              {current}{unit}
+            </Text>{" "}
+            / {goal}{unit}
           </Text>
         </View>
-      );
-    }
-    return (
-      <View style={styles.postsGrid}>
-        {posts.map((post, index) => (
-          <Pressable
-            key={post.id}
-            style={({ pressed }) => [
-              styles.gridItem,
-              pressed && styles.gridItemPressed,
-            ]}
-            onPress={() =>
-              router.navigate(
-                `/user/posts?userId=${profileUserId}&postIndex=${index}` as any,
-              )
-            }
-            hitSlop={4}
-          >
-            <Image
-              source={{ uri: post.images[0] }}
-              style={styles.gridImage}
-              resizeMode="cover"
-            />
-            {post.images.length > 1 && (
-              <View style={styles.multipleIndicator}>
-                <Ionicons
-                  name="copy-outline"
-                  size={14}
-                  color={theme.foreground.white}
-                />
-              </View>
-            )}
-          </Pressable>
-        ))}
+        <View style={styles.progressBarBg}>
+          <View style={[styles.progressBarFill, { width: `${pct}%`, backgroundColor: color }]} />
+        </View>
       </View>
     );
   };
 
-  const renderRoutinesList = () => {
-    if (routines.length === 0) {
-      return (
-        <View style={styles.emptyState}>
-          <Ionicons
-            name="barbell-outline"
-            size={44}
-            color={theme.foreground.gray}
-          />
-          <Text style={styles.emptyText}>{t("profile.noRoutinesYet")}</Text>
-          <Text style={styles.emptySubtext}>
-            {t("profile.createFirstRoutine")}
-          </Text>
-        </View>
-      );
-    }
-    return (
-      <View style={styles.routinesList}>
-        {routines.map((routine) => {
-          const colors = difficultyColor(routine.difficulty);
-          return (
-            <Pressable
-              key={routine.id}
-              style={({ pressed }) => [
-                styles.routineCard,
-                pressed && styles.routineCardPressed,
-              ]}
-              onPress={() => router.navigate(`/routines/${routine.id}` as any)}
-              hitSlop={6}
-            >
-              <View style={styles.routineHeader}>
-                <View style={styles.routineInfo}>
-                  <Text style={styles.routineName}>
-                    {translateRoutineName(routine.name)}
-                  </Text>
-                  <Text style={styles.routineDesc} numberOfLines={2}>
-                    {translateRoutineDescription(routine.description)}
-                  </Text>
-                </View>
-                <View style={styles.routineHeaderRight}>
-                  <View
-                    style={[
-                      styles.difficultyBadge,
-                      { backgroundColor: colors.bg },
-                    ]}
-                  >
-                    <Text
-                      style={[styles.difficultyText, { color: colors.text }]}
-                    >
-                      {translateApiData(routine.difficulty)}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-
-              <View style={styles.routineMeta}>
-                <View style={styles.routineMetaItem}>
-                  <Ionicons
-                    name="time-outline"
-                    size={14}
-                    color={theme.foreground.gray}
-                  />
-                  <Text style={styles.routineMetaText}>
-                    {routine.estimatedDuration} min
-                  </Text>
-                </View>
-                <View style={styles.routineMetaItem}>
-                  <Ionicons
-                    name="barbell-outline"
-                    size={14}
-                    color={theme.foreground.gray}
-                  />
-                  <Text style={styles.routineMetaText}>
-                    {routine.exercises.length} {t("profile.exercises")}
-                  </Text>
-                </View>
-                <View style={styles.routineMetaItem}>
-                  <Ionicons
-                    name="checkmark-circle-outline"
-                    size={14}
-                    color={theme.foreground.gray}
-                  />
-                  <Text style={styles.routineMetaText}>
-                    {routine.timesCompleted} × {t("profile.done")}
-                  </Text>
-                </View>
-              </View>
-
-              {/* muscle tags */}
-              {routine.targetMuscles.length > 0 && (
-                <View style={styles.muscleTagsRow}>
-                  {routine.targetMuscles.map((m) => (
-                    <View key={m} style={styles.muscleTag}>
-                      <Text style={styles.muscleTagText}>
-                        {i18n.language === "fr"
-                          ? translateExerciseTerm(m, "targetMuscles")
-                          : m}
-                      </Text>
-                    </View>
-                  ))}
-                </View>
-              )}
-            </Pressable>
-          );
-        })}
-      </View>
-    );
-  };
+  const chartTextColor = theme.foreground.gray;
 
   return (
     <View style={styles.container}>
       {themeType === "female" && (
         <Image
           source={require("../../../assets/girly.png")}
-          style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, width: "100%", height: "100%", opacity: 0.3 }}
+          style={styles.bgOverlay}
           resizeMode="cover"
         />
       )}
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{
-          paddingTop: 4,
-          paddingBottom: Math.max(90, 24 + insets.bottom),
-        }}
+        contentContainerStyle={{ paddingTop: 4, paddingBottom: Math.max(100, 24 + insets.bottom) }}
       >
+        {/* ── Header ──────────────────────────────────────────────── */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>{t("tabs.profile")}</Text>
-          <Pressable
-            style={({ pressed }) => [
-              styles.iconBtn,
-              pressed && styles.iconBtnPressed,
-            ]}
-            onPress={() => router.push("/settings" as any)}
-            hitSlop={8}
-          >
-            <Ionicons
-              name="settings-outline"
-              size={20}
-              color={theme.foreground.white}
+          <Text style={styles.headerTitle}>{isFr ? "Profil" : "Profile"}</Text>
+          <Pressable style={styles.settingsBtn} onPress={() => router.push("/settings" as any)}>
+            <Ionicons name="settings-outline" size={20} color={theme.foreground.white} />
+          </Pressable>
+        </View>
+
+        {/* ── User Card ───────────────────────────────────────────── */}
+        <View style={styles.userCard}>
+          <Pressable onPress={() => router.push("/settings/edit-profile" as any)}>
+            <Image
+              source={
+                themeType === "female"
+                  ? require("../../../assets/images/AuthPage/female/HoldingTwoWeights.jpg")
+                  : require("../../../assets/images/AuthPage/HoldingTwoWeights.jpg")
+              }
+              style={styles.avatar}
             />
           </Pressable>
+          <View style={styles.userInfo}>
+            <Text style={styles.userName}>{displayName || (isFr ? "Utilisateur" : "User")}</Text>
+            <Text style={styles.userMeta}>
+              {age} {isFr ? "ans" : "y/o"} · {height} cm · {weight} kg
+            </Text>
+            {fitnessGoals.length > 0 && (
+              <View style={styles.goalTags}>
+                {fitnessGoals.slice(0, 3).map((g) => {
+                  const info = goalLabels[g];
+                  if (!info) return null;
+                  return (
+                    <View key={g} style={styles.goalTag}>
+                      <Ionicons name={info.icon} size={12} color={theme.primary.main} />
+                      <Text style={styles.goalTagText}>{info.label}</Text>
+                    </View>
+                  );
+                })}
+              </View>
+            )}
+          </View>
         </View>
 
-        <View style={styles.heroCard}>
-          <View style={styles.heroGlow} />
-          <View style={styles.hero}>
-            <Pressable
-              style={({ pressed }) => [
-                styles.avatarButton,
-                pressed && styles.avatarButtonPressed,
-              ]}
-              onPress={goToEditProfile}
-              hitSlop={8}
-            >
-              <View style={styles.avatarFrame}>
-                <Image
-                  source={
-                    themeType === "female"
-                      ? require("../../../assets/images/AuthPage/female/HoldingTwoWeights.jpg")
-                      : { uri: user.avatar }
-                  }
-                  style={styles.avatar}
-                />
-              </View>
-              <View style={styles.avatarEditBadge}>
-                <Ionicons
-                  name="camera"
-                  size={13}
-                  color={theme.background.dark}
-                />
-              </View>
-            </Pressable>
-            <Text style={styles.username}>{user.username}</Text>
-            <Text style={styles.bio}>{user.bio}</Text>
-            <View style={styles.heroActions}>
-              <Pressable
-                style={({ pressed }) => [
-                  styles.primaryAction,
-                  pressed && styles.primaryActionPressed,
-                ]}
-                onPress={goToEditProfile}
-                hitSlop={8}
-              >
-                <Ionicons
-                  name="create-outline"
-                  size={14}
-                  color={theme.background.dark}
-                />
-                <Text style={styles.primaryActionText}>
-                  {t("settings.editProfile")}
-                </Text>
-              </Pressable>
+        {/* ── Progression Card ────────────────────────────────────── */}
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>
+            <Ionicons name="trending-up" size={18} color={theme.primary.main} />{" "}
+            {isFr ? "Progression" : "Progress"}
+          </Text>
+
+          {/* Weight progress */}
+          <View style={styles.weightRow}>
+            <View style={styles.weightBox}>
+              <Text style={styles.weightBoxLabel}>{isFr ? "Actuel" : "Current"}</Text>
+              <Text style={styles.weightBoxValue}>{weight} <Text style={styles.weightBoxUnit}>kg</Text></Text>
+            </View>
+            <View style={styles.weightArrow}>
+              <Ionicons
+                name={weightDiff > 0 ? "arrow-forward" : weightDiff < 0 ? "arrow-forward" : "checkmark"}
+                size={20}
+                color={theme.primary.main}
+              />
+              <Text style={[styles.weightDiffText, { color: weightDiff === 0 ? "#34C759" : theme.primary.main }]}>
+                {weightDiff > 0 ? `-${weightDiff} kg` : weightDiff < 0 ? `+${Math.abs(weightDiff)} kg` : isFr ? "Atteint!" : "Reached!"}
+              </Text>
+            </View>
+            <View style={styles.weightBox}>
+              <Text style={styles.weightBoxLabel}>{isFr ? "Objectif" : "Target"}</Text>
+              <Text style={styles.weightBoxValue}>{targetWeight} <Text style={styles.weightBoxUnit}>kg</Text></Text>
             </View>
           </View>
 
-          {/* â”€â”€ Fitness stat bar â”€â”€ */}
-          <View style={styles.fitnessBar}>
-            <View style={styles.fitnessStatItem}>
-              <View
-                style={[
-                  styles.fitnessIconBadge,
-                  { backgroundColor: "rgba(255,107,53,0.18)" },
-                ]}
-              >
-                <Ionicons name="flame-outline" size={14} color="#FF6B35" />
-              </View>
-              <Text style={[styles.fitnessValue, { color: "#FF6B35" }]}>
-                {workouts.length}
-              </Text>
-              <Text style={styles.fitnessLabel}>{t("profile.workouts")}</Text>
+          {/* Progress bar */}
+          <View style={styles.progressBarBg}>
+            <View style={[styles.progressBarFill, { width: `${Math.round(weightProgress * 100)}%`, backgroundColor: "#34C759" }]} />
+          </View>
+          <Text style={styles.progressPct}>{Math.round(weightProgress * 100)}%</Text>
+
+          {/* BMI & BMR */}
+          <View style={styles.metricsRow}>
+            <View style={styles.metricBox}>
+              <Text style={styles.metricLabel}>BMI</Text>
+              <Text style={[styles.metricValue, { color: bmiInfo.color }]}>{bmi.toFixed(1)}</Text>
+              <Text style={[styles.metricSub, { color: bmiInfo.color }]}>{bmiInfo.label}</Text>
             </View>
-            <View style={styles.fitnessStatItem}>
-              <View
-                style={[
-                  styles.fitnessIconBadge,
-                  { backgroundColor: theme.primary.main + "22" },
-                ]}
-              >
-                <Ionicons
-                  name="barbell-outline"
-                  size={14}
-                  color={theme.primary.main}
-                />
-              </View>
-              <Text
-                style={[styles.fitnessValue, { color: theme.primary.main }]}
-              >
-                {totalVolume} kg
-              </Text>
-              <Text style={styles.fitnessLabel}>
-                {t("profile.totalVolume")}
-              </Text>
-            </View>
-            <View style={styles.fitnessStatItem}>
-              <View
-                style={[
-                  styles.fitnessIconBadge,
-                  { backgroundColor: "rgba(245,166,35,0.18)" },
-                ]}
-              >
-                <Ionicons name="trophy-outline" size={14} color="#F5A623" />
-              </View>
-              <Text style={[styles.fitnessValue, { color: "#F5A623" }]}>7</Text>
-              <Text style={styles.fitnessLabel}>{t("profile.dayStreak")}</Text>
+            <View style={styles.metricDivider} />
+            <View style={styles.metricBox}>
+              <Text style={styles.metricLabel}>{isFr ? "Métab. basal" : "Basal Metab."}</Text>
+              <Text style={styles.metricValue}>{Math.round(bmr)}</Text>
+              <Text style={styles.metricSub}>kcal/{isFr ? "jour" : "day"}</Text>
             </View>
           </View>
         </View>
 
-        <View style={styles.statsRow}>
-          {renderSocialStat(formatCount(user.postsCount), t("profile.posts"))}
-          {renderSocialStat(
-            formatCount(user.followers),
-            t("profile.followers"),
-            () => router.push(`/user/follows/${user.id}?type=followers` as any),
-          )}
-          {renderSocialStat(
-            formatCount(user.following),
-            t("profile.following"),
-            () => router.push(`/user/follows/${user.id}?type=following` as any),
+        {/* ── Calories Burned ─────────────────────────────────────── */}
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>
+            <Ionicons name="flame" size={18} color="#FF6B35" />{" "}
+            {isFr ? "Calories brûlées" : "Calories Burned"}
+          </Text>
+          {renderPeriodTabs(caloriesPeriod, setCaloriesPeriod)}
+
+          <Text style={styles.bigStat}>
+            {totalCaloriesBurned} <Text style={styles.bigStatUnit}>kcal</Text>
+          </Text>
+
+          <View style={styles.chartContainer}>
+            <BarChart
+              data={caloriesChartData}
+              barWidth={caloriesChartData.length <= 4 ? 40 : 28}
+              spacing={caloriesChartData.length <= 4 ? 30 : 14}
+              roundedTop
+              roundedBottom
+              noOfSections={4}
+              yAxisThickness={0}
+              xAxisThickness={0}
+              xAxisLabelTextStyle={{ color: chartTextColor, fontSize: 10, fontFamily: FONTS.semiBold }}
+              yAxisTextStyle={{ color: chartTextColor, fontSize: 10 }}
+              hideRules
+              barBorderRadius={6}
+              isAnimated
+              height={140}
+              width={280}
+            />
+          </View>
+        </View>
+
+        {/* ── Weight Analysis ─────────────────────────────────────── */}
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>
+            <Ionicons name="analytics" size={18} color="#4A90D9" />{" "}
+            {isFr ? "Analyse du poids" : "Weight Analysis"}
+          </Text>
+          {renderPeriodTabs(weightPeriod, setWeightPeriod)}
+
+          <Text style={styles.bigStat}>
+            {weight} <Text style={styles.bigStatUnit}>kg</Text>
+          </Text>
+
+          {weightChartData.length >= 1 ? (
+            <View style={styles.chartContainer}>
+              <LineChart
+                data={weightChartData}
+                color={theme.primary.main}
+                thickness={3}
+                noOfSections={4}
+                yAxisThickness={0}
+                xAxisThickness={0}
+                xAxisLabelTextStyle={{ color: chartTextColor, fontSize: 9, fontFamily: FONTS.semiBold }}
+                yAxisTextStyle={{ color: chartTextColor, fontSize: 10 }}
+                hideRules
+                curved={weightChartData.length > 2}
+                isAnimated
+                height={140}
+                width={280}
+                dataPointsColor={theme.primary.main}
+                dataPointsRadius={5}
+                startFillColor={`${theme.primary.main}30`}
+                endFillColor={`${theme.primary.main}05`}
+                areaChart
+              />
+            </View>
+          ) : (
+            <View style={styles.emptyChart}>
+              <Ionicons name="scale-outline" size={32} color={theme.foreground.gray} />
+              <Text style={styles.emptyChartText}>
+                {isFr
+                  ? "Mettez à jour votre poids dans Alimentation pour voir le graphe"
+                  : "Update your weight in Alimentation to see the chart"}
+              </Text>
+            </View>
           )}
         </View>
 
-        <View style={styles.tabBar}>
-          <Pressable
-            style={({ pressed }) => [
-              styles.tab,
-              activeTab === "posts" && styles.tabActive,
-              pressed && styles.tabPressed,
-            ]}
-            onPress={() => setActiveTab("posts")}
-            hitSlop={4}
-          >
-            <Text
-              style={[
-                styles.tabText,
-                activeTab === "posts" && styles.tabTextActive,
-              ]}
-            >
-              {t("profile.posts")}
-            </Text>
-          </Pressable>
-          <Pressable
-            style={({ pressed }) => [
-              styles.tab,
-              activeTab === "routines" && styles.tabActive,
-              pressed && styles.tabPressed,
-            ]}
-            onPress={() => setActiveTab("routines")}
-            hitSlop={4}
-          >
-            <Text
-              style={[
-                styles.tabText,
-                activeTab === "routines" && styles.tabTextActive,
-              ]}
-            >
-              {t("profile.routines")}
-            </Text>
-          </Pressable>
+        {/* ── Nutritional Intake ───────────────────────────────────── */}
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>
+            <Ionicons name="nutrition" size={18} color="#34C759" />{" "}
+            {isFr ? "Apport nutritionnel" : "Nutritional Intake"}
+          </Text>
+          {renderPeriodTabs(nutritionPeriod, setNutritionPeriod)}
+
+          <View style={styles.nutritionStats}>
+            {renderProgressBar(isFr ? "Calories" : "Calories", nutritionData.calories.current, nutritionData.calories.goal, theme.primary.main, " kcal")}
+            {renderProgressBar(isFr ? "Protéines" : "Protein", nutritionData.protein.current, nutritionData.protein.goal, "#4A90D9", "g")}
+            {renderProgressBar(isFr ? "Glucides" : "Carbs", nutritionData.carbs.current, nutritionData.carbs.goal, "#F5A623", "g")}
+            {renderProgressBar(isFr ? "Lipides" : "Fat", nutritionData.fat.current, nutritionData.fat.goal, "#ED6665", "g")}
+          </View>
         </View>
 
-        {activeTab === "posts" ? renderPostsGrid() : renderRoutinesList()}
       </ScrollView>
     </View>
   );
 }
 
+// ── Styles ───────────────────────────────────────────────────────────────
+function createStyles(theme: Theme) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: theme.background.dark },
+    bgOverlay: {
+      position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
+      width: "100%", height: "100%", opacity: 0.3,
+    },
+    header: {
+      flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+      paddingHorizontal: 20, paddingVertical: 10,
+    },
+    headerTitle: {
+      fontFamily: FONTS.extraBold, fontSize: 26,
+      color: theme.foreground.white, letterSpacing: -0.5,
+    },
+    settingsBtn: {
+      width: 38, height: 38, borderRadius: 12,
+      alignItems: "center", justifyContent: "center",
+      backgroundColor: theme.background.accent,
+    },
+
+    // User Card
+    userCard: {
+      marginHorizontal: 20, marginBottom: 16, padding: 16,
+      borderRadius: 20, backgroundColor: theme.background.darker,
+      flexDirection: "row", alignItems: "center", gap: 14,
+    },
+    avatar: {
+      width: 72, height: 72, borderRadius: 36,
+      borderWidth: 2, borderColor: theme.primary.main,
+    },
+    userInfo: { flex: 1 },
+    userName: {
+      fontFamily: FONTS.bold, fontSize: 18, color: theme.foreground.white,
+    },
+    userMeta: {
+      fontFamily: FONTS.semiBold, fontSize: 13, color: theme.foreground.gray, marginTop: 2,
+    },
+    goalTags: {
+      flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 8,
+    },
+    goalTag: {
+      flexDirection: "row", alignItems: "center", gap: 4,
+      paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8,
+      backgroundColor: `${theme.primary.main}15`,
+    },
+    goalTagText: {
+      fontFamily: FONTS.semiBold, fontSize: 11, color: theme.primary.main,
+    },
+
+    // Card
+    card: {
+      marginHorizontal: 20, marginBottom: 16, padding: 20,
+      borderRadius: 20, backgroundColor: theme.background.darker,
+    },
+    sectionTitle: {
+      fontFamily: FONTS.bold, fontSize: 17, color: theme.foreground.white,
+      marginBottom: 16, letterSpacing: -0.3,
+    },
+
+    // Period Tabs
+    periodTabs: {
+      flexDirection: "row", backgroundColor: theme.background.dark,
+      borderRadius: 12, padding: 3, marginBottom: 16,
+    },
+    periodTab: {
+      flex: 1, alignItems: "center", justifyContent: "center",
+      paddingVertical: 8, borderRadius: 10,
+    },
+    periodTabActive: {
+      backgroundColor: theme.primary.main,
+    },
+    periodTabText: {
+      fontFamily: FONTS.semiBold, fontSize: 12, color: theme.foreground.gray,
+    },
+    periodTabTextActive: {
+      color: "#FFF",
+    },
+
+    // Weight Progress
+    weightRow: {
+      flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+      marginBottom: 16,
+    },
+    weightBox: {
+      alignItems: "center", flex: 1,
+      padding: 12, borderRadius: 14,
+      backgroundColor: theme.background.dark,
+    },
+    weightBoxLabel: {
+      fontFamily: FONTS.semiBold, fontSize: 11, color: theme.foreground.gray,
+      textTransform: "uppercase", letterSpacing: 0.5,
+    },
+    weightBoxValue: {
+      fontFamily: FONTS.extraBold, fontSize: 22, color: theme.foreground.white, marginTop: 4,
+    },
+    weightBoxUnit: {
+      fontSize: 14, color: theme.foreground.gray,
+    },
+    weightArrow: {
+      alignItems: "center", paddingHorizontal: 8,
+    },
+    weightDiffText: {
+      fontFamily: FONTS.bold, fontSize: 11, marginTop: 2,
+    },
+
+    progressBarBg: {
+      height: 10, borderRadius: 5, backgroundColor: `${theme.foreground.gray}30`,
+      overflow: "hidden",
+    },
+    progressBarFill: {
+      height: "100%", borderRadius: 5,
+    },
+    progressPct: {
+      fontFamily: FONTS.bold, fontSize: 12, color: "#34C759",
+      textAlign: "right", marginTop: 6,
+    },
+
+    // Metrics
+    metricsRow: {
+      flexDirection: "row", marginTop: 16,
+      backgroundColor: theme.background.dark, borderRadius: 14,
+      padding: 14,
+    },
+    metricBox: {
+      flex: 1, alignItems: "center",
+    },
+    metricDivider: {
+      width: 1, backgroundColor: `${theme.foreground.gray}30`,
+      marginHorizontal: 10,
+    },
+    metricLabel: {
+      fontFamily: FONTS.semiBold, fontSize: 11, color: theme.foreground.gray,
+      textTransform: "uppercase", letterSpacing: 0.3,
+    },
+    metricValue: {
+      fontFamily: FONTS.extraBold, fontSize: 24, color: theme.foreground.white,
+      marginTop: 4,
+    },
+    metricSub: {
+      fontFamily: FONTS.semiBold, fontSize: 11, color: theme.foreground.gray, marginTop: 2,
+    },
+
+    // Big stat
+    bigStat: {
+      fontFamily: FONTS.extraBold, fontSize: 32, color: theme.foreground.white,
+      textAlign: "center", marginBottom: 12,
+    },
+    bigStatUnit: {
+      fontSize: 16, color: theme.foreground.gray,
+    },
+
+    // Chart
+    chartContainer: {
+      alignItems: "center", overflow: "hidden",
+    },
+
+    // Empty chart
+    emptyChart: {
+      alignItems: "center", paddingVertical: 30, gap: 10,
+    },
+    emptyChartText: {
+      fontFamily: FONTS.regular, fontSize: 13, color: theme.foreground.gray,
+      textAlign: "center", lineHeight: 18, paddingHorizontal: 20,
+    },
+
+    // Nutrition
+    nutritionStats: {
+      gap: 16,
+    },
+    progressItem: {},
+    progressHeader: {
+      flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end",
+      marginBottom: 8,
+    },
+    progressLabel: {
+      fontFamily: FONTS.bold, fontSize: 14, color: theme.foreground.white,
+    },
+    progressValue: {
+      fontFamily: FONTS.semiBold, fontSize: 12, color: theme.foreground.gray,
+    },
+  });
+}

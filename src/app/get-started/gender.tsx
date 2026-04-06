@@ -1,11 +1,11 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useTranslation } from "react-i18next";
+import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import ChipButton from "../../components/ui/ChipButton";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
-import ChipButton from "../../components/ui/ChipButton";
 
 import { FONTS } from "../../constants/fonts";
 
@@ -72,14 +72,14 @@ function createStyles(theme: Theme) {
     genderText: {
       fontSize: 17,
       fontFamily: FONTS.bold,
-      color: "#000000",
+      color: "#ffffff",
       position: "absolute",
       bottom: 12,
       left: 16,
       zIndex: 1,
     },
     genderTextSelected: {
-      color: "#000000",
+      color: "#ffffff",
     },
   });
 }
@@ -142,7 +142,7 @@ export default function GenderSelection() {
               {t("onboarding.gender.male")}
             </Text>
             <Image
-              source={require("../../../assets/images/frameboy.png")}
+              source={require("../../../assets/images/frameboy2.png")}
               style={styles.genderImage}
               resizeMode="cover"
             />
@@ -165,7 +165,7 @@ export default function GenderSelection() {
               {t("onboarding.gender.female")}
             </Text>
             <Image
-              source={require("../../../assets/images/framegirl.png")}
+              source={require("../../../assets/images/framegirl2.png")}
               style={[styles.genderImage, { top: 0 }]}
               resizeMode="cover"
             />

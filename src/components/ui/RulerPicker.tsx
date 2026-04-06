@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   Dimensions,
   FlatList,
+  LayoutChangeEvent,
   NativeScrollEvent,
   NativeSyntheticEvent,
   StyleSheet,
@@ -14,6 +15,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const TICK_SPACING = 12;
+const EPSILON = 0.0001;
 
 interface RulerPickerProps {
   min: number;
@@ -34,12 +36,14 @@ export default function RulerPicker({
 }: RulerPickerProps) {
   const { theme } = useTheme();
   const flatListRef = useRef<FlatList<number>>(null);
+  const [rulerWidth, setRulerWidth] = useState(SCREEN_WIDTH);
   const [displayValue, setDisplayValue] = useState(defaultValue);
   const prevValueRef = useRef(defaultValue);
   const initializedRef = useRef(false);
 
   const totalSteps = Math.round((max - min) / step);
-  const halfScreen = SCREEN_WIDTH / 2;
+  const halfRuler = rulerWidth / 2;
+  const sidePadding = Math.max(0, halfRuler - TICK_SPACING / 2);
   const hasDecimal = step % 1 !== 0;
 
   const ticks = useMemo(() => {
@@ -92,25 +96,36 @@ export default function RulerPicker({
     [min, max, step, onChange],
   );
 
+  const handleRulerLayout = useCallback((event: LayoutChangeEvent) => {
+    const nextWidth = event.nativeEvent.layout.width;
+    if (nextWidth > 0 && Math.abs(nextWidth - rulerWidth) > 0.5) {
+      setRulerWidth(nextWidth);
+    }
+  }, [rulerWidth]);
+
   const renderTick = useCallback(
     ({ item: i }: { item: number }) => {
       const val = min + i * step;
-      const isWhole = val % 1 === 0;
-      const isFifth = val % 5 === 0;
+      const isMultipleOf = (target: number) =>
+        Math.abs(val / target - Math.round(val / target)) < EPSILON;
+
+      // For integer pickers like age, emphasize decades (10, 20, 30...).
+      const isMajor = step >= 1 ? isMultipleOf(10) : isMultipleOf(5);
+      const isMedium = step >= 1 ? isMultipleOf(5) : isMultipleOf(1);
 
       return (
         <View style={styles.tickContainer}>
           <View
             style={[
               styles.tick,
-              isFifth
+              isMajor
                 ? styles.tickMajor
-                : isWhole
+                : isMedium
                   ? styles.tickMedium
                   : styles.tickMinor,
             ]}
           />
-          {isFifth && (
+          {isMajor && (
             <Text style={[styles.tickLabel, { color: theme.foreground.gray }]}>
               {val}
             </Text>
@@ -131,6 +146,7 @@ export default function RulerPicker({
       <Text style={[styles.unitText, { color: theme.primary.main }]}>{unit}</Text>
 
       <View style={styles.rulerWrapper}>
+        <View style={styles.rulerLayout} onLayout={handleRulerLayout} />
         <View style={[styles.centerIndicator, { backgroundColor: theme.primary.main }]} />
 
         <FlatList
@@ -142,8 +158,10 @@ export default function RulerPicker({
           showsHorizontalScrollIndicator={false}
           decelerationRate="normal"
           contentContainerStyle={{
-            paddingHorizontal: halfScreen,
+            paddingHorizontal: sidePadding,
           }}
+          snapToInterval={TICK_SPACING}
+          snapToAlignment="start"
           onScroll={handleScroll}
           scrollEventThrottle={32}
           onMomentumScrollEnd={handleScrollEnd}
@@ -179,6 +197,9 @@ const styles = StyleSheet.create({
     width: "100%",
     position: "relative",
   },
+  rulerLayout: {
+    ...StyleSheet.absoluteFillObject,
+  },
   centerIndicator: {
     position: "absolute",
     top: 0,
@@ -213,6 +234,10 @@ const styles = StyleSheet.create({
   tickLabel: {
     fontSize: 11,
     fontFamily: FONTS.semiBold,
-    marginTop: 4,
+    position: "absolute",
+    top: 38,
+    width: 30,
+    left: -9,
+    textAlign: "center",
   },
 });

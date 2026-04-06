@@ -21,7 +21,7 @@ export type ApiNinjasLanguage = "en" | "fr";
 const API_NINJAS_BASE = "https://api.api-ninjas.com/v1";
 
 // Get your free API key from: https://api-ninjas.com
-const API_KEY = process.env.EXPO_PUBLIC_API_NINJAS_KEY || "";
+const API_KEY = process.env.EXPO_PUBLIC_API_NINJAS_KEY || "5OmsQtr1dyTmd6eGGNuKCWnN0TBcIRZ2ElahhAJj";
 
 function buildHeaders(language?: ApiNinjasLanguage): Record<string, string> {
   const headers: Record<string, string> = {

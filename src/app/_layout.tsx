@@ -81,6 +81,7 @@ function AppContent() {
         <Stack.Screen name="get-started/ready" />
         <Stack.Screen name="get-started/email-preferences" />
         <Stack.Screen name="objective/index" />
+        <Stack.Screen name="food-search" />
         <Stack.Screen name="share-workout/index" />
       </Stack>
     </>

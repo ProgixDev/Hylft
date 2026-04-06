@@ -6,16 +6,15 @@ import { useRouter } from "expo-router";
 import React, { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-    Dimensions,
-    Image,
-    ImageBackground,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
+  Dimensions,
+  Image,
+  ImageBackground,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
-import { BarChart } from "react-native-gifted-charts";
 import { FONTS } from "../../constants/fonts";
 import { Theme } from "../../constants/themes";
 import { useHealth } from "../../contexts/HealthContext";
@@ -55,7 +54,7 @@ export default function Home() {
   const { theme, themeType, setTheme } = useTheme();
   const { t } = useTranslation();
   const { goals, todaySummary, weekSummaries } = useNutrition();
-  const { todaySteps, todayCaloriesBurned, weeklyCaloriesBurned } = useHealth();
+  const { todaySteps, todayCaloriesBurned } = useHealth();
   const genderedImages = useGenderedImages();
   const [selectedBodyFocus, setSelectedBodyFocus] = useState(0);
   const [weeklyObjective, setWeeklyObjective] = useState(3);
@@ -156,39 +155,12 @@ export default function Home() {
   // ── Derived calorie data from contexts ─────────────────────────────────
   const caloriesConsumed = todaySummary.totalCalories;
   const caloriesBurned = todayCaloriesBurned;
-  const caloriesRemaining = goals.calorieGoal - caloriesConsumed + caloriesBurned;
-  const consumedPercent = goals.calorieGoal > 0
-    ? Math.round((caloriesConsumed / goals.calorieGoal) * 100)
-    : 0;
-
-  const donutData = [
-    {
-      value: Math.max(caloriesConsumed, 1),
-      color: theme.primary.main,
-      gradientCenterColor: theme.primary.light,
-    },
-    {
-      value: Math.max(goals.calorieGoal - caloriesConsumed, 0),
-      color: theme.background.accent,
-    },
-  ];
 
   const macros = useMemo(() => ({
     protein: { current: todaySummary.totalProtein, goal: goals.proteinGoal, color: "#4A90D9" },
     carbs: { current: todaySummary.totalCarbs, goal: goals.carbsGoal, color: "#F5A623" },
     fat: { current: todaySummary.totalFat, goal: goals.fatGoal, color: "#ED6665" },
   }), [todaySummary, goals]);
-
-  // Build weekly burned data from Health context (fallback to 0 for missing days)
-  const weeklyBurnedData = useMemo(() => {
-    return DAY_LABELS.map((label, i) => {
-      const dayData = weeklyCaloriesBurned[i];
-      return {
-        value: dayData?.totalCalories ?? 0,
-        label,
-      };
-    });
-  }, [weeklyCaloriesBurned]);
 
   const bodyFocusOptions = [
     t("home.abs"),
@@ -510,7 +482,7 @@ export default function Home() {
                   {t("home.todaysWorkout", "LEGS DAY: CUISSES & MOLLETS")}
                 </Text>
                 <Text style={styles.nextWorkoutMeta}>
-                  {t("home.today", "Aujourd'hui")}, 17:30 | 50 min
+                  17:30 | {t("home.todaysWorkout", "LEGS DAY: CUISSES & MOLLETS")}
                 </Text>
               </View>
               <Pressable
@@ -526,64 +498,6 @@ export default function Home() {
               </Pressable>
             </View>
           </Pressable>
-        </View>
-
-        {/* ── Calories Burned Chart ───────────────────────────────── */}
-        <View style={styles.chartCard}>
-          <View style={styles.chartCardHeader}>
-            <Text style={styles.chartCardTitle}>
-              {t("home.caloriesBurned")}
-            </Text>
-            <View style={styles.chartTotalBadge}>
-              <MaterialCommunityIcons
-                name="fire"
-                size={14}
-                color="#FF6B35"
-              />
-              <Text style={styles.chartTotalText}>
-                {weeklyBurnedData.reduce((s, d) => s + d.value, 0)} kcal
-              </Text>
-            </View>
-          </View>
-          <View style={{ alignItems: "center", marginTop: 4 }}>
-            <BarChart
-              data={weeklyBurnedData.map((item, i) => ({
-                ...item,
-                frontColor:
-                  i === weeklyBurnedData.length - 1
-                    ? theme.primary.main
-                    : theme.primary.main + "50",
-                topLabelComponent:
-                  i === weeklyBurnedData.length - 1
-                    ? () => (
-                        <Text
-                          style={[
-                            styles.barTopLabel,
-                            { color: theme.primary.main },
-                          ]}
-                        >
-                          {item.value}
-                        </Text>
-                      )
-                    : undefined,
-              }))}
-              width={SCREEN_WIDTH - 100}
-              height={120}
-              barWidth={24}
-              spacing={18}
-              initialSpacing={8}
-              noOfSections={3}
-              maxValue={700}
-              yAxisColor="transparent"
-              xAxisColor="transparent"
-              yAxisTextStyle={styles.chartAxisText}
-              xAxisLabelTextStyle={styles.chartXLabel}
-              hideRules
-              isAnimated
-              animationDuration={600}
-              barBorderRadius={8}
-            />
-          </View>
         </View>
 
         {/* ── Challenge Section ───────────────────────────────────── */}

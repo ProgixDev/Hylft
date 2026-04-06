@@ -1,20 +1,23 @@
 /**
  * NutritionContext
  * Manages meal logging, daily calorie/macro tracking, and nutrition goals.
- * Calls the NestJS server API for persistence (not Supabase directly).
- * Uses AsyncStorage for offline cache.
+ * Uses AsyncStorage for local persistence by default.
+ * Optional remote sync can be enabled with EXPO_PUBLIC_ENABLE_NUTRITION_SYNC=true.
  */
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
+    createContext,
+    useCallback,
+    useContext,
+    useEffect,
+    useMemo,
+    useState,
 } from "react";
 import { api } from "../services/api";
 import type { MealEntry, MealType } from "../services/nutritionApi";
+
+const ENABLE_REMOTE_NUTRITION_SYNC =
+  String(process.env.EXPO_PUBLIC_ENABLE_NUTRITION_SYNC || "false").toLowerCase() === "true";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 export interface NutritionGoals {
@@ -132,7 +135,9 @@ export function NutritionProvider({ children }: { children: React.ReactNode }) {
         if (storedGoals) setGoals(JSON.parse(storedGoals));
         if (storedMeals) {
           const parsed: MealEntry[] = JSON.parse(storedMeals);
-          setTodayMeals(parsed.filter((m) => m.date === today));
+          const todayOnly = parsed.filter((m) => m.date === today);
+          console.log("[NutritionContext] Loaded meals:", JSON.stringify(todayOnly.map(m => ({ id: m.id, name: m.foodName, type: m.mealType }))));
+          setTodayMeals(todayOnly);
         }
       } catch (error) {
         console.warn("[NutritionContext] Load cache failed:", error);
@@ -142,8 +147,10 @@ export function NutritionProvider({ children }: { children: React.ReactNode }) {
     })();
   }, [today]);
 
-  // ── Sync goals from server on mount ────────────────────────────────────
+  // ── Optional remote goals sync on mount ────────────────────────────────
   useEffect(() => {
+    if (!ENABLE_REMOTE_NUTRITION_SYNC) return;
+
     (async () => {
       try {
         const serverGoals = await api.getNutritionGoals();
@@ -175,26 +182,34 @@ export function NutritionProvider({ children }: { children: React.ReactNode }) {
         loggedAt: new Date().toISOString(),
       };
 
+      console.log(`[NutritionContext] Adding meal: "${localMeal.foodName}" → mealType="${localMeal.mealType}"`);
+
       setTodayMeals((prev) => {
         const updated = [...prev, localMeal];
         AsyncStorage.setItem(STORAGE_KEYS.todayMeals, JSON.stringify(updated));
         return updated;
       });
 
-      // Sync to server in background (don't block UI)
-      api.addMeal({
-        date: meal.date,
-        meal_type: meal.mealType,
-        food_id: meal.foodId,
-        food_name: meal.foodName,
-        servings: meal.servings,
-        calories: meal.calories,
-        protein: meal.protein,
-        carbs: meal.carbs,
-        fat: meal.fat,
-      }).catch((error) => {
-        console.warn("[NutritionContext] Server sync failed (data saved locally):", error);
-      });
+      if (ENABLE_REMOTE_NUTRITION_SYNC) {
+        // Optional background sync; local data is source of truth by default.
+        api.addMeal({
+          date: meal.date,
+          meal_type: meal.mealType,
+          food_id: meal.foodId,
+          food_name: meal.foodName,
+          servings: meal.servings,
+          calories: meal.calories,
+          protein: meal.protein,
+          carbs: meal.carbs,
+          fat: meal.fat,
+        }).catch((error) => {
+          const message = error instanceof Error ? error.message : String(error);
+          const isNetworkIssue = /Network request failed|fetch|network/i.test(message);
+          if (!isNetworkIssue) {
+            console.warn("[NutritionContext] Server sync failed (data saved locally):", error);
+          }
+        });
+      }
     },
     []
   );
@@ -206,10 +221,12 @@ export function NutritionProvider({ children }: { children: React.ReactNode }) {
       return updated;
     });
 
-    try {
-      await api.deleteMeal(mealId);
-    } catch (error) {
-      console.warn("[NutritionContext] deleteMeal failed:", error);
+    if (ENABLE_REMOTE_NUTRITION_SYNC) {
+      try {
+        await api.deleteMeal(mealId);
+      } catch (error) {
+        console.warn("[NutritionContext] deleteMeal failed:", error);
+      }
     }
   }, []);
 
@@ -218,19 +235,22 @@ export function NutritionProvider({ children }: { children: React.ReactNode }) {
       const updated = { ...prev, ...newGoals };
       AsyncStorage.setItem(STORAGE_KEYS.goals, JSON.stringify(updated));
 
-      // Sync to server
-      api.updateNutritionGoals({
-        calorie_goal: updated.calorieGoal,
-        protein_goal: updated.proteinGoal,
-        carbs_goal: updated.carbsGoal,
-        fat_goal: updated.fatGoal,
-      }).catch((e) => console.warn("[NutritionContext] updateGoals failed:", e));
+      if (ENABLE_REMOTE_NUTRITION_SYNC) {
+        api.updateNutritionGoals({
+          calorie_goal: updated.calorieGoal,
+          protein_goal: updated.proteinGoal,
+          carbs_goal: updated.carbsGoal,
+          fat_goal: updated.fatGoal,
+        }).catch((e) => console.warn("[NutritionContext] updateGoals failed:", e));
+      }
 
       return updated;
     });
   }, []);
 
   const refreshToday = useCallback(async () => {
+    if (!ENABLE_REMOTE_NUTRITION_SYNC) return;
+
     try {
       const serverMeals = await api.getMeals(today);
       const meals = (serverMeals ?? []).map(mapServerMeal);
@@ -242,6 +262,8 @@ export function NutritionProvider({ children }: { children: React.ReactNode }) {
   }, [today]);
 
   const refreshWeek = useCallback(async () => {
+    if (!ENABLE_REMOTE_NUTRITION_SYNC) return;
+
     try {
       const { start, end } = getWeekRange();
       const serverMeals = await api.getMealsRange(start, end);
@@ -253,13 +275,17 @@ export function NutritionProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const getMealsForDate = useCallback(async (date: string): Promise<MealEntry[]> => {
+    if (!ENABLE_REMOTE_NUTRITION_SYNC) {
+      return todayMeals.filter((meal) => meal.date === date);
+    }
+
     try {
       const serverMeals = await api.getMeals(date);
       return (serverMeals ?? []).map(mapServerMeal);
     } catch {
       return [];
     }
-  }, []);
+  }, [todayMeals]);
 
   // ── Computed ───────────────────────────────────────────────────────────
   const todaySummary = useMemo(

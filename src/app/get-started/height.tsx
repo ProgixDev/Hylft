@@ -1,20 +1,20 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
+import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  Dimensions,
-  FlatList,
-  NativeScrollEvent,
-  NativeSyntheticEvent,
-  StyleSheet,
-  Text,
-  View,
+    Dimensions,
+    FlatList,
+    NativeScrollEvent,
+    NativeSyntheticEvent,
+    StyleSheet,
+    Text,
+    View,
 } from "react-native";
+import ChipButton from "../../components/ui/ChipButton";
 import { FONTS } from "../../constants/fonts";
 import { Theme } from "../../constants/themes";
-import ChipButton from "../../components/ui/ChipButton";
 import { useTheme } from "../../contexts/ThemeContext";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -174,8 +174,10 @@ export default function HeightScreen() {
               showsVerticalScrollIndicator={false}
               decelerationRate="normal"
               contentContainerStyle={{
-                paddingVertical: RULER_HEIGHT / 2,
+                paddingVertical: RULER_HEIGHT / 2 - TICK_HEIGHT / 2,
               }}
+              snapToInterval={TICK_HEIGHT}
+              snapToAlignment="start"
               onScroll={handleScroll}
               scrollEventThrottle={32}
               onMomentumScrollEnd={handleScrollEnd}
