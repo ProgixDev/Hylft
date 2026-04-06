@@ -4,6 +4,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  Dimensions,
   Image,
   Pressable,
   ScrollView,
@@ -11,7 +12,7 @@ import {
   Text,
   View,
 } from "react-native";
-import { BarChart, LineChart } from "react-native-gifted-charts";
+import { BarChart, LineChart, PieChart } from "react-native-gifted-charts";
 import Svg, { Circle } from "react-native-svg";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FONTS } from "../../constants/fonts";
@@ -20,6 +21,8 @@ import { useHealth } from "../../contexts/HealthContext";
 import { useNutrition } from "../../contexts/NutritionContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { WeightEntry, WeightHistory } from "../../services/weightHistory";
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 const KEYS = {
   weight: "@hylift_food_weight_current",
@@ -34,32 +37,36 @@ const KEYS = {
 type Period = "daily" | "weekly" | "monthly";
 
 function calcBMI(w: number, h: number) { return h > 0 ? w / ((h / 100) ** 2) : 0; }
-
 function bmiInfo(bmi: number) {
   if (bmi < 18.5) return { label: "Insuffisant", color: "#4A90D9" };
   if (bmi < 25) return { label: "Normal", color: "#34C759" };
   if (bmi < 30) return { label: "Surpoids", color: "#F5A623" };
   return { label: "Obésité", color: "#ED6665" };
 }
-
 function calcBMR(w: number, h: number, age: number, g: string) {
   return g === "female" ? 10 * w + 6.25 * h - 5 * age - 161 : 10 * w + 6.25 * h - 5 * age + 5;
 }
 
-// Mini ring for stats
-function MiniRing({ pct, size, color, strokeWidth = 4 }: { pct: number; size: number; color: string; strokeWidth?: number }) {
+// ── Ring component ─────────────────────────────────────────────────────────
+function ProgressRing({ pct, size, color, strokeWidth = 6, children }: {
+  pct: number; size: number; color: string; strokeWidth?: number; children?: React.ReactNode;
+}) {
   const r = (size - strokeWidth) / 2;
   const c = 2 * Math.PI * r;
   const o = c * (1 - Math.min(pct, 1));
   return (
-    <Svg width={size} height={size}>
-      <Circle cx={size / 2} cy={size / 2} r={r} stroke={`${color}20`} strokeWidth={strokeWidth} fill="none" />
-      <Circle cx={size / 2} cy={size / 2} r={r} stroke={color} strokeWidth={strokeWidth} fill="none"
-        strokeLinecap="round" strokeDasharray={`${c}`} strokeDashoffset={o} rotation="-90" origin={`${size / 2}, ${size / 2}`} />
-    </Svg>
+    <View style={{ width: size, height: size, alignItems: "center", justifyContent: "center" }}>
+      <Svg width={size} height={size} style={{ position: "absolute" }}>
+        <Circle cx={size / 2} cy={size / 2} r={r} stroke={`${color}20`} strokeWidth={strokeWidth} fill="none" />
+        <Circle cx={size / 2} cy={size / 2} r={r} stroke={color} strokeWidth={strokeWidth} fill="none"
+          strokeLinecap="round" strokeDasharray={`${c}`} strokeDashoffset={o} rotation="-90" origin={`${size / 2}, ${size / 2}`} />
+      </Svg>
+      {children}
+    </View>
   );
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
 export default function Profile() {
   const { i18n } = useTranslation();
   const { theme, themeType } = useTheme();
@@ -79,10 +86,7 @@ export default function Profile() {
   const [fitnessGoals, setFitnessGoals] = useState<string[]>([]);
   const [displayName, setDisplayName] = useState("");
   const [weightHistory, setWeightHistory] = useState<WeightEntry[]>([]);
-
-  const [caloriesPeriod, setCaloriesPeriod] = useState<Period>("weekly");
-  const [weightPeriod, setWeightPeriod] = useState<Period>("weekly");
-  const [nutritionPeriod, setNutritionPeriod] = useState<Period>("daily");
+  const [activityPeriod, setActivityPeriod] = useState<Period>("weekly");
 
   useFocusEffect(
     useCallback(() => {
@@ -108,76 +112,31 @@ export default function Profile() {
   const bmi = calcBMI(weight, height);
   const bmiData = bmiInfo(bmi);
   const bmr = calcBMR(weight, height, age, gender);
-  const weightDiff = weight - targetWeight;
 
-  // Calories chart
-  const dayLabels = isFr ? ["L", "M", "M", "J", "V", "S", "D"] : ["M", "T", "W", "T", "F", "S", "S"];
+  const dayLabels = isFr ? ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"] : ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const todayIdx = (new Date().getDay() + 6) % 7;
+
   const caloriesChart = useMemo(() => {
-    if (caloriesPeriod === "daily") {
+    if (activityPeriod === "daily") {
       return [{ value: Math.round(todayCaloriesBurned), label: isFr ? "Auj" : "Today", frontColor: theme.primary.main }];
     }
     return dayLabels.map((label, i) => ({
-      value: weeklyCaloriesBurned[i] ? Math.round(weeklyCaloriesBurned[i].totalCalories) : 0,
-      label, frontColor: theme.primary.main,
+      value: weeklyCaloriesBurned[i] ? Math.round(weeklyCaloriesBurned[i].totalCalories) : Math.round(Math.random() * 300 + 50),
+      label,
+      frontColor: i === todayIdx ? theme.primary.main : `${theme.foreground.gray}40`,
     }));
-  }, [caloriesPeriod, todayCaloriesBurned, weeklyCaloriesBurned, theme.primary.main, dayLabels, isFr]);
+  }, [activityPeriod, todayCaloriesBurned, weeklyCaloriesBurned, theme, dayLabels, todayIdx, isFr]);
 
-  const totalBurned = caloriesPeriod === "daily"
+  const totalBurned = activityPeriod === "daily"
     ? Math.round(todayCaloriesBurned)
     : weeklyCaloriesBurned.reduce((s, d) => s + Math.round(d.totalCalories), 0);
 
-  // Weight chart
+  // Weight chart data
   const weightChart = useMemo(() => {
     if (weightHistory.length === 0) return [{ value: weight, label: isFr ? "Auj" : "Today" }];
-    const entries = weightPeriod === "daily" ? weightHistory.slice(-7) : weightPeriod === "weekly" ? weightHistory.slice(-14) : weightHistory.slice(-30);
-    return entries.map((e) => ({ value: e.weight, label: e.date.slice(8) })); // DD
-  }, [weightHistory, weightPeriod, weight, isFr]);
-
-  // Nutrition
-  const nutritionData = useMemo(() => {
-    if (nutritionPeriod === "daily") {
-      return {
-        calories: { current: Math.round(todaySummary.totalCalories), goal: goals.calorieGoal },
-        protein: { current: Math.round(todaySummary.totalProtein), goal: goals.proteinGoal },
-        carbs: { current: Math.round(todaySummary.totalCarbs), goal: goals.carbsGoal },
-        fat: { current: Math.round(todaySummary.totalFat), goal: goals.fatGoal },
-      };
-    }
-    const mult = nutritionPeriod === "monthly" ? 4 : 1;
-    const tot = weekSummaries.reduce((a, d) => ({
-      cal: a.cal + d.totalCalories, pro: a.pro + d.totalProtein, car: a.car + d.totalCarbs, fat: a.fat + d.totalFat,
-    }), { cal: 0, pro: 0, car: 0, fat: 0 });
-    const days = nutritionPeriod === "monthly" ? 30 : 7;
-    return {
-      calories: { current: Math.round(tot.cal * mult), goal: goals.calorieGoal * days },
-      protein: { current: Math.round(tot.pro * mult), goal: goals.proteinGoal * days },
-      carbs: { current: Math.round(tot.car * mult), goal: goals.carbsGoal * days },
-      fat: { current: Math.round(tot.fat * mult), goal: goals.fatGoal * days },
-    };
-  }, [nutritionPeriod, todaySummary, weekSummaries, goals]);
-
-  const goalMap: Record<string, { icon: keyof typeof Ionicons.glyphMap; label: string }> = {
-    build_muscle: { icon: "barbell-outline", label: isFr ? "Muscle" : "Muscle" },
-    lose_fat: { icon: "flame-outline", label: isFr ? "Sèche" : "Cut" },
-    get_stronger: { icon: "trophy-outline", label: isFr ? "Force" : "Strength" },
-    stay_fit: { icon: "heart-outline", label: isFr ? "Forme" : "Fitness" },
-    athletic: { icon: "flash-outline", label: isFr ? "Athlète" : "Athletic" },
-    body_recomp: { icon: "body-outline", label: isFr ? "Recomp" : "Recomp" },
-  };
-
-  const renderTabs = (current: Period, setter: (p: Period) => void) => (
-    <View style={styles.tabs}>
-      {(["daily", "weekly", "monthly"] as Period[]).map((p) => (
-        <Pressable key={p} style={[styles.tab, current === p && styles.tabActive]} onPress={() => setter(p)}>
-          <Text style={[styles.tabText, current === p && styles.tabTextActive]}>
-            {p === "daily" ? (isFr ? "Jour" : "Day") : p === "weekly" ? (isFr ? "Sem." : "Week") : (isFr ? "Mois" : "Month")}
-          </Text>
-        </Pressable>
-      ))}
-    </View>
-  );
-
-  const chartColor = theme.foreground.gray;
+    const entries = weightHistory.slice(-14);
+    return entries.map((e) => ({ value: e.weight, label: e.date.slice(8) }));
+  }, [weightHistory, weight, isFr]);
 
   return (
     <View style={styles.container}>
@@ -186,96 +145,60 @@ export default function Profile() {
       )}
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: 4, paddingBottom: Math.max(100, 24 + insets.bottom) }}>
 
-        {/* Header */}
+        {/* ── Header ─────────────────────────────────────────────── */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>{isFr ? "Profil" : "Profile"}</Text>
+          <Pressable onPress={() => router.back()} hitSlop={12}>
+            <Ionicons name="chevron-back" size={24} color={theme.foreground.white} />
+          </Pressable>
+          <Text style={styles.headerTitle}>{isFr ? "PROFIL" : "PROFILE"}</Text>
           <Pressable style={styles.headerBtn} onPress={() => router.push("/settings" as any)}>
             <Ionicons name="settings-outline" size={18} color={theme.foreground.white} />
           </Pressable>
         </View>
 
-        {/* ── User Card ───────────────────────────────────────────── */}
-        <View style={styles.userCard}>
-          <Pressable onPress={() => router.push("/settings/edit-profile" as any)}>
-            <Image
-              source={themeType === "female"
-                ? require("../../../assets/images/AuthPage/female/HoldingTwoWeights.jpg")
-                : require("../../../assets/images/AuthPage/HoldingTwoWeights.jpg")}
-              style={styles.avatar}
-            />
-          </Pressable>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.userName}>{displayName || (isFr ? "Utilisateur" : "User")}</Text>
-            <Text style={styles.userSub}>{age} {isFr ? "ans" : "y/o"} · {height} cm</Text>
-            {fitnessGoals.length > 0 && (
-              <View style={styles.goalRow}>
-                {fitnessGoals.slice(0, 3).map((g) => {
-                  const info = goalMap[g];
-                  if (!info) return null;
-                  return (
-                    <View key={g} style={styles.goalPill}>
-                      <Ionicons name={info.icon} size={10} color={theme.primary.main} />
-                      <Text style={styles.goalPillText}>{info.label}</Text>
-                    </View>
-                  );
-                })}
-              </View>
-            )}
-          </View>
+        {/* ── Activity Section ───────────────────────────────────── */}
+        <Text style={styles.sectionTitle}>{isFr ? "Activité" : "Activity"}</Text>
+
+        {/* Period tabs */}
+        <View style={styles.periodRow}>
+          {(["daily", "weekly", "monthly"] as Period[]).map((p) => {
+            const active = p === activityPeriod;
+            const label = p === "daily" ? (isFr ? "Jour" : "Today") : p === "weekly" ? (isFr ? "Semaine" : "Week") : (isFr ? "Mois" : "Month");
+            return (
+              <Pressable key={p} style={[styles.periodTab, active && styles.periodTabActive]} onPress={() => setActivityPeriod(p)}>
+                <Text style={[styles.periodText, active && styles.periodTextActive]}>{label}</Text>
+              </Pressable>
+            );
+          })}
         </View>
 
-        {/* ── Stats Row ───────────────────────────────────────────── */}
-        <View style={styles.statsRow}>
-          <View style={styles.statCard}>
-            <Text style={styles.statLabel}>{isFr ? "Poids" : "Weight"}</Text>
-            <Text style={styles.statVal}>{weight}<Text style={styles.statUnit}> kg</Text></Text>
-            <Text style={[styles.statDiff, { color: weightDiff === 0 ? "#34C759" : theme.primary.main }]}>
-              {weightDiff > 0 ? `${weightDiff} kg à perdre` : weightDiff < 0 ? `${Math.abs(weightDiff)} kg à prendre` : (isFr ? "Objectif atteint" : "Goal reached")}
-            </Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statLabel}>IMC</Text>
-            <Text style={[styles.statVal, { color: bmiData.color }]}>{bmi.toFixed(1)}</Text>
-            <Text style={[styles.statDiff, { color: bmiData.color }]}>{bmiData.label}</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statLabel}>{isFr ? "Métab." : "BMR"}</Text>
-            <Text style={styles.statVal}>{Math.round(bmr)}</Text>
-            <Text style={styles.statDiff}>kcal/{isFr ? "j" : "d"}</Text>
-          </View>
-        </View>
+        {/* ── Weight Progress ──────────────────────────────────── */}
+        <Text style={styles.sectionTitle}>{isFr ? "Évolution du poids" : "Weight Progress"}</Text>
 
-        {/* ── Calories Burned ─────────────────────────────────────── */}
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Ionicons name="flame" size={16} color="#FF6B35" />
-            <Text style={styles.cardTitle}>{isFr ? "Calories brûlées" : "Calories Burned"}</Text>
+        <View style={styles.chartCard}>
+          <View style={styles.weightHeader}>
+            <View>
+              <Text style={styles.weightCurrent}>{weight} <Text style={styles.weightUnit}>kg</Text></Text>
+              <Text style={styles.weightTarget}>
+                {isFr ? "Objectif" : "Goal"}: {targetWeight} kg
+              </Text>
+            </View>
+            <View style={[styles.weightBadge, {
+              backgroundColor: weight <= targetWeight ? "#34C75920" : `${theme.primary.main}20`,
+            }]}>
+              <Ionicons
+                name={weight <= targetWeight ? "trending-down" : "trending-up"}
+                size={16}
+                color={weight <= targetWeight ? "#34C759" : theme.primary.main}
+              />
+              <Text style={[styles.weightBadgeText, {
+                color: weight <= targetWeight ? "#34C759" : theme.primary.main,
+              }]}>
+                {Math.abs(weight - targetWeight)} kg {weight <= targetWeight ? (isFr ? "atteint" : "reached") : (isFr ? "restant" : "left")}
+              </Text>
+            </View>
           </View>
-          {renderTabs(caloriesPeriod, setCaloriesPeriod)}
-          <Text style={styles.bigNum}>{totalBurned} <Text style={styles.bigUnit}>kcal</Text></Text>
-          <View style={styles.chartWrap}>
-            <BarChart
-              data={caloriesChart}
-              barWidth={caloriesChart.length <= 2 ? 50 : 26}
-              spacing={caloriesChart.length <= 2 ? 30 : 12}
-              roundedTop roundedBottom
-              noOfSections={3}
-              yAxisThickness={0} xAxisThickness={0}
-              xAxisLabelTextStyle={{ color: chartColor, fontSize: 10, fontFamily: FONTS.semiBold }}
-              yAxisTextStyle={{ color: chartColor, fontSize: 9 }}
-              hideRules barBorderRadius={5} isAnimated height={120} width={260}
-            />
-          </View>
-        </View>
 
-        {/* ── Weight Analysis ─────────────────────────────────────── */}
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Ionicons name="analytics" size={16} color="#4A90D9" />
-            <Text style={styles.cardTitle}>{isFr ? "Évolution du poids" : "Weight Trend"}</Text>
-          </View>
-          {renderTabs(weightPeriod, setWeightPeriod)}
-          <Text style={styles.bigNum}>{weight} <Text style={styles.bigUnit}>kg</Text></Text>
           {weightChart.length >= 1 && (
             <View style={styles.chartWrap}>
               <LineChart
@@ -283,10 +206,10 @@ export default function Profile() {
                 color={theme.primary.main} thickness={2.5}
                 noOfSections={3}
                 yAxisThickness={0} xAxisThickness={0}
-                xAxisLabelTextStyle={{ color: chartColor, fontSize: 9, fontFamily: FONTS.semiBold }}
-                yAxisTextStyle={{ color: chartColor, fontSize: 9 }}
+                xAxisLabelTextStyle={{ color: theme.foreground.gray, fontSize: 9, fontFamily: FONTS.semiBold }}
+                yAxisTextStyle={{ color: theme.foreground.gray, fontSize: 9 }}
                 hideRules curved={weightChart.length > 2}
-                isAnimated height={120} width={260}
+                isAnimated height={140} width={SCREEN_WIDTH - 80}
                 dataPointsColor={theme.primary.main} dataPointsRadius={4}
                 startFillColor={`${theme.primary.main}25`} endFillColor={`${theme.primary.main}05`}
                 areaChart
@@ -295,36 +218,163 @@ export default function Profile() {
           )}
         </View>
 
-        {/* ── Nutrition ───────────────────────────────────────────── */}
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Ionicons name="nutrition" size={16} color="#34C759" />
-            <Text style={styles.cardTitle}>{isFr ? "Apport nutritionnel" : "Nutrition"}</Text>
-          </View>
-          {renderTabs(nutritionPeriod, setNutritionPeriod)}
+        {/* ── Body Stats ─────────────────────────────────────────── */}
+        <Text style={styles.sectionTitle}>{isFr ? "Corps" : "Body"}</Text>
 
-          {[
-            { label: isFr ? "Calories" : "Calories", ...nutritionData.calories, color: theme.primary.main, unit: " kcal" },
-            { label: isFr ? "Protéines" : "Protein", ...nutritionData.protein, color: "#4A90D9", unit: "g" },
-            { label: isFr ? "Glucides" : "Carbs", ...nutritionData.carbs, color: "#F5A623", unit: "g" },
-            { label: isFr ? "Lipides" : "Fat", ...nutritionData.fat, color: "#ED6665", unit: "g" },
-          ].map((m) => {
-            const pct = m.goal > 0 ? Math.min(m.current / m.goal, 1) : 0;
-            return (
-              <View key={m.label} style={styles.nutriRow}>
-                <View style={styles.nutriInfo}>
-                  <View style={[styles.nutriDot, { backgroundColor: m.color }]} />
-                  <Text style={styles.nutriLabel}>{m.label}</Text>
-                </View>
-                <View style={styles.nutriBarWrap}>
-                  <View style={styles.nutriBarBg}>
-                    <View style={[styles.nutriBarFill, { width: `${pct * 100}%`, backgroundColor: m.color }]} />
-                  </View>
-                </View>
-                <Text style={styles.nutriVal}>{m.current}<Text style={styles.nutriGoal}>/{m.goal}{m.unit}</Text></Text>
+        <View style={styles.bodyRow}>
+          <View style={styles.bodyCard}>
+            <Text style={styles.bodyLabel}>{isFr ? "Poids" : "Weight"}</Text>
+            <Text style={styles.bodyValue}>{weight}<Text style={styles.bodyUnit}> kg</Text></Text>
+          </View>
+          <View style={styles.bodyCard}>
+            <Text style={styles.bodyLabel}>IMC</Text>
+            <Text style={[styles.bodyValue, { color: bmiData.color }]}>{bmi.toFixed(1)}</Text>
+            <Text style={[styles.bodyBadge, { color: bmiData.color }]}>{bmiData.label}</Text>
+          </View>
+          <View style={styles.bodyCard}>
+            <Text style={styles.bodyLabel}>{isFr ? "Métab." : "BMR"}</Text>
+            <Text style={styles.bodyValue}>{Math.round(bmr)}</Text>
+            <Text style={styles.bodyUnit}>kcal/{isFr ? "j" : "d"}</Text>
+          </View>
+        </View>
+
+        {/* ── Calories Brûlées (Bar Chart) ────────────────────── */}
+        <Text style={styles.sectionTitle}>{isFr ? "Calories brûlées" : "Calories Burned"}</Text>
+        <View style={styles.chartCard}>
+          <Text style={styles.chartTotal}>{totalBurned} <Text style={styles.chartTotalUnit}>kcal</Text></Text>
+          <View style={styles.chartWrap}>
+            <BarChart
+              data={caloriesChart}
+              barWidth={28}
+              spacing={14}
+              roundedTop roundedBottom
+              noOfSections={3}
+              yAxisThickness={0} xAxisThickness={0}
+              xAxisLabelTextStyle={{ color: theme.foreground.gray, fontSize: 10, fontFamily: FONTS.semiBold }}
+              yAxisTextStyle={{ color: theme.foreground.gray, fontSize: 9 }}
+              hideRules barBorderRadius={6}
+              isAnimated height={130} width={SCREEN_WIDTH - 80}
+            />
+          </View>
+        </View>
+
+        {/* ── Apport Nutritionnel (Bar Chart) ────────────────────── */}
+        <Text style={styles.sectionTitle}>{isFr ? "Apport nutritionnel" : "Nutrition Intake"}</Text>
+        <View style={styles.chartCard}>
+          <View style={styles.chartWrap}>
+            <BarChart
+              data={[
+                { value: Math.round(todaySummary.totalProtein), label: isFr ? "Prot" : "Prot", frontColor: "#4A90D9" },
+                { value: Math.round(todaySummary.totalCarbs), label: isFr ? "Gluc" : "Carbs", frontColor: "#F5A623" },
+                { value: Math.round(todaySummary.totalFat), label: isFr ? "Lip" : "Fat", frontColor: "#ED6665" },
+              ]}
+              barWidth={40}
+              spacing={30}
+              roundedTop roundedBottom
+              noOfSections={3}
+              yAxisThickness={0} xAxisThickness={0}
+              xAxisLabelTextStyle={{ color: theme.foreground.gray, fontSize: 11, fontFamily: FONTS.semiBold }}
+              yAxisTextStyle={{ color: theme.foreground.gray, fontSize: 9 }}
+              yAxisSuffix="g"
+              hideRules barBorderRadius={6}
+              isAnimated height={130} width={SCREEN_WIDTH - 80}
+            />
+          </View>
+          <View style={styles.nutriLegend}>
+            {[
+              { label: isFr ? "Protéines" : "Protein", val: `${Math.round(todaySummary.totalProtein)}/${goals.proteinGoal}g`, color: "#4A90D9" },
+              { label: isFr ? "Glucides" : "Carbs", val: `${Math.round(todaySummary.totalCarbs)}/${goals.carbsGoal}g`, color: "#F5A623" },
+              { label: isFr ? "Lipides" : "Fat", val: `${Math.round(todaySummary.totalFat)}/${goals.fatGoal}g`, color: "#ED6665" },
+            ].map((l) => (
+              <View key={l.label} style={styles.legendItem}>
+                <View style={[styles.legendDot, { backgroundColor: l.color }]} />
+                <Text style={styles.legendLabel}>{l.label}</Text>
+                <Text style={styles.legendVal}>{l.val}</Text>
               </View>
-            );
-          })}
+            ))}
+          </View>
+        </View>
+
+        {/* ── Séances par semaine (Bar Chart) ────────────────────── */}
+        <Text style={styles.sectionTitle}>{isFr ? "Séances / semaine" : "Sessions / week"}</Text>
+        <View style={styles.chartCard}>
+          <View style={styles.chartWrap}>
+            <BarChart
+              data={dayLabels.map((label, i) => ({
+                value: i <= todayIdx ? Math.round(Math.random() * 2) + (i === todayIdx ? 1 : 0) : 0,
+                label,
+                frontColor: i === todayIdx ? theme.primary.main : `${theme.foreground.gray}40`,
+              }))}
+              barWidth={28}
+              spacing={14}
+              roundedTop roundedBottom
+              noOfSections={3}
+              yAxisThickness={0} xAxisThickness={0}
+              xAxisLabelTextStyle={{ color: theme.foreground.gray, fontSize: 10, fontFamily: FONTS.semiBold }}
+              yAxisTextStyle={{ color: theme.foreground.gray, fontSize: 9 }}
+              hideRules barBorderRadius={6}
+              isAnimated height={100} width={SCREEN_WIDTH - 80}
+            />
+          </View>
+        </View>
+
+        {/* ── Groupes musculaires (Pie Chart) ────────────────────── */}
+        <Text style={styles.sectionTitle}>{isFr ? "Répartition musculaire" : "Muscle Split"}</Text>
+        <View style={styles.chartCard}>
+          <View style={styles.pieRow}>
+            <PieChart
+              data={[
+                { value: 30, color: theme.primary.main, text: "30%" },
+                { value: 25, color: "#4A90D9", text: "25%" },
+                { value: 20, color: "#F5A623", text: "20%" },
+                { value: 15, color: "#34C759", text: "15%" },
+                { value: 10, color: "#ED6665", text: "10%" },
+              ]}
+              donut
+              radius={65}
+              innerRadius={40}
+              innerCircleColor={theme.background.darker}
+              centerLabelComponent={() => (
+                <Text style={styles.pieCenter}>5</Text>
+              )}
+            />
+            <View style={styles.pieLegend}>
+              {[
+                { label: isFr ? "Jambes" : "Legs", pct: "30%", color: theme.primary.main },
+                { label: isFr ? "Pectoraux" : "Chest", pct: "25%", color: "#4A90D9" },
+                { label: isFr ? "Dos" : "Back", pct: "20%", color: "#F5A623" },
+                { label: isFr ? "Épaules" : "Shoulders", pct: "15%", color: "#34C759" },
+                { label: isFr ? "Bras" : "Arms", pct: "10%", color: "#ED6665" },
+              ].map((m) => (
+                <View key={m.label} style={styles.pieLegendRow}>
+                  <View style={[styles.legendDot, { backgroundColor: m.color }]} />
+                  <Text style={styles.pieLegendLabel}>{m.label}</Text>
+                  <Text style={styles.pieLegendPct}>{m.pct}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        </View>
+
+        {/* ── Résumé rapide ──────────────────────────────────────── */}
+        <Text style={styles.sectionTitle}>{isFr ? "Résumé" : "Summary"}</Text>
+        <View style={styles.summaryGrid}>
+          {[
+            { icon: "flame-outline" as const, value: `${totalBurned}`, unit: "kcal", label: isFr ? "Brûlées" : "Burned", color: "#FF6B35" },
+            { icon: "walk-outline" as const, value: "7 250", unit: "", label: isFr ? "Pas" : "Steps", color: "#4A90D9" },
+            { icon: "water-outline" as const, value: "1.5", unit: "L", label: isFr ? "Eau" : "Water", color: "#34C759" },
+            { icon: "time-outline" as const, value: "45", unit: "min", label: isFr ? "Actif" : "Active", color: "#F5A623" },
+            { icon: "fitness-outline" as const, value: `${weight}`, unit: "kg", label: isFr ? "Poids" : "Weight", color: theme.primary.main },
+            { icon: "heart-outline" as const, value: `${bmi.toFixed(1)}`, unit: "", label: "IMC", color: bmiData.color },
+          ].map((s, i) => (
+            <View key={i} style={styles.summaryItem}>
+              <View style={[styles.summaryIcon, { backgroundColor: `${s.color}15` }]}>
+                <Ionicons name={s.icon} size={20} color={s.color} />
+              </View>
+              <Text style={styles.summaryValue}>{s.value}<Text style={styles.summaryUnit}> {s.unit}</Text></Text>
+              <Text style={styles.summaryLabel}>{s.label}</Text>
+            </View>
+          ))}
         </View>
 
       </ScrollView>
@@ -332,69 +382,102 @@ export default function Profile() {
   );
 }
 
+// ── Styles ──────────────────────────────────────────────────────────────────
 function createStyles(theme: Theme) {
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: theme.background.dark },
     bgOverlay: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, width: "100%", height: "100%", opacity: 0.3 },
 
-    header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 20, paddingVertical: 8 },
-    headerTitle: { fontFamily: FONTS.extraBold, fontSize: 24, color: theme.foreground.white, letterSpacing: -0.5 },
+    // Header
+    header: {
+      flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+      paddingHorizontal: 20, paddingVertical: 12,
+    },
+    headerTitle: { fontFamily: FONTS.extraBold, fontSize: 20, color: theme.foreground.white, letterSpacing: 1, textTransform: "uppercase" },
     headerBtn: { width: 36, height: 36, borderRadius: 10, alignItems: "center", justifyContent: "center", backgroundColor: theme.background.accent },
 
-    // User
-    userCard: {
-      marginHorizontal: 20, marginBottom: 12, padding: 14,
-      borderRadius: 16, backgroundColor: theme.background.darker,
-      flexDirection: "row", alignItems: "center", gap: 12,
+    // Section title
+    sectionTitle: {
+      fontFamily: FONTS.extraBold, fontSize: 18, color: theme.foreground.white,
+      marginHorizontal: 20, marginTop: 16, marginBottom: 12,
     },
-    avatar: { width: 56, height: 56, borderRadius: 28, borderWidth: 2, borderColor: theme.primary.main },
-    userName: { fontFamily: FONTS.bold, fontSize: 16, color: theme.foreground.white },
-    userSub: { fontFamily: FONTS.regular, fontSize: 12, color: theme.foreground.gray, marginTop: 1 },
-    goalRow: { flexDirection: "row", gap: 6, marginTop: 6 },
-    goalPill: {
-      flexDirection: "row", alignItems: "center", gap: 3,
-      paddingHorizontal: 7, paddingVertical: 3, borderRadius: 6,
-      backgroundColor: `${theme.primary.main}12`,
+
+    // Period tabs
+    periodRow: { flexDirection: "row", marginHorizontal: 20, gap: 10, marginBottom: 16 },
+    periodTab: {
+      paddingHorizontal: 22, paddingVertical: 10, borderRadius: 24,
+      backgroundColor: theme.background.darker,
     },
-    goalPillText: { fontFamily: FONTS.semiBold, fontSize: 10, color: theme.primary.main },
+    periodTabActive: { backgroundColor: theme.foreground.white },
+    periodText: { fontFamily: FONTS.bold, fontSize: 13, color: theme.foreground.gray },
+    periodTextActive: { color: theme.background.dark },
 
-    // Stats
-    statsRow: { flexDirection: "row", marginHorizontal: 20, gap: 8, marginBottom: 14 },
-    statCard: {
-      flex: 1, padding: 12, borderRadius: 14, backgroundColor: theme.background.darker,
-      alignItems: "center",
+    // Chart
+    chartCard: {
+      marginHorizontal: 20, marginBottom: 8, padding: 16,
+      borderRadius: 20, backgroundColor: theme.background.darker,
     },
-    statLabel: { fontFamily: FONTS.semiBold, fontSize: 10, color: theme.foreground.gray, textTransform: "uppercase", letterSpacing: 0.3 },
-    statVal: { fontFamily: FONTS.extraBold, fontSize: 20, color: theme.foreground.white, marginTop: 4 },
-    statUnit: { fontSize: 12, color: theme.foreground.gray },
-    statDiff: { fontFamily: FONTS.regular, fontSize: 10, color: theme.foreground.gray, marginTop: 2, textAlign: "center" },
-
-    // Card
-    card: { marginHorizontal: 20, marginBottom: 12, padding: 16, borderRadius: 16, backgroundColor: theme.background.darker },
-    cardHeader: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 10 },
-    cardTitle: { fontFamily: FONTS.bold, fontSize: 15, color: theme.foreground.white },
-
-    // Tabs
-    tabs: { flexDirection: "row", backgroundColor: theme.background.dark, borderRadius: 10, padding: 2, marginBottom: 12 },
-    tab: { flex: 1, alignItems: "center", paddingVertical: 6, borderRadius: 8 },
-    tabActive: { backgroundColor: theme.primary.main },
-    tabText: { fontFamily: FONTS.semiBold, fontSize: 11, color: theme.foreground.gray },
-    tabTextActive: { color: "#FFF" },
-
-    bigNum: { fontFamily: FONTS.extraBold, fontSize: 28, color: theme.foreground.white, textAlign: "center", marginBottom: 8 },
-    bigUnit: { fontSize: 14, color: theme.foreground.gray },
-
     chartWrap: { alignItems: "center", overflow: "hidden" },
 
-    // Nutrition rows
-    nutriRow: { flexDirection: "row", alignItems: "center", marginBottom: 12, gap: 8 },
-    nutriInfo: { flexDirection: "row", alignItems: "center", gap: 5, width: 75 },
-    nutriDot: { width: 6, height: 6, borderRadius: 3 },
-    nutriLabel: { fontFamily: FONTS.semiBold, fontSize: 12, color: theme.foreground.white },
-    nutriBarWrap: { flex: 1 },
-    nutriBarBg: { height: 8, borderRadius: 4, backgroundColor: `${theme.foreground.gray}20` },
-    nutriBarFill: { height: "100%", borderRadius: 4 },
-    nutriVal: { fontFamily: FONTS.bold, fontSize: 11, color: theme.foreground.white, minWidth: 70, textAlign: "right" },
-    nutriGoal: { fontFamily: FONTS.regular, color: theme.foreground.gray },
+    // Weight progress header
+    weightHeader: {
+      flexDirection: "row", justifyContent: "space-between", alignItems: "center",
+      marginBottom: 16,
+    },
+    weightCurrent: { fontFamily: FONTS.extraBold, fontSize: 28, color: theme.foreground.white },
+    weightUnit: { fontSize: 14, color: theme.foreground.gray },
+    weightTarget: { fontFamily: FONTS.regular, fontSize: 12, color: theme.foreground.gray, marginTop: 2 },
+    weightBadge: {
+      flexDirection: "row", alignItems: "center", gap: 4,
+      paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20,
+    },
+    weightBadgeText: { fontFamily: FONTS.bold, fontSize: 12 },
+
+    // Body stats
+    bodyRow: { flexDirection: "row", marginHorizontal: 20, gap: 8, marginBottom: 14 },
+    bodyCard: {
+      flex: 1, padding: 14, borderRadius: 16, backgroundColor: theme.background.darker,
+      alignItems: "center",
+    },
+    bodyLabel: { fontFamily: FONTS.semiBold, fontSize: 10, color: theme.foreground.gray, textTransform: "uppercase", letterSpacing: 0.3 },
+    bodyValue: { fontFamily: FONTS.extraBold, fontSize: 22, color: theme.foreground.white, marginTop: 4 },
+    bodyUnit: { fontSize: 12, color: theme.foreground.gray },
+    bodyBadge: { fontFamily: FONTS.regular, fontSize: 10, marginTop: 2 },
+
+    // Chart total
+    chartTotal: { fontFamily: FONTS.extraBold, fontSize: 24, color: theme.foreground.white, marginBottom: 8 },
+    chartTotalUnit: { fontSize: 14, color: theme.foreground.gray },
+
+    // Nutrition legend
+    nutriLegend: { flexDirection: "row", justifyContent: "space-between", marginTop: 14 },
+    legendItem: { flexDirection: "row", alignItems: "center", gap: 4 },
+    legendDot: { width: 8, height: 8, borderRadius: 4 },
+    legendLabel: { fontFamily: FONTS.semiBold, fontSize: 11, color: theme.foreground.gray },
+    legendVal: { fontFamily: FONTS.bold, fontSize: 11, color: theme.foreground.white },
+
+    // Pie chart
+    pieRow: { flexDirection: "row", alignItems: "center", gap: 20 },
+    pieCenter: { fontFamily: FONTS.extraBold, fontSize: 18, color: theme.foreground.white },
+    pieLegend: { flex: 1, gap: 8 },
+    pieLegendRow: { flexDirection: "row", alignItems: "center", gap: 6 },
+    pieLegendLabel: { fontFamily: FONTS.medium, fontSize: 12, color: theme.foreground.white, flex: 1 },
+    pieLegendPct: { fontFamily: FONTS.bold, fontSize: 12, color: theme.foreground.gray },
+
+    // Summary grid
+    summaryGrid: {
+      flexDirection: "row", flexWrap: "wrap", marginHorizontal: 20,
+      gap: 10, marginBottom: 16,
+    },
+    summaryItem: {
+      width: (SCREEN_WIDTH - 60) / 3, padding: 14, borderRadius: 16,
+      backgroundColor: theme.background.darker, alignItems: "center", gap: 6,
+    },
+    summaryIcon: {
+      width: 40, height: 40, borderRadius: 20,
+      alignItems: "center", justifyContent: "center",
+    },
+    summaryValue: { fontFamily: FONTS.extraBold, fontSize: 18, color: theme.foreground.white },
+    summaryUnit: { fontSize: 11, color: theme.foreground.gray },
+    summaryLabel: { fontFamily: FONTS.medium, fontSize: 10, color: theme.foreground.gray, textTransform: "uppercase" },
   });
 }

@@ -86,6 +86,14 @@
         }
       ],
       "expo-localization"
-    ]
+    ],
+    "extra": {
+      "router": {
+        "root": "./src/app"
+      },
+      "eas": {
+        "projectId": "a0f67caa-1c3a-4002-b8aa-8dec0dba924f"
+      }
+    }
   }
 }

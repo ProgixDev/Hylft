@@ -267,6 +267,17 @@ export default function Home() {
         <View style={styles.header}>
           <Text style={styles.headerTitle}>{t("home.homeWorkout")}</Text>
           <View style={styles.headerRight}>
+            {themeType === "female" && (
+              <Pressable
+                onPress={() => setTheme("male")}
+                style={({ pressed }) => [
+                  styles.darkModeBtn,
+                  pressed && { opacity: 0.7 },
+                ]}
+              >
+                <Ionicons name="male" size={20} color={theme.foreground.gray} />
+              </Pressable>
+            )}
             {(themeType === "male" || themeType === "dark") && (
               <Pressable
                 onPress={() => setTheme(themeType === "dark" ? "male" : "dark")}
@@ -459,7 +470,7 @@ export default function Home() {
             })}
           </View>
 
-          {/* Next workout card */}
+          {/* Today's session card */}
           <Pressable
             style={({ pressed }) => [
               styles.nextWorkoutCard,
@@ -473,17 +484,24 @@ export default function Home() {
               resizeMode="cover"
             />
             <LinearGradient
-              colors={["rgba(0,0,0,0.1)", "rgba(0,0,0,0.7)"]}
+              colors={["rgba(0,0,0,0.1)", "rgba(0,0,0,0.75)"]}
               style={styles.nextWorkoutGradient}
             />
             <View style={styles.nextWorkoutContent}>
               <View style={styles.nextWorkoutInfo}>
                 <Text style={styles.nextWorkoutName}>
-                  {t("home.todaysWorkout", "LEGS DAY: CUISSES & MOLLETS")}
+                  LEGS DAY: CUISSES & MOLLETS
                 </Text>
-                <Text style={styles.nextWorkoutMeta}>
-                  17:30 | {t("home.todaysWorkout", "LEGS DAY: CUISSES & MOLLETS")}
-                </Text>
+                <View style={styles.sessionDetails}>
+                  <View style={styles.sessionTag}>
+                    <Ionicons name="barbell-outline" size={12} color="rgba(255,255,255,0.8)" />
+                    <Text style={styles.sessionTagText}>Squats, Soulevé de terre, Presse</Text>
+                  </View>
+                  <View style={styles.sessionTag}>
+                    <Ionicons name="time-outline" size={12} color="rgba(255,255,255,0.8)" />
+                    <Text style={styles.sessionTagText}>17:30 · 50 min</Text>
+                  </View>
+                </View>
               </View>
               <Pressable
                 style={({ pressed }) => [
@@ -1076,7 +1094,7 @@ function createStyles(theme: Theme) {
 
     // ── Next Workout Card ─────────────────────
     nextWorkoutCard: {
-      height: 120,
+      height: 160,
       borderRadius: 16,
       overflow: "hidden",
       borderWidth: 2,
@@ -1115,6 +1133,20 @@ function createStyles(theme: Theme) {
       fontSize: 12,
       color: "rgba(255,255,255,0.8)",
       fontStyle: "italic",
+    },
+    sessionDetails: {
+      gap: 4,
+      marginTop: 4,
+    },
+    sessionTag: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 5,
+    },
+    sessionTagText: {
+      fontFamily: FONTS.medium,
+      fontSize: 11,
+      color: "rgba(255,255,255,0.8)",
     },
     nextWorkoutBtn: {
       backgroundColor: theme.primary.main,
