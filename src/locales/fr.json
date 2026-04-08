@@ -157,6 +157,10 @@
         "6": {
           "label": "6 jours / semaine",
           "description": "PPL × 2 — fréquence maximale pour les athlètes avancés"
+        },
+        "7": {
+          "label": "7 jours / semaine",
+          "description": "Aucun repos — pour les plus déterminés uniquement"
         }
       }
     },
@@ -167,16 +171,12 @@
       "previewPrefix": "Vos entraînements mettront l'accent sur",
       "previewSuffix": "avec un volume et une fréquence hebdomadaire supplémentaires.",
       "muscles": {
+        "full_body": "Corps entier",
         "chest": "Pectoraux",
         "back": "Dos",
-        "shoulders": "Épaules",
         "arms": "Bras",
         "core": "Abdominaux",
-        "quads": "Quadriceps",
-        "hamstrings": "Ischio-jambiers",
-        "glutes": "Fessiers",
-        "calves": "Mollets",
-        "full_body": "Corps entier"
+        "legs": "Jambes"
       }
     },
     "emailPreferences": {
@@ -203,7 +203,7 @@
       "inches": "Pouces"
     },
     "gender": {
-      "title": "Quel est votre genre de naissance ?",
+      "title": "Quel est votre genre ?",
       "subtitle": "Cela nous aide à fournir des recommandations personnalisées",
       "male": "Homme",
       "female": "Femme"

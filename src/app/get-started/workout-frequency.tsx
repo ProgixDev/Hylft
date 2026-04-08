@@ -29,6 +29,7 @@ const FREQUENCIES: FreqOption[] = [
   { id: "4", days: 4, icon: "barbell-outline" },
   { id: "5", days: 5, icon: "flame-outline" },
   { id: "6", days: 6, icon: "flash-outline" },
+  { id: "7", days: 7, icon: "skull-outline" },
 ];
 
 export default function WorkoutFrequency() {

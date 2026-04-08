@@ -22,16 +22,12 @@ interface MuscleGroup {
 }
 
 const MUSCLE_GROUPS: MuscleGroup[] = [
+  { id: "full_body", icon: "flash-outline" },
   { id: "chest", icon: "fitness-outline" },
   { id: "back", icon: "body-outline" },
-  { id: "shoulders", icon: "arrow-up-circle-outline" },
   { id: "arms", icon: "barbell-outline" },
   { id: "core", icon: "ellipse-outline" },
-  { id: "quads", icon: "walk-outline" },
-  { id: "hamstrings", icon: "footsteps-outline" },
-  { id: "glutes", icon: "trending-up-outline" },
-  { id: "calves", icon: "resize-outline" },
-  { id: "full_body", icon: "flash-outline" },
+  { id: "legs", icon: "walk-outline" },
 ];
 
 export default function FocusAreas() {

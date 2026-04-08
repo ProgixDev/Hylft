@@ -12,7 +12,7 @@ import {
   Text,
   View,
 } from "react-native";
-import { BarChart, LineChart, PieChart } from "react-native-gifted-charts";
+import { BarChart, LineChart } from "react-native-gifted-charts";
 import Svg, { Circle } from "react-native-svg";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FONTS } from "../../constants/fonts";
@@ -87,6 +87,7 @@ export default function Profile() {
   const [displayName, setDisplayName] = useState("");
   const [weightHistory, setWeightHistory] = useState<WeightEntry[]>([]);
   const [activityPeriod, setActivityPeriod] = useState<Period>("weekly");
+  const [summaryMode, setSummaryMode] = useState<"total" | "average">("total");
 
   useFocusEffect(
     useCallback(() => {
@@ -295,78 +296,36 @@ export default function Profile() {
           </View>
         </View>
 
-        {/* ── Séances par semaine (Bar Chart) ────────────────────── */}
-        <Text style={styles.sectionTitle}>{isFr ? "Séances / semaine" : "Sessions / week"}</Text>
-        <View style={styles.chartCard}>
-          <View style={styles.chartWrap}>
-            <BarChart
-              data={dayLabels.map((label, i) => ({
-                value: i <= todayIdx ? Math.round(Math.random() * 2) + (i === todayIdx ? 1 : 0) : 0,
-                label,
-                frontColor: i === todayIdx ? theme.primary.main : `${theme.foreground.gray}40`,
-              }))}
-              barWidth={28}
-              spacing={14}
-              roundedTop roundedBottom
-              noOfSections={3}
-              yAxisThickness={0} xAxisThickness={0}
-              xAxisLabelTextStyle={{ color: theme.foreground.gray, fontSize: 10, fontFamily: FONTS.semiBold }}
-              yAxisTextStyle={{ color: theme.foreground.gray, fontSize: 9 }}
-              hideRules barBorderRadius={6}
-              isAnimated height={100} width={SCREEN_WIDTH - 80}
-            />
-          </View>
+        {/* ── Résumé de la semaine ────────────────────────────────── */}
+        <View style={styles.summaryHeader}>
+          <Text style={styles.sectionTitle}>{isFr ? "Résumé" : "Summary"}</Text>
+          <Pressable
+            style={styles.switchBtn}
+            onPress={() => setSummaryMode((m) => m === "total" ? "average" : "total")}
+          >
+            <Text style={styles.switchText}>
+              {summaryMode === "total" ? (isFr ? "Total" : "Total") : (isFr ? "Moyenne" : "Average")}
+            </Text>
+            <Ionicons name="swap-horizontal" size={14} color={theme.primary.main} />
+          </Pressable>
         </View>
-
-        {/* ── Groupes musculaires (Pie Chart) ────────────────────── */}
-        <Text style={styles.sectionTitle}>{isFr ? "Répartition musculaire" : "Muscle Split"}</Text>
-        <View style={styles.chartCard}>
-          <View style={styles.pieRow}>
-            <PieChart
-              data={[
-                { value: 30, color: theme.primary.main, text: "30%" },
-                { value: 25, color: "#4A90D9", text: "25%" },
-                { value: 20, color: "#F5A623", text: "20%" },
-                { value: 15, color: "#34C759", text: "15%" },
-                { value: 10, color: "#ED6665", text: "10%" },
-              ]}
-              donut
-              radius={65}
-              innerRadius={40}
-              innerCircleColor={theme.background.darker}
-              centerLabelComponent={() => (
-                <Text style={styles.pieCenter}>5</Text>
-              )}
-            />
-            <View style={styles.pieLegend}>
-              {[
-                { label: isFr ? "Jambes" : "Legs", pct: "30%", color: theme.primary.main },
-                { label: isFr ? "Pectoraux" : "Chest", pct: "25%", color: "#4A90D9" },
-                { label: isFr ? "Dos" : "Back", pct: "20%", color: "#F5A623" },
-                { label: isFr ? "Épaules" : "Shoulders", pct: "15%", color: "#34C759" },
-                { label: isFr ? "Bras" : "Arms", pct: "10%", color: "#ED6665" },
-              ].map((m) => (
-                <View key={m.label} style={styles.pieLegendRow}>
-                  <View style={[styles.legendDot, { backgroundColor: m.color }]} />
-                  <Text style={styles.pieLegendLabel}>{m.label}</Text>
-                  <Text style={styles.pieLegendPct}>{m.pct}</Text>
-                </View>
-              ))}
-            </View>
-          </View>
-        </View>
-
-        {/* ── Résumé rapide ──────────────────────────────────────── */}
-        <Text style={styles.sectionTitle}>{isFr ? "Résumé" : "Summary"}</Text>
         <View style={styles.summaryGrid}>
-          {[
-            { icon: "flame-outline" as const, value: `${totalBurned}`, unit: "kcal", label: isFr ? "Brûlées" : "Burned", color: "#FF6B35" },
-            { icon: "walk-outline" as const, value: "7 250", unit: "", label: isFr ? "Pas" : "Steps", color: "#4A90D9" },
-            { icon: "water-outline" as const, value: "1.5", unit: "L", label: isFr ? "Eau" : "Water", color: "#34C759" },
-            { icon: "time-outline" as const, value: "45", unit: "min", label: isFr ? "Actif" : "Active", color: "#F5A623" },
-            { icon: "fitness-outline" as const, value: `${weight}`, unit: "kg", label: isFr ? "Poids" : "Weight", color: theme.primary.main },
-            { icon: "heart-outline" as const, value: `${bmi.toFixed(1)}`, unit: "", label: "IMC", color: bmiData.color },
-          ].map((s, i) => (
+          {(() => {
+            const divisor = summaryMode === "average" ? 7 : 1;
+            const weekSteps = 48000;
+            const weekWater = 10.5;
+            const weekActive = 320;
+            const weightVar = weightHistory.length >= 2
+              ? weightHistory[weightHistory.length - 1].weight - weightHistory[0].weight
+              : 0;
+            return [
+              { icon: "flame-outline" as const, value: `${Math.round(totalBurned / divisor)}`, unit: "kcal", label: isFr ? "Brûlées" : "Burned", color: "#FF6B35" },
+              { icon: "walk-outline" as const, value: `${Math.round(weekSteps / divisor).toLocaleString()}`, unit: "", label: isFr ? "Pas" : "Steps", color: "#4A90D9" },
+              { icon: "water-outline" as const, value: `${(weekWater / divisor).toFixed(1)}`, unit: "L", label: isFr ? "Eau" : "Water", color: "#34C759" },
+              { icon: "time-outline" as const, value: `${Math.round(weekActive / divisor)}`, unit: "min", label: isFr ? "Actif" : "Active", color: "#F5A623" },
+              { icon: "trending-up-outline" as const, value: `${weightVar >= 0 ? "+" : ""}${weightVar.toFixed(1)}`, unit: "kg", label: isFr ? "Variation" : "Change", color: weightVar <= 0 ? "#34C759" : "#ED6665" },
+            ];
+          })().map((s, i) => (
             <View key={i} style={styles.summaryItem}>
               <View style={[styles.summaryIcon, { backgroundColor: `${s.color}15` }]}>
                 <Ionicons name={s.icon} size={20} color={s.color} />
@@ -455,13 +414,17 @@ function createStyles(theme: Theme) {
     legendLabel: { fontFamily: FONTS.semiBold, fontSize: 11, color: theme.foreground.gray },
     legendVal: { fontFamily: FONTS.bold, fontSize: 11, color: theme.foreground.white },
 
-    // Pie chart
-    pieRow: { flexDirection: "row", alignItems: "center", gap: 20 },
-    pieCenter: { fontFamily: FONTS.extraBold, fontSize: 18, color: theme.foreground.white },
-    pieLegend: { flex: 1, gap: 8 },
-    pieLegendRow: { flexDirection: "row", alignItems: "center", gap: 6 },
-    pieLegendLabel: { fontFamily: FONTS.medium, fontSize: 12, color: theme.foreground.white, flex: 1 },
-    pieLegendPct: { fontFamily: FONTS.bold, fontSize: 12, color: theme.foreground.gray },
+    // Summary header with switch
+    summaryHeader: {
+      flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+      paddingRight: 20,
+    },
+    switchBtn: {
+      flexDirection: "row", alignItems: "center", gap: 5,
+      paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20,
+      backgroundColor: `${theme.primary.main}15`,
+    },
+    switchText: { fontFamily: FONTS.bold, fontSize: 12, color: theme.primary.main },
 
     // Summary grid
     summaryGrid: {

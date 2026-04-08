@@ -157,6 +157,10 @@
         "6": {
           "label": "6 days / week",
           "description": "PPL × 2 — maximum frequency for advanced athletes"
+        },
+        "7": {
+          "label": "7 days / week",
+          "description": "No rest — for the most dedicated only"
         }
       }
     },
@@ -167,16 +171,12 @@
       "previewPrefix": "Your workouts will emphasize",
       "previewSuffix": "with extra volume and weekly frequency.",
       "muscles": {
+        "full_body": "Full Body",
         "chest": "Chest",
         "back": "Back",
-        "shoulders": "Shoulders",
         "arms": "Arms",
         "core": "Core / Abs",
-        "quads": "Quads",
-        "hamstrings": "Hamstrings",
-        "glutes": "Glutes",
-        "calves": "Calves",
-        "full_body": "Full Body"
+        "legs": "Legs"
       }
     },
     "emailPreferences": {
