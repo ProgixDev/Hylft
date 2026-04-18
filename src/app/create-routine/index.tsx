@@ -1,8 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Alert,
+  Modal,
+  Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -19,6 +24,17 @@ import { addRoutine, RoutineExercise, SetTarget } from "../../data/mockData";
 
 import { FONTS } from "../../constants/fonts";
 
+const surfaceShadow = Platform.select({
+  ios: {
+    shadowColor: "#000",
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+  },
+  android: { elevation: 4 },
+  default: {},
+});
+
 const getDifficulties = (t: (key: string) => string) => [
   { value: "beginner", label: t("createRoutine.beginner"), color: "#22c55e" },
   { value: "intermediate", label: t("createRoutine.intermediate"), color: "#f59e0b" },
@@ -26,7 +42,7 @@ const getDifficulties = (t: (key: string) => string) => [
 ] as const;
 
 export default function CreateRoutineScreen() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const styles = createStyles(theme);
   const router = useRouter();
@@ -39,6 +55,13 @@ export default function CreateRoutineScreen() {
     updateRoutineExercise,
     clearCreation,
   } = useCreateRoutine();
+
+  const [editingExerciseId, setEditingExerciseId] = useState<string | null>(
+    null,
+  );
+  const editingExercise = editingExerciseId
+    ? draft.exercises.find((e) => e.id === editingExerciseId) ?? null
+    : null;
 
   // Auto scroll when exercises change
   const scrollRef = useRef<ScrollView>(null);
@@ -209,16 +232,14 @@ export default function CreateRoutineScreen() {
             </TouchableOpacity>
           ) : (
             draft.exercises.map((ex, index) => (
-              <ExerciseRow
+              <ExerciseSummaryCard
                 key={ex.id}
                 exercise={ex}
                 index={index}
                 theme={theme}
                 styles={styles}
-                onUpdate={(updates) => updateRoutineExercise(ex.id, updates)}
+                onEdit={() => setEditingExerciseId(ex.id)}
                 onRemove={() => removeExerciseFromRoutine(ex.id)}
-                t={t}
-                i18n={i18n}
               />
             ))
           )}
@@ -238,30 +259,153 @@ export default function CreateRoutineScreen() {
           </View>
         )}
       </ScrollView>
+
+      {/* Per-exercise editor sheet */}
+      <ExerciseEditorSheet
+        visible={!!editingExercise}
+        exercise={editingExercise}
+        theme={theme}
+        styles={styles}
+        onClose={() => setEditingExerciseId(null)}
+        onUpdate={(updates) => {
+          if (editingExerciseId) updateRoutineExercise(editingExerciseId, updates);
+        }}
+        t={t}
+      />
     </View>
   );
 }
 
-interface ExerciseRowProps {
+// ─── Summary card shown in the routine list ────────────────────────────
+interface SummaryProps {
   exercise: RoutineExercise;
   index: number;
   theme: Theme;
   styles: ReturnType<typeof createStyles>;
-  onUpdate: (updates: Partial<RoutineExercise>) => void;
+  onEdit: () => void;
   onRemove: () => void;
 }
 
-function ExerciseRow({
+function ExerciseSummaryCard({
   exercise,
   index,
   theme,
   styles,
-  onUpdate,
+  onEdit,
   onRemove,
+}: SummaryProps) {
+  return (
+    <Pressable
+      onPress={onEdit}
+      style={({ pressed }) => [
+        styles.exerciseCard,
+        pressed && { opacity: 0.95, transform: [{ scale: 0.99 }] },
+      ]}
+    >
+      <View style={styles.exerciseGifWrap}>
+        {exercise.gifUrl ? (
+          <Image
+            source={{ uri: exercise.gifUrl }}
+            style={styles.exerciseGif}
+            contentFit="cover"
+            transition={200}
+          />
+        ) : (
+          <View style={[styles.exerciseGif, styles.exerciseGifPlaceholder]}>
+            <Ionicons
+              name="barbell-outline"
+              size={26}
+              color={theme.foreground.gray}
+            />
+          </View>
+        )}
+        <View style={styles.exerciseIndexBadge}>
+          <Text style={styles.exerciseIndexText}>{index + 1}</Text>
+        </View>
+      </View>
+
+      <View style={styles.exerciseBody}>
+        <Text style={styles.exerciseName} numberOfLines={1}>
+          {translateExerciseName(exercise.name)}
+        </Text>
+        <View style={styles.exerciseSummaryRow}>
+          <View style={styles.summaryPill}>
+            <Text style={styles.summaryPillStrong}>{exercise.sets}</Text>
+            <Text style={styles.summaryPillSoft}>×</Text>
+            <Text style={styles.summaryPillStrong}>{exercise.reps}</Text>
+          </View>
+          {!!exercise.targetWeight && (
+            <View style={styles.summaryPill}>
+              <Text style={styles.summaryPillStrong}>
+                {exercise.targetWeight}
+              </Text>
+              <Text style={styles.summaryPillSoft}>kg</Text>
+            </View>
+          )}
+          <View style={styles.summaryPill}>
+            <Ionicons
+              name="time-outline"
+              size={11}
+              color={theme.foreground.gray}
+            />
+            <Text style={styles.summaryPillSoft}>{exercise.restTime}s</Text>
+          </View>
+        </View>
+      </View>
+
+      <View style={styles.exerciseActions}>
+        <Pressable
+          onPress={onEdit}
+          hitSlop={6}
+          style={({ pressed }) => [
+            styles.iconBtn,
+            pressed && { opacity: 0.7 },
+          ]}
+        >
+          <Ionicons
+            name="create-outline"
+            size={18}
+            color={theme.primary.main}
+          />
+        </Pressable>
+        <Pressable
+          onPress={onRemove}
+          hitSlop={6}
+          style={({ pressed }) => [
+            styles.iconBtn,
+            pressed && { opacity: 0.7 },
+          ]}
+        >
+          <Ionicons name="trash-outline" size={18} color="#ef4444" />
+        </Pressable>
+      </View>
+    </Pressable>
+  );
+}
+
+// ─── Focused per-exercise editor (modal sheet) ─────────────────────────
+interface EditorProps {
+  visible: boolean;
+  exercise: RoutineExercise | null;
+  theme: Theme;
+  styles: ReturnType<typeof createStyles>;
+  onClose: () => void;
+  onUpdate: (updates: Partial<RoutineExercise>) => void;
+  t: (key: string) => string;
+}
+
+function ExerciseEditorSheet({
+  visible,
+  exercise,
+  theme,
+  styles,
+  onClose,
+  onUpdate,
   t,
-  i18n,
-}: ExerciseRowProps & { t: (key: string) => string; i18n: { language: string } }) {
-  const [showSetDetails, setShowSetDetails] = React.useState(false);
+}: EditorProps) {
+  const [showSetDetails, setShowSetDetails] = useState(false);
+
+  if (!exercise) return null;
 
   const handleSetTargetUpdate = (
     setIndex: number,
@@ -274,146 +418,237 @@ function ExerciseRow({
     onUpdate({ setTargets: updated });
   };
 
+  const incSets = () => onUpdate({ sets: Math.min(exercise.sets + 1, 99) });
+  const decSets = () => onUpdate({ sets: Math.max(exercise.sets - 1, 1) });
+
   return (
-    <View style={styles.exerciseCard}>
-      <View style={styles.exerciseCardHeader}>
-        <View style={styles.exerciseIndexBadge}>
-          <Text style={styles.exerciseIndexText}>{index + 1}</Text>
+    <Modal
+      visible={visible}
+      animationType="slide"
+      presentationStyle="pageSheet"
+      onRequestClose={onClose}
+    >
+      <View style={styles.editorContainer}>
+        <View style={styles.editorHeader}>
+          <Pressable onPress={onClose} hitSlop={8} style={styles.editorHeaderBtn}>
+            <Ionicons name="close" size={22} color={theme.foreground.white} />
+          </Pressable>
+          <Text style={styles.editorHeaderTitle} numberOfLines={1}>
+            {translateExerciseName(exercise.name)}
+          </Text>
+          <Pressable
+            onPress={onClose}
+            hitSlop={8}
+            style={[styles.editorHeaderBtn, styles.editorDoneBtn]}
+          >
+            <Text style={styles.editorDoneText}>{t("common.done")}</Text>
+          </Pressable>
         </View>
-        <Text style={styles.exerciseName} numberOfLines={1}>
-          {translateExerciseName(exercise.name)}
-        </Text>
-        <TouchableOpacity
-          onPress={onRemove}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+
+        <ScrollView
+          contentContainerStyle={styles.editorContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-          <Ionicons name="trash-outline" size={18} color="#ef4444" />
-        </TouchableOpacity>
-      </View>
+          <View style={styles.editorGifWrap}>
+            <LinearGradient
+              colors={[theme.primary.main + "20", "transparent"]}
+              style={StyleSheet.absoluteFill}
+            />
+            {exercise.gifUrl ? (
+              <Image
+                source={{ uri: exercise.gifUrl }}
+                style={styles.editorGif}
+                contentFit="contain"
+                transition={200}
+              />
+            ) : (
+              <View style={[styles.editorGif, styles.editorGifPlaceholder]}>
+                <Ionicons
+                  name="barbell-outline"
+                  size={48}
+                  color={theme.foreground.gray}
+                />
+              </View>
+            )}
+          </View>
 
-      {/* Row 1: Sets, Reps, Rest */}
-      <View style={styles.exerciseFields}>
-        <View style={styles.field}>
-          <Text style={styles.fieldLabel}>{t("createRoutine.sets")}</Text>
-          <TextInput
-            style={styles.fieldInput}
-            keyboardType="numeric"
-            value={String(exercise.sets)}
-            onChangeText={(v) => onUpdate({ sets: parseInt(v) || 1 })}
-            maxLength={2}
-          />
-        </View>
-        <View style={styles.field}>
-          <Text style={styles.fieldLabel}>{t("createRoutine.reps")}</Text>
-          <TextInput
-            style={styles.fieldInput}
-            placeholder="8-12"
-            placeholderTextColor={theme.foreground.gray}
-            value={exercise.reps}
-            onChangeText={(v) => onUpdate({ reps: v })}
-            maxLength={8}
-          />
-        </View>
-        <View style={styles.field}>
-          <Text style={styles.fieldLabel}>{t("createRoutine.rest")} (s)</Text>
-          <TextInput
-            style={styles.fieldInput}
-            keyboardType="numeric"
-            value={String(exercise.restTime)}
-            onChangeText={(v) => onUpdate({ restTime: parseInt(v) || 0 })}
-            maxLength={4}
-          />
-        </View>
-      </View>
+          {/* Sets stepper */}
+          <View style={styles.editorBlock}>
+            <Text style={styles.editorBlockLabel}>
+              {t("createRoutine.sets")}
+            </Text>
+            <View style={styles.stepperRow}>
+              <Pressable
+                onPress={decSets}
+                style={({ pressed }) => [
+                  styles.stepperBtn,
+                  pressed && { opacity: 0.7 },
+                ]}
+              >
+                <Ionicons name="remove" size={20} color={theme.primary.main} />
+              </Pressable>
+              <Text style={styles.stepperValue}>{exercise.sets}</Text>
+              <Pressable
+                onPress={incSets}
+                style={({ pressed }) => [
+                  styles.stepperBtn,
+                  pressed && { opacity: 0.7 },
+                ]}
+              >
+                <Ionicons name="add" size={20} color={theme.primary.main} />
+              </Pressable>
+            </View>
+          </View>
 
-      {/* Row 2: Weight, Training Time */}
-      <View style={styles.exerciseFields}>
-        <View style={styles.field}>
-          <Text style={styles.fieldLabel}>{t("createRoutine.weight")} (kg)</Text>
-          <TextInput
-            style={styles.fieldInput}
-            keyboardType="numeric"
-            placeholder="0"
-            placeholderTextColor={theme.foreground.gray}
-            value={exercise.targetWeight ? String(exercise.targetWeight) : ""}
-            onChangeText={(v) => onUpdate({ targetWeight: parseFloat(v) || 0 })}
-            maxLength={5}
-          />
-        </View>
-        <View style={styles.field}>
-          <Text style={styles.fieldLabel}>{t("createRoutine.trainingTime")} (s)</Text>
-          <TextInput
-            style={styles.fieldInput}
-            keyboardType="numeric"
-            placeholder="0"
-            placeholderTextColor={theme.foreground.gray}
-            value={exercise.trainingTime ? String(exercise.trainingTime) : ""}
-            onChangeText={(v) => onUpdate({ trainingTime: parseInt(v) || 0 })}
-            maxLength={4}
-          />
-        </View>
-        <View style={styles.field}>
-          <TouchableOpacity
-            style={styles.setDetailsToggle}
-            onPress={() => setShowSetDetails(!showSetDetails)}
+          {/* Reps + Weight */}
+          <View style={styles.editorRow}>
+            <View style={styles.editorBlock}>
+              <Text style={styles.editorBlockLabel}>
+                {t("createRoutine.reps")}
+              </Text>
+              <TextInput
+                style={styles.editorBigInput}
+                value={exercise.reps}
+                onChangeText={(v) => onUpdate({ reps: v })}
+                placeholder="8-12"
+                placeholderTextColor={theme.foreground.gray + "60"}
+                maxLength={8}
+              />
+            </View>
+            <View style={styles.editorBlock}>
+              <Text style={styles.editorBlockLabel}>
+                {t("createRoutine.weight")} (kg)
+              </Text>
+              <TextInput
+                style={styles.editorBigInput}
+                keyboardType="numeric"
+                value={exercise.targetWeight ? String(exercise.targetWeight) : ""}
+                onChangeText={(v) =>
+                  onUpdate({ targetWeight: parseFloat(v) || 0 })
+                }
+                placeholder="0"
+                placeholderTextColor={theme.foreground.gray + "60"}
+                maxLength={5}
+              />
+            </View>
+          </View>
+
+          {/* Rest + Training time */}
+          <View style={styles.editorRow}>
+            <View style={styles.editorBlock}>
+              <Text style={styles.editorBlockLabel}>
+                {t("createRoutine.rest")} (s)
+              </Text>
+              <TextInput
+                style={styles.editorBigInput}
+                keyboardType="numeric"
+                value={String(exercise.restTime)}
+                onChangeText={(v) => onUpdate({ restTime: parseInt(v) || 0 })}
+                maxLength={4}
+              />
+            </View>
+            <View style={styles.editorBlock}>
+              <Text style={styles.editorBlockLabel}>
+                {t("createRoutine.trainingTime")} (s)
+              </Text>
+              <TextInput
+                style={styles.editorBigInput}
+                keyboardType="numeric"
+                value={exercise.trainingTime ? String(exercise.trainingTime) : ""}
+                onChangeText={(v) =>
+                  onUpdate({ trainingTime: parseInt(v) || 0 })
+                }
+                placeholder="0"
+                placeholderTextColor={theme.foreground.gray + "60"}
+                maxLength={4}
+              />
+            </View>
+          </View>
+
+          {/* Per-set targets (collapsed by default) */}
+          <Pressable
+            style={({ pressed }) => [
+              styles.editorAccordionToggle,
+              pressed && { opacity: 0.85 },
+            ]}
+            onPress={() => setShowSetDetails((s) => !s)}
           >
             <Ionicons
               name={showSetDetails ? "chevron-up" : "chevron-down"}
-              size={14}
+              size={16}
               color={theme.primary.main}
             />
-            <Text style={[styles.fieldLabel, { color: theme.primary.main, marginBottom: 0 }]}>
+            <Text style={styles.editorAccordionText}>
               {t("createRoutine.perSet")}
             </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+          </Pressable>
 
-      {/* Per-set targets (expandable) */}
-      {showSetDetails && exercise.setTargets && exercise.setTargets.length > 0 && (
-        <View style={styles.setTargetsContainer}>
-          {/* Header */}
-          <View style={styles.setTargetRow}>
-            <Text style={[styles.setTargetHeader, { flex: 0.5 }]}>#</Text>
-            <Text style={styles.setTargetHeader}>{t("createRoutine.weight")} (kg)</Text>
-            <Text style={styles.setTargetHeader}>{t("createRoutine.reps")}</Text>
+          {showSetDetails &&
+            exercise.setTargets &&
+            exercise.setTargets.length > 0 && (
+              <View style={styles.setTargetsContainer}>
+                <View style={styles.setTargetRow}>
+                  <Text style={[styles.setTargetHeader, { flex: 0.5 }]}>#</Text>
+                  <Text style={styles.setTargetHeader}>
+                    {t("createRoutine.weight")} (kg)
+                  </Text>
+                  <Text style={styles.setTargetHeader}>
+                    {t("createRoutine.reps")}
+                  </Text>
+                </View>
+                {exercise.setTargets.map((st, i) => (
+                  <View key={i} style={styles.setTargetRow}>
+                    <Text style={[styles.setTargetNum, { flex: 0.5 }]}>
+                      {i + 1}
+                    </Text>
+                    <TextInput
+                      style={styles.setTargetInput}
+                      keyboardType="numeric"
+                      placeholder={String(exercise.targetWeight || 0)}
+                      placeholderTextColor={theme.foreground.gray + "80"}
+                      value={st.targetKg ? String(st.targetKg) : ""}
+                      onChangeText={(v) =>
+                        handleSetTargetUpdate(i, {
+                          targetKg: parseFloat(v) || 0,
+                        })
+                      }
+                    />
+                    <TextInput
+                      style={styles.setTargetInput}
+                      placeholder={exercise.reps}
+                      placeholderTextColor={theme.foreground.gray + "80"}
+                      value={
+                        st.targetReps !== exercise.reps ? st.targetReps : ""
+                      }
+                      onChangeText={(v) =>
+                        handleSetTargetUpdate(i, {
+                          targetReps: v || exercise.reps,
+                        })
+                      }
+                    />
+                  </View>
+                ))}
+              </View>
+            )}
+
+          {/* Notes */}
+          <View style={styles.editorBlock}>
+            <Text style={styles.editorBlockLabel}>
+              {t("createRoutine.addNotes")}
+            </Text>
+            <TextInput
+              style={[styles.editorBigInput, styles.editorNotesInput]}
+              placeholder={t("createRoutine.addNotes")}
+              placeholderTextColor={theme.foreground.gray + "60"}
+              value={exercise.notes ?? ""}
+              onChangeText={(v) => onUpdate({ notes: v })}
+              multiline
+            />
           </View>
-          {exercise.setTargets.map((st, i) => (
-            <View key={i} style={styles.setTargetRow}>
-              <Text style={[styles.setTargetNum, { flex: 0.5 }]}>{i + 1}</Text>
-              <TextInput
-                style={styles.setTargetInput}
-                keyboardType="numeric"
-                placeholder={String(exercise.targetWeight || 0)}
-                placeholderTextColor={theme.foreground.gray + "80"}
-                value={st.targetKg ? String(st.targetKg) : ""}
-                onChangeText={(v) =>
-                  handleSetTargetUpdate(i, { targetKg: parseFloat(v) || 0 })
-                }
-              />
-              <TextInput
-                style={styles.setTargetInput}
-                placeholder={exercise.reps}
-                placeholderTextColor={theme.foreground.gray + "80"}
-                value={st.targetReps !== exercise.reps ? st.targetReps : ""}
-                onChangeText={(v) =>
-                  handleSetTargetUpdate(i, { targetReps: v || exercise.reps })
-                }
-              />
-            </View>
-          ))}
-        </View>
-      )}
-
-      {/* Notes */}
-      <TextInput
-        style={styles.notesInput}
-        placeholder={t("createRoutine.addNotes")}
-        placeholderTextColor={theme.foreground.gray}
-        value={exercise.notes ?? ""}
-        onChangeText={(v) => onUpdate({ notes: v })}
-      />
-    </View>
+        </ScrollView>
+      </View>
+    </Modal>
   );
 }
 
@@ -423,59 +658,74 @@ const createStyles = (theme: Theme) =>
       flex: 1,
       backgroundColor: theme.background.dark,
     },
+
+    // ── Top bar
     header: {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      paddingHorizontal: 16,
-      paddingVertical: 8,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.background.darker,
+      paddingHorizontal: 18,
+      paddingTop: 6,
+      paddingBottom: 12,
     },
-    headerBtn: { padding: 4 },
+    headerBtn: {
+      width: 38,
+      height: 38,
+      borderRadius: 12,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: theme.background.darker,
+    },
     headerTitle: {
-      fontSize: 15,
-      fontFamily: FONTS.bold,
+      fontSize: 17,
+      fontFamily: FONTS.extraBold,
       color: theme.foreground.white,
+      letterSpacing: 0.3,
     },
     saveBtn: {
       backgroundColor: theme.primary.main,
-      paddingHorizontal: 12,
-      paddingVertical: 5,
-      borderRadius: 12,
+      paddingHorizontal: 18,
+      paddingVertical: 9,
+      borderRadius: 14,
     },
     saveBtnText: {
-      fontSize: 12,
-      fontFamily: FONTS.bold,
+      fontSize: 13,
+      fontFamily: FONTS.extraBold,
       color: theme.background.dark,
+      letterSpacing: 0.5,
     },
+
+    // ── Body
     content: { flex: 1 },
     section: {
-      paddingHorizontal: 14,
-      marginTop: 14,
+      paddingHorizontal: 18,
+      marginTop: 18,
     },
     label: {
       fontSize: 11,
-      fontFamily: FONTS.semiBold,
+      fontFamily: FONTS.bold,
       color: theme.foreground.gray,
       textTransform: "uppercase",
-      letterSpacing: 0.8,
-      marginBottom: 6,
+      letterSpacing: 1,
+      marginBottom: 8,
     },
     input: {
       backgroundColor: theme.background.darker,
-      borderRadius: 8,
-      paddingHorizontal: 12,
-      paddingVertical: 9,
-      fontSize: 13,
+      borderRadius: 14,
+      paddingHorizontal: 14,
+      paddingVertical: 13,
+      fontSize: 15,
+      fontFamily: FONTS.medium,
       color: theme.foreground.white,
-      borderWidth: 1,
-      borderColor: theme.background.accent,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: theme.foreground.gray + "20",
     },
     inputMultiline: {
-      minHeight: 64,
+      minHeight: 80,
       textAlignVertical: "top",
     },
+
+    // ── Difficulty
     difficultyRow: {
       flexDirection: "row",
       gap: 8,
@@ -485,197 +735,364 @@ const createStyles = (theme: Theme) =>
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
-      gap: 5,
-      paddingVertical: 8,
-      borderRadius: 8,
-      borderWidth: 1,
-      borderColor: theme.background.accent,
+      gap: 6,
+      paddingVertical: 12,
+      borderRadius: 14,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: theme.foreground.gray + "20",
       backgroundColor: theme.background.darker,
     },
     difficultyDot: {
-      width: 7,
-      height: 7,
-      borderRadius: 3.5,
+      width: 8,
+      height: 8,
+      borderRadius: 4,
     },
     difficultyBtnText: {
-      fontSize: 12,
-      fontFamily: FONTS.semiBold,
+      fontSize: 13,
+      fontFamily: FONTS.bold,
       color: theme.foreground.gray,
     },
+
+    // ── Exercises section header
     exercisesHeader: {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      marginBottom: 6,
+      marginBottom: 10,
     },
     addExBtn: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 3,
+      gap: 4,
       backgroundColor: theme.primary.main,
-      paddingHorizontal: 10,
-      paddingVertical: 5,
-      borderRadius: 12,
+      paddingHorizontal: 12,
+      paddingVertical: 7,
+      borderRadius: 14,
     },
     addExBtnText: {
-      fontSize: 11,
-      fontFamily: FONTS.bold,
+      fontSize: 12,
+      fontFamily: FONTS.extraBold,
       color: theme.background.dark,
+      letterSpacing: 0.4,
     },
     emptyEx: {
       alignItems: "center",
       justifyContent: "center",
-      paddingVertical: 24,
-      borderRadius: 10,
+      paddingVertical: 32,
+      borderRadius: 16,
       borderWidth: 1,
-      borderColor: theme.background.accent,
+      borderColor: theme.foreground.gray + "30",
       borderStyle: "dashed",
-      gap: 6,
+      gap: 8,
     },
     emptyExText: {
-      fontSize: 12,
+      fontSize: 13,
+      fontFamily: FONTS.medium,
       color: theme.foreground.gray,
     },
+
+    // ── Exercise summary card (collapsed in list)
     exerciseCard: {
-      backgroundColor: theme.background.darker,
-      borderRadius: 10,
-      padding: 10,
-      marginBottom: 8,
-      borderLeftWidth: 3,
-      borderLeftColor: theme.primary.main,
-    },
-    exerciseCardHeader: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 8,
-      marginBottom: 8,
+      gap: 12,
+      backgroundColor: theme.background.darker,
+      borderRadius: 16,
+      padding: 10,
+      marginBottom: 10,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: theme.foreground.gray + "15",
+      ...surfaceShadow,
+    },
+    exerciseGifWrap: {
+      width: 64,
+      height: 64,
+      borderRadius: 14,
+      backgroundColor: theme.background.dark,
+      overflow: "hidden",
+      position: "relative",
+    },
+    exerciseGif: {
+      width: "100%",
+      height: "100%",
+    },
+    exerciseGifPlaceholder: {
+      alignItems: "center",
+      justifyContent: "center",
     },
     exerciseIndexBadge: {
-      width: 22,
-      height: 22,
-      borderRadius: 11,
-      backgroundColor: theme.primary.main + "20",
-      borderWidth: 1,
-      borderColor: theme.primary.main,
+      position: "absolute",
+      top: 4,
+      left: 4,
+      minWidth: 20,
+      height: 20,
+      paddingHorizontal: 4,
+      borderRadius: 10,
+      backgroundColor: theme.primary.main,
       alignItems: "center",
       justifyContent: "center",
     },
     exerciseIndexText: {
-      fontSize: 10,
-      fontFamily: FONTS.bold,
-      color: theme.primary.main,
+      fontSize: 11,
+      fontFamily: FONTS.extraBold,
+      color: theme.background.dark,
+    },
+    exerciseBody: {
+      flex: 1,
+      gap: 6,
     },
     exerciseName: {
-      fontSize: 13,
-      fontFamily: FONTS.semiBold,
+      fontSize: 15,
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
-      flex: 1,
     },
-    exerciseFields: {
+    exerciseSummaryRow: {
       flexDirection: "row",
-      gap: 8,
-      marginBottom: 6,
+      flexWrap: "wrap",
+      gap: 6,
     },
-    field: { flex: 1 },
-    fieldLabel: {
-      fontSize: 10,
-      fontFamily: FONTS.semiBold,
-      color: theme.foreground.gray,
-      marginBottom: 3,
-    },
-    fieldInput: {
+    summaryPill: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 3,
       backgroundColor: theme.background.dark,
-      borderRadius: 7,
+      borderRadius: 8,
       paddingHorizontal: 8,
-      paddingVertical: 6,
+      paddingVertical: 4,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: theme.foreground.gray + "20",
+    },
+    summaryPillStrong: {
+      fontSize: 12,
+      fontFamily: FONTS.extraBold,
+      color: theme.foreground.white,
+    },
+    summaryPillSoft: {
+      fontSize: 11,
+      fontFamily: FONTS.medium,
+      color: theme.foreground.gray,
+    },
+    exerciseActions: {
+      gap: 8,
+      alignItems: "center",
+    },
+    iconBtn: {
+      width: 32,
+      height: 32,
+      borderRadius: 10,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: theme.background.dark,
+    },
+
+    // ── Editor sheet (modal)
+    editorContainer: {
+      flex: 1,
+      backgroundColor: theme.background.dark,
+    },
+    editorHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingHorizontal: 16,
+      paddingTop: 12,
+      paddingBottom: 12,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: theme.foreground.gray + "20",
+    },
+    editorHeaderBtn: {
+      minWidth: 64,
+      height: 36,
+      borderRadius: 12,
+      paddingHorizontal: 10,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: theme.background.darker,
+    },
+    editorDoneBtn: {
+      backgroundColor: theme.primary.main,
+    },
+    editorDoneText: {
       fontSize: 13,
-      fontFamily: FONTS.semiBold,
+      fontFamily: FONTS.extraBold,
+      color: theme.background.dark,
+    },
+    editorHeaderTitle: {
+      flex: 1,
+      textAlign: "center",
+      fontSize: 15,
+      fontFamily: FONTS.bold,
+      color: theme.foreground.white,
+      paddingHorizontal: 8,
+    },
+    editorContent: {
+      paddingHorizontal: 18,
+      paddingTop: 18,
+      paddingBottom: 40,
+      gap: 16,
+    },
+    editorGifWrap: {
+      width: "100%",
+      height: 220,
+      borderRadius: 22,
+      backgroundColor: theme.background.darker,
+      alignItems: "center",
+      justifyContent: "center",
+      overflow: "hidden",
+      ...surfaceShadow,
+    },
+    editorGif: {
+      width: "100%",
+      height: "100%",
+    },
+    editorGifPlaceholder: {
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    editorBlock: {
+      flex: 1,
+      backgroundColor: theme.background.darker,
+      borderRadius: 16,
+      padding: 14,
+      gap: 8,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: theme.foreground.gray + "15",
+    },
+    editorBlockLabel: {
+      fontSize: 11,
+      fontFamily: FONTS.bold,
+      color: theme.foreground.gray,
+      textTransform: "uppercase",
+      letterSpacing: 1,
+    },
+    editorRow: {
+      flexDirection: "row",
+      gap: 10,
+    },
+    editorBigInput: {
+      backgroundColor: theme.background.dark,
+      borderRadius: 12,
+      paddingVertical: 12,
+      paddingHorizontal: 14,
+      fontSize: 18,
+      fontFamily: FONTS.extraBold,
       color: theme.foreground.white,
       textAlign: "center",
-      borderWidth: 1,
-      borderColor: theme.background.accent,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: theme.foreground.gray + "20",
     },
-    setDetailsToggle: {
+    editorNotesInput: {
+      fontFamily: FONTS.regular,
+      fontSize: 14,
+      textAlign: "left",
+      minHeight: 70,
+      textAlignVertical: "top",
+    },
+    stepperRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      backgroundColor: theme.background.dark,
+      borderRadius: 12,
+      paddingHorizontal: 6,
+      paddingVertical: 6,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: theme.foreground.gray + "20",
+    },
+    stepperBtn: {
+      width: 38,
+      height: 38,
+      borderRadius: 10,
+      backgroundColor: theme.primary.main + "15",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    stepperValue: {
+      fontSize: 22,
+      fontFamily: FONTS.extraBold,
+      color: theme.foreground.white,
+      minWidth: 40,
+      textAlign: "center",
+    },
+    editorAccordionToggle: {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
-      gap: 4,
-      paddingVertical: 8,
-      borderRadius: 7,
-      borderWidth: 1,
-      borderColor: theme.primary.main + "30",
-      backgroundColor: theme.primary.main + "08",
-      marginTop: 15,
+      gap: 6,
+      paddingVertical: 12,
+      borderRadius: 14,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: theme.primary.main + "40",
+      backgroundColor: theme.primary.main + "10",
     },
+    editorAccordionText: {
+      fontSize: 13,
+      fontFamily: FONTS.bold,
+      color: theme.primary.main,
+      textTransform: "uppercase",
+      letterSpacing: 0.6,
+    },
+
+    // ── Per-set targets table (used inside editor)
     setTargetsContainer: {
-      backgroundColor: theme.background.dark,
-      borderRadius: 8,
-      padding: 8,
-      marginTop: 6,
-      marginBottom: 4,
-      borderWidth: 1,
-      borderColor: theme.background.accent,
+      backgroundColor: theme.background.darker,
+      borderRadius: 14,
+      padding: 12,
+      gap: 6,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: theme.foreground.gray + "20",
     },
     setTargetRow: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 8,
-      marginBottom: 4,
+      gap: 10,
     },
     setTargetHeader: {
       flex: 1,
-      fontSize: 9,
-      fontFamily: FONTS.semiBold,
+      fontSize: 10,
+      fontFamily: FONTS.bold,
       color: theme.foreground.gray,
       textAlign: "center",
       textTransform: "uppercase",
+      letterSpacing: 0.6,
     },
     setTargetNum: {
-      fontSize: 12,
-      fontFamily: FONTS.bold,
+      fontSize: 14,
+      fontFamily: FONTS.extraBold,
       color: theme.primary.main,
       textAlign: "center",
     },
     setTargetInput: {
       flex: 1,
-      backgroundColor: theme.background.darker,
-      borderRadius: 6,
-      paddingHorizontal: 6,
-      paddingVertical: 5,
-      fontSize: 12,
-      fontFamily: FONTS.semiBold,
+      backgroundColor: theme.background.dark,
+      borderRadius: 10,
+      paddingHorizontal: 8,
+      paddingVertical: 8,
+      fontSize: 14,
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
       textAlign: "center",
-      borderWidth: 1,
-      borderColor: theme.background.accent,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: theme.foreground.gray + "20",
     },
-    notesInput: {
-      backgroundColor: theme.background.dark,
-      borderRadius: 7,
-      paddingHorizontal: 8,
-      paddingVertical: 6,
-      fontSize: 12,
-      color: theme.foreground.white,
-      borderWidth: 1,
-      borderColor: theme.background.accent,
-      marginTop: 6,
-    },
+
+    // ── Target muscles chips
     muscleChips: {
       flexDirection: "row",
       flexWrap: "wrap",
-      gap: 6,
+      gap: 8,
     },
     muscleChip: {
       backgroundColor: theme.primary.main + "15",
-      borderWidth: 1,
+      borderWidth: StyleSheet.hairlineWidth,
       borderColor: theme.primary.main + "40",
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-      borderRadius: 16,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 20,
     },
     muscleChipText: {
-      fontSize: 11,
-      fontFamily: FONTS.semiBold,
+      fontSize: 12,
+      fontFamily: FONTS.bold,
       color: theme.primary.main,
       textTransform: "capitalize",
     },

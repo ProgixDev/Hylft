@@ -6,7 +6,6 @@ import { useTranslation } from "react-i18next";
 import {
   Dimensions,
   Image,
-  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -14,6 +13,7 @@ import {
   Text,
   View,
 } from "react-native";
+import RoutineCard from "../../components/ui/RoutineCard";
 import { FONTS } from "../../constants/fonts";
 import { Theme } from "../../constants/themes";
 import { useActiveWorkout } from "../../contexts/ActiveWorkoutContext";
@@ -26,11 +26,7 @@ import {
   Workout as WorkoutData,
 } from "../../data/mockData";
 import { useGenderedImages } from "../../hooks/useGenderedImages";
-import {
-  translateApiData,
-  translateRoutineDescription,
-  translateRoutineName,
-} from "../../utils/exerciseTranslator";
+import { buildActiveWorkoutFromRoutine } from "../../utils/workoutBuilder";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const ROUTINE_CARD_W = SCREEN_WIDTH * 0.65;
@@ -64,7 +60,6 @@ export default function Workout() {
   const [routines, setRoutines] = useState<Routine[]>([]);
   const { startWorkout } = useActiveWorkout();
   const { initCreation } = useCreateRoutine();
-  const [plusModalVisible, setPlusModalVisible] = useState(false);
   const scrollRef = useRef<ScrollView | null>(null);
 
   const loadData = useCallback(() => {
@@ -89,7 +84,6 @@ export default function Workout() {
   }, [loadData]);
 
   const handleCreateRoutine = () => {
-    setPlusModalVisible(false);
     initCreation();
     router.push("/create-routine" as any);
   };
@@ -102,6 +96,10 @@ export default function Workout() {
       sets: 0,
       exercises: [],
     });
+  };
+
+  const handleStartRoutine = (routine: Routine) => {
+    startWorkout(buildActiveWorkoutFromRoutine(routine));
   };
 
   // Stats
@@ -132,79 +130,56 @@ export default function Workout() {
         <Text style={styles.headerTitle}>WORKOUT</Text>
         <Pressable
           style={({ pressed }) => [styles.addBtn, pressed && { opacity: 0.8 }]}
-          onPress={() => setPlusModalVisible(true)}
+          onPress={handleCreateRoutine}
         >
           <Ionicons name="add" size={22} color={theme.foreground.white} />
         </Pressable>
       </View>
-
-      {/* Plus Modal */}
-      <Modal
-        transparent
-        visible={plusModalVisible}
-        animationType="fade"
-        onRequestClose={() => setPlusModalVisible(false)}
-      >
-        <Pressable
-          style={styles.modalOverlay}
-          onPress={() => setPlusModalVisible(false)}
-        >
-          <View style={styles.modalSheet}>
-            <Pressable
-              style={({ pressed }) => [
-                styles.modalOption,
-                pressed && { backgroundColor: "rgba(0,0,0,0.04)" },
-              ]}
-              onPress={() => {
-                handleStartEmptyWorkout();
-                setPlusModalVisible(false);
-              }}
-            >
-              <Ionicons
-                name="flash-outline"
-                size={20}
-                color={theme.primary.main}
-              />
-              <Text style={styles.modalOptionText}>
-                {t("workout.startEmptyWorkout")}
-              </Text>
-            </Pressable>
-            <View style={styles.modalDivider} />
-            <Pressable
-              style={({ pressed }) => [
-                styles.modalOption,
-                pressed && { backgroundColor: "rgba(0,0,0,0.04)" },
-              ]}
-              onPress={handleCreateRoutine}
-            >
-              <Ionicons
-                name="create-outline"
-                size={20}
-                color={theme.primary.main}
-              />
-              <Text style={styles.modalOptionText}>
-                {t("workout.createRoutine")}
-              </Text>
-            </Pressable>
-            <View style={styles.modalDivider} />
-            <Pressable
-              style={({ pressed }) => [
-                styles.modalOption,
-                pressed && { backgroundColor: "rgba(0,0,0,0.04)" },
-              ]}
-              onPress={() => setPlusModalVisible(false)}
-            >
-              <Text style={styles.modalCancelText}>{t("common.cancel")}</Text>
-            </Pressable>
-          </View>
-        </Pressable>
-      </Modal>
 
       <ScrollView
         ref={scrollRef}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 90 }}
       >
+        {/* ── Stats Strip ───────────────────────────────────── */}
+        {totalWorkouts > 0 && (
+          <View style={styles.statsStrip}>
+            <LinearGradient
+              colors={[theme.primary.main + "20", theme.primary.main + "08"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.statsStripGradient}
+            >
+              <View style={styles.statsStripItem}>
+                <Text style={[styles.statsStripValue, { color: theme.primary.main }]}>
+                  {totalWorkouts}
+                </Text>
+                <Text style={styles.statsStripLabel}>
+                  {t("workout.statWorkouts")}
+                </Text>
+              </View>
+              <View style={styles.statsStripDivider} />
+              <View style={styles.statsStripItem}>
+                <Text style={[styles.statsStripValue, { color: theme.primary.main }]}>
+                  {totalMinutes}
+                </Text>
+                <Text style={styles.statsStripLabel}>
+                  {t("workout.statMinutes")}
+                </Text>
+              </View>
+              <View style={styles.statsStripDivider} />
+              <View style={styles.statsStripItem}>
+                <Text style={[styles.statsStripValue, { color: theme.primary.main }]}>
+                  {totalExercises}
+                </Text>
+                <Text style={styles.statsStripLabel}>
+                  {t("workout.statExercises")}
+                </Text>
+              </View>
+            </LinearGradient>
+          </View>
+        )}
+
         {/* ── Quick Start Hero ──────────────────────────────── */}
         <Pressable
           style={({ pressed }) => [
@@ -240,7 +215,60 @@ export default function Workout() {
           </View>
         </Pressable>
 
- 
+        {/* ── My Routines ────────────────────────────────────── */}
+        <View style={styles.sectionHeaderRow}>
+          <Text style={styles.sectionTitle}>{t("workout.myRoutines")}</Text>
+          {routines.length > 0 && (
+            <Pressable
+              onPress={() => router.push("/routines" as any)}
+              style={({ pressed }) => pressed && { opacity: 0.7 }}
+            >
+              <Text style={styles.moreLink}>
+                {t("workout.viewAll")} {">"}
+              </Text>
+            </Pressable>
+          )}
+        </View>
+
+        {routines.length === 0 ? (
+          <Pressable
+            onPress={handleCreateRoutine}
+            style={({ pressed }) => [
+              styles.routinesEmpty,
+              pressed && { opacity: 0.9, transform: [{ scale: 0.99 }] },
+            ]}
+          >
+            <Ionicons
+              name="bookmark-outline"
+              size={28}
+              color={theme.primary.main}
+            />
+            <Text style={styles.routinesEmptyTitle}>
+              {t("workout.noRoutinesYet")}
+            </Text>
+            <View style={styles.routinesEmptyBtn}>
+              <Ionicons name="add" size={14} color={theme.background.dark} />
+              <Text style={styles.routinesEmptyBtnText}>
+                {t("workout.createFirstRoutine")}
+              </Text>
+            </View>
+          </Pressable>
+        ) : (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.routinesScroll}
+          >
+            {routines.slice(0, 6).map((routine) => (
+              <RoutineCard
+                key={routine.id}
+                routine={routine}
+                onPress={() => router.push(`/routines/${routine.id}` as any)}
+                onStart={() => handleStartRoutine(routine)}
+              />
+            ))}
+          </ScrollView>
+        )}
 
         {/* ── Recent Workouts ───────────────────────────────── */}
         {workouts.length > 0 && (
@@ -425,46 +453,80 @@ function createStyles(theme: Theme) {
       backgroundColor: theme.background.darker,
     },
 
-    // Modal
-    modalOverlay: {
-      flex: 1,
-      backgroundColor: "rgba(0,0,0,0.5)",
-      justifyContent: "center",
-      alignItems: "center",
-      padding: 24,
-    },
-    modalSheet: {
-      width: "100%",
-      maxWidth: 480,
-      backgroundColor: theme.background.darker,
-      borderRadius: 24,
-      paddingVertical: 8,
+    // Stats Strip
+    statsStrip: {
+      marginHorizontal: 20,
+      marginBottom: 16,
+      borderRadius: 18,
       overflow: "hidden",
       ...surfaceShadow,
     },
-    modalOption: {
+    statsStripGradient: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 12,
-      paddingVertical: 16,
-      paddingHorizontal: 24,
+      paddingVertical: 14,
+      paddingHorizontal: 8,
     },
-    modalOptionText: {
-      fontFamily: FONTS.semiBold,
-      fontSize: 16,
-      color: theme.foreground.white,
-    },
-    modalDivider: {
-      height: StyleSheet.hairlineWidth,
-      backgroundColor: "rgba(0,0,0,0.08)",
-      marginHorizontal: 20,
-    },
-    modalCancelText: {
-      fontFamily: FONTS.bold,
-      fontSize: 16,
-      color: "#ef4444",
-      textAlign: "center",
+    statsStripItem: {
       flex: 1,
+      alignItems: "center",
+      gap: 2,
+    },
+    statsStripValue: {
+      fontFamily: FONTS.extraBold,
+      fontSize: 22,
+    },
+    statsStripLabel: {
+      fontFamily: FONTS.medium,
+      fontSize: 11,
+      color: theme.foreground.gray,
+      textTransform: "uppercase",
+      letterSpacing: 0.5,
+    },
+    statsStripDivider: {
+      width: StyleSheet.hairlineWidth,
+      height: 30,
+      backgroundColor: theme.foreground.gray + "40",
+    },
+
+    // Routines (carousel + empty)
+    routinesScroll: {
+      paddingLeft: 20,
+      paddingRight: 6,
+      paddingBottom: 24,
+    },
+    routinesEmpty: {
+      marginHorizontal: 20,
+      marginBottom: 24,
+      paddingVertical: 26,
+      paddingHorizontal: 20,
+      borderRadius: 18,
+      backgroundColor: theme.background.darker,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: theme.primary.main + "30",
+      alignItems: "center",
+      gap: 10,
+    },
+    routinesEmptyTitle: {
+      fontFamily: FONTS.semiBold,
+      fontSize: 14,
+      color: theme.foreground.gray,
+      textAlign: "center",
+    },
+    routinesEmptyBtn: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+      backgroundColor: theme.primary.main,
+      paddingVertical: 8,
+      paddingHorizontal: 16,
+      borderRadius: 18,
+      marginTop: 4,
+    },
+    routinesEmptyBtnText: {
+      fontFamily: FONTS.bold,
+      fontSize: 12,
+      color: theme.background.dark,
     },
 
     // Quick Start Hero

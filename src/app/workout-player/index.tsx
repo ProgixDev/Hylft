@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Alert,
@@ -9,6 +10,7 @@ import {
   Dimensions,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -160,8 +162,6 @@ function ExercisePhase({ theme }: { theme: Theme }) {
   const { t } = useTranslation();
   const { guidedPlayer, completeCurrentSet } = useActiveWorkout();
 
-  const [openInputForSet, setOpenInputForSet] = useState(false);
-
   if (!guidedPlayer) return null;
   const exercise = guidedPlayer.exercises[guidedPlayer.currentExerciseIndex];
   if (!exercise) return null;
@@ -170,6 +170,23 @@ function ExercisePhase({ theme }: { theme: Theme }) {
   const setTarget = exercise.setTargets?.[guidedPlayer.currentSetIndex];
   const targetKg = setTarget?.targetKg ?? exercise.targetWeight ?? 0;
   const targetReps = setTarget?.targetReps ?? exercise.reps;
+  const defaultRepsNum = parseInt(String(targetReps).split("-")[0]) || 0;
+
+  // Inline input state — reset whenever the active set changes
+  const [kg, setKg] = useState(targetKg > 0 ? String(targetKg) : "");
+  const [reps, setReps] = useState(
+    defaultRepsNum > 0 ? String(defaultRepsNum) : "",
+  );
+
+  useEffect(() => {
+    setKg(targetKg > 0 ? String(targetKg) : "");
+    setReps(defaultRepsNum > 0 ? String(defaultRepsNum) : "");
+  }, [
+    guidedPlayer.currentExerciseIndex,
+    guidedPlayer.currentSetIndex,
+    targetKg,
+    defaultRepsNum,
+  ]);
 
   // Timed set: auto-advance when countdown hits 0
   const trainingTime = exercise.trainingTime ?? 0;
@@ -190,8 +207,17 @@ function ExercisePhase({ theme }: { theme: Theme }) {
     return () => clearTimeout(id);
   }, [remaining, trainingTime]);
 
+  const handleCompleteSet = () => {
+    completeCurrentSet(parseFloat(kg) || 0, parseInt(reps, 10) || 0);
+  };
+
   return (
-    <View style={styles.phaseContainer}>
+    <ScrollView
+      style={{ flex: 1 }}
+      contentContainerStyle={styles.phaseContainer}
+      keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={false}
+    >
       <Text style={styles.exerciseLabel}>
         {t("workoutPlayer.exerciseOf", {
           current: guidedPlayer.currentExerciseIndex + 1,
@@ -203,6 +229,10 @@ function ExercisePhase({ theme }: { theme: Theme }) {
       </Text>
 
       <View style={styles.gifWrap}>
+        <LinearGradient
+          colors={[theme.primary.main + "25", "transparent"]}
+          style={styles.gifGlow}
+        />
         {exercise.gifUrl ? (
           <Image
             source={{ uri: exercise.gifUrl }}
@@ -221,149 +251,98 @@ function ExercisePhase({ theme }: { theme: Theme }) {
         )}
       </View>
 
-      {/* Set chip */}
-      <View style={styles.setBadge}>
-        <Text style={styles.setBadgeText}>
-          {t("workoutPlayer.setOf", {
-            current: currentSetNumber,
-            total: exercise.sets,
-          })}
-        </Text>
+      {/* Set progress dots */}
+      <View style={styles.setDotsRow}>
+        {Array.from({ length: exercise.sets }).map((_, i) => {
+          const isDone = i < guidedPlayer.currentSetIndex;
+          const isCurrent = i === guidedPlayer.currentSetIndex;
+          return (
+            <View
+              key={i}
+              style={[
+                styles.setDot,
+                isDone && {
+                  backgroundColor: theme.primary.main,
+                  borderColor: theme.primary.main,
+                },
+                isCurrent && {
+                  backgroundColor: theme.primary.main + "30",
+                  borderColor: theme.primary.main,
+                  width: 28,
+                },
+              ]}
+            />
+          );
+        })}
       </View>
 
-      {/* Targets row */}
-      <View style={styles.targetRow}>
-        <View style={styles.targetItem}>
-          <Text style={styles.targetValue}>{targetReps}</Text>
-          <Text style={styles.targetLabel}>
-            {t("createRoutine.reps")}
-          </Text>
+      <Text style={styles.setCounterText}>
+        {t("workoutPlayer.setOf", {
+          current: currentSetNumber,
+          total: exercise.sets,
+        })}
+      </Text>
+
+      {/* Inline editable inputs */}
+      <View style={styles.inputRow}>
+        <View style={styles.inputCell}>
+          <Text style={styles.inputLabel}>{t("workoutPlayer.weight")}</Text>
+          <TextInput
+            style={styles.inputBox}
+            keyboardType="numeric"
+            value={kg}
+            onChangeText={setKg}
+            placeholder={targetKg > 0 ? String(targetKg) : "0"}
+            placeholderTextColor={theme.foreground.gray + "60"}
+            selectTextOnFocus
+          />
+          <Text style={styles.inputUnit}>kg</Text>
         </View>
-        <View style={styles.targetDivider} />
-        <View style={styles.targetItem}>
-          <Text style={styles.targetValue}>
-            {targetKg > 0 ? `${targetKg}kg` : "—"}
-          </Text>
-          <Text style={styles.targetLabel}>
-            {t("workoutPlayer.weight")}
-          </Text>
+        <View style={styles.inputDivider} />
+        <View style={styles.inputCell}>
+          <Text style={styles.inputLabel}>{t("createRoutine.reps")}</Text>
+          <TextInput
+            style={styles.inputBox}
+            keyboardType="numeric"
+            value={reps}
+            onChangeText={setReps}
+            placeholder={String(targetReps)}
+            placeholderTextColor={theme.foreground.gray + "60"}
+            selectTextOnFocus
+          />
+          <Text style={styles.inputUnit}>{t("createRoutine.reps")}</Text>
         </View>
         {!!trainingTime && (
           <>
-            <View style={styles.targetDivider} />
-            <View style={styles.targetItem}>
-              <Text style={styles.targetValue}>
+            <View style={styles.inputDivider} />
+            <View style={styles.inputCell}>
+              <Text style={styles.inputLabel}>{t("workoutPlayer.timer")}</Text>
+              <Text style={styles.inputBoxStatic}>
                 {formatSeconds(remaining)}
               </Text>
-              <Text style={styles.targetLabel}>
-                {t("workoutPlayer.timer")}
-              </Text>
+              <Text style={styles.inputUnit}> </Text>
             </View>
           </>
         )}
       </View>
 
-      {/* Done Set button */}
       <Pressable
         style={({ pressed }) => [
           styles.primaryButton,
           pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
         ]}
-        onPress={() => setOpenInputForSet(true)}
+        onPress={handleCompleteSet}
       >
         <Ionicons
           name="checkmark-circle"
-          size={20}
+          size={22}
           color={theme.background.dark}
         />
         <Text style={styles.primaryButtonText}>
           {t("workoutPlayer.doneSet")}
         </Text>
       </Pressable>
-
-      {openInputForSet && (
-        <QuickLogInline
-          theme={theme}
-          defaultKg={targetKg}
-          defaultReps={parseInt(String(targetReps).split("-")[0]) || 0}
-          onCancel={() => setOpenInputForSet(false)}
-          onConfirm={(kg, reps) => {
-            setOpenInputForSet(false);
-            completeCurrentSet(kg, reps);
-          }}
-        />
-      )}
-    </View>
-  );
-}
-
-function QuickLogInline({
-  theme,
-  defaultKg,
-  defaultReps,
-  onCancel,
-  onConfirm,
-}: {
-  theme: Theme;
-  defaultKg: number;
-  defaultReps: number;
-  onCancel: () => void;
-  onConfirm: (kg: number, reps: number) => void;
-}) {
-  const styles = createStyles(theme);
-  const { t } = useTranslation();
-  const [kg, setKg] = useState(defaultKg > 0 ? String(defaultKg) : "");
-  const [reps, setReps] = useState(defaultReps > 0 ? String(defaultReps) : "");
-
-  return (
-    <View style={styles.logCardOverlay}>
-      <View style={styles.logCard}>
-        <Text style={styles.logTitle}>{t("workoutPlayer.logThisSet")}</Text>
-        <View style={styles.logRow}>
-          <View style={styles.logField}>
-            <Text style={styles.logFieldLabel}>
-              {t("workoutPlayer.weight")} (kg)
-            </Text>
-            <TextInput
-              style={styles.logInput}
-              keyboardType="numeric"
-              value={kg}
-              onChangeText={setKg}
-              placeholder="0"
-              placeholderTextColor={theme.foreground.gray}
-            />
-          </View>
-          <View style={styles.logField}>
-            <Text style={styles.logFieldLabel}>{t("createRoutine.reps")}</Text>
-            <TextInput
-              style={styles.logInput}
-              keyboardType="numeric"
-              value={reps}
-              onChangeText={setReps}
-              placeholder="0"
-              placeholderTextColor={theme.foreground.gray}
-            />
-          </View>
-        </View>
-        <View style={styles.logButtonRow}>
-          <Pressable style={styles.logCancelButton} onPress={onCancel}>
-            <Text style={styles.logCancelText}>
-              {t("workoutPlayer.cancel")}
-            </Text>
-          </Pressable>
-          <Pressable
-            style={styles.logConfirmButton}
-            onPress={() =>
-              onConfirm(parseFloat(kg) || 0, parseInt(reps, 10) || 0)
-            }
-          >
-            <Text style={styles.logConfirmText}>
-              {t("workoutPlayer.confirm")}
-            </Text>
-          </Pressable>
-        </View>
-      </View>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -687,31 +666,86 @@ const createStyles = (theme: Theme) =>
       alignItems: "center",
       justifyContent: "center",
     },
-    setBadge: {
-      backgroundColor: theme.primary.main + "20",
-      borderWidth: 1,
-      borderColor: theme.primary.main + "40",
-      paddingHorizontal: 14,
-      paddingVertical: 6,
-      borderRadius: 20,
-      marginBottom: 14,
+    gifGlow: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
     },
-    setBadgeText: {
-      color: theme.primary.main,
-      fontSize: 13,
-      fontFamily: FONTS.bold,
-      textTransform: "uppercase",
-      letterSpacing: 0.5,
-    },
-    targetRow: {
+    setDotsRow: {
       flexDirection: "row",
       alignItems: "center",
+      gap: 6,
+      marginBottom: 6,
+    },
+    setDot: {
+      width: 10,
+      height: 10,
+      borderRadius: 6,
+      borderWidth: 1,
+      borderColor: theme.foreground.gray + "60",
+      backgroundColor: "transparent",
+    },
+    setCounterText: {
+      color: theme.foreground.gray,
+      fontSize: 12,
+      fontFamily: FONTS.semiBold,
+      textTransform: "uppercase",
+      letterSpacing: 1,
+      marginBottom: 18,
+    },
+    inputRow: {
+      flexDirection: "row",
+      alignItems: "stretch",
       backgroundColor: theme.background.darker,
       borderRadius: 20,
-      paddingVertical: 14,
+      paddingVertical: 16,
       paddingHorizontal: 8,
       width: "100%",
       marginBottom: 24,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: theme.primary.main + "30",
+    },
+    inputCell: {
+      flex: 1,
+      alignItems: "center",
+      gap: 4,
+    },
+    inputLabel: {
+      color: theme.foreground.gray,
+      fontSize: 10,
+      fontFamily: FONTS.semiBold,
+      textTransform: "uppercase",
+      letterSpacing: 1,
+    },
+    inputBox: {
+      color: theme.foreground.white,
+      fontSize: 28,
+      fontFamily: FONTS.extraBold,
+      textAlign: "center",
+      minWidth: 60,
+      paddingVertical: 0,
+      paddingHorizontal: 4,
+    },
+    inputBoxStatic: {
+      color: theme.primary.main,
+      fontSize: 26,
+      fontFamily: FONTS.extraBold,
+      textAlign: "center",
+      paddingVertical: 0,
+    },
+    inputUnit: {
+      color: theme.foreground.gray,
+      fontSize: 11,
+      fontFamily: FONTS.medium,
+      textTransform: "uppercase",
+      letterSpacing: 0.8,
+    },
+    inputDivider: {
+      width: StyleSheet.hairlineWidth,
+      backgroundColor: theme.foreground.gray + "30",
+      marginVertical: 4,
     },
     targetItem: {
       flex: 1,
@@ -760,82 +794,6 @@ const createStyles = (theme: Theme) =>
     exitButtonText: {
       color: theme.background.dark,
       fontFamily: FONTS.bold,
-      fontSize: 15,
-    },
-    // Quick log overlay
-    logCardOverlay: {
-      position: "absolute",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: "rgba(0,0,0,0.55)",
-      justifyContent: "center",
-      alignItems: "center",
-      padding: 20,
-    },
-    logCard: {
-      width: "100%",
-      backgroundColor: theme.background.darker,
-      borderRadius: 24,
-      padding: 20,
-      gap: 16,
-    },
-    logTitle: {
-      color: theme.foreground.white,
-      fontSize: 17,
-      fontFamily: FONTS.bold,
-      textAlign: "center",
-    },
-    logRow: {
-      flexDirection: "row",
-      gap: 12,
-    },
-    logField: {
-      flex: 1,
-      gap: 6,
-    },
-    logFieldLabel: {
-      color: theme.foreground.gray,
-      fontSize: 12,
-      fontFamily: FONTS.semiBold,
-    },
-    logInput: {
-      backgroundColor: theme.background.dark,
-      color: theme.foreground.white,
-      borderRadius: 14,
-      paddingVertical: 14,
-      paddingHorizontal: 16,
-      fontSize: 18,
-      fontFamily: FONTS.bold,
-      textAlign: "center",
-    },
-    logButtonRow: {
-      flexDirection: "row",
-      gap: 10,
-    },
-    logCancelButton: {
-      flex: 1,
-      backgroundColor: theme.background.dark,
-      borderRadius: 20,
-      paddingVertical: 14,
-      alignItems: "center",
-    },
-    logCancelText: {
-      color: theme.foreground.white,
-      fontFamily: FONTS.semiBold,
-      fontSize: 15,
-    },
-    logConfirmButton: {
-      flex: 2,
-      backgroundColor: theme.primary.main,
-      borderRadius: 20,
-      paddingVertical: 14,
-      alignItems: "center",
-    },
-    logConfirmText: {
-      color: theme.background.dark,
-      fontFamily: FONTS.extraBold,
       fontSize: 15,
     },
     // Rest
