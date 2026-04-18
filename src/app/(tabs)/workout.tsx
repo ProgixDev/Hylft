@@ -26,7 +26,6 @@ import {
   Workout as WorkoutData,
 } from "../../data/mockData";
 import { useGenderedImages } from "../../hooks/useGenderedImages";
-import { buildActiveWorkoutFromRoutine } from "../../utils/workoutBuilder";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const ROUTINE_CARD_W = SCREEN_WIDTH * 0.65;
@@ -58,7 +57,7 @@ export default function Workout() {
 
   const [workouts, setWorkouts] = useState<WorkoutData[]>([]);
   const [routines, setRoutines] = useState<Routine[]>([]);
-  const { startWorkout } = useActiveWorkout();
+  const { startWorkout, startGuidedRoutine } = useActiveWorkout();
   const { initCreation } = useCreateRoutine();
   const scrollRef = useRef<ScrollView | null>(null);
 
@@ -99,7 +98,8 @@ export default function Workout() {
   };
 
   const handleStartRoutine = (routine: Routine) => {
-    startWorkout(buildActiveWorkoutFromRoutine(routine));
+    startGuidedRoutine(routine);
+    router.push("/workout-player" as any);
   };
 
   // Stats
