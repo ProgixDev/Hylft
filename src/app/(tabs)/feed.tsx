@@ -3,6 +3,7 @@ import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  ActivityIndicator,
   FlatList,
   Image,
   Platform,
@@ -16,7 +17,8 @@ import Post, { PostData } from "../../components/ui/Post";
 import { FONTS } from "../../constants/fonts";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
-import { addPostsListener, getPostsWithUserData } from "../../data/mockData";
+import { useFeedTimeline } from "../../hooks/useFeedTimeline";
+import { api } from "../../services/api";
 
 const controlShadow = Platform.select({
   ios: {
@@ -74,6 +76,31 @@ function createStyles(theme: Theme) {
       borderWidth: 1.5,
       borderColor: theme.background.darker,
     },
+    emptyWrap: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      paddingHorizontal: 32,
+      paddingVertical: 64,
+    },
+    emptyText: {
+      fontFamily: FONTS.regular,
+      fontSize: 14,
+      color: theme.foreground.gray,
+      textAlign: "center",
+    },
+    errorText: {
+      fontFamily: FONTS.regular,
+      fontSize: 13,
+      color: "#e27171",
+      textAlign: "center",
+      paddingHorizontal: 20,
+      paddingVertical: 12,
+    },
+    footerLoading: {
+      paddingVertical: 16,
+      alignItems: "center",
+    },
   });
 }
 
@@ -81,89 +108,52 @@ export default function Feed() {
   const router = useRouter();
   const { theme, themeType } = useTheme();
   const { t } = useTranslation();
-  const [refreshing, setRefreshing] = useState(false);
-  const [unreadCount] = useState(3); // Example: 3 unread messages
-
-  // Initialize posts with like state
-  const [posts, setPosts] = useState<PostData[]>(
-    () =>
-      getPostsWithUserData().map((post) => ({
-        id: post.id,
-        user: {
-          id: post.user.id,
-          username: post.user.username,
-          avatar: post.user.avatar,
-          bio: post.user.bio,
-        },
-        images: post.images,
-        likes: post.likes,
-        caption: post.caption,
-        comments: post.comments,
-        timestamp: post.timestamp,
-        isLiked: post.isLiked,
-        weight: post.weight,
-        reps: post.reps,
-        sets: post.sets,
-        duration: post.duration,
-      })) as PostData[],
-  );
+  const {
+    posts,
+    loading,
+    refreshing,
+    loadingMore,
+    hasMore,
+    error,
+    refresh,
+    loadMore,
+    toggleLike,
+  } = useFeedTimeline({ scope: "timeline" });
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const styles = createStyles(theme);
 
-  // Refresh feed whenever a new post is added (e.g. after a workout)
   useEffect(() => {
-    const unsub = addPostsListener(() => {
-      setPosts(
-        getPostsWithUserData().map((post) => ({
-          id: post.id,
-          user: {
-            id: post.user.id,
-            username: post.user.username,
-            avatar: post.user.avatar,
-            bio: post.user.bio,
-          },
-          images: post.images,
-          likes: post.likes,
-          caption: post.caption,
-          comments: post.comments,
-          timestamp: post.timestamp,
-          isLiked: post.isLiked,
-          weight: post.weight,
-          reps: post.reps,
-          sets: post.sets,
-          duration: post.duration,
-        })) as PostData[],
-      );
-    });
-    return unsub;
-  }, []);
-
-  const handleLike = useCallback((postId: string) => {
-    setPosts((prevPosts) =>
-      prevPosts.map((post) =>
-        post.id === postId
-          ? {
-              ...post,
-              isLiked: !post.isLiked,
-              likes: post.isLiked ? post.likes - 1 : post.likes + 1,
-            }
-          : post,
-      ),
-    );
-  }, []);
-
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    // Simulate API call
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 1500);
+    let cancelled = false;
+    (async () => {
+      try {
+        const res: { unread: number } = await api.getUnreadNotificationsCount();
+        if (!cancelled) setUnreadCount(res.unread ?? 0);
+      } catch {
+        /* silent */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const renderPost = useCallback(
-    ({ item }: { item: PostData }) => <Post post={item} onLike={handleLike} />,
-    [handleLike],
+    ({ item }: { item: PostData }) => <Post post={item} onLike={toggleLike} />,
+    [toggleLike],
   );
+
+  const listEmpty = loading ? null : (
+    <View style={styles.emptyWrap}>
+      <Text style={styles.emptyText}>{t("feed.empty", "No posts yet")}</Text>
+    </View>
+  );
+
+  const listFooter = loadingMore ? (
+    <View style={styles.footerLoading}>
+      <ActivityIndicator color={theme.primary.main} />
+    </View>
+  ) : null;
 
   return (
     <View style={styles.container}>
@@ -174,7 +164,6 @@ export default function Feed() {
           resizeMode="cover"
         />
       )}
-      {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>{t("tabs.feed")}</Text>
         <View style={styles.headerIcons}>
@@ -204,7 +193,8 @@ export default function Feed() {
         </View>
       </View>
 
-      {/* Posts Feed */}
+      {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
       <FlatList
         data={posts}
         renderItem={renderPost}
@@ -214,13 +204,16 @@ export default function Feed() {
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
-            onRefresh={onRefresh}
+            onRefresh={refresh}
             tintColor={theme.primary.main}
             colors={[theme.primary.main]}
           />
         }
+        onEndReached={hasMore ? loadMore : undefined}
+        onEndReachedThreshold={0.4}
+        ListEmptyComponent={listEmpty}
+        ListFooterComponent={listFooter}
       />
     </View>
   );
 }
-

@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   FlatList,
   Image,
   Keyboard,
@@ -15,175 +16,218 @@ import {
 } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../../contexts/ThemeContext";
-import {
-  Comment,
-  getCommentsWithUserData,
-  getPostById,
-  getUserById,
-} from "../../data/mockData";
-
 import { FONTS } from "../../constants/fonts";
+import { api } from "../../services/api";
+import { mapPostToUi, type BackendPost } from "../../services/feedMappers";
+import type { PostData } from "../../components/ui/Post";
 
-interface CommentWithUser extends Comment {
-  user: {
-    id: string;
-    username: string;
-    avatar: string;
-    bio: string;
-  };
-  replies?: ReplyWithUser[];
-}
-
-interface ReplyWithUser {
+type BackendAuthor = {
   id: string;
-  commentId: string;
-  userId: string;
+  username?: string | null;
+  display_name?: string | null;
+  avatar_url?: string | null;
+};
+
+type BackendComment = {
+  id: string;
+  post_id: string;
+  author_id: string;
+  parent_comment_id: string | null;
+  body: string;
+  likes_count: number;
+  created_at: string;
+  updated_at: string;
+  is_liked: boolean;
+  author: BackendAuthor | null;
+  replies?: BackendComment[];
+};
+
+type UiComment = {
+  id: string;
+  parentId: string | null;
   text: string;
   timestamp: string;
   likes: number;
   isLiked: boolean;
-  user: {
-    id: string;
-    username: string;
-    avatar: string;
-    bio: string;
+  user: { id: string; username: string; avatar: string };
+  replies: UiComment[];
+};
+
+function mapComment(c: BackendComment): UiComment {
+  return {
+    id: c.id,
+    parentId: c.parent_comment_id,
+    text: c.body,
+    timestamp: c.created_at,
+    likes: c.likes_count ?? 0,
+    isLiked: !!c.is_liked,
+    user: {
+      id: c.author_id,
+      username: c.author?.username ?? "unknown",
+      avatar: c.author?.avatar_url ?? "",
+    },
+    replies: (c.replies ?? []).map(mapComment),
   };
 }
 
 export default function CommentsScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { postId } = useLocalSearchParams();
+  const { postId } = useLocalSearchParams<{ postId: string }>();
   const { theme } = useTheme();
   const styles = createStyles(theme);
 
-  // Get post and comments data
-  const post = getPostById(postId as string);
-  const postUser = post ? getUserById(post.userId) : null;
+  const [post, setPost] = useState<PostData | null>(null);
+  const [comments, setComments] = useState<UiComment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  const [comments, setComments] = useState<CommentWithUser[]>(
-    getCommentsWithUserData(postId as string) as CommentWithUser[],
-  );
   const [commentText, setCommentText] = useState("");
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
-  const [expandedReplies, setExpandedReplies] = useState<Set<string>>(
-    new Set(),
-  );
+  const [expandedReplies, setExpandedReplies] = useState<Set<string>>(new Set());
 
   const INITIAL_REPLIES_TO_SHOW = 0;
 
   useEffect(() => {
-    const showSubscription = Keyboard.addListener("keyboardDidShow", () => {
-      setIsKeyboardVisible(true);
-    });
-    const hideSubscription = Keyboard.addListener("keyboardDidHide", () => {
-      setIsKeyboardVisible(false);
-    });
-
+    const show = Keyboard.addListener("keyboardDidShow", () =>
+      setIsKeyboardVisible(true),
+    );
+    const hide = Keyboard.addListener("keyboardDidHide", () =>
+      setIsKeyboardVisible(false),
+    );
     return () => {
-      showSubscription.remove();
-      hideSubscription.remove();
+      show.remove();
+      hide.remove();
     };
   }, []);
 
-  const handleLikeComment = (commentId: string) => {
-    setComments((prevComments) =>
-      prevComments.map((comment) =>
-        comment.id === commentId
-          ? {
-              ...comment,
-              isLiked: !comment.isLiked,
-              likes: comment.isLiked ? comment.likes - 1 : comment.likes + 1,
-            }
-          : comment,
-      ),
-    );
-  };
+  const load = useCallback(async () => {
+    if (!postId) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const [postRes, commentsRes] = await Promise.all([
+        api.getPost(postId) as Promise<BackendPost>,
+        api.listComments(postId) as Promise<{ items: BackendComment[] }>,
+      ]);
+      setPost(mapPostToUi(postRes));
+      setComments((commentsRes.items ?? []).map(mapComment));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to load comments");
+    } finally {
+      setLoading(false);
+    }
+  }, [postId]);
 
-  const handleLikeReply = (commentId: string, replyId: string) => {
-    setComments((prevComments) =>
-      prevComments.map((comment) =>
-        comment.id === commentId && comment.replies
-          ? {
-              ...comment,
-              replies: comment.replies.map((reply) =>
-                reply.id === replyId
-                  ? {
-                      ...reply,
-                      isLiked: !reply.isLiked,
-                      likes: reply.isLiked ? reply.likes - 1 : reply.likes + 1,
-                    }
-                  : reply,
-              ),
-            }
-          : comment,
-      ),
-    );
-  };
+  useEffect(() => {
+    load();
+  }, [load]);
 
-  const handleAddComment = () => {
-    if (commentText.trim()) {
+  const handleLikeComment = useCallback(
+    async (commentId: string, parentId: string | null) => {
+      let prev: { isLiked: boolean; likes: number } | null = null;
+      setComments((all) =>
+        all.map((c) => {
+          if (parentId == null && c.id === commentId) {
+            prev = { isLiked: c.isLiked, likes: c.likes };
+            return {
+              ...c,
+              isLiked: !c.isLiked,
+              likes: c.isLiked ? Math.max(c.likes - 1, 0) : c.likes + 1,
+            };
+          }
+          if (parentId != null && c.id === parentId) {
+            return {
+              ...c,
+              replies: c.replies.map((r) => {
+                if (r.id !== commentId) return r;
+                prev = { isLiked: r.isLiked, likes: r.likes };
+                return {
+                  ...r,
+                  isLiked: !r.isLiked,
+                  likes: r.isLiked ? Math.max(r.likes - 1, 0) : r.likes + 1,
+                };
+              }),
+            };
+          }
+          return c;
+        }),
+      );
+      try {
+        if (prev?.isLiked) await api.unlikeComment(commentId);
+        else await api.likeComment(commentId);
+      } catch {
+        // rollback
+        if (prev) {
+          setComments((all) =>
+            all.map((c) => {
+              if (parentId == null && c.id === commentId) {
+                return { ...c, isLiked: prev!.isLiked, likes: prev!.likes };
+              }
+              if (parentId != null && c.id === parentId) {
+                return {
+                  ...c,
+                  replies: c.replies.map((r) =>
+                    r.id === commentId
+                      ? { ...r, isLiked: prev!.isLiked, likes: prev!.likes }
+                      : r,
+                  ),
+                };
+              }
+              return c;
+            }),
+          );
+        }
+      }
+    },
+    [],
+  );
+
+  const handleSubmit = useCallback(async () => {
+    const body = commentText.trim();
+    if (!body || !postId || submitting) return;
+    setSubmitting(true);
+    try {
+      const created = (await api.createComment(postId, {
+        body,
+        parent_comment_id: replyingTo ?? undefined,
+      })) as BackendComment;
+
+      // Hydrate the local list without a round-trip: fetch the author from the
+      // existing comment or fall back to the backend shape.
+      const ui = mapComment({ ...created, replies: [] });
+
       if (replyingTo) {
-        // Adding a reply
-        setComments((prevComments) =>
-          prevComments.map((comment) =>
-            comment.id === replyingTo
-              ? {
-                  ...comment,
-                  replies: [
-                    ...(comment.replies || []),
-                    {
-                      id: `r${Date.now()}`,
-                      commentId: replyingTo,
-                      userId: "1",
-                      text: commentText.trim(),
-                      timestamp: "now",
-                      likes: 0,
-                      isLiked: false,
-                      user: {
-                        id: "1",
-                        username: "alex_shred",
-                        avatar: "https://i.pravatar.cc/150?img=12",
-                        bio: "NPC Competitor | Nutrition Coach 🏆",
-                      },
-                    },
-                  ],
-                }
-              : comment,
+        setComments((all) =>
+          all.map((c) =>
+            c.id === replyingTo ? { ...c, replies: [...c.replies, ui] } : c,
           ),
         );
-        setReplyingTo(null);
+        setExpandedReplies((prev) => new Set(prev).add(replyingTo));
       } else {
-        // Adding a new comment
-        const newComment: CommentWithUser = {
-          id: `c${Date.now()}`,
-          postId: postId as string,
-          userId: "1",
-          text: commentText.trim(),
-          timestamp: "Just now",
-          likes: 0,
-          isLiked: false,
-          user: {
-            id: "1",
-            username: "alex_shred",
-            avatar: "https://i.pravatar.cc/150?img=12",
-            bio: "NPC Competitor | Nutrition Coach 🏆",
-          },
-        };
-
-        setComments([newComment, ...comments]);
+        setComments((all) => [ui, ...all]);
       }
-      setCommentText("");
-    }
-  };
 
-  const renderReply = (reply: ReplyWithUser, commentId: string) => (
+      setCommentText("");
+      setReplyingTo(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to post comment");
+    } finally {
+      setSubmitting(false);
+    }
+  }, [commentText, postId, replyingTo, submitting]);
+
+  const renderReply = (reply: UiComment, parentId: string) => (
     <View key={reply.id} style={styles.replyContainer}>
       <TouchableOpacity
         onPress={() => router.navigate(`/user/${reply.user.id}` as any)}
       >
-        <Image source={{ uri: reply.user.avatar }} style={styles.replyAvatar} />
+        <Image
+          source={{ uri: reply.user.avatar || undefined }}
+          style={styles.replyAvatar}
+        />
       </TouchableOpacity>
 
       <View style={styles.replyContent}>
@@ -196,14 +240,15 @@ export default function CommentsScreen() {
           <Text style={styles.timestamp}>{reply.timestamp}</Text>
           {reply.likes > 0 && (
             <Text style={styles.likes}>
-              {reply.likes} {reply.likes === 1 ? t("comments.like") : t("comments.likes")}
+              {reply.likes}{" "}
+              {reply.likes === 1 ? t("comments.like") : t("comments.likes")}
             </Text>
           )}
         </View>
       </View>
 
       <TouchableOpacity
-        onPress={() => handleLikeReply(commentId, reply.id)}
+        onPress={() => handleLikeComment(reply.id, parentId)}
         style={styles.likeButton}
       >
         <Ionicons
@@ -215,13 +260,16 @@ export default function CommentsScreen() {
     </View>
   );
 
-  const renderComment = ({ item }: { item: CommentWithUser }) => (
+  const renderComment = ({ item }: { item: UiComment }) => (
     <View>
       <View style={styles.commentContainer}>
         <TouchableOpacity
           onPress={() => router.navigate(`/user/${item.user.id}` as any)}
         >
-          <Image source={{ uri: item.user.avatar }} style={styles.avatar} />
+          <Image
+            source={{ uri: item.user.avatar || undefined }}
+            style={styles.avatar}
+          />
         </TouchableOpacity>
 
         <View style={styles.commentContent}>
@@ -234,7 +282,8 @@ export default function CommentsScreen() {
             <Text style={styles.timestamp}>{item.timestamp}</Text>
             {item.likes > 0 && (
               <Text style={styles.likes}>
-                {item.likes} {item.likes === 1 ? t("comments.like") : t("comments.likes")}
+                {item.likes}{" "}
+                {item.likes === 1 ? t("comments.like") : t("comments.likes")}
               </Text>
             )}
             <TouchableOpacity onPress={() => setReplyingTo(item.id)}>
@@ -244,7 +293,7 @@ export default function CommentsScreen() {
         </View>
 
         <TouchableOpacity
-          onPress={() => handleLikeComment(item.id)}
+          onPress={() => handleLikeComment(item.id, null)}
           style={styles.likeButton}
         >
           <Ionicons
@@ -255,26 +304,20 @@ export default function CommentsScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Replies */}
-      {item.replies && item.replies.length > 0 && (
+      {item.replies.length > 0 && (
         <View style={styles.repliesContainer}>
-          {/* Show limited or all replies based on expanded state */}
           {(expandedReplies.has(item.id)
             ? item.replies
             : item.replies.slice(0, INITIAL_REPLIES_TO_SHOW)
           ).map((reply) => renderReply(reply, item.id))}
 
-          {/* View more / Hide replies button */}
           {item.replies.length > INITIAL_REPLIES_TO_SHOW && (
             <TouchableOpacity
               onPress={() => {
                 setExpandedReplies((prev) => {
                   const newSet = new Set(prev);
-                  if (newSet.has(item.id)) {
-                    newSet.delete(item.id);
-                  } else {
-                    newSet.add(item.id);
-                  }
+                  if (newSet.has(item.id)) newSet.delete(item.id);
+                  else newSet.add(item.id);
                   return newSet;
                 });
               }}
@@ -284,7 +327,14 @@ export default function CommentsScreen() {
               <Text style={styles.viewMoreRepliesText}>
                 {expandedReplies.has(item.id)
                   ? t("comments.hideReplies")
-                  : t("comments.viewReplies").replace("{count}", String(item.replies.length)).replace(/\{count, plural, one \{reply\} other \{replies\}\}/, item.replies.length === 1 ? t("comments.reply") : t("comments.replies"))}
+                  : t("comments.viewReplies")
+                      .replace("{count}", String(item.replies.length))
+                      .replace(
+                        /\{count, plural, one \{reply\} other \{replies\}\}/,
+                        item.replies.length === 1
+                          ? t("comments.reply")
+                          : t("comments.replies"),
+                      )}
               </Text>
             </TouchableOpacity>
           )}
@@ -295,15 +345,15 @@ export default function CommentsScreen() {
 
   const renderHeader = () => (
     <View style={styles.headerContent}>
-      {post && postUser && (
+      {post && (
         <>
           <View style={styles.postInfo}>
             <Image
-              source={{ uri: postUser.avatar }}
+              source={{ uri: post.user.avatar || undefined }}
               style={styles.postUserAvatar}
             />
             <View style={styles.postUserInfo}>
-              <Text style={styles.postUsername}>{postUser.username}</Text>
+              <Text style={styles.postUsername}>{post.user.username}</Text>
               <Text style={styles.postCaption}>{post.caption}</Text>
               <Text style={styles.postTimestamp}>{post.timestamp}</Text>
             </View>
@@ -316,41 +366,50 @@ export default function CommentsScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.backButton}
-        >
-          <Ionicons
-            name="arrow-back"
-            size={24}
-            color={theme.foreground.white}
-          />
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color={theme.foreground.white} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t("comments.title")}</Text>
         <View style={styles.headerRight} />
       </View>
+
+      {error ? (
+        <Text
+          style={{
+            color: "#e27171",
+            textAlign: "center",
+            paddingHorizontal: 16,
+            paddingVertical: 8,
+          }}
+        >
+          {error}
+        </Text>
+      ) : null}
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
       >
-        {/* Comments List */}
-        <FlatList
-          data={comments}
-          renderItem={renderComment}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.commentsList}
-          ListHeaderComponent={renderHeader}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="on-drag"
-          automaticallyAdjustKeyboardInsets={true}
-        />
+        {loading ? (
+          <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+            <ActivityIndicator color={theme.primary.main} />
+          </View>
+        ) : (
+          <FlatList
+            data={comments}
+            renderItem={renderComment}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.commentsList}
+            ListHeaderComponent={renderHeader}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
+            automaticallyAdjustKeyboardInsets={true}
+          />
+        )}
 
-        {/* Comment Input */}
         <View>
           {replyingTo && (
             <View style={styles.replyingToLabel}>
@@ -373,30 +432,32 @@ export default function CommentsScreen() {
               isKeyboardVisible && styles.inputContainerKeyboard,
             ]}
           >
-            <Image
-              source={{ uri: "https://i.pravatar.cc/150?img=12" }}
-              style={styles.inputAvatar}
-            />
             <TextInput
               style={styles.input}
-              placeholder={replyingTo ? t("comments.addReply") : t("comments.addComment")}
+              placeholder={
+                replyingTo
+                  ? t("comments.addReply")
+                  : t("comments.addComment")
+              }
               placeholderTextColor={theme.foreground.gray}
               value={commentText}
               onChangeText={setCommentText}
               multiline
-              maxLength={500}
+              maxLength={1000}
+              editable={!submitting}
             />
             <TouchableOpacity
-              onPress={handleAddComment}
-              disabled={!commentText.trim()}
+              onPress={handleSubmit}
+              disabled={!commentText.trim() || submitting}
             >
               <Text
                 style={[
                   styles.postButton,
                   {
-                    color: commentText.trim()
-                      ? theme.primary.main
-                      : theme.foreground.gray,
+                    color:
+                      commentText.trim() && !submitting
+                        ? theme.primary.main
+                        : theme.foreground.gray,
                   },
                 ]}
               >
@@ -412,10 +473,7 @@ export default function CommentsScreen() {
 
 const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
   StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.background.dark,
-    },
+    container: { flex: 1, backgroundColor: theme.background.dark },
     header: {
       flexDirection: "row",
       alignItems: "center",
@@ -425,34 +483,23 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       borderBottomWidth: 1,
       borderBottomColor: theme.background.darker,
     },
-    backButton: {
-      padding: 4,
-    },
+    backButton: { padding: 4 },
     headerTitle: {
       fontSize: 18,
       fontFamily: FONTS.semiBold,
       color: theme.foreground.white,
     },
-    headerRight: {
-      width: 32,
-    },
-    headerContent: {
-      marginBottom: 8,
-    },
-    postInfo: {
-      flexDirection: "row",
-      padding: 16,
-      paddingBottom: 12,
-    },
+    headerRight: { width: 32 },
+    headerContent: { marginBottom: 8 },
+    postInfo: { flexDirection: "row", padding: 16, paddingBottom: 12 },
     postUserAvatar: {
       width: 40,
       height: 40,
       borderRadius: 20,
       marginRight: 12,
+      backgroundColor: theme.background.darker,
     },
-    postUserInfo: {
-      flex: 1,
-    },
+    postUserInfo: { flex: 1 },
     postUsername: {
       fontSize: 15,
       fontFamily: FONTS.semiBold,
@@ -465,19 +512,14 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       lineHeight: 20,
       marginBottom: 4,
     },
-    postTimestamp: {
-      fontSize: 12,
-      color: theme.foreground.gray,
-    },
+    postTimestamp: { fontSize: 12, color: theme.foreground.gray },
     divider: {
       height: 1,
       backgroundColor: theme.background.darker,
       marginHorizontal: 16,
       marginBottom: 8,
     },
-    commentsList: {
-      paddingBottom: 16,
-    },
+    commentsList: { paddingBottom: 16 },
     commentContainer: {
       flexDirection: "row",
       paddingHorizontal: 16,
@@ -488,10 +530,9 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       height: 36,
       borderRadius: 18,
       marginRight: 12,
+      backgroundColor: theme.background.darker,
     },
-    commentContent: {
-      flex: 1,
-    },
+    commentContent: { flex: 1 },
     commentTextContainer: {
       backgroundColor: theme.background.darker,
       borderRadius: 18,
@@ -505,20 +546,9 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       color: theme.foreground.white,
       marginBottom: 2,
     },
-    commentText: {
-      fontSize: 14,
-      color: theme.foreground.white,
-      lineHeight: 18,
-    },
-    commentMeta: {
-      flexDirection: "row",
-      paddingHorizontal: 14,
-      gap: 12,
-    },
-    timestamp: {
-      fontSize: 12,
-      color: theme.foreground.gray,
-    },
+    commentText: { fontSize: 14, color: theme.foreground.white, lineHeight: 18 },
+    commentMeta: { flexDirection: "row", paddingHorizontal: 14, gap: 12 },
+    timestamp: { fontSize: 12, color: theme.foreground.gray },
     likes: {
       fontSize: 12,
       color: theme.foreground.gray,
@@ -529,10 +559,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       color: theme.foreground.gray,
       fontFamily: FONTS.semiBold,
     },
-    likeButton: {
-      padding: 4,
-      marginLeft: 8,
-    },
+    likeButton: { padding: 4, marginLeft: 8 },
     inputContainer: {
       flexDirection: "row",
       alignItems: "center",
@@ -547,12 +574,6 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       alignItems: "flex-start",
       paddingTop: 8,
       paddingBottom: 5,
-    },
-    inputAvatar: {
-      width: 32,
-      height: 32,
-      borderRadius: 16,
-      marginRight: 12,
     },
     input: {
       flex: 1,
@@ -583,10 +604,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       color: theme.foreground.gray,
       fontStyle: "italic",
     },
-    repliesContainer: {
-      paddingLeft: 26,
-      marginLeft: 16,
-    },
+    repliesContainer: { paddingLeft: 26, marginLeft: 16 },
     replyContainer: {
       flexDirection: "row",
       paddingHorizontal: 16,
@@ -598,10 +616,9 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       height: 28,
       borderRadius: 14,
       marginRight: 10,
+      backgroundColor: theme.background.darker,
     },
-    replyContent: {
-      flex: 1,
-    },
+    replyContent: { flex: 1 },
     replyTextContainer: {
       backgroundColor: theme.background.darker,
       borderRadius: 14,
@@ -609,16 +626,8 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       paddingVertical: 8,
       marginBottom: 4,
     },
-    replyText: {
-      fontSize: 13,
-      color: theme.foreground.white,
-      lineHeight: 17,
-    },
-    replyMeta: {
-      flexDirection: "row",
-      paddingHorizontal: 12,
-      gap: 10,
-    },
+    replyText: { fontSize: 13, color: theme.foreground.white, lineHeight: 17 },
+    replyMeta: { flexDirection: "row", paddingHorizontal: 12, gap: 10 },
     viewMoreRepliesButton: {
       flexDirection: "row",
       alignItems: "center",

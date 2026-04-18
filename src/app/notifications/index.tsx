@@ -1,9 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   FlatList,
   Image,
+  RefreshControl,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -11,22 +13,59 @@ import {
 } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../../contexts/ThemeContext";
-import { getNotificationsWithUserData } from "../../data/mockData";
+import { api } from "../../services/api";
 
 import { FONTS } from "../../constants/fonts";
 
+type BackendNotificationType =
+  | "like"
+  | "follow"
+  | "follow_request"
+  | "comment"
+  | "reply"
+  | "mention"
+  | "achievement";
+
+type BackendNotification = {
+  id: string;
+  type: BackendNotificationType;
+  target_type: string | null;
+  target_id: string | null;
+  read_at: string | null;
+  created_at: string;
+  actor: {
+    id: string;
+    username?: string | null;
+    display_name?: string | null;
+    avatar_url?: string | null;
+  } | null;
+};
+
 interface NotificationWithUser {
   id: string;
-  type: "like" | "follow" | "comment" | "mention";
-  user: {
-    id: string;
-    username: string;
-    avatar: string;
-  };
+  type: BackendNotificationType;
+  user: { id: string; username: string; avatar: string };
   action: string;
   timestamp: string;
   postId?: string;
   isRead: boolean;
+}
+
+function actionKey(type: BackendNotificationType): string {
+  switch (type) {
+    case "like":
+      return "notifications.likedYourPost";
+    case "follow":
+    case "follow_request":
+      return "notifications.startedFollowingYou";
+    case "comment":
+    case "reply":
+      return "notifications.commentedOnYourPost";
+    case "mention":
+      return "notifications.mentionedYouInComment";
+    default:
+      return "notifications.title";
+  }
 }
 
 export default function Notifications() {
@@ -34,19 +73,64 @@ export default function Notifications() {
   const router = useRouter();
   const { theme } = useTheme();
   const styles = createStyles(theme);
-  const notificationsData = useMemo(
-    () => getNotificationsWithUserData() as NotificationWithUser[],
-    [],
-  );
-  const [notifications, setNotifications] =
-    useState<NotificationWithUser[]>(notificationsData);
 
-  const handleMarkAsRead = (id: string) => {
+  const [notifications, setNotifications] = useState<NotificationWithUser[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const mapItem = useCallback(
+    (n: BackendNotification): NotificationWithUser => ({
+      id: n.id,
+      type: n.type,
+      user: {
+        id: n.actor?.id ?? "",
+        username: n.actor?.username ?? "unknown",
+        avatar: n.actor?.avatar_url ?? "",
+      },
+      action: t(actionKey(n.type)),
+      timestamp: n.created_at,
+      postId:
+        n.target_type === "post" && n.target_id ? n.target_id : undefined,
+      isRead: !!n.read_at,
+    }),
+    [t],
+  );
+
+  const load = useCallback(async () => {
+    try {
+      const res: { items: BackendNotification[]; next_cursor: string | null } =
+        await api.listNotifications({ limit: 50 });
+      setNotifications((res.items ?? []).map(mapItem));
+      setError(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to load");
+    }
+  }, [mapItem]);
+
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      await load();
+      setLoading(false);
+    })();
+  }, [load]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await load();
+    setRefreshing(false);
+  }, [load]);
+
+  const handleMarkAsRead = async (id: string) => {
     setNotifications((prev) =>
-      prev.map((notif) =>
-        notif.id === id ? { ...notif, isRead: true } : notif,
-      ),
+      prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
     );
+    try {
+      await api.markNotificationRead(id);
+    } catch {
+      /* best-effort */
+    }
   };
 
   function getIconName(type: string): keyof typeof Ionicons.glyphMap {
@@ -79,20 +163,12 @@ export default function Notifications() {
     }
   }
 
-  function getTranslatedAction(type: string, action: string): string {
-    switch (action) {
-      case "liked your post":
-        return t("notifications.likedYourPost");
-      case "started following you":
-        return t("notifications.startedFollowingYou");
-      case "commented on your post":
-        return t("notifications.commentedOnYourPost");
-      case "mentioned you in a comment":
-        return t("notifications.mentionedYouInComment");
-      default:
-        return action;
-    }
-  }
+  const onItemPress = (item: NotificationWithUser) => {
+    if (!item.isRead) handleMarkAsRead(item.id);
+    if (item.postId) router.navigate(`/comments/${item.postId}` as any);
+    else if (item.type === "follow" && item.user.id)
+      router.navigate(`/user/${item.user.id}` as any);
+  };
 
   const renderNotification = ({ item }: { item: NotificationWithUser }) => (
     <TouchableOpacity
@@ -100,16 +176,16 @@ export default function Notifications() {
         styles.notificationItem,
         !item.isRead && styles.notificationItemUnread,
       ]}
-      onPress={() => handleMarkAsRead(item.id)}
+      onPress={() => onItemPress(item)}
       activeOpacity={0.8}
     >
       <Image
-        source={{ uri: item.user.avatar }}
+        source={{ uri: item.user.avatar || undefined }}
         style={styles.avatarContainer}
       />
       <View style={styles.contentContainer}>
         <Text style={styles.username}>{item.user.username}</Text>
-        <Text style={styles.action}>{getTranslatedAction(item.type, item.action)}</Text>
+        <Text style={styles.action}>{item.action}</Text>
         <Text style={styles.timestamp}>{item.timestamp}</Text>
       </View>
       <View style={styles.iconContainer}>
@@ -137,26 +213,52 @@ export default function Notifications() {
         <View style={styles.spacer} />
       </View>
 
-      {/* Notifications List */}
-      <FlatList
-        data={notifications}
-        renderItem={renderNotification}
-        keyExtractor={(item) => item.id}
-        scrollEnabled={true}
-        contentContainerStyle={styles.listContent}
-        ListEmptyComponent={
-          <View style={{ alignItems: "center", marginTop: 28 }}>
-            <Ionicons
-              name="notifications-off-outline"
-              size={36}
-              color={theme.foreground.gray}
+      {error ? (
+        <Text
+          style={{
+            color: "#e27171",
+            textAlign: "center",
+            paddingHorizontal: 16,
+            paddingVertical: 8,
+          }}
+        >
+          {error}
+        </Text>
+      ) : null}
+
+      {loading ? (
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+          <ActivityIndicator color={theme.primary.main} />
+        </View>
+      ) : (
+        <FlatList
+          data={notifications}
+          renderItem={renderNotification}
+          keyExtractor={(item) => item.id}
+          scrollEnabled={true}
+          contentContainerStyle={styles.listContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={theme.primary.main}
+              colors={[theme.primary.main]}
             />
-            <Text style={{ color: theme.foreground.gray, marginTop: 8, fontSize: 13 }}>
-              {t("notifications.noNotificationsYet")}
-            </Text>
-          </View>
-        }
-      />
+          }
+          ListEmptyComponent={
+            <View style={{ alignItems: "center", marginTop: 28 }}>
+              <Ionicons
+                name="notifications-off-outline"
+                size={36}
+                color={theme.foreground.gray}
+              />
+              <Text style={{ color: theme.foreground.gray, marginTop: 8, fontSize: 13 }}>
+                {t("notifications.noNotificationsYet")}
+              </Text>
+            </View>
+          }
+        />
+      )}
     </View>
   );
 }
