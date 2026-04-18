@@ -81,6 +81,10 @@ export const CreateRoutineProvider: React.FC<{ children: ReactNode }> = ({
         targetKg: 0,
         targetReps: "8-12",
       })),
+      gifUrl: ex.gifUrl,
+      bodyPart: ex.bodyPart,
+      target: ex.target,
+      equipment: ex.equipment,
     }));
 
     setDraft((prev) => {

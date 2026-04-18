@@ -2,13 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
-} from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import ChipButton from "../../components/ui/ChipButton";
 import { FONTS } from "../../constants/fonts";
 import { Theme } from "../../constants/themes";
@@ -18,6 +12,7 @@ const WEEKLY_OPTIONS = [1, 2, 3, 4, 5, 6, 7];
 const DAY_OPTIONS = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
 const OBJECTIVE_KEY = "@hylift_home_weekly_objective";
 const OBJECTIVE_DAYS_KEY = "@hylift_home_weekly_objective_days";
+const ALL_DAY_INDICES = DAY_OPTIONS.map((_, index) => index);
 
 export default function ObjectiveScreen() {
   const { theme } = useTheme();
@@ -40,7 +35,11 @@ export default function ObjectiveScreen() {
         if (!isMounted) return;
 
         const parsedObjective = Number(savedObjective);
-        if (Number.isFinite(parsedObjective) && parsedObjective >= 1 && parsedObjective <= 7) {
+        if (
+          Number.isFinite(parsedObjective) &&
+          parsedObjective >= 1 &&
+          parsedObjective <= 7
+        ) {
           setSelected(parsedObjective);
         }
 
@@ -50,8 +49,18 @@ export default function ObjectiveScreen() {
             const valid = parsedDays
               .filter((d) => Number.isInteger(d) && d >= 0 && d <= 6)
               .slice(0, 7);
-            setSelectedDays(valid);
+            setSelectedDays(
+              valid.length > 0
+                ? valid
+                : parsedObjective === 7
+                  ? ALL_DAY_INDICES
+                  : [],
+            );
+          } else if (parsedObjective === 7) {
+            setSelectedDays(ALL_DAY_INDICES);
           }
+        } else if (parsedObjective === 7) {
+          setSelectedDays(ALL_DAY_INDICES);
         }
       } catch {
         // Keep default UI state when storage is unavailable.
@@ -67,12 +76,14 @@ export default function ObjectiveScreen() {
 
   const canConfirm = useMemo(
     () => !!selected && selectedDays.length === selected,
-    [selected, selectedDays]
+    [selected, selectedDays],
   );
 
   const handleSelect = (days: number) => {
     setSelected(days);
-    setSelectedDays((prev) => prev.slice(0, days));
+    setSelectedDays(
+      days === 7 ? ALL_DAY_INDICES : (prev) => prev.slice(0, days),
+    );
   };
 
   const toggleDay = (dayIndex: number) => {
@@ -94,7 +105,10 @@ export default function ObjectiveScreen() {
   const handleConfirm = async () => {
     if (!selected || selectedDays.length !== selected) return;
     await AsyncStorage.setItem(OBJECTIVE_KEY, String(selected));
-    await AsyncStorage.setItem(OBJECTIVE_DAYS_KEY, JSON.stringify(selectedDays));
+    await AsyncStorage.setItem(
+      OBJECTIVE_DAYS_KEY,
+      JSON.stringify(selectedDays),
+    );
     router.back();
   };
 
@@ -102,12 +116,17 @@ export default function ObjectiveScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Pressable
-          style={({ pressed }) => [styles.backButton, pressed && { opacity: 0.8 }]}
+          style={({ pressed }) => [
+            styles.backButton,
+            pressed && { opacity: 0.8 },
+          ]}
           onPress={() => router.back()}
         >
           <Text style={styles.backButtonText}>←</Text>
         </Pressable>
-        <Text style={styles.headerTitle}>{t("home.objective", "Objective")}</Text>
+        <Text style={styles.headerTitle}>
+          {t("home.objective", "Objective")}
+        </Text>
         <View style={styles.headerSpacer} />
       </View>
 
@@ -118,7 +137,7 @@ export default function ObjectiveScreen() {
         <Text style={styles.title}>
           {t(
             "home.objectiveQuestion",
-            "Combien de fois par semaine veux-tu t'entraîner ?"
+            "Combien de fois par semaine veux-tu t'entraîner ?",
           )}
         </Text>
 
@@ -143,7 +162,9 @@ export default function ObjectiveScreen() {
                 onPress={() => handleSelect(days)}
               >
                 <Text style={styles.optionText}>
-                  {t("home.objectiveOption", "{{count}} x semaine", { count: days })}
+                  {t("home.objectiveOption", "{{count}} x semaine", {
+                    count: days,
+                  })}
                 </Text>
               </Pressable>
             );
@@ -157,7 +178,7 @@ export default function ObjectiveScreen() {
           {t(
             "home.objectiveChooseDaysHint",
             "Sélectionne {{selected}}/{{target}} jours",
-            { selected: selectedDays.length, target: selected ?? 0 }
+            { selected: selectedDays.length, target: selected ?? 0 },
           )}
         </Text>
 

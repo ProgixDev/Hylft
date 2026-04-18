@@ -24,7 +24,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.anonymous.hylift",
       "infoPlist": {
-        "UIViewControllerBasedStatusBarAppearance": true,
+        "UIViewControllerBasedStatusBarAppearance": false,
         "NSHealthShareUsageDescription": "Hylift needs access to your health data to track your calories burned, steps, and workouts.",
         "NSHealthUpdateUsageDescription": "Hylift needs to save your workout and nutrition data to Apple Health."
       },

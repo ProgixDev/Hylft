@@ -64,7 +64,7 @@ export default function RoutineDetail() {
   const { t } = useTranslation();
   const styles = createStyles(theme);
   const router = useRouter();
-  const { startWorkout } = useActiveWorkout();
+  const { startGuidedRoutine } = useActiveWorkout();
 
   const routine = useMemo(() => getRoutineById(id), [id]);
 
@@ -96,14 +96,9 @@ export default function RoutineDetail() {
   const totalSets = routine.exercises.reduce((sum, ex) => sum + ex.sets, 0);
 
   const handleStartRoutine = () => {
-    startWorkout({
-      id: `workout-${Date.now()}`,
-      duration: 0,
-      volume: 0,
-      sets: 0,
-      exercises: [],
-    });
-    router.back();
+    if (!routine) return;
+    startGuidedRoutine(routine);
+    router.push("/workout-player" as any);
   };
 
   return (

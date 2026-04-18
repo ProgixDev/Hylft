@@ -10,7 +10,8 @@ import { useActiveWorkout } from "../../contexts/ActiveWorkoutContext";
 
 function TabsLayoutContent() {
   const { t } = useTranslation();
-  const { activeWorkout, setIsExpanded, isExpanded } = useActiveWorkout();
+  const { activeWorkout, setIsExpanded, isExpanded, guidedPlayer } =
+    useActiveWorkout();
   const activeWorkoutSheetRef = useRef<BottomSheet>(null);
 
   const handleExpandWorkout = () => {
@@ -22,7 +23,7 @@ function TabsLayoutContent() {
       <Tabs
         tabBar={(props) => (
           <View>
-            {activeWorkout && !isExpanded && (
+            {activeWorkout && !isExpanded && !guidedPlayer && (
               <MiniWorkoutPlayer onExpand={handleExpandWorkout} />
             )}
             <CustomTabBar {...props} />
@@ -75,10 +76,12 @@ function TabsLayoutContent() {
           pointerEvents: "box-none",
         }}
       >
-        <ActiveWorkoutSheet
-          ref={activeWorkoutSheetRef}
-          isExpanded={activeWorkout ? isExpanded : false}
-        />
+        {!guidedPlayer && (
+          <ActiveWorkoutSheet
+            ref={activeWorkoutSheetRef}
+            isExpanded={activeWorkout ? isExpanded : false}
+          />
+        )}
       </View>
     </View>
   );

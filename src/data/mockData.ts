@@ -98,6 +98,10 @@ export interface RoutineExercise {
   targetWeight?: number; // default kg for all sets
   setTargets?: SetTarget[]; // per-set weight/reps overrides
   notes?: string;
+  gifUrl?: string; // ExerciseDB gif for guided player
+  bodyPart?: string;
+  target?: string;
+  equipment?: string;
 }
 
 export interface Routine {

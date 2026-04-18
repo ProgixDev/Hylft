@@ -324,6 +324,29 @@ export async function fetchExercisesByEquipmentExerciseDb(
   }
 }
 
+// Best-effort lookup by display name — used by the guided workout player
+// to hydrate a routine exercise that has no cached gifUrl (e.g. mock data).
+export async function findExerciseByNameExerciseDb(
+  name: string,
+): Promise<ExerciseDbExercise | null> {
+  if (!name?.trim()) return null;
+
+  const cacheKey = `byname_${name.toLowerCase().trim()}`;
+  const cached = getCached<ExerciseDbExercise | null>(cacheKey);
+  if (cached !== null) return cached;
+
+  try {
+    const results = await searchExercisesExerciseDb(name, false);
+    const lower = name.toLowerCase().trim();
+    const exact =
+      results.find((ex) => ex.name.toLowerCase() === lower) ?? results[0] ?? null;
+    return setCached(cacheKey, exact);
+  } catch (error) {
+    console.error("ExerciseDb findByName error:", error);
+    return null;
+  }
+}
+
 export async function getAvailableBodyPartsExerciseDb(
   translate: boolean = false,
 ): Promise<string[]> {

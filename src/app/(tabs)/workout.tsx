@@ -4,15 +4,15 @@ import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-    Dimensions,
-    Image,
-    Modal,
-    Platform,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
+  Dimensions,
+  Image,
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
 import { FONTS } from "../../constants/fonts";
 import { Theme } from "../../constants/themes";
@@ -20,21 +20,20 @@ import { useActiveWorkout } from "../../contexts/ActiveWorkoutContext";
 import { useCreateRoutine } from "../../contexts/CreateRoutineContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import {
-    getRoutinesByUserId,
-    getWorkoutsByUserId,
-    Routine,
-    Workout as WorkoutData,
+  getRoutinesByUserId,
+  getWorkoutsByUserId,
+  Routine,
+  Workout as WorkoutData,
 } from "../../data/mockData";
 import { useGenderedImages } from "../../hooks/useGenderedImages";
 import {
-    translateApiData,
-    translateRoutineDescription,
-    translateRoutineName,
+  translateApiData,
+  translateRoutineDescription,
+  translateRoutineName,
 } from "../../utils/exerciseTranslator";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const ROUTINE_CARD_W = SCREEN_WIDTH * 0.65;
-
 
 const diffColors: Record<string, { bg: string; text: string }> = {
   beginner: { bg: "#4CAF5030", text: "#4CAF50" },
@@ -73,8 +72,14 @@ export default function Workout() {
     setRoutines(getRoutinesByUserId("1"));
   }, []);
 
-  useEffect(() => { loadData(); }, [loadData]);
-  useFocusEffect(useCallback(() => { loadData(); }, [loadData]));
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+  useFocusEffect(
+    useCallback(() => {
+      loadData();
+    }, [loadData]),
+  );
 
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -102,17 +107,23 @@ export default function Workout() {
   // Stats
   const totalWorkouts = workouts.length;
   const totalMinutes = workouts.reduce((s, w) => s + w.duration, 0);
-  const totalExercises = workouts.reduce(
-    (s, w) => s + w.exercises.length,
-    0
-  );
+  const totalExercises = workouts.reduce((s, w) => s + w.exercises.length, 0);
 
   return (
     <View style={styles.container}>
       {themeType === "female" && (
         <Image
           source={require("../../../assets/girly.png")}
-          style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, width: "100%", height: "100%", opacity: 0.3 }}
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: "100%",
+            height: "100%",
+            opacity: 0.3,
+          }}
           resizeMode="cover"
         />
       )}
@@ -120,10 +131,7 @@ export default function Workout() {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>WORKOUT</Text>
         <Pressable
-          style={({ pressed }) => [
-            styles.addBtn,
-            pressed && { opacity: 0.8 },
-          ]}
+          style={({ pressed }) => [styles.addBtn, pressed && { opacity: 0.8 }]}
           onPress={() => setPlusModalVisible(true)}
         >
           <Ionicons name="add" size={22} color={theme.foreground.white} />
@@ -186,9 +194,7 @@ export default function Workout() {
               ]}
               onPress={() => setPlusModalVisible(false)}
             >
-              <Text style={styles.modalCancelText}>
-                {t("common.cancel")}
-              </Text>
+              <Text style={styles.modalCancelText}>{t("common.cancel")}</Text>
             </Pressable>
           </View>
         </Pressable>
@@ -234,124 +240,7 @@ export default function Workout() {
           </View>
         </Pressable>
 
-        {/* ── My Routines ───────────────────────────────────── */}
-        <View style={styles.sectionHeaderRow}>
-          <Text style={styles.sectionTitle}>{t("workout.myRoutines")}</Text>
-          <Pressable
-            onPress={() => router.push("/routines" as any)}
-            style={({ pressed }) => pressed && { opacity: 0.7 }}
-          >
-            <Text style={styles.moreLink}>
-              {t("home.more")} {">"}
-            </Text>
-          </Pressable>
-        </View>
-
-        {routines.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Ionicons
-              name="barbell-outline"
-              size={48}
-              color={theme.foreground.gray}
-            />
-            <Text style={styles.emptyStateText}>
-              {t("workout.noRoutinesYet")}
-            </Text>
-          </View>
-        ) : (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.routineScroll}
-            snapToInterval={ROUTINE_CARD_W + 14}
-            decelerationRate="fast"
-          >
-            {routines.map((routine, index) => {
-              const dc = diffColors[routine.difficulty] || diffColors.beginner;
-              return (
-                <Pressable
-                  key={routine.id}
-                  style={({ pressed }) => [
-                    styles.routineCard,
-                    pressed && {
-                      opacity: 0.95,
-                      transform: [{ scale: 0.98 }],
-                    },
-                  ]}
-                  onPress={() =>
-                    router.push(`/routines/${routine.id}` as any)
-                  }
-                >
-                  <Image
-                    source={routineImages[index % routineImages.length]}
-                    style={styles.routineCardImage}
-                    resizeMode="cover"
-                  />
-                  <LinearGradient
-                    colors={["transparent", "rgba(0,0,0,0.8)"]}
-                    style={styles.routineCardGradient}
-                  />
-
-                  {/* Difficulty badge */}
-                  <View
-                    style={[
-                      styles.routineDiffBadge,
-                      { backgroundColor: dc.bg },
-                    ]}
-                  >
-                    <Text style={[styles.routineDiffText, { color: dc.text }]}>
-                      {translateApiData(routine.difficulty)}
-                    </Text>
-                  </View>
-
-                  <View style={styles.routineCardContent}>
-                    <Text style={styles.routineCardName} numberOfLines={1}>
-                      {translateRoutineName(routine.name)}
-                    </Text>
-                    <Text
-                      style={styles.routineCardDesc}
-                      numberOfLines={1}
-                    >
-                      {translateRoutineDescription(routine.description)}
-                    </Text>
-                    <View style={styles.routineCardMeta}>
-                      <View style={styles.routineMetaItem}>
-                        <Ionicons
-                          name="barbell-outline"
-                          size={12}
-                          color="rgba(255,255,255,0.7)"
-                        />
-                        <Text style={styles.routineMetaText}>
-                          {routine.exercises.length}
-                        </Text>
-                      </View>
-                      <View style={styles.routineMetaItem}>
-                        <Ionicons
-                          name="time-outline"
-                          size={12}
-                          color="rgba(255,255,255,0.7)"
-                        />
-                        <Text style={styles.routineMetaText}>
-                          {routine.estimatedDuration}m
-                        </Text>
-                      </View>
-                      <View style={styles.routineMetaItem}>
-                        <Ionicons
-                          name="checkmark-circle-outline"
-                          size={12}
-                          color="rgba(255,255,255,0.7)"
-                        />
-                        <Text style={styles.routineMetaText}>
-                          {routine.timesCompleted}×
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                </Pressable>
-              );
-            })}
-          </ScrollView>
-        )}
+ 
 
         {/* ── Recent Workouts ───────────────────────────────── */}
         {workouts.length > 0 && (
@@ -382,9 +271,7 @@ export default function Workout() {
                     styles.recentCard,
                     pressed && { opacity: 0.95, transform: [{ scale: 0.98 }] },
                   ]}
-                  onPress={() =>
-                    router.push(`/workouts/${workout.id}` as any)
-                  }
+                  onPress={() => router.push(`/workouts/${workout.id}` as any)}
                 >
                   <Image
                     source={routineImages[(index + 1) % routineImages.length]}
@@ -400,12 +287,20 @@ export default function Workout() {
                       {workout.name}
                     </Text>
                     <View style={styles.recentCardMeta}>
-                      <Ionicons name="time-outline" size={11} color="rgba(255,255,255,0.7)" />
+                      <Ionicons
+                        name="time-outline"
+                        size={11}
+                        color="rgba(255,255,255,0.7)"
+                      />
                       <Text style={styles.recentCardMetaText}>
                         {workout.duration} min
                       </Text>
                       <Text style={styles.recentCardMetaText}>·</Text>
-                      <Ionicons name="barbell-outline" size={11} color="rgba(255,255,255,0.7)" />
+                      <Ionicons
+                        name="barbell-outline"
+                        size={11}
+                        color="rgba(255,255,255,0.7)"
+                      />
                       <Text style={styles.recentCardMetaText}>
                         {workout.exercises.length}
                       </Text>
@@ -419,9 +314,7 @@ export default function Workout() {
 
         {/* ── Create Routine CTA ─────────────────────────────── */}
         <View style={styles.sectionHeaderRow}>
-          <Text style={styles.sectionTitle}>
-            {t("home.customWorkout")}
-          </Text>
+          <Text style={styles.sectionTitle}>{t("home.customWorkout")}</Text>
         </View>
         <Pressable
           style={({ pressed }) => [

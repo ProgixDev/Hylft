@@ -677,6 +677,28 @@
     "clearFilters": "Effacer les filtres",
     "addSelected": "Ajouter {{count}} sélectionné(s)"
   },
+  "workoutPlayer": {
+    "noActive": "Aucune séance active",
+    "exerciseOf": "Exercice {{current}} sur {{total}}",
+    "setOf": "Série {{current}} sur {{total}}",
+    "weight": "Charge",
+    "timer": "Minuteur",
+    "doneSet": "Série terminée",
+    "logThisSet": "Enregistrer cette série",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "rest": "Repos",
+    "catchYourBreath": "Reprenez votre souffle",
+    "nextSet": "Série suivante",
+    "nextExercise": "Exercice suivant",
+    "skipRest": "Passer le repos",
+    "workoutComplete": "Séance terminée !",
+    "volume": "Volume",
+    "finish": "Terminer",
+    "endWorkout": "Terminer la séance ?",
+    "endWorkoutConfirm": "Votre progression sera enregistrée.",
+    "endAndSave": "Terminer et enregistrer"
+  },
   "search": {
     "findPeople": "Trouver des personnes",
     "searchPeople": "Rechercher des personnes...",
