@@ -38,7 +38,7 @@ yarn-error.*
 server/.env
 server/node_modules/
 server/dist/
-
+/exercisedb
 # typescript
 *.tsbuildinfo
 

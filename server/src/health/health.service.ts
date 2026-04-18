@@ -1,18 +1,12 @@
-import {
-  Injectable,
-  Logger,
-  OnModuleInit,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { UpsertSnapshotDto } from './dto/upsert-snapshot.dto';
 import { CreateWorkoutLogDto } from './dto/create-workout-log.dto';
 
 @Injectable()
-export class HealthService implements OnModuleInit {
+export class HealthService {
   private supabase: SupabaseClient;
-  private readonly logger = new Logger(HealthService.name);
-  private tablesReady = false;
 
   constructor(config: ConfigService) {
     this.supabase = createClient(
@@ -21,50 +15,15 @@ export class HealthService implements OnModuleInit {
     );
   }
 
-  async onModuleInit() {
-    await this.ensureTables();
-  }
-
-  private async ensureTables(): Promise<void> {
-    if (this.tablesReady) return;
-
-    const { error } = await this.supabase.rpc('ensure_health_tables');
-
-    if (error) {
-      this.logger.error('Failed to ensure health tables', error.message);
-    } else {
-      this.tablesReady = true;
-      this.logger.log('Health tables are ready');
-    }
-  }
-
-  private async run<T>(
-    op: () => PromiseLike<{ data: T | null; error: any }>,
-  ): Promise<{ data: T | null; error: any }> {
-    await this.ensureTables();
-    const result = await op();
-
-    if (result.error?.code === '42P01') {
-      this.logger.warn('Health table missing — recreating and retrying...');
-      this.tablesReady = false;
-      await this.ensureTables();
-      return op();
-    }
-
-    return result;
-  }
-
   // ── Daily Snapshots ────────────────────────────────────────────────────
 
   async getSnapshot(userId: string, date: string) {
-    const { data, error } = await this.run(() =>
-      this.supabase
-        .from('daily_health_snapshots')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('date', date)
-        .single(),
-    );
+    const { data, error } = await this.supabase
+      .from('daily_health_snapshots')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('date', date)
+      .single();
 
     if (error?.code === 'PGRST116') {
       return {
@@ -82,37 +41,33 @@ export class HealthService implements OnModuleInit {
   }
 
   async getSnapshotsRange(userId: string, startDate: string, endDate: string) {
-    const { data, error } = await this.run(() =>
-      this.supabase
-        .from('daily_health_snapshots')
-        .select('*')
-        .eq('user_id', userId)
-        .gte('date', startDate)
-        .lte('date', endDate)
-        .order('date', { ascending: true }),
-    );
+    const { data, error } = await this.supabase
+      .from('daily_health_snapshots')
+      .select('*')
+      .eq('user_id', userId)
+      .gte('date', startDate)
+      .lte('date', endDate)
+      .order('date', { ascending: true });
 
     if (error) throw error;
     return data ?? [];
   }
 
   async upsertSnapshot(userId: string, dto: UpsertSnapshotDto) {
-    const { data, error } = await this.run(() =>
-      this.supabase
-        .from('daily_health_snapshots')
-        .upsert({
-          user_id: userId,
-          date: dto.date,
-          steps: dto.steps,
-          calories_burned: dto.calories_burned,
-          active_minutes: dto.active_minutes ?? 0,
-          distance_km: dto.distance_km ?? 0,
-          water_ml: dto.water_ml ?? 0,
-          updated_at: new Date().toISOString(),
-        }, { onConflict: 'user_id,date' })
-        .select()
-        .single(),
-    );
+    const { data, error } = await this.supabase
+      .from('daily_health_snapshots')
+      .upsert({
+        user_id: userId,
+        date: dto.date,
+        steps: dto.steps,
+        calories_burned: dto.calories_burned,
+        active_minutes: dto.active_minutes ?? 0,
+        distance_km: dto.distance_km ?? 0,
+        water_ml: dto.water_ml ?? 0,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'user_id,date' })
+      .select()
+      .single();
 
     if (error) throw error;
     return data;
@@ -121,29 +76,25 @@ export class HealthService implements OnModuleInit {
   // ── Workout Logs ───────────────────────────────────────────────────────
 
   async getWorkouts(userId: string, date: string) {
-    const { data, error } = await this.run(() =>
-      this.supabase
-        .from('workout_logs')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('date', date)
-        .order('start_time', { ascending: true }),
-    );
+    const { data, error } = await this.supabase
+      .from('workout_logs')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('date', date)
+      .order('start_time', { ascending: true });
 
     if (error) throw error;
     return data ?? [];
   }
 
   async getWorkoutsRange(userId: string, startDate: string, endDate: string) {
-    const { data, error } = await this.run(() =>
-      this.supabase
-        .from('workout_logs')
-        .select('*')
-        .eq('user_id', userId)
-        .gte('date', startDate)
-        .lte('date', endDate)
-        .order('date', { ascending: true }),
-    );
+    const { data, error } = await this.supabase
+      .from('workout_logs')
+      .select('*')
+      .eq('user_id', userId)
+      .gte('date', startDate)
+      .lte('date', endDate)
+      .order('date', { ascending: true });
 
     if (error) throw error;
     return data ?? [];
@@ -152,39 +103,35 @@ export class HealthService implements OnModuleInit {
   async addWorkout(userId: string, dto: CreateWorkoutLogDto) {
     const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 
-    const { data, error } = await this.run(() =>
-      this.supabase
-        .from('workout_logs')
-        .insert({
-          id,
-          user_id: userId,
-          name: dto.name,
-          workout_type: dto.workout_type ?? 'general',
-          date: dto.date,
-          start_time: dto.start_time ?? null,
-          end_time: dto.end_time ?? null,
-          duration_minutes: dto.duration_minutes,
-          calories_burned: dto.calories_burned,
-          source: dto.source ?? 'manual',
-          exercises: dto.exercises ?? null,
-          notes: dto.notes ?? null,
-        })
-        .select()
-        .single(),
-    );
+    const { data, error } = await this.supabase
+      .from('workout_logs')
+      .insert({
+        id,
+        user_id: userId,
+        name: dto.name,
+        workout_type: dto.workout_type ?? 'general',
+        date: dto.date,
+        start_time: dto.start_time ?? null,
+        end_time: dto.end_time ?? null,
+        duration_minutes: dto.duration_minutes,
+        calories_burned: dto.calories_burned,
+        source: dto.source ?? 'manual',
+        exercises: dto.exercises ?? null,
+        notes: dto.notes ?? null,
+      })
+      .select()
+      .single();
 
     if (error) throw error;
     return data;
   }
 
   async deleteWorkout(userId: string, workoutId: string) {
-    const { error } = await this.run(() =>
-      this.supabase
-        .from('workout_logs')
-        .delete()
-        .eq('id', workoutId)
-        .eq('user_id', userId),
-    );
+    const { error } = await this.supabase
+      .from('workout_logs')
+      .delete()
+      .eq('id', workoutId)
+      .eq('user_id', userId);
 
     if (error) throw error;
     return { deleted: true };
