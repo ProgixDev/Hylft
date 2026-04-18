@@ -1,8 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
 import BottomSheet from "@gorhom/bottom-sheet";
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React, { useMemo, useRef, useState } from "react";
 import {
+  Dimensions,
+  Image,
+  Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -11,17 +16,43 @@ import {
   View,
 } from "react-native";
 import ExploreRoutineFilterSheet from "../../components/ui/ExploreRoutineFilterSheet";
-import RoutineCard from "../../components/ui/RoutineCard";
 import { Theme } from "../../constants/themes";
 import { useActiveWorkout } from "../../contexts/ActiveWorkoutContext";
 import { useTheme } from "../../contexts/ThemeContext";
+import { useGenderedImages } from "../../hooks/useGenderedImages";
 import {
   ExploreCategory,
   getExploreRoutines,
 } from "../../services/exploreService";
+import {
+  translateRoutineName,
+  translateApiData,
+} from "../../utils/exerciseTranslator";
 import { buildActiveWorkoutFromRoutine } from "../../utils/workoutBuilder";
 
 import { FONTS } from "../../constants/fonts";
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const GRID_PADDING = 14;
+const GRID_GAP = 12;
+const CARD_WIDTH = (SCREEN_WIDTH - GRID_PADDING * 2 - GRID_GAP) / 2;
+
+const cardShadow = Platform.select({
+  ios: {
+    shadowColor: "#000",
+    shadowOpacity: 0.18,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 6 },
+  },
+  android: { elevation: 5 },
+  default: {},
+});
+
+const diffColors: Record<string, string> = {
+  beginner: "#4CAF50",
+  intermediate: "#FF9800",
+  advanced: "#F44336",
+};
 
 type DifficultyFilter = "All" | "beginner" | "intermediate" | "advanced";
 type FilterTab = "difficulty" | "category";
@@ -31,6 +62,8 @@ export default function ExploreRoutines() {
   const styles = createStyles(theme);
   const router = useRouter();
   const { startWorkout } = useActiveWorkout();
+  const genderedImages = useGenderedImages();
+  const routineImages = genderedImages.routine;
 
   const filterSheetRef = useRef<BottomSheet>(null);
 
@@ -149,7 +182,7 @@ export default function ExploreRoutines() {
           {routines.length} routine{routines.length !== 1 ? "s" : ""}
         </Text>
 
-        {/* ── List ── */}
+        {/* ── Grid ── */}
         {routines.length === 0 ? (
           <View style={styles.emptyState}>
             <Ionicons
@@ -163,17 +196,70 @@ export default function ExploreRoutines() {
             </Text>
           </View>
         ) : (
-          routines.map((routine) => (
-            <RoutineCard
-              key={routine.id}
-              routine={routine}
-              fullWidth
-              onPress={() =>
-                router.push(`/explore-routines/${routine.id}` as any)
-              }
-              onStart={() => handleStart(routine)}
-            />
-          ))
+          <View style={styles.grid}>
+            {routines.map((routine, i) => {
+              const img = routineImages[i % routineImages.length];
+              const diffColor =
+                diffColors[routine.difficulty] ?? theme.primary.main;
+              return (
+                <Pressable
+                  key={routine.id}
+                  onPress={() =>
+                    router.push(`/explore-routines/${routine.id}` as any)
+                  }
+                  onLongPress={() => handleStart(routine)}
+                  style={({ pressed }) => [
+                    styles.gridCard,
+                    pressed && { opacity: 0.95, transform: [{ scale: 0.98 }] },
+                  ]}
+                >
+                  <Image
+                    source={img}
+                    style={styles.gridCardImage}
+                    resizeMode="cover"
+                  />
+                  <LinearGradient
+                    colors={["transparent", "rgba(0,0,0,0.85)"]}
+                    style={styles.gridCardGradient}
+                  />
+                  <View
+                    style={[
+                      styles.gridCardDiffBadge,
+                      { backgroundColor: diffColor + "EE" },
+                    ]}
+                  >
+                    <Text style={styles.gridCardDiffText}>
+                      {translateApiData(routine.difficulty)}
+                    </Text>
+                  </View>
+                  <View style={styles.gridCardContent}>
+                    <Text style={styles.gridCardTitle} numberOfLines={2}>
+                      {translateRoutineName(routine.name)}
+                    </Text>
+                    <View style={styles.gridCardMetaRow}>
+                      <Ionicons
+                        name="time-outline"
+                        size={12}
+                        color="rgba(255,255,255,0.85)"
+                      />
+                      <Text style={styles.gridCardMetaText}>
+                        {routine.estimatedDuration} min
+                      </Text>
+                      <Text style={styles.gridCardMetaDot}>·</Text>
+                      <Ionicons
+                        name="barbell-outline"
+                        size={12}
+                        color="rgba(255,255,255,0.85)"
+                      />
+                      <Text style={styles.gridCardMetaText}>
+                        {routine.exercises.length}
+                      </Text>
+                    </View>
+                  </View>
+                </Pressable>
+              );
+            })}
+          </View>
         )}
       </ScrollView>
 
@@ -294,7 +380,79 @@ const createStyles = (theme: Theme) =>
       paddingHorizontal: 14,
       paddingVertical: 8,
     },
-    // List
+    // Grid
+    grid: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: GRID_GAP,
+      paddingHorizontal: 0,
+    },
+    gridCard: {
+      width: CARD_WIDTH,
+      height: CARD_WIDTH * 1.3,
+      borderRadius: 18,
+      overflow: "hidden",
+      backgroundColor: theme.background.darker,
+      ...cardShadow,
+    },
+    gridCardImage: {
+      position: "absolute",
+      width: "100%",
+      height: "100%",
+    },
+    gridCardGradient: {
+      position: "absolute",
+      left: 0,
+      right: 0,
+      bottom: 0,
+      height: "70%",
+    },
+    gridCardDiffBadge: {
+      position: "absolute",
+      top: 10,
+      left: 10,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 10,
+    },
+    gridCardDiffText: {
+      fontSize: 9,
+      fontFamily: FONTS.extraBold,
+      color: "#fff",
+      textTransform: "uppercase",
+      letterSpacing: 0.6,
+    },
+    gridCardContent: {
+      position: "absolute",
+      bottom: 0,
+      left: 0,
+      right: 0,
+      padding: 12,
+      gap: 6,
+    },
+    gridCardTitle: {
+      fontSize: 14,
+      fontFamily: FONTS.extraBold,
+      color: "#fff",
+      lineHeight: 17,
+    },
+    gridCardMetaRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+    },
+    gridCardMetaText: {
+      fontSize: 11,
+      fontFamily: FONTS.semiBold,
+      color: "rgba(255,255,255,0.85)",
+    },
+    gridCardMetaDot: {
+      fontSize: 11,
+      color: "rgba(255,255,255,0.5)",
+      marginHorizontal: 2,
+    },
+
+    // Empty state
     emptyState: {
       alignItems: "center",
       justifyContent: "center",

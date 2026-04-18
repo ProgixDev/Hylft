@@ -131,12 +131,17 @@ export interface ExerciseDbExercise {
   difficulty: Difficulty;
   allBodyParts: string[];
   allEquipments: string[];
+  // Untranslated, canonical English values (lower-case as returned by the API).
+  // Use these for filter matching so it works regardless of UI language.
+  rawBodyParts: string[];
+  rawEquipments: string[];
 }
 
 export interface ExerciseDbResponse {
   exercises: ExerciseDbExercise[];
   totalExercises: number;
   hasMore: boolean;
+  nextCursor: string | null;
 }
 
 // V1 API - Free, public endpoint, no auth needed
@@ -180,25 +185,39 @@ function mapExercise(
     allEquipments: (ex.equipments ?? []).map((eq) =>
       translateExerciseTerm(eq, "equipment"),
     ),
+    rawBodyParts: (ex.bodyParts ?? []).map((bp) => bp.toLowerCase()),
+    rawEquipments: (ex.equipments ?? []).map((eq) => eq.toLowerCase()),
   };
 }
 
 export async function fetchExercisesExerciseDb(options?: {
-  page?: number;
+  cursor?: string | null;
   limit?: number;
   translate?: boolean;
+  bodyParts?: string | null;
+  equipments?: string | null;
 }): Promise<ExerciseDbResponse> {
-  const { page = 0, limit = 20, translate = false } = options || {};
+  const {
+    cursor = null,
+    limit = 20,
+    translate = false,
+    bodyParts = null,
+    equipments = null,
+  } = options || {};
   const safeLimit = Math.min(Math.max(limit, 1), 100);
-  const offset = page * safeLimit;
-  const cacheKey = `exercises_${offset}_${safeLimit}_${translate ? "fr" : "en"}`;
+  const filterKey = `${bodyParts ?? ""}|${equipments ?? ""}`;
+  const cacheKey = `exercises_${cursor ?? "start"}_${safeLimit}_${filterKey}_${translate ? "fr" : "en"}`;
 
   // Check cache first
   const cached = getCached<ExerciseDbResponse>(cacheKey);
   if (cached) return cached;
 
   try {
-    const url = `${EXERCISEDB_BASE}/api/v1/exercises?offset=${offset}&limit=${safeLimit}`;
+    const params = new URLSearchParams({ limit: String(safeLimit) });
+    if (cursor) params.set("cursor", cursor);
+    if (bodyParts) params.set("bodyParts", bodyParts.toLowerCase().trim());
+    if (equipments) params.set("equipments", equipments.toLowerCase().trim());
+    const url = `${EXERCISEDB_BASE}/api/v1/exercises?${params.toString()}`;
     const response = await throttledFetch(url);
 
     if (!response.ok) {
@@ -207,27 +226,28 @@ export async function fetchExercisesExerciseDb(options?: {
 
     interface ApiResponse {
       success: boolean;
-      metadata: {
-        totalExercises: number;
-        currentPage: number;
-        totalPages: number;
+      meta?: {
+        total?: number;
+        hasNextPage?: boolean;
+        nextCursor?: string | null;
       };
       data: ApiExercise[];
     }
 
     const result: ApiResponse = await response.json();
-    const exercises = result.data.map((ex) => mapExercise(ex, translate));
+    const exercises = (result.data ?? []).map((ex) => mapExercise(ex, translate));
 
     const data: ExerciseDbResponse = {
       exercises,
-      totalExercises: result.metadata?.totalExercises || 1500,
-      hasMore: exercises.length === safeLimit,
+      totalExercises: result.meta?.total ?? 1500,
+      hasMore: result.meta?.hasNextPage ?? exercises.length === safeLimit,
+      nextCursor: result.meta?.nextCursor ?? null,
     };
 
     return setCached(cacheKey, data);
   } catch (error) {
     console.error("ExerciseDb fetch error:", error);
-    return { exercises: [], totalExercises: 0, hasMore: false };
+    return { exercises: [], totalExercises: 0, hasMore: false, nextCursor: null };
   }
 }
 
@@ -242,7 +262,7 @@ export async function searchExercisesExerciseDb(
   if (cached) return cached;
 
   try {
-    const url = `${EXERCISEDB_BASE}/api/v1/exercises?search=${encodeURIComponent(query)}`;
+    const url = `${EXERCISEDB_BASE}/api/v1/exercises/search?search=${encodeURIComponent(query)}&limit=50`;
     const response = await throttledFetch(url);
 
     if (!response.ok) return [];
@@ -260,68 +280,31 @@ export async function searchExercisesExerciseDb(
   }
 }
 
-export async function searchExercisesByBodyPartExerciseDb(
-  bodyPart: string,
-  translate: boolean = false,
-): Promise<ExerciseDbExercise[]> {
-  if (!bodyPart.trim()) return [];
-
-  const normalizedBodyPart = bodyPart.toLowerCase().trim();
-  const cacheKey = `bodypart_${normalizedBodyPart}_${translate ? "fr" : "en"}`;
-  const cached = getCached<ExerciseDbExercise[]>(cacheKey);
-  if (cached) return cached;
-
-  try {
-    const url = `${EXERCISEDB_BASE}/api/v1/bodyparts/${encodeURIComponent(normalizedBodyPart)}/exercises`;
-    const response = await throttledFetch(url);
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    interface ApiResponse {
-      success: boolean;
-      data: ApiExercise[];
-    }
-    const result: ApiResponse = await response.json();
-    const exercises = (result.data || []).map((ex) => mapExercise(ex, translate));
-    return setCached(cacheKey, exercises);
-  } catch (error) {
-    console.error("ExerciseDb body part search error:", error);
-    return [];
+// Fetch ALL exercises matching the given filters by paging through cursors.
+// Used for guided/non-paginated callers; the picker should prefer the
+// paginated `fetchExercisesExerciseDb` directly.
+export async function fetchAllExercisesExerciseDb(filters: {
+  bodyParts?: string | null;
+  equipments?: string | null;
+  translate?: boolean;
+}): Promise<ExerciseDbExercise[]> {
+  const { bodyParts = null, equipments = null, translate = false } = filters;
+  const all: ExerciseDbExercise[] = [];
+  let cursor: string | null = null;
+  // Hard cap so a misuse can't loop forever.
+  for (let i = 0; i < 20; i++) {
+    const page = await fetchExercisesExerciseDb({
+      cursor,
+      limit: 100,
+      translate,
+      bodyParts,
+      equipments,
+    });
+    all.push(...page.exercises);
+    if (!page.hasMore || !page.nextCursor) break;
+    cursor = page.nextCursor;
   }
-}
-
-export async function fetchExercisesByEquipmentExerciseDb(
-  equipment: string,
-  translate: boolean = false,
-): Promise<ExerciseDbExercise[]> {
-  if (!equipment.trim()) return [];
-
-  const normalizedEquipment = equipment.toLowerCase().trim();
-  const cacheKey = `equipment_${normalizedEquipment}_${translate ? "fr" : "en"}`;
-  const cached = getCached<ExerciseDbExercise[]>(cacheKey);
-  if (cached) return cached;
-
-  try {
-    const url = `${EXERCISEDB_BASE}/api/v1/equipments/${encodeURIComponent(normalizedEquipment)}/exercises`;
-    const response = await throttledFetch(url);
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    interface ApiResponse {
-      success: boolean;
-      data: ApiExercise[];
-    }
-    const result: ApiResponse = await response.json();
-    const exercises = (result.data || []).map((ex) => mapExercise(ex, translate));
-    return setCached(cacheKey, exercises);
-  } catch (error) {
-    console.error("ExerciseDb equipment search error:", error);
-    return [];
-  }
+  return all;
 }
 
 // Best-effort lookup by display name — used by the guided workout player
@@ -347,10 +330,12 @@ export async function findExerciseByNameExerciseDb(
   }
 }
 
-export async function getAvailableBodyPartsExerciseDb(
-  translate: boolean = false,
-): Promise<string[]> {
-  const cacheKey = `bodyparts_list_${translate ? "fr" : "en"}`;
+// Returns canonical English values (e.g. "back", "chest"). Display-time
+// translation should happen at the call site via `translateExerciseTerm`.
+// This keeps the value the user picks usable as an API filter param regardless
+// of UI language.
+export async function getAvailableBodyPartsExerciseDb(): Promise<string[]> {
+  const cacheKey = `bodyparts_list`;
   const cached = getCached<string[]>(cacheKey);
   if (cached) return cached;
 
@@ -365,10 +350,7 @@ export async function getAvailableBodyPartsExerciseDb(
       data: { name: string }[];
     }
     const result: ApiResponse = await response.json();
-    // Always use translateApiData - it will translate based on current language
-    const bodyParts = (result.data || []).map((item) =>
-      translateExerciseTerm(item.name, "bodyParts"),
-    );
+    const bodyParts = (result.data || []).map((item) => item.name);
     return setCached(cacheKey, bodyParts);
   } catch (error) {
     console.error("ExerciseDb body parts list error:", error);
@@ -376,10 +358,8 @@ export async function getAvailableBodyPartsExerciseDb(
   }
 }
 
-export async function getAvailableEquipmentsExerciseDb(
-  translate: boolean = false,
-): Promise<string[]> {
-  const cacheKey = `equipments_list_${translate ? "fr" : "en"}`;
+export async function getAvailableEquipmentsExerciseDb(): Promise<string[]> {
+  const cacheKey = `equipments_list`;
   const cached = getCached<string[]>(cacheKey);
   if (cached) return cached;
 
@@ -394,10 +374,7 @@ export async function getAvailableEquipmentsExerciseDb(
       data: { name: string }[];
     }
     const result: ApiResponse = await response.json();
-    // Always use translateApiData - it will translate based on current language
-    const equipments = (result.data || []).map((item) =>
-      translateExerciseTerm(item.name, "equipment"),
-    );
+    const equipments = (result.data || []).map((item) => item.name);
     return setCached(cacheKey, equipments);
   } catch (error) {
     console.error("ExerciseDb equipments list error:", error);
