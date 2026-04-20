@@ -63,6 +63,24 @@ export class UsersService {
     return data;
   }
 
+  // Public-safe profile subset for viewing other users. Returns null-safe
+  // fields and respects is_private (posts count still visible; post content
+  // is governed separately by the feed RLS).
+  async getPublicProfile(targetId: string) {
+    const { data, error } = await this.supabase
+      .from('user_profiles')
+      .select(
+        'id, username, display_name, avatar_url, bio, is_private, fitness_goals, experience_level, created_at',
+      )
+      .eq('id', targetId)
+      .single();
+    if (error) {
+      if (error.code === 'PGRST116') throw new NotFoundException('Profile not found');
+      throw error;
+    }
+    return data;
+  }
+
   async completeOnboarding(userId: string, dto: UpdateProfileDto) {
     const { data, error } = await this.supabase
       .from('user_profiles')

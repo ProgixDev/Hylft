@@ -4,6 +4,8 @@ import {
   Post,
   Patch,
   Body,
+  Param,
+  ParseUUIDPipe,
   UseGuards,
 } from '@nestjs/common';
 import { SupabaseJwtGuard } from '../auth/guards/supabase-jwt.guard';
@@ -47,5 +49,10 @@ export class UsersController {
     @Body() dto: UpdateProfileDto,
   ) {
     return this.usersService.completeOnboarding(user.id, dto);
+  }
+
+  @Get(':id')
+  getPublicProfile(@Param('id', ParseUUIDPipe) id: string) {
+    return this.usersService.getPublicProfile(id);
   }
 }

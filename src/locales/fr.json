@@ -370,6 +370,8 @@
   "home": {
     "dashboard": "Tableau de bord",
     "hello": "Bonjour",
+    "goodMorning": "Bonjour",
+    "goodEvening": "Bonsoir",
     "letsGetMoving": "C'est parti pour aujourd'hui !",
     "healthSummary": "Résumé santé",
     "workouts": "Séances",

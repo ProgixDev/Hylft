@@ -27,11 +27,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const clearLocalAuthState = async () => {
+    // Keep this scoped to Supabase auth keys so we do not wipe unrelated app data.
+    const keys = await AsyncStorage.getAllKeys();
+    const supabaseAuthKeys = keys.filter(
+      (key) => key.startsWith("sb-") && key.includes("-auth-token")
+    );
+    if (supabaseAuthKeys.length > 0) {
+      await AsyncStorage.multiRemove(supabaseAuthKeys);
+    }
+  };
+
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session: s } }) => {
-      setSession(s);
-      setIsLoading(false);
-    });
+    const bootstrapSession = async () => {
+      try {
+        const {
+          data: { session: s },
+          error,
+        } = await supabase.auth.getSession();
+
+        if (error) {
+          const message = error.message.toLowerCase();
+          const isInvalidRefreshToken =
+            message.includes("invalid refresh token") ||
+            message.includes("refresh token not found");
+
+          if (isInvalidRefreshToken) {
+            await clearLocalAuthState();
+            await supabase.auth.signOut({ scope: "local" });
+            setSession(null);
+          } else {
+            throw error;
+          }
+        } else {
+          setSession(s);
+        }
+      } catch (err) {
+        console.error("[Auth] Failed to restore session", err);
+        setSession(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    void bootstrapSession();
 
     const {
       data: { subscription },
@@ -61,6 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInWithGoogle = async (): Promise<void> => {
     const redirectUrl = Linking.createURL("/");
+    console.log("[OAuth] redirectUrl =", redirectUrl);
 
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",

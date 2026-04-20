@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { AppController } from './app.controller';
 import { envValidationSchema } from './config/env.validation';
 import { AuthModule } from './auth/auth.module';
 import { ExercisesModule } from './exercises/exercises.module';
@@ -32,5 +33,6 @@ import { WeightEntriesModule } from './weight-entries/weight-entries.module';
     NotificationsModule,
     ExercisesModule,
   ],
+  controllers: [AppController],
 })
 export class AppModule {}

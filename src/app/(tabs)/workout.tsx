@@ -141,45 +141,6 @@ export default function Workout() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 90 }}
       >
-        {/* ── Stats Strip ───────────────────────────────────── */}
-        {totalWorkouts > 0 && (
-          <View style={styles.statsStrip}>
-            <LinearGradient
-              colors={[theme.primary.main + "20", theme.primary.main + "08"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.statsStripGradient}
-            >
-              <View style={styles.statsStripItem}>
-                <Text style={[styles.statsStripValue, { color: theme.primary.main }]}>
-                  {totalWorkouts}
-                </Text>
-                <Text style={styles.statsStripLabel}>
-                  {t("workout.statWorkouts")}
-                </Text>
-              </View>
-              <View style={styles.statsStripDivider} />
-              <View style={styles.statsStripItem}>
-                <Text style={[styles.statsStripValue, { color: theme.primary.main }]}>
-                  {totalMinutes}
-                </Text>
-                <Text style={styles.statsStripLabel}>
-                  {t("workout.statMinutes")}
-                </Text>
-              </View>
-              <View style={styles.statsStripDivider} />
-              <View style={styles.statsStripItem}>
-                <Text style={[styles.statsStripValue, { color: theme.primary.main }]}>
-                  {totalExercises}
-                </Text>
-                <Text style={styles.statsStripLabel}>
-                  {t("workout.statExercises")}
-                </Text>
-              </View>
-            </LinearGradient>
-          </View>
-        )}
-
         {/* ── Quick Start Hero ──────────────────────────────── */}
         <Pressable
           style={({ pressed }) => [

@@ -1,11 +1,22 @@
 import { Platform } from "react-native";
 import { supabase } from "./supabase";
 
-const API_BASE = __DEV__
-  ? Platform.OS === "android"
+// Primary source: EXPO_PUBLIC_API_BASE_URL from `.env` (Expo injects this at
+// build time). When unset, fall back to sensible dev/prod defaults so the
+// app still works without a local .env file.
+const ENV_BASE = process.env.EXPO_PUBLIC_API_BASE_URL;
+const DEFAULT_DEV_BASE =
+  Platform.OS === "android"
     ? "http://10.0.2.2:3000/api"
-    : "http://localhost:3000/api"
-  : "https://hylft2-0.onrender.com/api";
+    : "http://localhost:3000/api";
+const DEFAULT_PROD_BASE = "https://hylft2-0.onrender.com/api";
+
+const API_BASE =
+  ENV_BASE && ENV_BASE.length > 0
+    ? ENV_BASE
+    : __DEV__
+      ? DEFAULT_DEV_BASE
+      : DEFAULT_PROD_BASE;
 
 async function authFetch(path: string, options: RequestInit = {}) {
   const {
@@ -41,6 +52,7 @@ export const api = {
       method: "POST",
       body: JSON.stringify(data),
     }),
+  getPublicProfile: (userId: string) => authFetch(`/users/${userId}`),
 
   // ── Nutrition ────────────────────────────────────────────
   getMeals: (date: string) =>

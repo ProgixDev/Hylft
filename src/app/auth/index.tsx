@@ -120,7 +120,7 @@ export default function AuthLanding() {
     return () => clearInterval(interval);
   }, [fadeAnim]);
 
-  const { user, signIn, signInWithGoogle, hasCompletedGetStarted } = useAuth();
+  const { user, signInWithGoogle, hasCompletedGetStarted } = useAuth();
   const hasNavigated = useRef(false);
 
   // Android/Expo Go: Chrome Custom Tabs redirects to exp://... which it can't load
@@ -169,14 +169,8 @@ export default function AuthLanding() {
     }
   };
 
-  const handleSignIn = async () => {
-    try {
-      await signIn("mohameddn988@gmail.com", "mohamed2003");
-    } catch (error: unknown) {
-      const message =
-        error instanceof Error ? error.message : "Auto sign in failed";
-      Alert.alert("Error", message);
-    }
+  const handleSignIn = () => {
+    router.navigate("/auth/signin");
   };
 
   return (

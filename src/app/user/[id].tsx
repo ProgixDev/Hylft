@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Image,
   ScrollView,
   StyleSheet,
@@ -11,61 +12,185 @@ import {
 } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../../contexts/ThemeContext";
-import { getUserProfile } from "../../data/mockData";
+import { api } from "../../services/api";
+import { mapPostToUi, type BackendPost } from "../../services/feedMappers";
+import type { PostData } from "../../components/ui/Post";
 
 import { FONTS } from "../../constants/fonts";
+
+type PublicProfile = {
+  id: string;
+  username: string | null;
+  display_name: string | null;
+  avatar_url: string | null;
+  bio: string | null;
+  is_private: boolean;
+};
+
+type FollowStats = { followers_count: number; following_count: number };
+
+function compactNumber(n: number): string {
+  if (n < 1000) return String(n);
+  return `${(n / 1000).toFixed(1)}k`;
+}
 
 export default function UserProfile() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { id } = useLocalSearchParams();
+  const { id } = useLocalSearchParams<{ id: string }>();
   const { theme } = useTheme();
-  const userProfileData = getUserProfile(id as string);
   const styles = createStyles(theme);
-  const [isFollowing, setIsFollowing] = useState(userProfileData?.isFollowing || false);
 
-  if (!userProfileData) {
+  const [profile, setProfile] = useState<PublicProfile | null>(null);
+  const [stats, setStats] = useState<FollowStats>({
+    followers_count: 0,
+    following_count: 0,
+  });
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [pendingRequest, setPendingRequest] = useState(false);
+  const [posts, setPosts] = useState<PostData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [toggling, setToggling] = useState(false);
+
+  const load = useCallback(async () => {
+    if (!id) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const [profileRes, statsRes, followRes] = await Promise.all([
+        api.getPublicProfile(id) as Promise<PublicProfile>,
+        api.getFollowStats(id) as Promise<FollowStats>,
+        api.isFollowing(id) as Promise<{ is_following: boolean }>,
+      ]);
+      setProfile(profileRes);
+      setStats(statsRes);
+      setIsFollowing(!!followRes.is_following);
+
+      // Fetch posts only if public or already following.
+      if (!profileRes.is_private || followRes.is_following) {
+        try {
+          const postsRes = (await api.listPosts({
+            scope: "author",
+            author_id: id,
+            limit: 24,
+          })) as { items: BackendPost[] };
+          setPosts((postsRes.items ?? []).map(mapPostToUi));
+        } catch {
+          setPosts([]);
+        }
+      } else {
+        setPosts([]);
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to load profile");
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const handleToggleFollow = async () => {
+    if (!id || toggling) return;
+    setToggling(true);
+    // Optimistic
+    const wasFollowing = isFollowing;
+    setIsFollowing(!wasFollowing);
+    setStats((s) => ({
+      ...s,
+      followers_count: Math.max(
+        s.followers_count + (wasFollowing ? -1 : 1),
+        0,
+      ),
+    }));
+    try {
+      if (wasFollowing) {
+        await api.unfollow(id);
+        setPendingRequest(false);
+      } else {
+        const res = (await api.follow(id)) as {
+          state: "following" | "pending";
+        };
+        setPendingRequest(res.state === "pending");
+        if (res.state === "pending") {
+          // follow_request → not actually following yet
+          setIsFollowing(false);
+          setStats((s) => ({
+            ...s,
+            followers_count: Math.max(s.followers_count - 1, 0),
+          }));
+        }
+      }
+    } catch {
+      // rollback
+      setIsFollowing(wasFollowing);
+      setStats((s) => ({
+        ...s,
+        followers_count: Math.max(
+          s.followers_count + (wasFollowing ? 1 : -1),
+          0,
+        ),
+      }));
+    } finally {
+      setToggling(false);
+    }
+  };
+
+  if (loading) {
     return (
-      <View style={styles.container}>
-        <Text style={{ color: theme.foreground.white }}>{t("user.userNotFound")}</Text>
+      <View
+        style={[styles.container, { justifyContent: "center", alignItems: "center" }]}
+      >
+        <ActivityIndicator color={theme.primary.main} />
       </View>
     );
   }
 
-  const handleToggleFollow = () => {
-    setIsFollowing(!isFollowing);
-  };
+  if (error || !profile) {
+    return (
+      <View style={styles.container}>
+        <Text style={{ color: theme.foreground.white, padding: 20 }}>
+          {error ?? t("user.userNotFound")}
+        </Text>
+      </View>
+    );
+  }
+
+  const displayName =
+    profile.display_name ?? profile.username ?? t("user.userNotFound");
+
+  const followLabel = pendingRequest
+    ? t("user.requested", "Requested")
+    : isFollowing
+      ? t("user.following")
+      : t("user.follow");
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons
-            name="chevron-back"
-            size={28}
-            color={theme.foreground.white}
-          />
+          <Ionicons name="chevron-back" size={28} color={theme.foreground.white} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{userProfileData.username}</Text>
+        <Text style={styles.headerTitle}>{displayName}</Text>
         <View style={styles.spacer} />
       </View>
 
-      {/* Profile Content */}
       <ScrollView
         style={styles.content}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* Profile Header */}
         <View style={styles.profileHeader}>
           <Image
-            source={{ uri: userProfileData.avatar }}
+            source={{ uri: profile.avatar_url || undefined }}
             style={styles.avatar}
           />
           <View style={styles.profileInfo}>
             <View style={styles.nameContainer}>
-              <Text style={styles.username}>{userProfileData.username}</Text>
-              {userProfileData.isPrivate && (
+              <Text style={styles.username}>{displayName}</Text>
+              {profile.is_private && (
                 <Ionicons
                   name="lock-closed"
                   size={16}
@@ -74,63 +199,72 @@ export default function UserProfile() {
                 />
               )}
             </View>
-            <Text style={styles.bio}>{userProfileData.bio}</Text>
+            {profile.bio ? <Text style={styles.bio}>{profile.bio}</Text> : null}
           </View>
         </View>
 
-        {/* Stats */}
         <View style={styles.statsContainer}>
           <View style={styles.statBox}>
-            <Text style={styles.statNumber}>{userProfileData.postsCount}</Text>
+            <Text style={styles.statNumber}>{posts.length}</Text>
             <Text style={styles.statLabel}>{t("user.posts")}</Text>
           </View>
-          <View style={styles.statBox}>
+          <TouchableOpacity
+            style={styles.statBox}
+            onPress={() =>
+              router.navigate(`/user/follows/${profile.id}?tab=followers` as any)
+            }
+          >
             <Text style={styles.statNumber}>
-              {userProfileData.followers > 1000
-                ? (userProfileData.followers / 1000).toFixed(1) + "k"
-                : userProfileData.followers}
+              {compactNumber(stats.followers_count)}
             </Text>
             <Text style={styles.statLabel}>{t("user.followers")}</Text>
-          </View>
-          <View style={styles.statBox}>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.statBox}
+            onPress={() =>
+              router.navigate(`/user/follows/${profile.id}?tab=following` as any)
+            }
+          >
             <Text style={styles.statNumber}>
-              {userProfileData.following > 1000
-                ? (userProfileData.following / 1000).toFixed(1) + "k"
-                : userProfileData.following}
+              {compactNumber(stats.following_count)}
             </Text>
             <Text style={styles.statLabel}>{t("user.following")}</Text>
-          </View>
+          </TouchableOpacity>
         </View>
 
-        {/* Follow Button */}
         <TouchableOpacity
-          style={[styles.followButton, isFollowing && styles.followingButton]}
+          style={[
+            styles.followButton,
+            (isFollowing || pendingRequest) && styles.followingButton,
+          ]}
           onPress={handleToggleFollow}
+          disabled={toggling}
         >
           <Text
             style={[
               styles.followButtonText,
-              isFollowing && styles.followingButtonText,
+              (isFollowing || pendingRequest) && styles.followingButtonText,
             ]}
           >
-            {isFollowing ? t("user.following") : t("user.follow")}
+            {followLabel}
           </Text>
         </TouchableOpacity>
 
-        {/* Content Based on Privacy */}
-        {userProfileData.isPrivate ? (
+        {profile.is_private && !isFollowing ? (
           <View style={styles.privateContainer}>
             <Ionicons
               name="lock-closed"
               size={64}
               color={theme.foreground.gray}
             />
-            <Text style={styles.privateTitle}>{t("user.thisAccountIsPrivate")}</Text>
+            <Text style={styles.privateTitle}>
+              {t("user.thisAccountIsPrivate")}
+            </Text>
             <Text style={styles.privateSubtitle}>
               {t("user.followToSeePosts")}
             </Text>
           </View>
-        ) : userProfileData.posts_data.length === 0 ? (
+        ) : posts.length === 0 ? (
           <View style={styles.emptyState}>
             <Ionicons
               name="image-outline"
@@ -138,28 +272,35 @@ export default function UserProfile() {
               color={theme.foreground.gray}
             />
             <Text style={styles.emptyTitle}>{t("user.noPostsYet")}</Text>
-            <Text style={styles.emptySubtitle}>
-              {t("user.userHasntShared")}
-            </Text>
+            <Text style={styles.emptySubtitle}>{t("user.userHasntShared")}</Text>
           </View>
         ) : (
           <View style={styles.postsSection}>
             <Text style={styles.postsTitle}>{t("user.posts")}</Text>
             <View style={styles.postsGrid}>
-              {userProfileData.posts_data.map((post, index) => (
+              {posts.map((post, index) => (
                 <TouchableOpacity
                   key={post.id}
                   style={styles.gridItem}
                   onPress={() =>
                     router.navigate(
-                      `/user/posts?userId=${userProfileData.id}&postIndex=${index}` as any,
+                      `/user/posts?userId=${profile.id}&postIndex=${index}` as any,
                     )
                   }
                 >
-                  <Image
-                    source={{ uri: post.images[0] }}
-                    style={styles.gridImage}
-                  />
+                  {post.images[0] ? (
+                    <Image
+                      source={{ uri: post.images[0] }}
+                      style={styles.gridImage}
+                    />
+                  ) : (
+                    <View
+                      style={[
+                        styles.gridImage,
+                        { backgroundColor: theme.background.darker },
+                      ]}
+                    />
+                  )}
                 </TouchableOpacity>
               ))}
             </View>
@@ -172,10 +313,7 @@ export default function UserProfile() {
 
 const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
   StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.background.dark,
-    },
+    container: { flex: 1, backgroundColor: theme.background.dark },
     header: {
       flexDirection: "row",
       alignItems: "center",
@@ -190,15 +328,9 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       fontFamily: FONTS.bold,
       color: theme.foreground.white,
     },
-    spacer: {
-      width: 28,
-    },
-    content: {
-      flex: 1,
-    },
-    scrollContent: {
-      paddingBottom: 24,
-    },
+    spacer: { width: 28 },
+    content: { flex: 1 },
+    scrollContent: { paddingBottom: 24 },
     profileHeader: {
       flexDirection: "row",
       alignItems: "flex-start",
@@ -210,10 +342,9 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       height: 80,
       borderRadius: 40,
       marginRight: 16,
+      backgroundColor: theme.background.darker,
     },
-    profileInfo: {
-      flex: 1,
-    },
+    profileInfo: { flex: 1 },
     nameContainer: {
       flexDirection: "row",
       alignItems: "center",
@@ -224,23 +355,15 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       fontFamily: FONTS.bold,
       color: theme.foreground.white,
     },
-    lockIcon: {
-      marginLeft: 8,
-    },
-    bio: {
-      fontSize: 13,
-      color: theme.foreground.gray,
-      marginBottom: 8,
-    },
+    lockIcon: { marginLeft: 8 },
+    bio: { fontSize: 13, color: theme.foreground.gray, marginBottom: 8 },
     statsContainer: {
       flexDirection: "row",
       justifyContent: "space-around",
       paddingHorizontal: 16,
       marginBottom: 20,
     },
-    statBox: {
-      alignItems: "center",
-    },
+    statBox: { alignItems: "center" },
     statNumber: {
       fontSize: 18,
       fontFamily: FONTS.bold,
@@ -269,13 +392,8 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       fontFamily: FONTS.semiBold,
       color: theme.background.dark,
     },
-    followingButtonText: {
-      color: theme.primary.main,
-    },
-    privateContainer: {
-      alignItems: "center",
-      paddingVertical: 60,
-    },
+    followingButtonText: { color: theme.primary.main },
+    privateContainer: { alignItems: "center", paddingVertical: 60 },
     privateTitle: {
       fontSize: 18,
       fontFamily: FONTS.semiBold,
@@ -289,10 +407,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       textAlign: "center",
       paddingHorizontal: 32,
     },
-    emptyState: {
-      alignItems: "center",
-      paddingVertical: 60,
-    },
+    emptyState: { alignItems: "center", paddingVertical: 60 },
     emptyTitle: {
       fontSize: 18,
       fontFamily: FONTS.semiBold,
@@ -306,68 +421,19 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       textAlign: "center",
       paddingHorizontal: 32,
     },
-    postsSection: {
-      paddingHorizontal: 16,
-    },
+    postsSection: { paddingHorizontal: 16 },
     postsTitle: {
       fontSize: 16,
       fontFamily: FONTS.bold,
       color: theme.foreground.white,
       marginBottom: 12,
     },
-    postsGrid: {
-      flexDirection: "row",
-      flexWrap: "wrap",
-      gap: 4,
-    },
+    postsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 4 },
     gridItem: {
       width: "32%",
       aspectRatio: 1,
       borderRadius: 8,
       overflow: "hidden",
     },
-    gridImage: {
-      width: "100%",
-      height: "100%",
-    },
-    postItem: {
-      marginHorizontal: 16,
-      marginBottom: 16,
-      borderRadius: 12,
-      overflow: "hidden",
-      height: 300,
-    },
-    postImage: {
-      width: "100%",
-      height: "100%",
-    },
-    postOverlay: {
-      position: "absolute",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: "rgba(0, 0, 0, 0.3)",
-      justifyContent: "flex-end",
-      padding: 16,
-    },
-    postStats: {
-      flexDirection: "row",
-      gap: 16,
-    },
-    stat: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 8,
-      backgroundColor: "rgba(0, 0, 0, 0.6)",
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-      borderRadius: 8,
-    },
-    statText: {
-      fontSize: 14,
-      fontFamily: FONTS.semiBold,
-      color: theme.foreground.white,
-    },
+    gridImage: { width: "100%", height: "100%" },
   });
-

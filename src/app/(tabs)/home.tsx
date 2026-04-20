@@ -17,6 +17,7 @@ import {
 } from "react-native";
 import { FONTS } from "../../constants/fonts";
 import { Theme } from "../../constants/themes";
+import { useAuth } from "../../contexts/AuthContext";
 import { useHealth } from "../../contexts/HealthContext";
 import { useNutrition } from "../../contexts/NutritionContext";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -29,6 +30,7 @@ const DAY_LABELS = ["L", "M", "M", "J", "V", "S", "D"];
 const DAY_LABELS_SHORT = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
 const OBJECTIVE_KEY = "@hylift_home_weekly_objective";
 const OBJECTIVE_DAYS_KEY = "@hylift_home_weekly_objective_days";
+const DISPLAY_NAME_KEY = "@hylift_display_name";
 
 type DayStatus = "completed" | "missed" | "pending" | "off";
 
@@ -55,10 +57,12 @@ export default function Home() {
   const { t } = useTranslation();
   const { goals, todaySummary, weekSummaries } = useNutrition();
   const { todaySteps, todayCaloriesBurned } = useHealth();
+  const { user } = useAuth();
   const genderedImages = useGenderedImages();
   const [selectedBodyFocus, setSelectedBodyFocus] = useState(0);
   const [weeklyObjective, setWeeklyObjective] = useState(3);
   const [weeklyObjectiveDays, setWeeklyObjectiveDays] = useState<number[]>([]);
+  const [displayName, setDisplayName] = useState("");
 
   const now = new Date();
   const todayDayIndex = (now.getDay() + 6) % 7; // Convert Sun=0 to Mon=0 based
@@ -69,10 +73,12 @@ export default function Home() {
 
       const loadObjective = async () => {
         try {
-          const [savedObjective, savedDays] = await Promise.all([
+          const [savedObjective, savedDays, savedName] = await Promise.all([
             AsyncStorage.getItem(OBJECTIVE_KEY),
             AsyncStorage.getItem(OBJECTIVE_DAYS_KEY),
+            AsyncStorage.getItem(DISPLAY_NAME_KEY),
           ]);
+          if (isMounted && savedName) setDisplayName(savedName);
 
           const parsed = Number(savedObjective);
           if (
@@ -306,6 +312,22 @@ export default function Home() {
             </Pressable>
           </View>
         </View>
+
+        {/* ── Greeting ────────────────────────────────────────── */}
+        <Text style={styles.greeting}>
+          {(() => {
+            const name =
+              displayName ||
+              (user?.user_metadata as { username?: string } | undefined)?.username ||
+              user?.email?.split("@")[0] ||
+              "";
+            const greeting =
+              now.getHours() < 18
+                ? t("home.goodMorning", "Good morning")
+                : t("home.goodEvening", "Good evening");
+            return name ? `${greeting}, ${name}` : greeting;
+          })()}
+        </Text>
 
         {/* ── Calorie Summary (Donut + Stats) ─────────────────────── */}
 {/* ── Résumé Santé (Bento Grid) ───────────────────────── */}
@@ -1166,6 +1188,13 @@ function createStyles(theme: Theme) {
     sectionTitle: {
       fontFamily: FONTS.bold,
       fontSize: 18,
+      color: theme.foreground.white,
+      paddingHorizontal: 20,
+      marginBottom: 14,
+    },
+    greeting: {
+      fontFamily: FONTS.bold,
+      fontSize: 22,
       color: theme.foreground.white,
       paddingHorizontal: 20,
       marginBottom: 14,

@@ -370,6 +370,8 @@
   "home": {
     "dashboard": "Dashboard",
     "hello": "Hello",
+    "goodMorning": "Good morning",
+    "goodEvening": "Good evening",
     "letsGetMoving": "Let's get moving today!",
     "healthSummary": "Health Summary",
     "workouts": "Workouts",
