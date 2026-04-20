@@ -22,6 +22,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import ConfirmationModal from "./ConfirmationModal";
 import { Theme } from "../../constants/themes";
 import {
   ExerciseSet,
@@ -137,23 +138,17 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
     const [summaryVisible, setSummaryVisible] = useState(false);
     const [summary, setSummary] = useState<WorkoutSummary | null>(null);
 
+    const [discardModalVisible, setDiscardModalVisible] = useState(false);
+
     const handleDiscard = useCallback(() => {
-      Alert.alert(
-        t("workout.discardWorkout"),
-        t("workout.discardWorkoutConfirm"),
-        [
-          { text: t("common.cancel"), style: "cancel" },
-          {
-            text: t("workout.discard"),
-            style: "destructive",
-            onPress: () => {
-              discardWorkout();
-              setIsExpanded(false);
-            },
-          },
-        ],
-      );
-    }, [discardWorkout, setIsExpanded, t]);
+      setDiscardModalVisible(true);
+    }, []);
+
+    const handleConfirmDiscard = useCallback(() => {
+      setDiscardModalVisible(false);
+      discardWorkout();
+      setIsExpanded(false);
+    }, [discardWorkout, setIsExpanded]);
 
     const handleSave = useCallback(() => {
       setTempWorkoutName(`Workout ${formatDisplayDate(new Date())}`);
@@ -725,6 +720,19 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
             </View>
           </Pressable>
         </Modal>
+
+        {/* ── Discard confirmation modal ───────────────────────────────── */}
+        <ConfirmationModal
+          visible={discardModalVisible}
+          variant="destructive"
+          icon="trash"
+          title={t("workout.discardWorkout")}
+          message={t("workout.discardWorkoutConfirm")}
+          confirmLabel={t("workout.discard")}
+          cancelLabel={t("common.cancel")}
+          onCancel={() => setDiscardModalVisible(false)}
+          onConfirm={handleConfirmDiscard}
+        />
 
         {/* ── Exercise options modal ─────────────────────────────────────── */}
         <ExerciseMenu

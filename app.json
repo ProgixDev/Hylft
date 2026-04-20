@@ -12,10 +12,7 @@
     },
     "scheme": "hylift",
     "userInterfaceStyle": "automatic",
-    "platforms": [
-      "ios",
-      "android"
-    ],
+    "platforms": ["ios", "android"],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true

@@ -20,7 +20,8 @@ import { translateExerciseName } from "../../utils/exerciseTranslator";
 import { Theme } from "../../constants/themes";
 import { useCreateRoutine } from "../../contexts/CreateRoutineContext";
 import { useTheme } from "../../contexts/ThemeContext";
-import { addRoutine, RoutineExercise, SetTarget } from "../../data/mockData";
+import { RoutineExercise, SetTarget } from "../../data/mockData";
+import { api } from "../../services/api";
 
 import { FONTS } from "../../constants/fonts";
 
@@ -73,7 +74,7 @@ export default function CreateRoutineScreen() {
     prevExCount.current = draft.exercises.length;
   }, [draft.exercises.length]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!draft.name.trim()) {
       Alert.alert(t("createRoutine.missingName"), t("createRoutine.pleaseEnterRoutineName"));
       return;
@@ -90,17 +91,22 @@ export default function CreateRoutineScreen() {
       0,
     );
 
-    addRoutine({
-      id: `routine-${Date.now()}`,
-      userId: "1",
-      name: draft.name.trim(),
-      description: draft.description.trim(),
-      exercises: draft.exercises,
-      estimatedDuration: Math.round(estimatedDuration),
-      targetMuscles: draft.targetMuscles,
-      difficulty: draft.difficulty,
-      timesCompleted: 0,
-    });
+    try {
+      await api.createRoutine({
+        name: draft.name.trim(),
+        description: draft.description.trim(),
+        difficulty: draft.difficulty,
+        targetMuscles: draft.targetMuscles,
+        exercises: draft.exercises,
+        estimatedDuration: Math.round(estimatedDuration),
+      });
+    } catch (error: any) {
+      Alert.alert(
+        t("createRoutine.missingName"),
+        error?.message || "Failed to save routine",
+      );
+      return;
+    }
 
     clearCreation();
     Alert.alert(
@@ -383,6 +389,148 @@ function ExerciseSummaryCard({
   );
 }
 
+// ─── Rest time picker widget ───────────────────────────────────────────
+const REST_PRESETS = [30, 45, 60, 90, 120, 180];
+const REST_STEP = 15;
+const REST_MIN = 0;
+const REST_MAX = 600;
+
+function formatRest(seconds: number): string {
+  if (seconds <= 0) return "0s";
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  if (m === 0) return `${s}s`;
+  if (s === 0) return `${m}m`;
+  return `${m}m ${s}s`;
+}
+
+interface RestPickerProps {
+  value: number;
+  onChange: (value: number) => void;
+  theme: Theme;
+}
+
+function RestTimePicker({ value, onChange, theme }: RestPickerProps) {
+  const clamp = (n: number) => Math.max(REST_MIN, Math.min(REST_MAX, n));
+  const dec = () => onChange(clamp(value - REST_STEP));
+  const inc = () => onChange(clamp(value + REST_STEP));
+  const s = restPickerStyles(theme);
+
+  return (
+    <View style={s.wrap}>
+      <View style={s.stepperRow}>
+        <Pressable
+          onPress={dec}
+          hitSlop={8}
+          style={({ pressed }) => [s.stepBtn, pressed && { opacity: 0.6 }]}
+        >
+          <Ionicons name="remove" size={22} color={theme.primary.main} />
+        </Pressable>
+
+        <View style={s.display}>
+          <Text style={s.displayValue}>{formatRest(value)}</Text>
+          <Text style={s.displayHint}>−/+ {REST_STEP}s</Text>
+        </View>
+
+        <Pressable
+          onPress={inc}
+          hitSlop={8}
+          style={({ pressed }) => [s.stepBtn, pressed && { opacity: 0.6 }]}
+        >
+          <Ionicons name="add" size={22} color={theme.primary.main} />
+        </Pressable>
+      </View>
+
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={s.presetsRow}
+      >
+        {REST_PRESETS.map((p) => {
+          const active = p === value;
+          return (
+            <Pressable
+              key={p}
+              onPress={() => onChange(p)}
+              style={({ pressed }) => [
+                s.preset,
+                active && s.presetActive,
+                pressed && { opacity: 0.8 },
+              ]}
+            >
+              <Text style={[s.presetText, active && s.presetTextActive]}>
+                {formatRest(p)}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+    </View>
+  );
+}
+
+const restPickerStyles = (theme: Theme) =>
+  StyleSheet.create({
+    wrap: {
+      gap: 12,
+    },
+    stepperRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      backgroundColor: theme.background.accent,
+      borderRadius: 16,
+      padding: 8,
+    },
+    stepBtn: {
+      width: 44,
+      height: 44,
+      borderRadius: 12,
+      backgroundColor: theme.primary.main + "18",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    display: {
+      flex: 1,
+      alignItems: "center",
+    },
+    displayValue: {
+      fontFamily: FONTS.bold,
+      fontSize: 22,
+      color: theme.foreground.white,
+    },
+    displayHint: {
+      fontFamily: FONTS.regular,
+      fontSize: 11,
+      color: theme.foreground.gray,
+      marginTop: 2,
+    },
+    presetsRow: {
+      gap: 8,
+      paddingHorizontal: 2,
+    },
+    preset: {
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      borderRadius: 18,
+      backgroundColor: theme.background.accent,
+      borderWidth: 1,
+      borderColor: "transparent",
+    },
+    presetActive: {
+      backgroundColor: theme.primary.main + "20",
+      borderColor: theme.primary.main,
+    },
+    presetText: {
+      fontFamily: FONTS.semiBold,
+      fontSize: 13,
+      color: theme.foreground.gray,
+    },
+    presetTextActive: {
+      color: theme.primary.main,
+    },
+  });
+
 // ─── Focused per-exercise editor (modal sheet) ─────────────────────────
 interface EditorProps {
   visible: boolean;
@@ -534,36 +682,34 @@ function ExerciseEditorSheet({
             </View>
           </View>
 
-          {/* Rest + Training time */}
-          <View style={styles.editorRow}>
-            <View style={styles.editorBlock}>
-              <Text style={styles.editorBlockLabel}>
-                {t("createRoutine.rest")} (s)
-              </Text>
-              <TextInput
-                style={styles.editorBigInput}
-                keyboardType="numeric"
-                value={String(exercise.restTime)}
-                onChangeText={(v) => onUpdate({ restTime: parseInt(v) || 0 })}
-                maxLength={4}
-              />
-            </View>
-            <View style={styles.editorBlock}>
-              <Text style={styles.editorBlockLabel}>
-                {t("createRoutine.trainingTime")} (s)
-              </Text>
-              <TextInput
-                style={styles.editorBigInput}
-                keyboardType="numeric"
-                value={exercise.trainingTime ? String(exercise.trainingTime) : ""}
-                onChangeText={(v) =>
-                  onUpdate({ trainingTime: parseInt(v) || 0 })
-                }
-                placeholder="0"
-                placeholderTextColor={theme.foreground.gray + "60"}
-                maxLength={4}
-              />
-            </View>
+          {/* Rest picker */}
+          <View style={styles.editorBlock}>
+            <Text style={styles.editorBlockLabel}>
+              {t("createRoutine.rest")}
+            </Text>
+            <RestTimePicker
+              value={exercise.restTime}
+              onChange={(v) => onUpdate({ restTime: v })}
+              theme={theme}
+            />
+          </View>
+
+          {/* Training time */}
+          <View style={styles.editorBlock}>
+            <Text style={styles.editorBlockLabel}>
+              {t("createRoutine.trainingTime")} (s)
+            </Text>
+            <TextInput
+              style={styles.editorBigInput}
+              keyboardType="numeric"
+              value={exercise.trainingTime ? String(exercise.trainingTime) : ""}
+              onChangeText={(v) =>
+                onUpdate({ trainingTime: parseInt(v) || 0 })
+              }
+              placeholder="0"
+              placeholderTextColor={theme.foreground.gray + "60"}
+              maxLength={4}
+            />
           </View>
 
           {/* Per-set targets (collapsed by default) */}

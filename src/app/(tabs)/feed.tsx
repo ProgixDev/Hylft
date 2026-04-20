@@ -14,6 +14,100 @@ import {
   View,
 } from "react-native";
 import Post, { PostData } from "../../components/ui/Post";
+
+const MOCK_POSTS: PostData[] = [
+  {
+    id: "mock-1",
+    user: {
+      id: "u-mock-1",
+      username: "alex_lifts",
+      avatar: "https://i.pravatar.cc/150?img=12",
+    },
+    images: [
+      "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800",
+    ],
+    likes: 1284,
+    caption: "New bench PR today! 💪 Hard work pays off.",
+    comments: 47,
+    timestamp: "2h ago",
+    isLiked: false,
+    weight: "225 lb",
+    sets: "5",
+    reps: "5",
+  },
+  {
+    id: "mock-2",
+    user: {
+      id: "u-mock-2",
+      username: "sarah_fit",
+      avatar: "https://i.pravatar.cc/150?img=47",
+    },
+    images: [
+      "https://images.unsplash.com/photo-1518611012118-696072aa579a?w=800",
+      "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=800",
+    ],
+    likes: 2841,
+    caption: "Leg day done 🔥 Who's training with me tomorrow?",
+    comments: 132,
+    timestamp: "5h ago",
+    isLiked: true,
+    weight: "185 lb",
+    sets: "4",
+    reps: "8",
+  },
+  {
+    id: "mock-3",
+    user: {
+      id: "u-mock-3",
+      username: "mike_beast",
+      avatar: "https://i.pravatar.cc/150?img=33",
+    },
+    images: [],
+    likes: 421,
+    caption: "Full body workout complete. Feeling unstoppable.",
+    comments: 18,
+    timestamp: "8h ago",
+    isLiked: false,
+    duration: "62 min",
+  },
+  {
+    id: "mock-4",
+    user: {
+      id: "u-mock-4",
+      username: "emma_strong",
+      avatar: "https://i.pravatar.cc/150?img=24",
+    },
+    images: [
+      "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800",
+    ],
+    likes: 892,
+    caption: "Deadlift day! New personal best 🏆",
+    comments: 64,
+    timestamp: "1d ago",
+    isLiked: false,
+    weight: "315 lb",
+    sets: "3",
+    reps: "3",
+  },
+  {
+    id: "mock-5",
+    user: {
+      id: "u-mock-5",
+      username: "chris_gains",
+      avatar: "https://i.pravatar.cc/150?img=58",
+    },
+    images: [
+      "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=800",
+      "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=800",
+      "https://images.unsplash.com/photo-1599058917212-d750089bc07e?w=800",
+    ],
+    likes: 3567,
+    caption: "Morning pump hits different ☀️ Let's get it!",
+    comments: 201,
+    timestamp: "2d ago",
+    isLiked: true,
+  },
+];
 import { FONTS } from "../../constants/fonts";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -196,7 +290,7 @@ export default function Feed() {
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
       <FlatList
-        data={posts}
+        data={[...MOCK_POSTS, ...posts]}
         renderItem={renderPost}
         keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}

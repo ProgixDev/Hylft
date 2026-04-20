@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Session, User } from "@supabase/supabase-js";
 import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
-import { Session, User } from "@supabase/supabase-js";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "../services/supabase";
 
@@ -31,7 +31,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Keep this scoped to Supabase auth keys so we do not wipe unrelated app data.
     const keys = await AsyncStorage.getAllKeys();
     const supabaseAuthKeys = keys.filter(
-      (key) => key.startsWith("sb-") && key.includes("-auth-token")
+      (key) => key.startsWith("sb-") && key.includes("-auth-token"),
     );
     if (supabaseAuthKeys.length > 0) {
       await AsyncStorage.multiRemove(supabaseAuthKeys);

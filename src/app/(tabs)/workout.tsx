@@ -20,12 +20,40 @@ import { useActiveWorkout } from "../../contexts/ActiveWorkoutContext";
 import { useCreateRoutine } from "../../contexts/CreateRoutineContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import {
-  getRoutinesByUserId,
   getWorkoutsByUserId,
   Routine,
   Workout as WorkoutData,
 } from "../../data/mockData";
 import { useGenderedImages } from "../../hooks/useGenderedImages";
+import { api } from "../../services/api";
+
+type ApiRoutine = {
+  id: string;
+  user_id: string;
+  name: string;
+  description?: string | null;
+  exercises?: any[] | null;
+  estimated_duration?: number | null;
+  target_muscles?: string[] | null;
+  difficulty: "beginner" | "intermediate" | "advanced";
+  last_used?: string | null;
+  times_completed?: number | null;
+};
+
+function mapRoutine(r: ApiRoutine): Routine {
+  return {
+    id: r.id,
+    userId: r.user_id,
+    name: r.name,
+    description: r.description ?? "",
+    exercises: (r.exercises ?? []) as any,
+    estimatedDuration: r.estimated_duration ?? 0,
+    targetMuscles: r.target_muscles ?? [],
+    difficulty: r.difficulty,
+    lastUsed: r.last_used ?? undefined,
+    timesCompleted: r.times_completed ?? 0,
+  };
+}
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const ROUTINE_CARD_W = SCREEN_WIDTH * 0.65;
@@ -61,9 +89,14 @@ export default function Workout() {
   const { initCreation } = useCreateRoutine();
   const scrollRef = useRef<ScrollView | null>(null);
 
-  const loadData = useCallback(() => {
+  const loadData = useCallback(async () => {
     setWorkouts(getWorkoutsByUserId("1"));
-    setRoutines(getRoutinesByUserId("1"));
+    try {
+      const res = (await api.getRoutines()) as ApiRoutine[];
+      setRoutines((res ?? []).map(mapRoutine));
+    } catch (error) {
+      console.warn("[Workout] load routines failed:", error);
+    }
   }, []);
 
   useEffect(() => {

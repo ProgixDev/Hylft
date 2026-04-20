@@ -5,7 +5,6 @@ import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  Alert,
   BackHandler,
   Dimensions,
   Platform,
@@ -16,6 +15,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import ConfirmationModal from "../../components/ui/ConfirmationModal";
 import { FONTS } from "../../constants/fonts";
 import { Theme } from "../../constants/themes";
 import { useActiveWorkout } from "../../contexts/ActiveWorkoutContext";
@@ -67,23 +67,17 @@ export default function WorkoutPlayerScreen() {
   ]);
 
   // ── Exit confirmation handler (hardware + header back) ──────────────
+  const [exitModalVisible, setExitModalVisible] = useState(false);
+
   const confirmExit = useCallback(() => {
-    Alert.alert(
-      t("workoutPlayer.endWorkout"),
-      t("workoutPlayer.endWorkoutConfirm"),
-      [
-        { text: t("workoutPlayer.cancel"), style: "cancel" },
-        {
-          text: t("workoutPlayer.endAndSave"),
-          style: "destructive",
-          onPress: async () => {
-            await endGuidedRoutine(true);
-            router.back();
-          },
-        },
-      ],
-    );
-  }, [endGuidedRoutine, router, t]);
+    setExitModalVisible(true);
+  }, []);
+
+  const handleEndConfirm = useCallback(async () => {
+    setExitModalVisible(false);
+    await endGuidedRoutine(true);
+    router.back();
+  }, [endGuidedRoutine, router]);
 
   useEffect(() => {
     const sub = BackHandler.addEventListener("hardwareBackPress", () => {
@@ -152,6 +146,18 @@ export default function WorkoutPlayerScreen() {
           }}
         />
       )}
+
+      <ConfirmationModal
+        visible={exitModalVisible}
+        variant="success"
+        icon="flag"
+        title={t("workoutPlayer.endWorkout")}
+        message={t("workoutPlayer.endWorkoutConfirm")}
+        confirmLabel={t("workoutPlayer.endAndSave")}
+        cancelLabel={t("workoutPlayer.cancel")}
+        onCancel={() => setExitModalVisible(false)}
+        onConfirm={handleEndConfirm}
+      />
     </View>
   );
 }

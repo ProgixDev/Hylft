@@ -11,7 +11,8 @@
     "continue": "Continue",
     "confirm": "Confirm",
     "or": "or",
-    "seeAll": "See All"
+    "seeAll": "See All",
+    "all": "All"
   },
   "auth": {
     "signUpToGetStarted": "Sign up to get started",
@@ -676,7 +677,10 @@
     "by": "by",
     "perWeek": "Per Week",
     "totalSets": "Total Sets",
-    "lastUsed": "Last used"
+    "lastUsed": "Last used",
+    "routinesLabel": "Routines",
+    "noRoutinesFound": "No routines match your filters",
+    "searchRoutines": "Search routines"
   },
   "exercisePicker": {
     "searchExercise": "Search exercise",

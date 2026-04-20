@@ -11,7 +11,8 @@
     "continue": "Continuer",
     "confirm": "Confirmer",
     "or": "ou",
-    "seeAll": "Voir tout"
+    "seeAll": "Voir tout",
+    "all": "Tout"
   },
   "auth": {
     "signUpToGetStarted": "Inscrivez-vous pour commencer",
@@ -676,7 +677,10 @@
     "by": "par",
     "perWeek": "Par semaine",
     "totalSets": "Séries totales",
-    "lastUsed": "Dernière utilisation"
+    "lastUsed": "Dernière utilisation",
+    "routinesLabel": "Routines",
+    "noRoutinesFound": "Aucune routine ne correspond",
+    "searchRoutines": "Rechercher une routine"
   },
   "exercisePicker": {
     "searchExercise": "Rechercher un exercice",
