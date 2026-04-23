@@ -131,7 +131,7 @@ export default function Feed() {
   const listHeader = (
     <View>
       <View style={styles.header}>
-        <Text style={styles.title}>{t("tabs.feed")}</Text>
+        <Text style={styles.title}>{t("feed.title")}</Text>
         <Pressable
           onPress={() => router.navigate("/search" as any)}
           style={({ pressed }) => [

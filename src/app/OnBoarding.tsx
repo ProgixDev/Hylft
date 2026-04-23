@@ -90,7 +90,7 @@ export default function OnBoarding() {
 
   const handleFinish = async () => {
     await setOnboardingCompleted();
-    router.replace("/get-started/username");
+    router.replace("/auth");
   };
 
   const handleNext = () => {

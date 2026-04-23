@@ -1,21 +1,21 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
-import {
-  ActivityIndicator,
-  FlatList,
-  Image,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
 import { useTranslation } from "react-i18next";
+import {
+    ActivityIndicator,
+    FlatList,
+    Image,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from "react-native";
 import ImageCarousel from "../../components/ui/ImageCarousel";
+import type { PostData } from "../../components/ui/Post";
 import { useTheme } from "../../contexts/ThemeContext";
 import { api } from "../../services/api";
 import { mapPostToUi, type BackendPost } from "../../services/feedMappers";
-import type { PostData } from "../../components/ui/Post";
 
 import { FONTS } from "../../constants/fonts";
 
@@ -173,7 +173,9 @@ export default function UserPosts() {
 
       {/* Likes and Caption */}
       <View style={styles.contentContainer}>
-        <Text style={styles.likes}>{item.likes.toLocaleString()} {t("post.likes")}</Text>
+        <Text style={styles.likes}>
+          {item.likes.toLocaleString()} {t("post.likes")}
+        </Text>
         <View style={styles.captionContainer}>
           <Text style={styles.captionUsername}>{item.user.username}</Text>
           <Text style={styles.caption}> {item.caption}</Text>
@@ -183,7 +185,10 @@ export default function UserPosts() {
             onPress={() => router.navigate(`/comments/${item.id}` as any)}
           >
             <Text style={styles.viewComments}>
-              {t("post.viewAllComments").replace("{count}", String(item.comments))}
+              {t("post.viewAllComments").replace(
+                "{count}",
+                String(item.comments),
+              )}
             </Text>
           </TouchableOpacity>
         )}

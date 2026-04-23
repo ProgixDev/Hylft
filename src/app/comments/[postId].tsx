@@ -1,25 +1,25 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
-import {
-  ActivityIndicator,
-  FlatList,
-  Image,
-  Keyboard,
-  KeyboardAvoidingView,
-  Platform,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
 import { useTranslation } from "react-i18next";
-import { useTheme } from "../../contexts/ThemeContext";
+import {
+    ActivityIndicator,
+    FlatList,
+    Image,
+    Keyboard,
+    KeyboardAvoidingView,
+    Platform,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+} from "react-native";
+import type { PostData } from "../../components/ui/Post";
 import { FONTS } from "../../constants/fonts";
+import { useTheme } from "../../contexts/ThemeContext";
 import { api } from "../../services/api";
 import { mapPostToUi, type BackendPost } from "../../services/feedMappers";
-import type { PostData } from "../../components/ui/Post";
 
 type BackendAuthor = {
   id: string;
@@ -102,7 +102,9 @@ export default function CommentsScreen() {
   const [commentText, setCommentText] = useState("");
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
-  const [expandedReplies, setExpandedReplies] = useState<Set<string>>(new Set());
+  const [expandedReplies, setExpandedReplies] = useState<Set<string>>(
+    new Set(),
+  );
 
   const INITIAL_REPLIES_TO_SHOW = 0;
 
@@ -241,7 +243,10 @@ export default function CommentsScreen() {
         onPress={() => router.navigate(`/user/${reply.user.id}` as any)}
       >
         {reply.user.avatar ? (
-          <Image source={{ uri: reply.user.avatar }} style={styles.replyAvatar} />
+          <Image
+            source={{ uri: reply.user.avatar }}
+            style={styles.replyAvatar}
+          />
         ) : (
           <View style={styles.replyAvatarPlaceholder}>
             <Ionicons name="person" size={14} color={theme.foreground.gray} />
@@ -405,8 +410,15 @@ export default function CommentsScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={theme.foreground.white} />
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={styles.backButton}
+        >
+          <Ionicons
+            name="arrow-back"
+            size={24}
+            color={theme.foreground.white}
+          />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t("comments.title")}</Text>
         <View style={styles.headerRight} />
@@ -431,7 +443,9 @@ export default function CommentsScreen() {
         keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
       >
         {loading ? (
-          <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+          <View
+            style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+          >
             <ActivityIndicator color={theme.primary.main} />
           </View>
         ) : (
@@ -473,9 +487,7 @@ export default function CommentsScreen() {
             <TextInput
               style={styles.input}
               placeholder={
-                replyingTo
-                  ? t("comments.addReply")
-                  : t("comments.addComment")
+                replyingTo ? t("comments.addReply") : t("comments.addComment")
               }
               placeholderTextColor={theme.foreground.gray}
               value={commentText}
@@ -602,7 +614,11 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       color: theme.foreground.white,
       marginBottom: 2,
     },
-    commentText: { fontSize: 14, color: theme.foreground.white, lineHeight: 18 },
+    commentText: {
+      fontSize: 14,
+      color: theme.foreground.white,
+      lineHeight: 18,
+    },
     commentMeta: { flexDirection: "row", paddingHorizontal: 14, gap: 12 },
     timestamp: { fontSize: 12, color: theme.foreground.gray },
     likes: {

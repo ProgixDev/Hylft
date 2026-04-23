@@ -128,27 +128,14 @@ export class SocialService {
   }
 
   async isFollowing(followerId: string, followeeId: string) {
-    const [followRes, requestRes] = await Promise.all([
-      this.supabase
-        .from('follows')
-        .select('follower_id')
-        .eq('follower_id', followerId)
-        .eq('followee_id', followeeId)
-        .maybeSingle(),
-      this.supabase
-        .from('follow_requests')
-        .select('requester_id')
-        .eq('requester_id', followerId)
-        .eq('target_id', followeeId)
-        .eq('status', 'pending')
-        .maybeSingle(),
-    ]);
-    if (followRes.error) throw followRes.error;
-    if (requestRes.error) throw requestRes.error;
-    return {
-      is_following: !!followRes.data,
-      has_pending_request: !!requestRes.data,
-    };
+    const { data, error } = await this.supabase
+      .from('follows')
+      .select('follower_id')
+      .eq('follower_id', followerId)
+      .eq('followee_id', followeeId)
+      .maybeSingle();
+    if (error) throw error;
+    return { is_following: !!data };
   }
 
   // ── follow_requests ────────────────────────────────────────────────────

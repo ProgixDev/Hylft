@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import {
   Image,
   ImageSourcePropType,
@@ -8,7 +9,6 @@ import {
   Text,
   View,
 } from "react-native";
-import { useTranslation } from "react-i18next";
 import { FONTS } from "../../constants/fonts";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -26,7 +26,6 @@ export interface ProfileHeaderProps {
   stats: { posts: number; followers: number; likes: number };
   mode: ProfileHeaderMode;
   isFollowing?: boolean;
-  followPending?: boolean;
   locale?: string;
   onSettingsPress?: () => void;
   onAvatarPress?: () => void;
@@ -53,7 +52,6 @@ export default function ProfileHeader(props: ProfileHeaderProps) {
     stats,
     mode,
     isFollowing,
-    followPending,
     locale,
     onSettingsPress,
     onAvatarPress,
@@ -69,22 +67,19 @@ export default function ProfileHeader(props: ProfileHeaderProps) {
   const primaryLabel =
     mode === "self"
       ? "Modifier le profil"
-      : followPending
-        ? "Requested"
-        : isFollowing
-          ? "Following"
-          : "Follow";
+      : isFollowing
+        ? "Abonné"
+        : "Suivre";
   const primaryIcon: keyof typeof Ionicons.glyphMap | null =
     mode === "self"
       ? "create-outline"
-      : isFollowing || followPending
+      : isFollowing
         ? "checkmark"
         : "add";
-  const secondaryLabel = mode === "self" ? "Partager" : "Chat";
-  const secondaryIcon: keyof typeof Ionicons.glyphMap =
-    mode === "self" ? "share-social-outline" : "chatbubble-outline";
+  const secondaryLabel = "Partager";
+  const secondaryIcon: keyof typeof Ionicons.glyphMap = "share-social-outline";
 
-  const primaryFilled = !(mode === "public" && (isFollowing || followPending));
+  const primaryFilled = !(mode === "public" && isFollowing);
 
   return (
     <View style={styles.wrapper}>
@@ -117,8 +112,8 @@ export default function ProfileHeader(props: ProfileHeaderProps) {
           </View>
         )}
 
-        <View style={styles.coverOverlay}>
-          {onSettingsPress ? (
+        {onSettingsPress ? (
+          <View style={styles.coverOverlay}>
             <Pressable
               hitSlop={10}
               onPress={onSettingsPress}
@@ -126,10 +121,8 @@ export default function ProfileHeader(props: ProfileHeaderProps) {
             >
               <Ionicons name="settings-outline" size={18} color="#fff" />
             </Pressable>
-          ) : (
-            <View style={styles.cornerBtn} />
-          )}
-        </View>
+          </View>
+        ) : null}
 
         <View style={styles.avatarFrame} pointerEvents="box-none">
           <Pressable
@@ -239,15 +232,17 @@ export default function ProfileHeader(props: ProfileHeaderProps) {
               />
             ) : null}
           </Pressable>
-          <Pressable onPress={onSecondaryPress} style={styles.secondaryBtn}>
-            <Text style={styles.secondaryBtnText}>{secondaryLabel}</Text>
-            <Ionicons
-              name={secondaryIcon}
-              size={16}
-              color={theme.foreground.white}
-              style={{ marginLeft: 6 }}
-            />
-          </Pressable>
+          {mode === "self" ? (
+            <Pressable onPress={onSecondaryPress} style={styles.secondaryBtn}>
+              <Text style={styles.secondaryBtnText}>{secondaryLabel}</Text>
+              <Ionicons
+                name={secondaryIcon}
+                size={16}
+                color={theme.foreground.white}
+                style={{ marginLeft: 6 }}
+              />
+            </Pressable>
+          ) : null}
         </View>
       </View>
     </View>

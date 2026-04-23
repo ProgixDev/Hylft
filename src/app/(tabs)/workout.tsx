@@ -136,7 +136,7 @@ export default function Workout() {
       {/* Header */}
       <AnimatedSection delay={0}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>WORKOUT</Text>
+        <Text style={styles.headerTitle}>{t("workout.title")}</Text>
       </View>
       </AnimatedSection>
 

@@ -231,6 +231,8 @@ export default function Home() {
 
   const challengeRoutines = adminRoutines.challenge ?? {};
   const bodyFocusRoutines = adminRoutines.body_focus ?? {};
+  const justForYouRoutines = adminRoutines.just_for_you ?? {};
+  const stretchWarmUpRoutines = adminRoutines.stretch_warm_up ?? {};
 
   const handleStartRoutine = useCallback(
     (routine?: ApiRoutine) => {
@@ -277,8 +279,7 @@ export default function Home() {
     {
       routine: bodyFocusRoutines[`${selectedBodyFocusKey}:beginner`],
       name: selectedLabel + " " + t("home.beginner"),
-      duration:
-        `${bodyFocusRoutines[`${selectedBodyFocusKey}:beginner`]?.estimated_duration ?? 15} mins`,
+      duration: `${bodyFocusRoutines[`${selectedBodyFocusKey}:beginner`]?.estimated_duration ?? 15} mins`,
       exercises:
         bodyFocusRoutines[`${selectedBodyFocusKey}:beginner`]?.exercises
           ?.length ?? 16,
@@ -291,8 +292,7 @@ export default function Home() {
     {
       routine: bodyFocusRoutines[`${selectedBodyFocusKey}:intermediate`],
       name: selectedLabel + " " + t("home.intermediate"),
-      duration:
-        `${bodyFocusRoutines[`${selectedBodyFocusKey}:intermediate`]?.estimated_duration ?? 24} mins`,
+      duration: `${bodyFocusRoutines[`${selectedBodyFocusKey}:intermediate`]?.estimated_duration ?? 24} mins`,
       exercises:
         bodyFocusRoutines[`${selectedBodyFocusKey}:intermediate`]?.exercises
           ?.length ?? 21,
@@ -305,8 +305,7 @@ export default function Home() {
     {
       routine: bodyFocusRoutines[`${selectedBodyFocusKey}:advanced`],
       name: selectedLabel + " " + t("home.advanced"),
-      duration:
-        `${bodyFocusRoutines[`${selectedBodyFocusKey}:advanced`]?.estimated_duration ?? 27} mins`,
+      duration: `${bodyFocusRoutines[`${selectedBodyFocusKey}:advanced`]?.estimated_duration ?? 27} mins`,
       exercises:
         bodyFocusRoutines[`${selectedBodyFocusKey}:advanced`]?.exercises
           ?.length ?? 21,
@@ -320,29 +319,47 @@ export default function Home() {
 
   const justForYouWorkouts = [
     {
+      routine: justForYouRoutines["killer_chest:intermediate"],
       name: t("home.killerChestRoutine"),
-      duration: "10 min",
-      level: t("home.intermediate"),
+      duration: `${justForYouRoutines["killer_chest:intermediate"]?.estimated_duration ?? 10} min`,
+      level:
+        justForYouRoutines["killer_chest:intermediate"]?.difficulty ===
+        "beginner"
+          ? t("home.beginner")
+          : justForYouRoutines["killer_chest:intermediate"]?.difficulty ===
+              "advanced"
+            ? t("home.advanced")
+            : t("home.intermediate"),
       image: genderedImages.bodyFocus[0],
     },
     {
+      routine: justForYouRoutines["quick_abs:beginner"],
       name: t("home.sevenMinAbs"),
-      duration: "7 min",
-      level: t("home.beginner"),
+      duration: `${justForYouRoutines["quick_abs:beginner"]?.estimated_duration ?? 7} min`,
+      level:
+        justForYouRoutines["quick_abs:beginner"]?.difficulty === "advanced"
+          ? t("home.advanced")
+          : justForYouRoutines["quick_abs:beginner"]?.difficulty ===
+              "intermediate"
+            ? t("home.intermediate")
+            : t("home.beginner"),
       image: genderedImages.bodyFocus[1],
     },
   ];
 
   const stretchWorkouts = [
     {
+      routine: stretchWarmUpRoutines["sleepy_time:beginner"],
       name: t("home.sleepyTimeStretching"),
       image: genderedImages.bodyFocus[2],
     },
     {
+      routine: stretchWarmUpRoutines["tabata_4min:intermediate"],
       name: t("home.fourMinTabata"),
       image: genderedImages.bodyFocus[3],
     },
     {
+      routine: stretchWarmUpRoutines["morning_stretch:beginner"],
       name: t("home.morningStretch"),
       image: genderedImages.bodyFocus[0],
     },
@@ -368,7 +385,7 @@ export default function Home() {
         {/* ── Header ──────────────────────────────────────────────── */}
         <AnimatedSection delay={0}>
           <View style={styles.header}>
-            <Text style={styles.headerTitle}>{t("home.homeWorkout")}</Text>
+            <Text style={styles.headerTitle}>{t("tabs.home")}</Text>
             <View style={styles.headerRight}>
               <Pressable
                 style={({ pressed }) => [
@@ -814,14 +831,6 @@ export default function Home() {
         <AnimatedSection delay={1240}>
           <View style={styles.sectionHeaderRow}>
             <Text style={styles.sectionTitle}>{t("home.justForYou")}</Text>
-            <Pressable
-              onPress={() => router.navigate("/search" as any)}
-              style={({ pressed }) => pressed && { opacity: 0.7 }}
-            >
-              <Text style={styles.moreLink}>
-                {t("home.more")} {">"}
-              </Text>
-            </Pressable>
           </View>
         </AnimatedSection>
         <View style={styles.justForYouList}>
@@ -836,7 +845,10 @@ export default function Home() {
                 style={({ pressed }) => [
                   styles.justForYouRow,
                   pressed && { opacity: 0.8 },
+                  !workout.routine && { opacity: 0.6 },
                 ]}
+                onPress={() => handleStartRoutine(workout.routine)}
+                disabled={!workout.routine}
               >
                 <Image
                   source={workout.image}
@@ -849,6 +861,13 @@ export default function Home() {
                     {workout.duration} · {workout.level}
                   </Text>
                 </View>
+
+                <Ionicons
+                  name="flame"
+                  size={22}
+                  color="#FF6B35"
+                  style={{ marginLeft: "auto" }}
+                />
               </Pressable>
             </AnimatedSection>
           ))}
@@ -882,7 +901,10 @@ export default function Home() {
                 style={({ pressed }) => [
                   styles.stretchCard,
                   pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
+                  !workout.routine && { opacity: 0.6 },
                 ]}
+                onPress={() => handleStartRoutine(workout.routine)}
+                disabled={!workout.routine}
               >
                 <Image
                   source={workout.image}
