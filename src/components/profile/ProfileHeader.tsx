@@ -8,6 +8,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import { FONTS } from "../../constants/fonts";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -38,6 +39,7 @@ const AVATAR_SIZE = 88;
 const COVER_HEIGHT = 220;
 
 export default function ProfileHeader(props: ProfileHeaderProps) {
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const styles = createStyles(theme);
 
@@ -93,7 +95,26 @@ export default function ProfileHeader(props: ProfileHeaderProps) {
         {coverSource ? (
           <Image source={coverSource} style={styles.cover} resizeMode="cover" />
         ) : (
-          <View style={[styles.cover, styles.coverPlaceholder]} />
+          <View style={[styles.cover, styles.coverPlaceholder]}>
+            <Ionicons
+              name="image-outline"
+              size={28}
+              color={theme.foreground.gray}
+            />
+            <Text style={styles.coverPlaceholderTitle}>
+              {mode === "self"
+                ? t("profile.coverPlaceholderTitle", "Add a cover photo")
+                : t("profile.coverPlaceholderTitlePublic", "No cover photo")}
+            </Text>
+            {mode === "self" ? (
+              <Text style={styles.coverPlaceholderHint}>
+                {t(
+                  "profile.coverPlaceholderHint",
+                  "Tap to choose a cover picture for your profile",
+                )}
+              </Text>
+            ) : null}
+          </View>
         )}
 
         <View style={styles.coverOverlay}>
@@ -154,7 +175,9 @@ export default function ProfileHeader(props: ProfileHeaderProps) {
 
         {memberSinceIso ? (
           <Text style={styles.memberSince}>
-            Member since {formatMemberSince(memberSinceIso, locale)}
+            {t("profile.memberSince", {
+              date: formatMemberSince(memberSinceIso, locale),
+            })}
           </Text>
         ) : null}
 
@@ -276,14 +299,32 @@ function createStyles(theme: Theme) {
       height: COVER_HEIGHT,
       borderRadius: 24,
     },
-    coverPlaceholder: { backgroundColor: theme.background.darker },
+    coverPlaceholder: {
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: theme.background.darker,
+    },
+    coverPlaceholderTitle: {
+      marginTop: 8,
+      color: theme.foreground.white,
+      fontSize: 16,
+      fontFamily: FONTS.semiBold,
+    },
+    coverPlaceholderHint: {
+      marginTop: 4,
+      color: theme.foreground.gray,
+      fontSize: 12,
+      fontFamily: FONTS.regular,
+      textAlign: "center",
+      paddingHorizontal: 24,
+    },
     coverOverlay: {
       position: "absolute",
       top: 14,
       left: 14,
       right: 14,
       flexDirection: "row",
-      justifyContent: "space-between",
+      justifyContent: "flex-end",
     },
     cornerBtn: {
       width: 38,

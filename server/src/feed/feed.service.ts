@@ -136,37 +136,62 @@ export class FeedService {
     const limit = q.limit ?? 20;
     const scope = q.scope ?? 'timeline';
 
-    let query = this.supabase
-      .from('posts')
-      .select('*')
-      .is('deleted_at', null)
-      .order('created_at', { ascending: false })
-      .limit(limit);
+    const buildBase = () =>
+      this.supabase
+        .from('posts')
+        .select('*')
+        .is('deleted_at', null)
+        .order('created_at', { ascending: false })
+        .limit(limit);
 
-    if (q.cursor) query = query.lt('created_at', q.cursor);
+    let allRows: PostRow[];
+    let allVisible: PostRow[];
 
     if (scope === 'author') {
       if (!q.author_id) return { items: [], next_cursor: null };
-      query = query.eq('author_id', q.author_id);
-      // Visibility filter applied per row below.
+      let query = buildBase().eq('author_id', q.author_id);
+      if (q.cursor) query = query.lt('created_at', q.cursor);
+      const { data, error } = await query;
+      if (error) throw error;
+      allRows = (data ?? []) as PostRow[];
+      allVisible = allRows.filter((p) => this.canView(userId, p, null));
     } else {
-      // Timeline: own posts + every post by someone the viewer follows.
-      // Privacy is still enforced per row via canView() (private posts by
-      // followees are filtered out there).
+      // Timeline: own posts + followees first, fill remaining slots with global public posts.
       const followeeIds = await this.getFolloweeIds(userId);
       const authorIds = Array.from(new Set([userId, ...followeeIds]));
-      query = query.in('author_id', authorIds);
+
+      let followerQ = buildBase().in('author_id', authorIds);
+      if (q.cursor) followerQ = followerQ.lt('created_at', q.cursor);
+      const { data: fData, error: fErr } = await followerQ;
+      if (fErr) throw fErr;
+
+      const followerRows = (fData ?? []) as PostRow[];
+      const followerVisible = followerRows.filter((p) => this.canView(userId, p, null));
+
+      if (followerVisible.length < limit) {
+        // Fill remaining slots with public posts from non-followed users.
+        const remaining = limit - followerVisible.length;
+        const inList = `(${authorIds.join(',')})`;
+        let globalQ = buildBase()
+          .eq('privacy', 'public')
+          .not('author_id', 'in', inList)
+          .limit(remaining);
+        if (q.cursor) globalQ = globalQ.lt('created_at', q.cursor);
+        const { data: gData, error: gErr } = await globalQ;
+        if (gErr) throw gErr;
+        const globalRows = (gData ?? []) as PostRow[];
+        allRows = [...followerRows, ...globalRows];
+        allVisible = [...followerVisible, ...globalRows];
+      } else {
+        allRows = followerRows;
+        allVisible = followerVisible;
+      }
     }
 
-    const { data, error } = await query;
-    if (error) throw error;
-
-    const rows = (data ?? []) as PostRow[];
-    const visible = rows.filter((p) => this.canView(userId, p, /*followees*/ null));
-    const hydrated = await this.hydratePostsBatch(userId, visible);
+    const hydrated = await this.hydratePostsBatch(userId, allVisible);
 
     const next_cursor =
-      hydrated.length === limit ? rows[rows.length - 1].created_at : null;
+      hydrated.length === limit ? allRows[allRows.length - 1].created_at : null;
 
     return { items: hydrated, next_cursor };
   }

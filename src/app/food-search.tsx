@@ -20,6 +20,9 @@ import type { FoodItem, MealType } from "../services/nutritionApi";
 
 const VALID_MEAL_TYPES: MealType[] = ["breakfast", "lunch", "dinner", "snack"];
 
+const AVATAR_COLORS = ["#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#F7DC6F", "#DDA0DD", "#FFB347", "#87CEEB"];
+const getAvatarColor = (name: string) => AVATAR_COLORS[name.charCodeAt(0) % AVATAR_COLORS.length];
+
 // One default search per meal type (avoids rate-limiting)
 const DEFAULT_QUERY: Record<string, Record<MealType, string>> = {
   fr: {
@@ -196,42 +199,48 @@ export default function FoodSearchScreen() {
           numColumns={1}
           keyExtractor={(item, index) => `${item.id}-${index}`}
           contentContainerStyle={styles.listContent}
-          renderItem={({ item }) => (
-            <View style={styles.foodCard}>
-              <View style={styles.foodInfo}>
-                <Text style={styles.foodName} numberOfLines={2}>
-                  {item.name}
-                </Text>
-                <View style={styles.nutritionRow}>
-                  <Text style={styles.caloriesText}>
-                    {Math.round(item.calories)} kcal
+          renderItem={({ item }) => {
+            const isAdded = addedIds.has(item.id);
+            const avatarColor = getAvatarColor(item.name);
+            return (
+              <View style={[styles.foodCard, isAdded && styles.foodCardDone]}>
+                <View style={[styles.foodAvatar, { backgroundColor: avatarColor + "22" }]}>
+                  <Text style={[styles.foodAvatarText, { color: avatarColor }]}>
+                    {item.name.charAt(0).toUpperCase()}
                   </Text>
                 </View>
-                <View style={styles.macrosContainer}>
-                  <View style={styles.macroItem}>
-                    <Text style={styles.macroLabel}>{isFr ? "Prot." : "Protein"}</Text>
-                    <Text style={styles.macroValue}>{item.protein.toFixed(1)}g</Text>
+
+                <View style={styles.foodInfo}>
+                  <Text style={styles.foodName} numberOfLines={2}>
+                    {item.name}
+                  </Text>
+                  <View style={styles.calorieRow}>
+                    <View style={styles.caloriePill}>
+                      <Text style={styles.calorieValue}>{Math.round(item.calories)}</Text>
+                      <Text style={styles.calorieUnit}>kcal</Text>
+                    </View>
+                    <Text style={styles.servingDot}>·</Text>
+                    <Text style={styles.serveNote}>100g</Text>
                   </View>
-                  <View style={styles.macroItem}>
-                    <Text style={styles.macroLabel}>{isFr ? "Gluc." : "Carbs"}</Text>
-                    <Text style={styles.macroValue}>{item.carbs.toFixed(1)}g</Text>
-                  </View>
-                  <View style={styles.macroItem}>
-                    <Text style={styles.macroLabel}>{isFr ? "Lip." : "Fat"}</Text>
-                    <Text style={styles.macroValue}>{item.fat.toFixed(1)}g</Text>
+                  <View style={styles.macroRow}>
+                    <View style={[styles.macroDot, { backgroundColor: "#3B82F6" }]} />
+                    <Text style={styles.macroText}>P {item.protein.toFixed(1)}g</Text>
+                    <View style={[styles.macroDot, { backgroundColor: "#F59E0B" }]} />
+                    <Text style={styles.macroText}>C {item.carbs.toFixed(1)}g</Text>
+                    <View style={[styles.macroDot, { backgroundColor: "#EF4444" }]} />
+                    <Text style={styles.macroText}>F {item.fat.toFixed(1)}g</Text>
                   </View>
                 </View>
-                <Text style={styles.serveNote}>{isFr ? "Pour 100g" : "Per 100g serving"}</Text>
-              </View>
 
-              <Pressable
-                style={[styles.addBtn, addedIds.has(item.id) && styles.addBtnDone]}
-                onPress={() => handleAddFood(item)}
-              >
-                <Ionicons name={addedIds.has(item.id) ? "checkmark" : "add"} size={28} color="#fff" />
-              </Pressable>
-            </View>
-          )}
+                <Pressable
+                  style={[styles.addBtn, isAdded && styles.addBtnDone]}
+                  onPress={() => handleAddFood(item)}
+                >
+                  <Ionicons name={isAdded ? "checkmark" : "add"} size={22} color="#fff" />
+                </Pressable>
+              </View>
+            );
+          }}
         />
       )}
     </View>
@@ -350,70 +359,96 @@ function createStyles(theme: Theme) {
       backgroundColor: theme.background.darker,
       borderWidth: 1,
       borderColor: theme.background.accent,
-      borderRadius: 12,
+      borderRadius: 14,
       padding: 12,
       gap: 12,
-      minHeight: 140,
+    },
+    foodCardDone: {
+      borderColor: "#34C75930",
+      backgroundColor: theme.background.darker,
+    },
+    foodAvatar: {
+      width: 50,
+      height: 50,
+      borderRadius: 12,
+      alignItems: "center",
+      justifyContent: "center",
+      flexShrink: 0,
+    },
+    foodAvatarText: {
+      fontFamily: FONTS.bold,
+      fontSize: 22,
+      fontWeight: "700",
     },
     foodInfo: {
       flex: 1,
-      gap: 6,
+      gap: 5,
     },
     foodName: {
       fontFamily: FONTS.bold,
-      fontSize: 15,
+      fontSize: 14,
       color: theme.foreground.white,
-      fontWeight: "600",
       lineHeight: 18,
     },
-    nutritionRow: {
+    calorieRow: {
       flexDirection: "row",
       alignItems: "center",
+      gap: 6,
     },
-    caloriesText: {
-      fontFamily: FONTS.semiBold,
+    caloriePill: {
+      flexDirection: "row",
+      alignItems: "baseline",
+      gap: 2,
+      backgroundColor: `${theme.primary.main}18`,
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+      borderRadius: 20,
+    },
+    calorieValue: {
+      fontFamily: FONTS.bold,
       fontSize: 13,
       color: theme.primary.main,
       fontWeight: "700",
     },
-    macrosContainer: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      gap: 6,
-    },
-    macroItem: {
-      flex: 1,
-      alignItems: "center",
-      paddingVertical: 4,
-      paddingHorizontal: 6,
-      borderRadius: 6,
-      backgroundColor: `${theme.primary.main}15`,
-    },
-    macroLabel: {
+    calorieUnit: {
       fontFamily: FONTS.regular,
-      fontSize: 9,
-      color: theme.foreground.gray,
-      textTransform: "uppercase",
-    },
-    macroValue: {
-      fontFamily: FONTS.bold,
-      fontSize: 12,
+      fontSize: 10,
       color: theme.primary.main,
-      fontWeight: "700",
+    },
+    servingDot: {
+      fontSize: 12,
+      color: theme.foreground.gray,
     },
     serveNote: {
       fontFamily: FONTS.regular,
-      fontSize: 10,
+      fontSize: 11,
       color: theme.foreground.gray,
-      fontStyle: "italic",
+    },
+    macroRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 5,
+      flexWrap: "wrap",
+    },
+    macroDot: {
+      width: 5,
+      height: 5,
+      borderRadius: 3,
+    },
+    macroText: {
+      fontFamily: FONTS.regular,
+      fontSize: 11,
+      color: theme.foreground.gray,
+      marginRight: 3,
     },
     addBtn: {
-      width: 52,
-      height: 52,
-      borderRadius: 26,
+      width: 40,
+      height: 40,
+      borderRadius: 20,
       backgroundColor: theme.primary.main,
       alignItems: "center",
       justifyContent: "center",
+      flexShrink: 0,
     },
     addBtnDone: {
       backgroundColor: "#34C759",

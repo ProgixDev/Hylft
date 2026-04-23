@@ -53,6 +53,22 @@ type UiComment = {
   replies: UiComment[];
 };
 
+function formatCommentDateHour(input: string, locale: string) {
+  const d = new Date(input);
+  if (Number.isNaN(d.getTime())) return input;
+  const lang = locale.startsWith("fr") ? "fr-FR" : "en-US";
+  const date = d.toLocaleDateString(lang, {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+  const time = d.toLocaleTimeString(lang, {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  return `${date} ${time}`;
+}
+
 function mapComment(c: BackendComment): UiComment {
   return {
     id: c.id,
@@ -71,7 +87,7 @@ function mapComment(c: BackendComment): UiComment {
 }
 
 export default function CommentsScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const router = useRouter();
   const { postId } = useLocalSearchParams<{ postId: string }>();
   const { theme } = useTheme();
@@ -224,10 +240,13 @@ export default function CommentsScreen() {
       <TouchableOpacity
         onPress={() => router.navigate(`/user/${reply.user.id}` as any)}
       >
-        <Image
-          source={{ uri: reply.user.avatar || undefined }}
-          style={styles.replyAvatar}
-        />
+        {reply.user.avatar ? (
+          <Image source={{ uri: reply.user.avatar }} style={styles.replyAvatar} />
+        ) : (
+          <View style={styles.replyAvatarPlaceholder}>
+            <Ionicons name="person" size={14} color={theme.foreground.gray} />
+          </View>
+        )}
       </TouchableOpacity>
 
       <View style={styles.replyContent}>
@@ -237,7 +256,9 @@ export default function CommentsScreen() {
         </View>
 
         <View style={styles.replyMeta}>
-          <Text style={styles.timestamp}>{reply.timestamp}</Text>
+          <Text style={styles.timestamp}>
+            {formatCommentDateHour(reply.timestamp, i18n.language)}
+          </Text>
           {reply.likes > 0 && (
             <Text style={styles.likes}>
               {reply.likes}{" "}
@@ -266,10 +287,13 @@ export default function CommentsScreen() {
         <TouchableOpacity
           onPress={() => router.navigate(`/user/${item.user.id}` as any)}
         >
-          <Image
-            source={{ uri: item.user.avatar || undefined }}
-            style={styles.avatar}
-          />
+          {item.user.avatar ? (
+            <Image source={{ uri: item.user.avatar }} style={styles.avatar} />
+          ) : (
+            <View style={styles.avatarPlaceholder}>
+              <Ionicons name="person" size={16} color={theme.foreground.gray} />
+            </View>
+          )}
         </TouchableOpacity>
 
         <View style={styles.commentContent}>
@@ -279,7 +303,9 @@ export default function CommentsScreen() {
           </View>
 
           <View style={styles.commentMeta}>
-            <Text style={styles.timestamp}>{item.timestamp}</Text>
+            <Text style={styles.timestamp}>
+              {formatCommentDateHour(item.timestamp, i18n.language)}
+            </Text>
             {item.likes > 0 && (
               <Text style={styles.likes}>
                 {item.likes}{" "}
@@ -348,14 +374,26 @@ export default function CommentsScreen() {
       {post && (
         <>
           <View style={styles.postInfo}>
-            <Image
-              source={{ uri: post.user.avatar || undefined }}
-              style={styles.postUserAvatar}
-            />
+            {post.user.avatar ? (
+              <Image
+                source={{ uri: post.user.avatar }}
+                style={styles.postUserAvatar}
+              />
+            ) : (
+              <View style={styles.postUserAvatarPlaceholder}>
+                <Ionicons
+                  name="person"
+                  size={16}
+                  color={theme.foreground.gray}
+                />
+              </View>
+            )}
             <View style={styles.postUserInfo}>
               <Text style={styles.postUsername}>{post.user.username}</Text>
               <Text style={styles.postCaption}>{post.caption}</Text>
-              <Text style={styles.postTimestamp}>{post.timestamp}</Text>
+              <Text style={styles.postTimestamp}>
+                {formatCommentDateHour(post.timestamp, i18n.language)}
+              </Text>
             </View>
           </View>
           <View style={styles.divider} />
@@ -499,6 +537,15 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       marginRight: 12,
       backgroundColor: theme.background.darker,
     },
+    postUserAvatarPlaceholder: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      marginRight: 12,
+      backgroundColor: theme.background.darker,
+      alignItems: "center",
+      justifyContent: "center",
+    },
     postUserInfo: { flex: 1 },
     postUsername: {
       fontSize: 15,
@@ -531,6 +578,15 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       borderRadius: 18,
       marginRight: 12,
       backgroundColor: theme.background.darker,
+    },
+    avatarPlaceholder: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      marginRight: 12,
+      backgroundColor: theme.background.darker,
+      alignItems: "center",
+      justifyContent: "center",
     },
     commentContent: { flex: 1 },
     commentTextContainer: {
@@ -617,6 +673,15 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       borderRadius: 14,
       marginRight: 10,
       backgroundColor: theme.background.darker,
+    },
+    replyAvatarPlaceholder: {
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      marginRight: 10,
+      backgroundColor: theme.background.darker,
+      alignItems: "center",
+      justifyContent: "center",
     },
     replyContent: { flex: 1 },
     replyTextContainer: {

@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   FlatList,
   Image,
   StyleSheet,
@@ -12,70 +13,92 @@ import {
 import { useTranslation } from "react-i18next";
 import ImageCarousel from "../../components/ui/ImageCarousel";
 import { useTheme } from "../../contexts/ThemeContext";
-import { getPostsByUserId, getUserById } from "../../data/mockData";
+import { api } from "../../services/api";
+import { mapPostToUi, type BackendPost } from "../../services/feedMappers";
+import type { PostData } from "../../components/ui/Post";
 
 import { FONTS } from "../../constants/fonts";
-
-interface UserPost {
-  id: string;
-  images: string[];
-  likes: number;
-  comments: number;
-  caption: string;
-  isLiked: boolean;
-  user: {
-    id: string;
-    username: string;
-    avatar: string;
-  };
-}
 
 export default function UserPosts() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { userId, postIndex } = useLocalSearchParams();
+  const { userId, postIndex } = useLocalSearchParams<{
+    userId?: string;
+    postIndex?: string;
+  }>();
   const { theme } = useTheme();
   const styles = createStyles(theme);
-  const flatListRef = useRef<FlatList>(null);
-  const initialIndex = parseInt(postIndex as string) || 0;
+  const flatListRef = useRef<FlatList<PostData>>(null);
+  const initialIndex = Number.parseInt(postIndex ?? "0", 10) || 0;
 
-  // Get posts for this user from centralized data
-  const userPostsData = getPostsByUserId(userId as string);
-  const user = getUserById(userId as string);
+  const [posts, setPosts] = useState<PostData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const [posts, setPosts] = useState<UserPost[]>(
-    userPostsData.map((post) => ({
-      id: post.id,
-      images: post.images,
-      likes: post.likes,
-      comments: post.comments,
-      caption: post.caption,
-      isLiked: false,
-      user: {
-        id: user?.id || "",
-        username: user?.username || "",
-        avatar: user?.avatar || "",
-      },
-    })),
-  );
+  useEffect(() => {
+    const loadPosts = async () => {
+      if (!userId) {
+        setPosts([]);
+        setLoading(false);
+        return;
+      }
 
-  const handleLike = (postId: string) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = (await api.listPosts({
+          scope: "author",
+          author_id: userId,
+          limit: 50,
+        })) as { items: BackendPost[] };
+        setPosts((res.items ?? []).map(mapPostToUi));
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Failed to load posts");
+        setPosts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPosts();
+  }, [userId]);
+
+  const handleLike = async (postId: string) => {
+    let prevState: { isLiked: boolean; likes: number } | null = null;
     setPosts((prevPosts) =>
-      prevPosts.map((post) =>
-        post.id === postId
-          ? {
-              ...post,
-              isLiked: !post.isLiked,
-              likes: post.isLiked ? post.likes - 1 : post.likes + 1,
-            }
-          : post,
-      ),
+      prevPosts.map((post) => {
+        if (post.id !== postId) return post;
+        prevState = { isLiked: post.isLiked, likes: post.likes };
+        return {
+          ...post,
+          isLiked: !post.isLiked,
+          likes: post.isLiked ? Math.max(post.likes - 1, 0) : post.likes + 1,
+        };
+      }),
     );
+
+    try {
+      if (prevState?.isLiked) await api.unlikePost(postId);
+      else await api.likePost(postId);
+    } catch {
+      if (!prevState) return;
+      setPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post.id === postId
+            ? { ...post, isLiked: prevState!.isLiked, likes: prevState!.likes }
+            : post,
+        ),
+      );
+    }
   };
 
   useEffect(() => {
-    // Jump directly to the clicked post without animation
-    if (flatListRef.current && initialIndex > 0) {
+    // Jump directly to the clicked post without animation.
+    if (
+      flatListRef.current &&
+      initialIndex > 0 &&
+      initialIndex < posts.length
+    ) {
       // Use setTimeout to ensure FlatList has rendered
       setTimeout(() => {
         flatListRef.current?.scrollToIndex({
@@ -84,20 +107,26 @@ export default function UserPosts() {
         });
       }, 50);
     }
-  }, [initialIndex]);
+  }, [initialIndex, posts.length]);
 
   const handleUserPress = (userId: string) => {
     router.navigate(`/user/${userId}` as any);
   };
 
-  const renderPost = ({ item }: { item: UserPost }) => (
+  const renderPost = ({ item }: { item: PostData }) => (
     <View style={styles.postContainer}>
       {/* Post Header */}
       <TouchableOpacity
         onPress={() => handleUserPress(item.user.id)}
         style={styles.postHeader}
       >
-        <Image source={{ uri: item.user.avatar }} style={styles.avatar} />
+        {item.user.avatar ? (
+          <Image source={{ uri: item.user.avatar }} style={styles.avatar} />
+        ) : (
+          <View style={styles.avatarPlaceholder}>
+            <Ionicons name="person" size={18} color={theme.foreground.gray} />
+          </View>
+        )}
         <Text style={styles.username}>{item.user.username}</Text>
       </TouchableOpacity>
 
@@ -177,15 +206,31 @@ export default function UserPosts() {
         <View style={styles.spacer} />
       </View>
 
-      {/* Posts List */}
-      <FlatList
-        ref={flatListRef}
-        data={posts}
-        renderItem={renderPost}
-        keyExtractor={(item) => item.id}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.listContent}
-      />
+      {loading ? (
+        <View style={styles.centerState}>
+          <ActivityIndicator color={theme.primary.main} />
+        </View>
+      ) : error ? (
+        <View style={styles.centerState}>
+          <Text style={styles.errorText}>{error}</Text>
+        </View>
+      ) : posts.length === 0 ? (
+        <View style={styles.centerState}>
+          <Text style={styles.emptyText}>{t("user.noPostsYet")}</Text>
+        </View>
+      ) : (
+        <FlatList
+          ref={flatListRef}
+          data={posts}
+          renderItem={renderPost}
+          keyExtractor={(item) => item.id}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.listContent}
+          onScrollToIndexFailed={() => {
+            flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
+          }}
+        />
+      )}
     </View>
   );
 }
@@ -219,6 +264,23 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     listContent: {
       paddingBottom: 24,
     },
+    centerState: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      paddingHorizontal: 24,
+    },
+    emptyText: {
+      color: theme.foreground.gray,
+      fontFamily: FONTS.medium,
+      fontSize: 14,
+    },
+    errorText: {
+      color: theme.foreground.white,
+      fontFamily: FONTS.medium,
+      fontSize: 14,
+      textAlign: "center",
+    },
     postHeader: {
       flexDirection: "row",
       alignItems: "center",
@@ -230,6 +292,15 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       height: 40,
       borderRadius: 20,
       marginRight: 12,
+    },
+    avatarPlaceholder: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      marginRight: 12,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: theme.background.darker,
     },
     username: {
       fontSize: 14,

@@ -636,6 +636,7 @@
     "posts": "Publications",
     "followers": "Abonnés",
     "following": "Abonnements",
+    "memberSince": "Membre depuis {{date}}",
     "workouts": "Entraînements",
     "totalVolume": "Volume total",
     "routines": "Routines",

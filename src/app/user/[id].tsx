@@ -72,13 +72,14 @@ export default function UserProfile() {
       const [profileRes, statsRes, followRes, userStatsRes] = await Promise.all([
         api.getPublicProfile(id) as Promise<PublicProfile>,
         api.getFollowStats(id) as Promise<FollowStats>,
-        api.isFollowing(id) as Promise<{ is_following: boolean }>,
+        api.isFollowing(id) as Promise<{ is_following: boolean; has_pending_request: boolean }>,
         api.getUserStats(id) as Promise<UserStats>,
       ]);
       setProfile(profileRes);
       setStats(statsRes);
       setUserStats(userStatsRes);
       setIsFollowing(!!followRes.is_following);
+      setPendingRequest(!!followRes.has_pending_request);
 
       // Fetch posts only if public or already following.
       if (!profileRes.is_private || followRes.is_following) {
@@ -109,7 +110,21 @@ export default function UserProfile() {
   const handleToggleFollow = async () => {
     if (!id || toggling) return;
     setToggling(true);
-    // Optimistic
+
+    // Cancel a pending follow request (private account)
+    if (pendingRequest) {
+      setPendingRequest(false);
+      try {
+        await api.cancelOutgoingFollowRequest(id);
+      } catch {
+        setPendingRequest(true);
+      } finally {
+        setToggling(false);
+      }
+      return;
+    }
+
+    // Optimistic toggle for follow / unfollow
     const wasFollowing = isFollowing;
     setIsFollowing(!wasFollowing);
     const delta = wasFollowing ? -1 : 1;
@@ -124,14 +139,13 @@ export default function UserProfile() {
     try {
       if (wasFollowing) {
         await api.unfollow(id);
-        setPendingRequest(false);
       } else {
         const res = (await api.follow(id)) as {
           state: "following" | "pending";
         };
-        setPendingRequest(res.state === "pending");
         if (res.state === "pending") {
-          // follow_request → not actually following yet
+          // follow_request sent → not actually following yet
+          setPendingRequest(true);
           setIsFollowing(false);
           setStats((s) => ({
             ...s,
@@ -327,18 +341,18 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       textAlign: "center",
       paddingHorizontal: 32,
     },
-    postsSection: { paddingHorizontal: 16 },
+    postsSection: { paddingHorizontal: 12 },
     postsTitle: {
       fontSize: 16,
       fontFamily: FONTS.bold,
       color: theme.foreground.white,
-      marginBottom: 12,
+      marginBottom: 10,
     },
-    postsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 4 },
+    postsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 2 },
     gridItem: {
       width: "32%",
       aspectRatio: 1,
-      borderRadius: 8,
+      borderRadius: 0,
       overflow: "hidden",
     },
     gridImage: { width: "100%", height: "100%" },
