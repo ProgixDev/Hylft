@@ -9,14 +9,18 @@ interface AuthContextType {
   session: Session | null;
   user: User | null;
   isLoading: boolean;
-  signUp: (email: string, password: string, username: string) => Promise<void>;
+  signUp: (
+    email: string,
+    password: string,
+    username: string,
+  ) => Promise<User | null>;
   signIn: (email: string, password: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
   hasCompletedOnboarding: () => Promise<boolean>;
   setOnboardingCompleted: () => Promise<void>;
   hasCompletedGetStarted: (userId?: string) => Promise<boolean>;
-  setGetStartedCompleted: () => Promise<void>;
+  setGetStartedCompleted: (userId?: string) => Promise<void>;
 }
 
 const ONBOARDING_KEY = "@hylift_onboarding_completed";
@@ -81,13 +85,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, username: string) => {
-    const { error } = await supabase.auth.signUp({
+  const signUp = async (
+    email: string,
+    password: string,
+    username: string,
+  ) => {
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: { data: { username } },
     });
     if (error) throw error;
+    return data.user ?? null;
   };
 
   const signIn = async (email: string, password: string) => {
@@ -151,21 +160,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const hasCompletedGetStarted = async (userId?: string) => {
     const id = userId ?? session?.user?.id;
     if (!id) return false;
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("user_profiles")
       .select("onboarding_completed")
       .eq("id", id)
-      .single();
+      .maybeSingle();
+    if (error) {
+      console.error("[Auth] Failed to read onboarding status", error);
+      return false;
+    }
     return data?.onboarding_completed === true;
   };
 
-  const setGetStartedCompleted = async () => {
-    const id = session?.user?.id;
+  const setGetStartedCompleted = async (userId?: string) => {
+    const id = userId ?? session?.user?.id;
     if (!id) return;
-    await supabase
+    const { error } = await supabase
       .from("user_profiles")
       .update({ onboarding_completed: true })
       .eq("id", id);
+    if (error) {
+      console.error("[Auth] Failed to mark onboarding complete", error);
+      throw error;
+    }
   };
 
   return (

@@ -498,6 +498,12 @@ export const ActiveWorkoutProvider: React.FC<ActiveWorkoutProviderProps> = ({
         } catch (error) {
           console.warn("[ActiveWorkout] Guided save failed:", error);
         }
+
+        try {
+          await api.incrementRoutineCompleted(player.routineId);
+        } catch (error) {
+          console.warn("[ActiveWorkout] Routine completion increment failed:", error);
+        }
       }
 
       setGuidedPlayer(null);

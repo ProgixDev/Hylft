@@ -23,6 +23,7 @@ export class RoutinesService {
       .from('routines')
       .select('*')
       .eq('user_id', userId)
+      .is('deleted_at', null)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -35,11 +36,45 @@ export class RoutinesService {
       .select('*')
       .eq('id', routineId)
       .eq('user_id', userId)
+      .is('deleted_at', null)
       .single();
 
-    if (error?.code === 'PGRST116') throw new NotFoundException('Routine not found');
+    if (error?.code === 'PGRST116') {
+      const { data: adminRoutine, error: adminError } = await this.supabase
+        .from('routines')
+        .select('*')
+        .eq('id', routineId)
+        .eq('is_admin_routine', true)
+        .eq('is_public', true)
+        .is('deleted_at', null)
+        .single();
+
+      if (adminError?.code === 'PGRST116')
+        throw new NotFoundException('Routine not found');
+      if (adminError) throw adminError;
+      return adminRoutine;
+    }
     if (error) throw error;
     return data;
+  }
+
+  async getAdminRoutines(category?: string, subCategory?: string) {
+    let query = this.supabase
+      .from('routines')
+      .select('*')
+      .eq('is_admin_routine', true)
+      .eq('is_public', true)
+      .is('deleted_at', null)
+      .order('category', { ascending: true })
+      .order('sub_category', { ascending: true })
+      .order('estimated_duration', { ascending: true });
+
+    if (category) query = query.eq('category', category);
+    if (subCategory) query = query.eq('sub_category', subCategory);
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return data ?? [];
   }
 
   async createRoutine(userId: string, dto: CreateRoutineDto) {
@@ -102,17 +137,27 @@ export class RoutinesService {
     const routine = await this.getRoutine(userId, routineId);
     const newCount = ((routine as any)?.times_completed ?? 0) + 1;
 
-    const { data, error } = await this.supabase
-      .from('routines')
-      .update({
-        times_completed: newCount,
-        last_used: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', routineId)
-      .eq('user_id', userId)
-      .select()
-      .single();
+    const payload = {
+      times_completed: newCount,
+      last_used: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    const { data, error } = (routine as any)?.is_admin_routine
+      ? await this.supabase
+          .from('routines')
+          .update(payload)
+          .eq('id', routineId)
+          .eq('is_admin_routine', true)
+          .select()
+          .single()
+      : await this.supabase
+          .from('routines')
+          .update(payload)
+          .eq('id', routineId)
+          .eq('user_id', userId)
+          .select()
+          .single();
 
     if (error) throw error;
     return data;

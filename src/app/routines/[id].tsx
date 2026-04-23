@@ -1,8 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useMemo } from "react";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import React, { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  ActivityIndicator,
   Platform,
   Pressable,
   ScrollView,
@@ -13,7 +14,8 @@ import {
 import { Theme } from "../../constants/themes";
 import { useActiveWorkout } from "../../contexts/ActiveWorkoutContext";
 import { useTheme } from "../../contexts/ThemeContext";
-import { getRoutineById } from "../../data/mockData";
+import { Routine } from "../../data/mockData";
+import { api } from "../../services/api";
 import { formatDisplayDate } from "../../utils/dateFormatter";
 import {
   translateApiData,
@@ -22,6 +24,7 @@ import {
   translateRoutineDescription,
   translateRoutineName,
 } from "../../utils/exerciseTranslator";
+import { ApiRoutine, mapRoutine } from "../../utils/routineMapper";
 
 import { FONTS } from "../../constants/fonts";
 
@@ -65,10 +68,48 @@ export default function RoutineDetail() {
   const styles = createStyles(theme);
   const router = useRouter();
   const { startGuidedRoutine } = useActiveWorkout();
+  const [routine, setRoutine] = useState<Routine | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
 
-  const routine = useMemo(() => getRoutineById(id), [id]);
+  const loadRoutine = useCallback(async () => {
+    if (!id) {
+      setRoutine(null);
+      setLoadFailed(true);
+      setIsLoading(false);
+      return;
+    }
 
-  if (!routine) {
+    setIsLoading(true);
+    setLoadFailed(false);
+
+    try {
+      const res = (await api.getRoutine(id)) as ApiRoutine;
+      setRoutine(mapRoutine(res));
+    } catch (error) {
+      console.warn("[RoutineDetail] load failed:", error);
+      setRoutine(null);
+      setLoadFailed(true);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [id]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadRoutine();
+    }, [loadRoutine]),
+  );
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, styles.centered]}>
+        <ActivityIndicator size="large" color={theme.primary.main} />
+      </View>
+    );
+  }
+
+  if (!routine || loadFailed) {
     return (
       <View style={[styles.container, styles.centered]}>
         <Ionicons

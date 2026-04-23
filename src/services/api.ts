@@ -98,6 +98,16 @@ export const api = {
   // ── Routines ─────────────────────────────────────────────
   getRoutines: () =>
     authFetch("/routines"),
+  getAdminRoutines: (params: {
+    category?: "challenge" | "body_focus";
+    sub_category?: string;
+  } = {}) => {
+    const qs = new URLSearchParams();
+    if (params.category) qs.set("category", params.category);
+    if (params.sub_category) qs.set("sub_category", params.sub_category);
+    const s = qs.toString();
+    return authFetch(`/routines/admin/library${s ? `?${s}` : ""}`);
+  },
   getRoutine: (id: string) =>
     authFetch(`/routines/${id}`),
   createRoutine: (data: Record<string, unknown>) =>

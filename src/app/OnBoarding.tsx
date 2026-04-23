@@ -165,7 +165,12 @@ export default function OnBoarding() {
       >
         {ONBOARDING_DATA.map((p) => (
           <View key={p.id} style={styles.page}>
-            <Image source={p.image} style={styles.image} resizeMode="cover" />
+            <Image
+              source={p.image}
+              style={styles.image}
+              resizeMode="cover"
+              fadeDuration={0}
+            />
             <LinearGradient
               colors={[
                 "rgba(0,0,0,0.35)",
@@ -185,20 +190,20 @@ export default function OnBoarding() {
           source={require("../../assets/images/Logo.png")}
           style={styles.logo}
           resizeMode="contain"
+          fadeDuration={0}
         />
       </View>
 
       {/* Bottom glass card */}
       <View style={styles.bottomCard}>
-        <BlurView
-          intensity={50}
-          tint="dark"
-          experimentalBlurMethod={
-            Platform.OS === "android" ? "dimezisBlurView" : undefined
-          }
-          pointerEvents="none"
-          style={styles.bottomCardBlur}
-        />
+        {Platform.OS !== "android" ? (
+          <BlurView
+            intensity={50}
+            tint="dark"
+            pointerEvents="none"
+            style={styles.bottomCardBlur}
+          />
+        ) : null}
         <View style={[styles.bottomCardGradient, styles.bottomCardBackdrop]}>
           <View style={styles.bottomCardBorder} pointerEvents="none" />
 
@@ -242,7 +247,7 @@ export default function OnBoarding() {
               <Text style={styles.standardButtonText}>{page.buttonText}</Text>
               <View style={styles.standardButtonChip}>
                 <MaterialCommunityIcons
-                  name="arrow-top-right"
+                  name="arrow-right"
                   size={18}
                   color="#fff"
                 />
@@ -320,7 +325,8 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       borderTopRightRadius: 28,
     },
     bottomCardBackdrop: {
-      backgroundColor: "transparent",
+      backgroundColor:
+        Platform.OS === "android" ? "rgba(10,12,16,0.78)" : "transparent",
       ...(Platform.OS === "web"
         ? ({
             // @ts-ignore — CSS property for web

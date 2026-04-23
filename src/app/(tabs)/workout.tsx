@@ -28,34 +28,7 @@ import {
 } from "../../data/mockData";
 import { useGenderedImages } from "../../hooks/useGenderedImages";
 import { api } from "../../services/api";
-
-type ApiRoutine = {
-  id: string;
-  user_id: string;
-  name: string;
-  description?: string | null;
-  exercises?: any[] | null;
-  estimated_duration?: number | null;
-  target_muscles?: string[] | null;
-  difficulty: "beginner" | "intermediate" | "advanced";
-  last_used?: string | null;
-  times_completed?: number | null;
-};
-
-function mapRoutine(r: ApiRoutine): Routine {
-  return {
-    id: r.id,
-    userId: r.user_id,
-    name: r.name,
-    description: r.description ?? "",
-    exercises: (r.exercises ?? []) as any,
-    estimatedDuration: r.estimated_duration ?? 0,
-    targetMuscles: r.target_muscles ?? [],
-    difficulty: r.difficulty,
-    lastUsed: r.last_used ?? undefined,
-    timesCompleted: r.times_completed ?? 0,
-  };
-}
+import { ApiRoutine, mapRoutine } from "../../utils/routineMapper";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const ROUTINE_CARD_W = SCREEN_WIDTH * 0.65;

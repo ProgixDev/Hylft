@@ -22,18 +22,15 @@ export default function Index() {
           setDestination("/get-started/language");
           return;
         }
+
+        const hasSeenOnboarding = await hasCompletedOnboarding();
         if (!user) {
-          setDestination("/OnBoarding");
+          setDestination(hasSeenOnboarding ? "/auth" : "/OnBoarding");
           return;
         }
 
-        const hasSeenOnboarding = await hasCompletedOnboarding();
-        if (!hasSeenOnboarding) {
-          setDestination("/OnBoarding");
-        } else {
-          const doneGetStarted = await hasCompletedGetStarted();
-          setDestination(doneGetStarted ? "/(tabs)/home" : "/get-started/username");
-        }
+        const doneGetStarted = await hasCompletedGetStarted(user.id);
+        setDestination(doneGetStarted ? "/(tabs)/home" : "/get-started/username");
       } catch (error) {
         console.error("Error checking auth status:", error);
         setDestination("/OnBoarding");
@@ -46,7 +43,7 @@ export default function Index() {
     if (!splashDone || !destination || hasNavigated.current) return;
     hasNavigated.current = true;
     router.replace(destination as any);
-  }, [splashDone, destination]);
+  }, [router, splashDone, destination]);
 
   // Always keep the splash visible — after its animation it's just a dark background,
   // so there's no blank screen while waiting for navigation to complete

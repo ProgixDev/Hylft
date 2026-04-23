@@ -29,7 +29,7 @@ export default function AccountScreen() {
   const { t, i18n } = useTranslation();
   const { theme } = useTheme();
   const styles = createStyles(theme);
-  const { signUp, setGetStartedCompleted } = useAuth();
+  const { signUp, setGetStartedCompleted, setOnboardingCompleted } = useAuth();
   const isFr = i18n.language?.startsWith("fr");
 
   const [username, setUsername] = useState("");
@@ -75,10 +75,13 @@ export default function AccountScreen() {
     if (!canSubmit) return;
     setLoading(true);
     try {
-      await signUp(email.trim(), password, username);
+      const createdUser = await signUp(email.trim(), password, username);
+      await setOnboardingCompleted();
       try {
-        await setGetStartedCompleted();
-      } catch {}
+        await setGetStartedCompleted(createdUser?.id);
+      } catch {
+        // Keep navigation moving even if profile completion sync lags behind auth.
+      }
       router.replace("/(tabs)/home");
     } catch (err: unknown) {
       const message =

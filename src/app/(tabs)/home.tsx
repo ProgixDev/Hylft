@@ -3,7 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Dimensions,
@@ -20,11 +20,14 @@ import AnimatedSection from "../../components/ui/AnimatedSection";
 import ProModal from "../../components/ui/ProModal";
 import { FONTS } from "../../constants/fonts";
 import { Theme } from "../../constants/themes";
+import { useActiveWorkout } from "../../contexts/ActiveWorkoutContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { useHealth } from "../../contexts/HealthContext";
 import { useNutrition } from "../../contexts/NutritionContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useGenderedImages } from "../../hooks/useGenderedImages";
+import { api } from "../../services/api";
+import { ApiRoutine, mapRoutine } from "../../utils/routineMapper";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CHALLENGE_CARD_WIDTH = SCREEN_WIDTH * 0.78;
@@ -36,6 +39,7 @@ const OBJECTIVE_DAYS_KEY = "@hylift_home_weekly_objective_days";
 const DISPLAY_NAME_KEY = "@hylift_display_name";
 
 type DayStatus = "completed" | "missed" | "pending" | "off";
+type HomeRoutineGroup = Record<string, Record<string, ApiRoutine>>;
 
 // Difficulty bolts component
 function DifficultyBolts({ level, theme }: { level: number; theme: Theme }) {
@@ -55,17 +59,19 @@ function DifficultyBolts({ level, theme }: { level: number; theme: Theme }) {
 
 export default function Home() {
   const router = useRouter();
-  const { theme, themeType, setTheme } = useTheme();
+  const { theme, themeType } = useTheme();
   const { t } = useTranslation();
-  const { goals, todaySummary, weekSummaries } = useNutrition();
+  const { goals, todaySummary } = useNutrition();
   const { todaySteps, todayCaloriesBurned } = useHealth();
   const { user } = useAuth();
+  const { startGuidedRoutine } = useActiveWorkout();
   const genderedImages = useGenderedImages();
   const [selectedBodyFocus, setSelectedBodyFocus] = useState(0);
   const [weeklyObjective, setWeeklyObjective] = useState(3);
   const [weeklyObjectiveDays, setWeeklyObjectiveDays] = useState<number[]>([]);
   const [displayName, setDisplayName] = useState("");
   const [isProModalVisible, setIsProModalVisible] = useState(false);
+  const [adminRoutines, setAdminRoutines] = useState<HomeRoutineGroup>({});
 
   const now = new Date();
   const todayDayIndex = (now.getDay() + 6) % 7; // Convert Sun=0 to Mon=0 based
@@ -113,6 +119,35 @@ export default function Home() {
       };
     }, []),
   );
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadAdminRoutines = async () => {
+      try {
+        const res = (await api.getAdminRoutines()) as ApiRoutine[];
+        if (!isMounted) return;
+
+        const grouped = (res ?? []).reduce<HomeRoutineGroup>((acc, routine) => {
+          const category = routine.category ?? "";
+          const subCategory = routine.sub_category ?? "";
+          if (!category || !subCategory) return acc;
+          if (!acc[category]) acc[category] = {};
+          acc[category][`${subCategory}:${routine.difficulty}`] = routine;
+          return acc;
+        }, {});
+
+        setAdminRoutines(grouped);
+      } catch (error) {
+        console.warn("[Home] load admin routines failed:", error);
+      }
+    };
+
+    loadAdminRoutines();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const weekDays = useMemo(() => {
     const monday = new Date(now);
@@ -194,23 +229,38 @@ export default function Home() {
     t("home.shoulder"),
   ];
 
+  const challengeRoutines = adminRoutines.challenge ?? {};
+  const bodyFocusRoutines = adminRoutines.body_focus ?? {};
+
+  const handleStartRoutine = useCallback(
+    (routine?: ApiRoutine) => {
+      if (!routine) return;
+      startGuidedRoutine(mapRoutine(routine));
+      router.push("/workout-player" as any);
+    },
+    [router, startGuidedRoutine],
+  );
+
   const challenges = [
     {
-      days: 28,
+      routine: challengeRoutines["full_body:beginner"],
+      days: challengeRoutines["full_body:beginner"]?.duration_days ?? 28,
       title: t("home.fullBodyChallenge"),
       desc: t("home.fullBodyChallengeDesc"),
       image: genderedImages.challenge[0],
       color: "#1565C0",
     },
     {
-      days: 28,
+      routine: challengeRoutines["upper_body:intermediate"],
+      days: challengeRoutines["upper_body:intermediate"]?.duration_days ?? 28,
       title: t("home.sculptUpperBody"),
       desc: t("home.sculptUpperBodyDesc"),
       image: genderedImages.challenge[1],
       color: "#2E7D9A",
     },
     {
-      days: 21,
+      routine: challengeRoutines["lower_body:advanced"],
+      days: challengeRoutines["lower_body:advanced"]?.duration_days ?? 21,
       title: t("home.lowerBodyBlast"),
       desc: t("home.lowerBodyBlastDesc"),
       image: genderedImages.challenge[2],
@@ -219,12 +269,19 @@ export default function Home() {
   ];
 
   const selectedLabel = bodyFocusOptions[selectedBodyFocus];
+  const selectedBodyFocusKey = ["abs", "arm", "back", "leg", "shoulder"][
+    selectedBodyFocus
+  ];
 
   const bodyFocusExercises = [
     {
+      routine: bodyFocusRoutines[`${selectedBodyFocusKey}:beginner`],
       name: selectedLabel + " " + t("home.beginner"),
-      duration: "15 mins",
-      exercises: 16,
+      duration:
+        `${bodyFocusRoutines[`${selectedBodyFocusKey}:beginner`]?.estimated_duration ?? 15} mins`,
+      exercises:
+        bodyFocusRoutines[`${selectedBodyFocusKey}:beginner`]?.exercises
+          ?.length ?? 16,
       difficulty: 1,
       image:
         genderedImages.bodyFocus[
@@ -232,9 +289,13 @@ export default function Home() {
         ],
     },
     {
+      routine: bodyFocusRoutines[`${selectedBodyFocusKey}:intermediate`],
       name: selectedLabel + " " + t("home.intermediate"),
-      duration: "24 mins",
-      exercises: 21,
+      duration:
+        `${bodyFocusRoutines[`${selectedBodyFocusKey}:intermediate`]?.estimated_duration ?? 24} mins`,
+      exercises:
+        bodyFocusRoutines[`${selectedBodyFocusKey}:intermediate`]?.exercises
+          ?.length ?? 21,
       difficulty: 2,
       image:
         genderedImages.bodyFocus[
@@ -242,9 +303,13 @@ export default function Home() {
         ],
     },
     {
+      routine: bodyFocusRoutines[`${selectedBodyFocusKey}:advanced`],
       name: selectedLabel + " " + t("home.advanced"),
-      duration: "27 mins",
-      exercises: 21,
+      duration:
+        `${bodyFocusRoutines[`${selectedBodyFocusKey}:advanced`]?.estimated_duration ?? 27} mins`,
+      exercises:
+        bodyFocusRoutines[`${selectedBodyFocusKey}:advanced`]?.exercises
+          ?.length ?? 21,
       difficulty: 3,
       image:
         genderedImages.bodyFocus[
@@ -622,6 +687,7 @@ export default function Home() {
                       styles.challengeStartBtn,
                       pressed && { opacity: 0.9, transform: [{ scale: 0.97 }] },
                     ]}
+                    onPress={() => handleStartRoutine(challenge.routine)}
                   >
                     <Text style={styles.challengeStartText}>
                       {t("home.start").toUpperCase()}
@@ -681,6 +747,7 @@ export default function Home() {
                   styles.exerciseRow,
                   pressed && { opacity: 0.8 },
                 ]}
+                onPress={() => handleStartRoutine(exercise.routine)}
               >
                 <Image
                   source={exercise.image}

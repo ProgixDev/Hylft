@@ -6,6 +6,7 @@ import {
   Delete,
   Body,
   Param,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { SupabaseJwtGuard } from '../auth/guards/supabase-jwt.guard';
@@ -25,6 +26,14 @@ export class RoutinesController {
   @Get()
   getRoutines(@CurrentUser() user: AuthUser) {
     return this.routinesService.getRoutines(user.id);
+  }
+
+  @Get('admin/library')
+  getAdminRoutines(
+    @Query('category') category?: string,
+    @Query('sub_category') subCategory?: string,
+  ) {
+    return this.routinesService.getAdminRoutines(category, subCategory);
   }
 
   @Get(':id')
