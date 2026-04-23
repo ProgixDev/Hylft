@@ -451,8 +451,6 @@ export default function Profile() {
             </View>
           ))}
         </View>
-
-        <DevRoutesSection />
           </>
         )}
 
@@ -482,97 +480,6 @@ export default function Profile() {
         onClose={() => setShareOpen(false)}
       />
     </AnimatedScreen>
-  );
-}
-
-const DEV_ROUTES: { label: string; path: string }[] = [
-  { label: "Home (tab)", path: "/(tabs)/home" },
-  { label: "Workout (tab)", path: "/(tabs)/workout" },
-  { label: "Alimentation (tab)", path: "/(tabs)/alimentation" },
-  { label: "Feed (tab)", path: "/(tabs)/feed" },
-  { label: "Profile (tab)", path: "/(tabs)/profile" },
-  { label: "Onboarding", path: "/OnBoarding" },
-  { label: "Auth — index", path: "/auth" },
-  { label: "Auth — sign in", path: "/auth/signin" },
-  { label: "Auth — sign up", path: "/auth/signup" },
-  { label: "Get Started — language", path: "/get-started/language" },
-  { label: "Get Started — gender", path: "/get-started/gender" },
-  { label: "Get Started — age", path: "/get-started/age" },
-  { label: "Get Started — height", path: "/get-started/height" },
-  { label: "Get Started — weight", path: "/get-started/weight" },
-  { label: "Get Started — target weight", path: "/get-started/target-weight" },
-  { label: "Get Started — fitness goal", path: "/get-started/fitness-goal" },
-  { label: "Get Started — focus areas", path: "/get-started/focus-areas" },
-  { label: "Get Started — experience level", path: "/get-started/experience-level" },
-  { label: "Get Started — workout frequency", path: "/get-started/workout-frequency" },
-  { label: "Get Started — units", path: "/get-started/units" },
-  { label: "Get Started — email preferences", path: "/get-started/email-preferences" },
-  { label: "Get Started — health connect", path: "/get-started/health-connect" },
-  { label: "Get Started — ready", path: "/get-started/ready" },
-  { label: "Settings — index", path: "/settings" },
-  { label: "Settings — edit profile", path: "/settings/edit-profile" },
-  { label: "Settings — change password", path: "/settings/change-password" },
-  { label: "Settings — privacy", path: "/settings/privacy" },
-  { label: "Settings — terms", path: "/settings/terms" },
-  { label: "Settings — about", path: "/settings/about" },
-  { label: "Settings — help center", path: "/settings/help-center" },
-  { label: "Routines — list", path: "/routines" },
-  { label: "Explore Routines", path: "/explore-routines" },
-  { label: "Create Routine", path: "/create-routine" },
-  { label: "Exercise Picker", path: "/exercise-picker" },
-  { label: "Workouts — list", path: "/workouts" },
-  { label: "Workout Player", path: "/workout-player" },
-  { label: "Share Workout", path: "/share-workout" },
-  { label: "Food Search", path: "/food-search" },
-  { label: "Alimentation History", path: "/alimentation-history" },
-  { label: "Search", path: "/search" },
-  { label: "Search — scan", path: "/search/scan" },
-  { label: "Notifications", path: "/notifications" },
-  { label: "Objective", path: "/objective" },
-  { label: "User Posts", path: "/user/posts" },
-];
-
-function DevRoutesSection() {
-  const router = useRouter();
-  const { theme } = useTheme();
-  const styles = createStyles(theme);
-  const [open, setOpen] = useState(false);
-
-  return (
-    <View style={styles.devContainer}>
-      <Pressable
-        onPress={() => setOpen((v) => !v)}
-        style={({ pressed }) => [styles.devToggle, pressed && { opacity: 0.85 }]}
-      >
-        <Ionicons name="construct" size={16} color={theme.foreground.white} />
-        <Text style={styles.devToggleText}>
-          DEV · {open ? "Hide" : "Show"} all screens
-        </Text>
-        <Ionicons
-          name={open ? "chevron-up" : "chevron-down"}
-          size={16}
-          color={theme.foreground.white}
-        />
-      </Pressable>
-
-      {open && (
-        <View style={styles.devList}>
-          {DEV_ROUTES.map((r) => (
-            <Pressable
-              key={r.path}
-              onPress={() => router.push(r.path as any)}
-              style={({ pressed }) => [
-                styles.devItem,
-                pressed && { opacity: 0.7 },
-              ]}
-            >
-              <Text style={styles.devItemLabel}>{r.label}</Text>
-              <Text style={styles.devItemPath}>{r.path}</Text>
-            </Pressable>
-          ))}
-        </View>
-      )}
-    </View>
   );
 }
 
@@ -953,55 +860,6 @@ function createStyles(theme: Theme) {
       color: "rgba(255,255,255,0.9)",
       textTransform: "uppercase",
       letterSpacing: 0.6,
-    },
-
-    // Dev navigation
-    devContainer: {
-      marginHorizontal: 20,
-      marginTop: 20,
-      marginBottom: 40,
-    },
-    devToggle: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: 8,
-      paddingVertical: 12,
-      paddingHorizontal: 16,
-      borderRadius: 12,
-      backgroundColor: theme.background.darker,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: theme.primary.main + "40",
-    },
-    devToggleText: {
-      fontFamily: FONTS.bold,
-      fontSize: 12,
-      color: theme.foreground.white,
-      letterSpacing: 0.5,
-      textTransform: "uppercase",
-    },
-    devList: {
-      marginTop: 10,
-      borderRadius: 12,
-      backgroundColor: theme.background.darker,
-      overflow: "hidden",
-    },
-    devItem: {
-      paddingVertical: 10,
-      paddingHorizontal: 14,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: theme.foreground.gray + "20",
-    },
-    devItemLabel: {
-      fontFamily: FONTS.semiBold,
-      fontSize: 13,
-      color: theme.foreground.white,
-    },
-    devItemPath: {
-      fontFamily: FONTS.regular,
-      fontSize: 11,
-      color: theme.foreground.gray,
-      marginTop: 2,
     },
   });
 }

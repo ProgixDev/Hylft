@@ -183,8 +183,8 @@ export default function EditProfile() {
         setAvatarUrl(p.avatar_url ?? null);
       } catch (e) {
         Alert.alert(
-          "Error",
-          e instanceof Error ? e.message : "Could not load profile.",
+          "Erreur",
+          e instanceof Error ? e.message : "Impossible de charger le profil.",
         );
       } finally {
         setLoading(false);
@@ -202,8 +202,8 @@ export default function EditProfile() {
       setAvatarUrl(updated.avatar_url ?? null);
     } catch (e) {
       Alert.alert(
-        "Error",
-        e instanceof Error ? e.message : "Failed to update photo.",
+        "Erreur",
+        e instanceof Error ? e.message : "Impossible de mettre a jour la photo.",
       );
     }
   };
@@ -212,8 +212,8 @@ export default function EditProfile() {
     const trimmedUsername = username.trim().toLowerCase();
     if (!USERNAME_RE.test(trimmedUsername)) {
       Alert.alert(
-        "Invalid username",
-        "Use 3–30 characters: lowercase letters, numbers, underscore or dot.",
+        "Nom d'utilisateur invalide",
+        "Utilisez 3 a 30 caracteres : lettres minuscules, chiffres, underscore ou point.",
       );
       return;
     }
@@ -221,7 +221,7 @@ export default function EditProfile() {
     const first = firstName.trim();
     const last = lastName.trim();
     if (!first) {
-      Alert.alert("Validation", "First name cannot be empty.");
+      Alert.alert("Validation", "Le prenom ne peut pas etre vide.");
       return;
     }
 
@@ -236,12 +236,12 @@ export default function EditProfile() {
         payload.username = trimmedUsername;
       }
       await api.updateProfile(payload);
-      Alert.alert("Saved", "Your profile has been updated.", [
+      Alert.alert("Enregistre", "Votre profil a ete mis a jour.", [
         { text: "OK", onPress: () => router.back() },
       ]);
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Failed to save.";
-      Alert.alert("Error", msg);
+      const msg = e instanceof Error ? e.message : "Impossible d'enregistrer.";
+      Alert.alert("Erreur", msg);
     } finally {
       setSaving(false);
     }
@@ -264,7 +264,7 @@ export default function EditProfile() {
               color={theme.foreground.white}
             />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Edit Profile</Text>
+          <Text style={styles.headerTitle}>Modifier le profil</Text>
         </View>
         <TouchableOpacity
           style={[
@@ -275,7 +275,7 @@ export default function EditProfile() {
           disabled={saving || loading}
           activeOpacity={0.8}
         >
-          <Text style={styles.saveBtnText}>{saving ? "Saving…" : "Save"}</Text>
+          <Text style={styles.saveBtnText}>{saving ? "Enregistrement..." : "Enregistrer"}</Text>
         </TouchableOpacity>
       </View>
 
@@ -311,14 +311,14 @@ export default function EditProfile() {
             </View>
           </TouchableOpacity>
           <TouchableOpacity onPress={handleChangePhoto}>
-            <Text style={styles.changePhotoText}>Change Profile Photo</Text>
+            <Text style={styles.changePhotoText}>Changer la photo de profil</Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.form}>
           <View style={styles.nameRow}>
             <View style={[styles.fieldGroup, styles.nameCol]}>
-              <Text style={styles.fieldLabel}>First Name</Text>
+              <Text style={styles.fieldLabel}>Prenom</Text>
               <TextInput
                 style={[
                   styles.input,
@@ -328,14 +328,14 @@ export default function EditProfile() {
                 onChangeText={setFirstName}
                 onFocus={() => setFocusedField("first")}
                 onBlur={() => setFocusedField(null)}
-                placeholder="First"
+                placeholder="Prenom"
                 placeholderTextColor={theme.foreground.gray}
                 maxLength={40}
                 returnKeyType="next"
               />
             </View>
             <View style={[styles.fieldGroup, styles.nameCol]}>
-              <Text style={styles.fieldLabel}>Last Name</Text>
+              <Text style={styles.fieldLabel}>Nom</Text>
               <TextInput
                 style={[
                   styles.input,
@@ -345,7 +345,7 @@ export default function EditProfile() {
                 onChangeText={setLastName}
                 onFocus={() => setFocusedField("last")}
                 onBlur={() => setFocusedField(null)}
-                placeholder="Last"
+                placeholder="Nom"
                 placeholderTextColor={theme.foreground.gray}
                 maxLength={40}
                 returnKeyType="next"
@@ -354,7 +354,7 @@ export default function EditProfile() {
           </View>
 
           <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>Username</Text>
+            <Text style={styles.fieldLabel}>Nom d'utilisateur</Text>
             <View
               style={[
                 styles.usernameRow,
@@ -379,7 +379,7 @@ export default function EditProfile() {
               />
             </View>
             <Text style={styles.hint}>
-              3–30 chars. Lowercase letters, numbers, "_" and "." only.
+              3 a 30 caracteres. Lettres minuscules, chiffres, "_" et "." uniquement.
             </Text>
           </View>
 
@@ -395,7 +395,7 @@ export default function EditProfile() {
               onChangeText={setBio}
               onFocus={() => setFocusedField("bio")}
               onBlur={() => setFocusedField(null)}
-              placeholder="Tell people about yourself…"
+              placeholder="Parlez un peu de vous..."
               placeholderTextColor={theme.foreground.gray}
               multiline
               maxLength={150}

@@ -66,7 +66,7 @@ export default function ProfileHeader(props: ProfileHeaderProps) {
 
   const primaryLabel =
     mode === "self"
-      ? "Edit Profile"
+      ? "Modifier le profil"
       : followPending
         ? "Requested"
         : isFollowing
@@ -78,7 +78,7 @@ export default function ProfileHeader(props: ProfileHeaderProps) {
       : isFollowing || followPending
         ? "checkmark"
         : "add";
-  const secondaryLabel = mode === "self" ? "Share" : "Chat";
+  const secondaryLabel = mode === "self" ? "Partager" : "Chat";
   const secondaryIcon: keyof typeof Ionicons.glyphMap =
     mode === "self" ? "share-social-outline" : "chatbubble-outline";
 
@@ -103,11 +103,7 @@ export default function ProfileHeader(props: ProfileHeaderProps) {
               onPress={onSettingsPress}
               style={styles.cornerBtn}
             >
-              <Ionicons
-                name="settings-outline"
-                size={18}
-                color="#fff"
-              />
+              <Ionicons name="settings-outline" size={18} color="#fff" />
             </Pressable>
           ) : (
             <View style={styles.cornerBtn} />
@@ -176,13 +172,13 @@ export default function ProfileHeader(props: ProfileHeaderProps) {
           <StatCell
             icon="document-text-outline"
             value={compactNumber(stats.posts)}
-            label="Total Posts"
+            label="Postes"
             theme={theme}
           />
           <StatCell
             icon="people-outline"
             value={compactNumber(stats.followers)}
-            label="Followers"
+            label="Abonnés"
             theme={theme}
           />
           <StatCell

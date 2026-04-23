@@ -97,7 +97,7 @@ export default function ShareProfileModal({
     if (!link) return;
     try {
       await Share.share({
-        message: `Check out ${username ? `@${username}` : displayName ?? "this profile"} on Hylift: ${link}`,
+        message: `Decouvre ${username ? `@${username}` : displayName ?? "ce profil"} sur Hylift : ${link}`,
         url: link,
       });
     } catch {
@@ -137,9 +137,9 @@ export default function ShareProfileModal({
           <View style={styles.handle} />
 
           <View style={styles.header}>
-            <Text style={styles.title}>Share profile</Text>
+            <Text style={styles.title}>Partager le profil</Text>
             <Text style={styles.subtitle}>
-              Let others scan this to open your profile
+              Laissez les autres scanner ceci pour ouvrir votre profil
             </Text>
           </View>
 
@@ -163,7 +163,7 @@ export default function ShareProfileModal({
 
           <View style={styles.identity}>
             <Text style={styles.name} numberOfLines={1}>
-              {displayName || (username ? `@${username}` : "Profile")}
+              {displayName || (username ? `@${username}` : "Profil")}
             </Text>
             {username ? (
               <Text style={styles.handle}>@{username}</Text>
@@ -184,7 +184,7 @@ export default function ShareProfileModal({
                 color={theme.foreground.white}
               />
               <Text style={styles.actionText}>
-                {copied ? "Copied" : "Copy link"}
+                {copied ? "Copie" : "Copier le lien"}
               </Text>
             </Pressable>
             <Pressable
@@ -201,7 +201,7 @@ export default function ShareProfileModal({
                 color={theme.background.dark}
               />
               <Text style={[styles.actionText, styles.actionPrimaryText]}>
-                Share
+                Partager
               </Text>
             </Pressable>
           </View>
