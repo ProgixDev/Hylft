@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Animated,
   Easing,
@@ -18,66 +19,40 @@ import { useTheme } from "../../contexts/ThemeContext";
 
 const LEVELS: {
   id: "sedentary" | "light" | "moderate" | "active" | "very_active";
-  label: string;
-  desc: string;
   icon: keyof typeof Ionicons.glyphMap;
+  dots: number;
 }[] = [
-  {
-    id: "sedentary",
-    label: "Sedentary",
-    desc: "Mostly sitting, little exercise",
-    icon: "cafe-outline",
-  },
-  {
-    id: "light",
-    label: "Lightly active",
-    desc: "Light walks, occasional workouts",
-    icon: "walk-outline",
-  },
-  {
-    id: "moderate",
-    label: "Moderately active",
-    desc: "3–5 workouts or active job",
-    icon: "bicycle-outline",
-  },
-  {
-    id: "active",
-    label: "Very active",
-    desc: "Daily workouts, on your feet",
-    icon: "fitness-outline",
-  },
-  {
-    id: "very_active",
-    label: "Extra active",
-    desc: "Intense training or physical job",
-    icon: "flame-outline",
-  },
+  { id: "sedentary", icon: "cafe-outline", dots: 1 },
+  { id: "light", icon: "walk-outline", dots: 2 },
+  { id: "moderate", icon: "bicycle-outline", dots: 3 },
+  { id: "active", icon: "fitness-outline", dots: 4 },
+  { id: "very_active", icon: "flame-outline", dots: 5 },
 ];
 
 export default function ActivityLevel() {
   const router = useRouter();
   const { theme } = useTheme();
-  const styles = createStyles(theme);
+  const { t } = useTranslation();
   const [selected, setSelected] = useState<string>("");
   const fade = useRef(new Animated.Value(0)).current;
-  const slide = useRef(new Animated.Value(24)).current;
+  const slide = useRef(new Animated.Value(28)).current;
 
   useEffect(() => {
     Animated.parallel([
       Animated.timing(fade, {
         toValue: 1,
-        duration: 420,
+        duration: 440,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }),
       Animated.timing(slide, {
         toValue: 0,
-        duration: 420,
+        duration: 440,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }),
     ]).start();
-  }, [fade, slide]);
+  }, []);
 
   const handleContinue = async () => {
     if (!selected) return;
@@ -85,21 +60,23 @@ export default function ActivityLevel() {
     router.push("/get-started/gender?flow=signup");
   };
 
+  const styles = createStyles(theme);
+
   return (
     <View style={styles.container}>
       <Animated.View
-        style={{
-          flex: 1,
-          opacity: fade,
-          transform: [{ translateY: slide }],
-        }}
+        style={{ flex: 1, opacity: fade, transform: [{ translateY: slide }] }}
       >
         <SignupProgress current={5} total={13} />
 
-        <Text style={styles.title}>What's your baseline activity level?</Text>
-        <Text style={styles.subtitle}>
-          Pick the one that best describes your typical week.
-        </Text>
+        <View style={styles.header}>
+          <Text style={styles.title}>
+            {t("onboarding.activityLevel.title")}
+          </Text>
+          <Text style={styles.subtitle}>
+            {t("onboarding.activityLevel.subtitle")}
+          </Text>
+        </View>
 
         <View style={styles.list}>
           {LEVELS.map((lv) => {
@@ -107,7 +84,7 @@ export default function ActivityLevel() {
             return (
               <TouchableOpacity
                 key={lv.id}
-                activeOpacity={0.85}
+                activeOpacity={0.82}
                 onPress={() => setSelected(lv.id)}
                 style={[
                   styles.card,
@@ -116,7 +93,7 @@ export default function ActivityLevel() {
                       ? theme.primary.main
                       : theme.background.accent,
                     backgroundColor: isSelected
-                      ? theme.primary.main + "14"
+                      ? theme.primary.main + "16"
                       : theme.background.darker,
                   },
                 ]}
@@ -126,19 +103,20 @@ export default function ActivityLevel() {
                     styles.iconWrap,
                     {
                       backgroundColor: isSelected
-                        ? theme.primary.main + "22"
+                        ? theme.primary.main + "28"
                         : theme.background.accent,
                     },
                   ]}
                 >
                   <Ionicons
                     name={lv.icon}
-                    size={22}
+                    size={26}
                     color={
                       isSelected ? theme.primary.main : theme.foreground.gray
                     }
                   />
                 </View>
+
                 <View style={{ flex: 1 }}>
                   <Text
                     style={[
@@ -150,11 +128,51 @@ export default function ActivityLevel() {
                       },
                     ]}
                   >
-                    {lv.label}
+                    {t(`onboarding.activityLevel.options.${lv.id}.label`)}
                   </Text>
-                  <Text style={[styles.cardDesc, { color: theme.foreground.gray }]}>
-                    {lv.desc}
+                  <Text
+                    style={[styles.cardDesc, { color: theme.foreground.gray }]}
+                  >
+                    {t(`onboarding.activityLevel.options.${lv.id}.description`)}
                   </Text>
+
+                  {/* Activity dots */}
+                  <View style={styles.dots}>
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <View
+                        key={i}
+                        style={[
+                          styles.dot,
+                          {
+                            backgroundColor:
+                              i < lv.dots
+                                ? isSelected
+                                  ? theme.primary.main
+                                  : theme.foreground.gray
+                                : theme.background.accent,
+                          },
+                        ]}
+                      />
+                    ))}
+                  </View>
+                </View>
+
+                <View
+                  style={[
+                    styles.check,
+                    {
+                      backgroundColor: isSelected
+                        ? theme.primary.main
+                        : "transparent",
+                      borderColor: isSelected
+                        ? theme.primary.main
+                        : theme.background.accent,
+                    },
+                  ]}
+                >
+                  {isSelected && (
+                    <Ionicons name="checkmark" size={14} color="#fff" />
+                  )}
                 </View>
               </TouchableOpacity>
             );
@@ -163,7 +181,7 @@ export default function ActivityLevel() {
       </Animated.View>
 
       <ChipButton
-        title="Continue"
+        title={t("common.continue")}
         onPress={handleContinue}
         variant="primary"
         size="lg"
@@ -182,17 +200,20 @@ function createStyles(theme: Theme) {
       paddingHorizontal: 20,
       paddingBottom: 16,
     },
+    header: {
+      marginBottom: 20,
+    },
     title: {
-      fontSize: 24,
-      fontFamily: FONTS.bold,
+      fontSize: 26,
+      fontFamily: FONTS.extraBold,
       color: theme.foreground.white,
       marginBottom: 6,
+      lineHeight: 32,
     },
     subtitle: {
-      fontSize: 13,
+      fontSize: 14,
       color: theme.foreground.gray,
-      lineHeight: 20,
-      marginBottom: 18,
+      lineHeight: 21,
     },
     list: {
       gap: 10,
@@ -200,25 +221,44 @@ function createStyles(theme: Theme) {
     card: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 12,
+      gap: 14,
       borderWidth: 1.5,
-      borderRadius: 14,
+      borderRadius: 18,
       padding: 14,
     },
     iconWrap: {
-      width: 42,
-      height: 42,
-      borderRadius: 12,
+      width: 54,
+      height: 54,
+      borderRadius: 16,
       alignItems: "center",
       justifyContent: "center",
     },
     cardTitle: {
       fontSize: 15,
       fontFamily: FONTS.bold,
-      marginBottom: 2,
+      marginBottom: 3,
     },
     cardDesc: {
       fontSize: 12,
+      lineHeight: 17,
+      marginBottom: 6,
+    },
+    dots: {
+      flexDirection: "row",
+      gap: 4,
+    },
+    dot: {
+      width: 14,
+      height: 4,
+      borderRadius: 2,
+    },
+    check: {
+      width: 26,
+      height: 26,
+      borderRadius: 13,
+      borderWidth: 2,
+      alignItems: "center",
+      justifyContent: "center",
     },
   });
 }

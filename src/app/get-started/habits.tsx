@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Animated,
   Easing,
@@ -22,41 +23,45 @@ const HABITS: {
   label: string;
   icon: keyof typeof Ionicons.glyphMap;
 }[] = [
-  { id: "eat_balanced", label: "Eat balanced meals", icon: "nutrition-outline" },
+  { id: "eat_balanced", label: "Eat balanced", icon: "nutrition-outline" },
   { id: "drink_water", label: "Drink more water", icon: "water-outline" },
   { id: "sleep_well", label: "Sleep better", icon: "moon-outline" },
-  { id: "move_daily", label: "Move every day", icon: "walk-outline" },
+  { id: "move_daily", label: "Move daily", icon: "walk-outline" },
   { id: "strength", label: "Build strength", icon: "barbell-outline" },
   { id: "reduce_stress", label: "Reduce stress", icon: "leaf-outline" },
-  { id: "cut_sugar", label: "Cut added sugar", icon: "ice-cream-outline" },
-  { id: "track_progress", label: "Track progress", icon: "stats-chart-outline" },
+  { id: "cut_sugar", label: "Cut sugar", icon: "ice-cream-outline" },
+  {
+    id: "track_progress",
+    label: "Track progress",
+    icon: "stats-chart-outline",
+  },
   { id: "mindful_eating", label: "Eat mindfully", icon: "happy-outline" },
 ];
 
 export default function HabitsScreen() {
   const router = useRouter();
   const { theme } = useTheme();
-  const styles = createStyles(theme);
+  const { t } = useTranslation();
   const [selected, setSelected] = useState<string[]>([]);
   const fade = useRef(new Animated.Value(0)).current;
-  const slide = useRef(new Animated.Value(24)).current;
+  const slide = useRef(new Animated.Value(28)).current;
 
   useEffect(() => {
     Animated.parallel([
       Animated.timing(fade, {
         toValue: 1,
-        duration: 420,
+        duration: 440,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }),
       Animated.timing(slide, {
         toValue: 0,
-        duration: 420,
+        duration: 440,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }),
     ]).start();
-  }, [fade, slide]);
+  }, []);
 
   const toggle = (id: string) => {
     setSelected((prev) =>
@@ -70,80 +75,92 @@ export default function HabitsScreen() {
     router.push("/get-started/habits-congrats");
   };
 
+  const styles = createStyles(theme);
+
   return (
     <View style={styles.container}>
       <Animated.View
-        style={{
-          flex: 1,
-          opacity: fade,
-          transform: [{ translateY: slide }],
-        }}
+        style={{ flex: 1, opacity: fade, transform: [{ translateY: slide }] }}
       >
         <SignupProgress current={3} total={13} />
 
-        <Text style={styles.title}>Which healthy habits matter to you?</Text>
-        <Text style={styles.subtitle}>
-          Select all that apply. We'll nudge you on the ones you pick.
-        </Text>
+        <View style={styles.header}>
+          <Text style={styles.title}>{t("onboarding.habits.title")}</Text>
+          <Text style={styles.subtitle}>{t("onboarding.habits.subtitle")}</Text>
+        </View>
 
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 16 }}
+          contentContainerStyle={styles.grid}
         >
-          <View style={styles.grid}>
-            {HABITS.map((h) => {
-              const isSelected = selected.includes(h.id);
-              return (
-                <TouchableOpacity
-                  key={h.id}
-                  activeOpacity={0.85}
-                  onPress={() => toggle(h.id)}
+          {HABITS.map((h) => {
+            const isSelected = selected.includes(h.id);
+            return (
+              <TouchableOpacity
+                key={h.id}
+                activeOpacity={0.82}
+                onPress={() => toggle(h.id)}
+                style={[
+                  styles.tile,
+                  {
+                    borderColor: isSelected
+                      ? theme.primary.main
+                      : theme.background.accent,
+                    backgroundColor: isSelected
+                      ? theme.primary.main + "16"
+                      : theme.background.darker,
+                  },
+                ]}
+              >
+                <View
                   style={[
-                    styles.chip,
+                    styles.tileIcon,
                     {
-                      borderColor: isSelected
-                        ? theme.primary.main
-                        : theme.background.accent,
                       backgroundColor: isSelected
-                        ? theme.primary.main + "18"
-                        : theme.background.darker,
+                        ? theme.primary.main + "28"
+                        : theme.background.accent,
                     },
                   ]}
                 >
                   <Ionicons
                     name={h.icon}
-                    size={18}
+                    size={24}
                     color={
                       isSelected ? theme.primary.main : theme.foreground.gray
                     }
                   />
-                  <Text
+                </View>
+                <Text
+                  style={[
+                    styles.tileLabel,
+                    {
+                      color: isSelected
+                        ? theme.primary.main
+                        : theme.foreground.white,
+                    },
+                  ]}
+                  numberOfLines={2}
+                >
+                  {t(`onboarding.habits.options.${h.id}`)}
+                </Text>
+                {isSelected && (
+                  <View
                     style={[
-                      styles.chipLabel,
-                      {
-                        color: isSelected
-                          ? theme.primary.main
-                          : theme.foreground.white,
-                      },
+                      styles.tileCheck,
+                      { backgroundColor: theme.primary.main },
                     ]}
                   >
-                    {h.label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-
-          {selected.length > 0 && (
-            <Text style={[styles.count, { color: theme.foreground.gray }]}>
-              {selected.length} selected
-            </Text>
-          )}
+                    <Ionicons name="checkmark" size={10} color="#fff" />
+                  </View>
+                )}
+              </TouchableOpacity>
+            );
+          })}
         </ScrollView>
       </Animated.View>
 
       <ChipButton
-        title="Continue"
+        title={t("common.continue")}
         onPress={handleContinue}
         variant="primary"
         size="lg"
@@ -162,40 +179,77 @@ function createStyles(theme: Theme) {
       paddingHorizontal: 20,
       paddingBottom: 16,
     },
+    header: {
+      marginBottom: 20,
+    },
     title: {
-      fontSize: 24,
-      fontFamily: FONTS.bold,
+      fontSize: 26,
+      fontFamily: FONTS.extraBold,
       color: theme.foreground.white,
       marginBottom: 6,
+      lineHeight: 32,
     },
     subtitle: {
-      fontSize: 13,
+      fontSize: 14,
       color: theme.foreground.gray,
-      lineHeight: 20,
-      marginBottom: 18,
+      lineHeight: 21,
     },
     grid: {
       flexDirection: "row",
       flexWrap: "wrap",
-      gap: 10,
+      gap: 12,
+      paddingBottom: 8,
     },
-    chip: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 8,
+    tile: {
+      width: "30%",
+      minHeight: 100,
       borderWidth: 1.5,
-      borderRadius: 999,
-      paddingVertical: 10,
-      paddingHorizontal: 14,
+      borderRadius: 18,
+      padding: 12,
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+      position: "relative",
     },
-    chipLabel: {
-      fontSize: 13,
-      fontFamily: FONTS.semiBold,
+    tileIcon: {
+      width: 48,
+      height: 48,
+      borderRadius: 14,
+      alignItems: "center",
+      justifyContent: "center",
     },
-    count: {
-      textAlign: "center",
+    tileLabel: {
       fontSize: 12,
-      marginTop: 14,
+      fontFamily: FONTS.semiBold,
+      textAlign: "center",
+      lineHeight: 16,
+    },
+    tileCheck: {
+      position: "absolute",
+      top: 8,
+      right: 8,
+      width: 18,
+      height: 18,
+      borderRadius: 9,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    countRow: {
+      alignItems: "center",
+      paddingTop: 12,
+      borderTopWidth: 1,
+      marginTop: 4,
+    },
+    countBadge: {
+      borderWidth: 1,
+      borderRadius: 100,
+      paddingHorizontal: 14,
+      paddingVertical: 5,
+    },
+    countText: {
+      fontSize: 12,
+      fontFamily: FONTS.bold,
+      letterSpacing: 0.5,
     },
   });
 }

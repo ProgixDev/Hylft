@@ -1,5 +1,5 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -19,6 +19,8 @@ import ChipButton from "../../components/ui/ChipButton";
 
 export default function HealthConnect() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ flow?: string }>();
+  const isSignupFlow = params.flow === "signup";
   const { theme } = useTheme();
   const { t } = useTranslation();
   const { initialize, requestPermissions } = useHealth();
@@ -36,7 +38,11 @@ export default function HealthConnect() {
           t("onboarding.healthConnect.unavailableTitle"),
           t("onboarding.healthConnect.unavailableMessage")
         );
-        router.navigate("/get-started/email-preferences");
+        router.navigate(
+          isSignupFlow
+            ? "/get-started/email-preferences?flow=signup"
+            : "/get-started/email-preferences",
+        );
         return;
       }
 
@@ -50,17 +56,29 @@ export default function HealthConnect() {
         );
       }
 
-      router.navigate("/get-started/email-preferences");
+      router.navigate(
+        isSignupFlow
+          ? "/get-started/email-preferences?flow=signup"
+          : "/get-started/email-preferences",
+      );
     } catch (error) {
       console.warn("[HealthConnect] Setup failed:", error);
-      router.navigate("/get-started/email-preferences");
+      router.navigate(
+        isSignupFlow
+          ? "/get-started/email-preferences?flow=signup"
+          : "/get-started/email-preferences",
+      );
     } finally {
       setIsConnecting(false);
     }
   };
 
   const handleNotNow = () => {
-    router.navigate("/get-started/email-preferences");
+    router.navigate(
+      isSignupFlow
+        ? "/get-started/email-preferences?flow=signup"
+        : "/get-started/email-preferences",
+    );
   };
 
   return (

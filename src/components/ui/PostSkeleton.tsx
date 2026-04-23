@@ -10,7 +10,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { useTheme } from "../../contexts/ThemeContext";
 
-function Shimmer({
+export function Shimmer({
   style,
   baseColor,
   highlightColor,

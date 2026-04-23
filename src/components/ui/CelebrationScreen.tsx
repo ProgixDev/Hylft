@@ -1,5 +1,5 @@
+import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React, { useEffect, useRef } from "react";
 import {
@@ -10,14 +10,12 @@ import {
   Text,
   View,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import ChipButton from "./ChipButton";
 import { FONTS } from "../../constants/fonts";
-import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
+import ChipButton from "./ChipButton";
 
 const { width: SW, height: SH } = Dimensions.get("window");
-const GIF_SIZE = 200;
+const GIF_SIZE = 160;
 
 interface Props {
   headline: string;
@@ -27,7 +25,7 @@ interface Props {
   /** require('./path/to/file.gif') — displayed instead of the icon badge */
   gifSource?: any;
   /** Short all-caps label shown above the headline, e.g. "GOAL SET" */
-  badge?: string;
+
   buttonLabel?: string;
   next: string;
 }
@@ -37,7 +35,7 @@ export function CelebrationScreen({
   message,
   icon = "sparkles",
   gifSource,
-  badge,
+
   buttonLabel = "Next",
   next,
 }: Props) {
@@ -46,8 +44,6 @@ export function CelebrationScreen({
 
   const visualScale = useRef(new Animated.Value(0.5)).current;
   const visualOpacity = useRef(new Animated.Value(0)).current;
-  const ring1 = useRef(new Animated.Value(0)).current;
-  const ring2 = useRef(new Animated.Value(0)).current;
   const textY = useRef(new Animated.Value(36)).current;
   const textOpacity = useRef(new Animated.Value(0)).current;
   const btnOpacity = useRef(new Animated.Value(0)).current;
@@ -87,118 +83,53 @@ export function CelebrationScreen({
         useNativeDriver: true,
       }),
     ]).start();
-
-    // Expanding pulse rings (offset by half-cycle)
-    const startRing = (
-      anim: Animated.Value,
-      delay: number,
-    ) => {
-      Animated.loop(
-        Animated.sequence([
-          Animated.delay(delay),
-          Animated.timing(anim, {
-            toValue: 1,
-            duration: 2200,
-            easing: Easing.out(Easing.ease),
-            useNativeDriver: true,
-          }),
-          Animated.timing(anim, {
-            toValue: 0,
-            duration: 0,
-            useNativeDriver: true,
-          }),
-        ]),
-      ).start();
-    };
-
-    startRing(ring1, 0);
-    startRing(ring2, 1100);
   }, []);
-
-  const ringInterp = (anim: Animated.Value) => ({
-    scale: anim.interpolate({ inputRange: [0, 1], outputRange: [1, 2] }),
-    opacity: anim.interpolate({
-      inputRange: [0, 0.15, 1],
-      outputRange: [0, 0.55, 0],
-    }),
-  });
-
-  const r1 = ringInterp(ring1);
-  const r2 = ringInterp(ring2);
 
   // Light themes need slightly different treatment for the glow
   const isLight =
-    theme.background.dark === "#FFFFFF" ||
-    theme.background.dark === "#FFF8F3";
+    theme.background.dark === "#FFFFFF" || theme.background.dark === "#FFF8F3";
 
   const glowStrength = isLight ? "20" : "28";
 
   return (
     <View style={[s.root, { backgroundColor: theme.background.dark }]}>
       {/* Full-screen gradient layer */}
-      <LinearGradient
-        colors={[theme.primary.main + "35", theme.background.dark + "00"]}
-        style={StyleSheet.absoluteFill}
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 0.65 }}
-      />
-
-      {/* Large ambient circle behind the visual */}
-      <View
-        style={[
-          s.ambient,
-          { backgroundColor: theme.primary.main + glowStrength },
-        ]}
-      />
 
       {/* ── Visual zone (top ~55%) ── */}
       <View style={s.visualZone}>
-        {/* Expanding rings */}
-        {[r1, r2].map((r, i) => (
-          <Animated.View
-            key={i}
+        {/* Static inner glow */}
+        {!gifSource && (
+          <View
             style={[
-              s.ring,
+              s.innerGlow,
               {
-                borderColor: theme.primary.main,
-                opacity: r.opacity,
-                transform: [{ scale: r.scale }],
+                backgroundColor: theme.primary.main + (isLight ? "15" : "20"),
               },
             ]}
           />
-        ))}
-
-        {/* Static inner glow */}
-        <View
-          style={[
-            s.innerGlow,
-            { backgroundColor: theme.primary.main + (isLight ? "15" : "20") },
-          ]}
-        />
+        )}
 
         {/* Main circle with GIF or icon */}
         <Animated.View
           style={[
             s.circle,
             {
-              backgroundColor: theme.primary.main + (isLight ? "18" : "22"),
-              borderColor: theme.primary.main + "55",
+              backgroundColor: gifSource
+                ? "transparent"
+                : theme.primary.main + (isLight ? "18" : "22"),
+              borderColor: gifSource
+                ? "transparent"
+                : theme.primary.main + "55",
               opacity: visualOpacity,
               transform: [{ scale: visualScale }],
             },
           ]}
         >
           {gifSource ? (
-            <Image
-              source={gifSource}
-              style={s.gif}
-              contentFit="contain"
-            />
+            <Image source={gifSource} style={s.gif} contentFit="contain" />
           ) : (
-            <View
-              style={[s.iconBadge, { backgroundColor: theme.primary.main }]}
-            >
-              <Ionicons name={icon} size={76} color="#fff" />
+            <View style={[s.iconBadge, {}]}>
+              <Ionicons name={icon} size={70} color="#fff" />
             </View>
           )}
         </Animated.View>
@@ -214,22 +145,6 @@ export function CelebrationScreen({
           },
         ]}
       >
-        {badge && (
-          <View
-            style={[
-              s.pill,
-              {
-                backgroundColor: theme.primary.main + "18",
-                borderColor: theme.primary.main + "50",
-              },
-            ]}
-          >
-            <Text style={[s.pillText, { color: theme.primary.main }]}>
-              {badge}
-            </Text>
-          </View>
-        )}
-
         <Text style={[s.headline, { color: theme.foreground.white }]}>
           {headline}
         </Text>
@@ -252,8 +167,6 @@ export function CelebrationScreen({
   );
 }
 
-const RING_SIZE = GIF_SIZE + 60;
-
 const s = StyleSheet.create({
   root: {
     flex: 1,
@@ -271,13 +184,6 @@ const s = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-  },
-  ring: {
-    position: "absolute",
-    width: RING_SIZE,
-    height: RING_SIZE,
-    borderRadius: RING_SIZE / 2,
-    borderWidth: 1.5,
   },
   innerGlow: {
     position: "absolute",
@@ -305,6 +211,7 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+
   textZone: {
     alignItems: "center",
     paddingHorizontal: 28,

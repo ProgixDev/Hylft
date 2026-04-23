@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Alert,
   Animated,
@@ -25,9 +26,11 @@ import { useTheme } from "../../contexts/ThemeContext";
 
 export default function AccountScreen() {
   const router = useRouter();
+  const { t, i18n } = useTranslation();
   const { theme } = useTheme();
   const styles = createStyles(theme);
   const { signUp, setGetStartedCompleted } = useAuth();
+  const isFr = i18n.language?.startsWith("fr");
 
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -63,6 +66,11 @@ export default function AccountScreen() {
   const canSubmit =
     isEmailValid && password.length >= 6 && agreed && !loading && username.length >= 2;
 
+  const withFallback = (key: string, enText: string, frText: string, options?: Record<string, unknown>) => {
+    const value = t(key, options);
+    return value === key ? (isFr ? frText : enText) : value;
+  };
+
   const handleSubmit = async () => {
     if (!canSubmit) return;
     setLoading(true);
@@ -73,8 +81,18 @@ export default function AccountScreen() {
       } catch {}
       router.replace("/(tabs)/home");
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Sign up failed";
-      Alert.alert("Sign up error", message);
+      const message =
+        err instanceof Error
+          ? err.message
+          : withFallback(
+              "onboarding.account.signUpFailed",
+              "Sign up failed",
+              "Échec de l'inscription"
+            );
+      Alert.alert(
+        withFallback("onboarding.account.signUpError", "Sign up error", "Erreur d'inscription"),
+        message
+      );
     } finally {
       setLoading(false);
     }
@@ -99,16 +117,33 @@ export default function AccountScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          <Text style={styles.title}>One last step{username ? `, ${username}` : ""}</Text>
+          <Text style={styles.title}>
+            {username
+              ? withFallback(
+                  "onboarding.account.titleWithName",
+                  `One last step, ${username}`,
+                  `Une dernière étape, ${username}`,
+                  { name: username }
+                )
+              : withFallback("onboarding.account.title", "One last step", "Une dernière étape")}
+          </Text>
           <Text style={styles.subtitle}>
-            Create your account to save your plan and track progress.
+            {withFallback(
+              "onboarding.account.subtitle",
+              "Create your account to save your plan and track progress.",
+              "Créez votre compte pour enregistrer votre plan et suivre vos progrès."
+            )}
           </Text>
 
           <View style={styles.field}>
-            <Text style={styles.label}>Email</Text>
+            <Text style={styles.label}>{t("auth.email")}</Text>
             <TextInput
               style={styles.input}
-              placeholder="you@example.com"
+              placeholder={withFallback(
+                "onboarding.account.emailPlaceholder",
+                "you@example.com",
+                "vous@exemple.com"
+              )}
               placeholderTextColor={theme.foreground.gray}
               value={email}
               onChangeText={setEmail}
@@ -119,11 +154,15 @@ export default function AccountScreen() {
           </View>
 
           <View style={styles.field}>
-            <Text style={styles.label}>Password</Text>
+            <Text style={styles.label}>{t("auth.password")}</Text>
             <View style={styles.passwordRow}>
               <TextInput
                 style={[styles.input, { flex: 1, paddingRight: 44 }]}
-                placeholder="At least 6 characters"
+                placeholder={withFallback(
+                  "onboarding.account.passwordPlaceholder",
+                  "At least 6 characters",
+                  "Au moins 6 caractères"
+                )}
                 placeholderTextColor={theme.foreground.gray}
                 value={password}
                 onChangeText={setPassword}
@@ -163,13 +202,13 @@ export default function AccountScreen() {
               {agreed && <Ionicons name="checkmark" size={14} color="#fff" />}
             </View>
             <Text style={[styles.agreeText, { color: theme.foreground.gray }]}>
-              I agree to the{" "}
+              {withFallback("onboarding.account.agreePrefix", "I agree to the", "J'accepte les")}{" "}
               <Text style={{ color: theme.primary.main, fontFamily: FONTS.semiBold }}>
-                Hylift Terms
+                {t("settings.termsOfService")}
               </Text>{" "}
-              and{" "}
+              {withFallback("onboarding.account.agreeAnd", "and", "et la")}{" "}
               <Text style={{ color: theme.primary.main, fontFamily: FONTS.semiBold }}>
-                Privacy Policy
+                {t("settings.privacyPolicy")}
               </Text>
               .
             </Text>
@@ -178,7 +217,19 @@ export default function AccountScreen() {
       </Animated.View>
 
       <ChipButton
-        title={loading ? "Creating account..." : "Create account"}
+        title={
+          loading
+            ? withFallback(
+                "onboarding.account.creatingAccount",
+                "Creating account...",
+                "Création du compte..."
+              )
+            : withFallback(
+                "onboarding.account.createAccount",
+                "Create account",
+                "Créer un compte"
+              )
+        }
         onPress={handleSubmit}
         variant="primary"
         size="lg"

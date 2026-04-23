@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Animated,
   Easing,
@@ -18,40 +19,40 @@ import { useTheme } from "../../contexts/ThemeContext";
 
 const OPTIONS: {
   id: "never" | "rarely" | "occasionally" | "frequently" | "always";
-  label: string;
-  desc: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  bars: number;
 }[] = [
-  { id: "never", label: "Never", desc: "I eat whatever shows up" },
-  { id: "rarely", label: "Rarely", desc: "Once in a while" },
-  { id: "occasionally", label: "Occasionally", desc: "Some days, not most" },
-  { id: "frequently", label: "Frequently", desc: "Most days I plan" },
-  { id: "always", label: "Always", desc: "I plan every meal" },
+  { id: "never", icon: "help-circle-outline", bars: 1 },
+  { id: "rarely", icon: "time-outline", bars: 2 },
+  { id: "occasionally", icon: "partly-sunny-outline", bars: 3 },
+  { id: "frequently", icon: "calendar-outline", bars: 4 },
+  { id: "always", icon: "checkmark-done-outline", bars: 5 },
 ];
 
 export default function MealPlanningScreen() {
   const router = useRouter();
   const { theme } = useTheme();
-  const styles = createStyles(theme);
+  const { t } = useTranslation();
   const [selected, setSelected] = useState<string>("");
   const fade = useRef(new Animated.Value(0)).current;
-  const slide = useRef(new Animated.Value(24)).current;
+  const slide = useRef(new Animated.Value(28)).current;
 
   useEffect(() => {
     Animated.parallel([
       Animated.timing(fade, {
         toValue: 1,
-        duration: 420,
+        duration: 440,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }),
       Animated.timing(slide, {
         toValue: 0,
-        duration: 420,
+        duration: 440,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }),
     ]).start();
-  }, [fade, slide]);
+  }, []);
 
   const handleContinue = async () => {
     if (!selected) return;
@@ -59,21 +60,21 @@ export default function MealPlanningScreen() {
     router.push("/get-started/meal-congrats");
   };
 
+  const styles = createStyles(theme);
+
   return (
     <View style={styles.container}>
       <Animated.View
-        style={{
-          flex: 1,
-          opacity: fade,
-          transform: [{ translateY: slide }],
-        }}
+        style={{ flex: 1, opacity: fade, transform: [{ translateY: slide }] }}
       >
         <SignupProgress current={4} total={13} />
 
-        <Text style={styles.title}>How often do you plan meals in advance?</Text>
-        <Text style={styles.subtitle}>
-          No judgment — we'll meet you where you are.
-        </Text>
+        <View style={styles.header}>
+          <Text style={styles.title}>{t("onboarding.mealPlanning.title")}</Text>
+          <Text style={styles.subtitle}>
+            {t("onboarding.mealPlanning.subtitle")}
+          </Text>
+        </View>
 
         <View style={styles.list}>
           {OPTIONS.map((o) => {
@@ -81,7 +82,7 @@ export default function MealPlanningScreen() {
             return (
               <TouchableOpacity
                 key={o.id}
-                activeOpacity={0.85}
+                activeOpacity={0.82}
                 onPress={() => setSelected(o.id)}
                 style={[
                   styles.card,
@@ -90,11 +91,30 @@ export default function MealPlanningScreen() {
                       ? theme.primary.main
                       : theme.background.accent,
                     backgroundColor: isSelected
-                      ? theme.primary.main + "14"
+                      ? theme.primary.main + "16"
                       : theme.background.darker,
                   },
                 ]}
               >
+                <View
+                  style={[
+                    styles.iconWrap,
+                    {
+                      backgroundColor: isSelected
+                        ? theme.primary.main + "28"
+                        : theme.background.accent,
+                    },
+                  ]}
+                >
+                  <Ionicons
+                    name={o.icon}
+                    size={24}
+                    color={
+                      isSelected ? theme.primary.main : theme.foreground.gray
+                    }
+                  />
+                </View>
+
                 <View style={{ flex: 1 }}>
                   <Text
                     style={[
@@ -106,22 +126,46 @@ export default function MealPlanningScreen() {
                       },
                     ]}
                   >
-                    {o.label}
+                    {t(`onboarding.mealPlanning.options.${o.id}.label`)}
                   </Text>
-                  <Text style={[styles.cardDesc, { color: theme.foreground.gray }]}>
-                    {o.desc}
+                  <Text
+                    style={[styles.cardDesc, { color: theme.foreground.gray }]}
+                  >
+                    {t(`onboarding.mealPlanning.options.${o.id}.description`)}
                   </Text>
+
+                  {/* Frequency bars */}
+                  <View style={styles.bars}>
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <View
+                        key={i}
+                        style={[
+                          styles.bar,
+                          {
+                            backgroundColor:
+                              i < o.bars
+                                ? isSelected
+                                  ? theme.primary.main
+                                  : theme.foreground.gray + "80"
+                                : theme.background.accent,
+                            height: 4 + i * 2,
+                          },
+                        ]}
+                      />
+                    ))}
+                  </View>
                 </View>
+
                 <View
                   style={[
-                    styles.radio,
+                    styles.check,
                     {
-                      borderColor: isSelected
-                        ? theme.primary.main
-                        : theme.background.accent,
                       backgroundColor: isSelected
                         ? theme.primary.main
                         : "transparent",
+                      borderColor: isSelected
+                        ? theme.primary.main
+                        : theme.background.accent,
                     },
                   ]}
                 >
@@ -136,7 +180,7 @@ export default function MealPlanningScreen() {
       </Animated.View>
 
       <ChipButton
-        title="Continue"
+        title={t("common.continue")}
         onPress={handleContinue}
         variant="primary"
         size="lg"
@@ -155,17 +199,20 @@ function createStyles(theme: Theme) {
       paddingHorizontal: 20,
       paddingBottom: 16,
     },
+    header: {
+      marginBottom: 20,
+    },
     title: {
-      fontSize: 24,
-      fontFamily: FONTS.bold,
+      fontSize: 26,
+      fontFamily: FONTS.extraBold,
       color: theme.foreground.white,
       marginBottom: 6,
+      lineHeight: 32,
     },
     subtitle: {
-      fontSize: 13,
+      fontSize: 14,
       color: theme.foreground.gray,
-      lineHeight: 20,
-      marginBottom: 18,
+      lineHeight: 21,
     },
     list: {
       gap: 10,
@@ -173,22 +220,41 @@ function createStyles(theme: Theme) {
     card: {
       flexDirection: "row",
       alignItems: "center",
+      gap: 14,
       borderWidth: 1.5,
-      borderRadius: 14,
+      borderRadius: 18,
       padding: 14,
+    },
+    iconWrap: {
+      width: 52,
+      height: 52,
+      borderRadius: 15,
+      alignItems: "center",
+      justifyContent: "center",
     },
     cardTitle: {
       fontSize: 15,
       fontFamily: FONTS.bold,
-      marginBottom: 2,
+      marginBottom: 3,
     },
     cardDesc: {
       fontSize: 12,
+      lineHeight: 17,
+      marginBottom: 7,
     },
-    radio: {
-      width: 24,
-      height: 24,
-      borderRadius: 12,
+    bars: {
+      flexDirection: "row",
+      alignItems: "flex-end",
+      gap: 3,
+    },
+    bar: {
+      width: 12,
+      borderRadius: 2,
+    },
+    check: {
+      width: 26,
+      height: 26,
+      borderRadius: 13,
       borderWidth: 2,
       alignItems: "center",
       justifyContent: "center",

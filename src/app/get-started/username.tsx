@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Animated,
   Easing,
@@ -22,6 +23,7 @@ const TOTAL_STEPS = 13;
 export default function UsernameScreen() {
   const router = useRouter();
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const styles = createStyles(theme);
   const [username, setUsername] = useState("");
   const fade = useRef(new Animated.Value(0)).current;
@@ -69,29 +71,27 @@ export default function UsernameScreen() {
       >
         <SignupProgress current={1} total={TOTAL_STEPS} />
 
-        <Text style={styles.title}>First, what can we call you?</Text>
-        <Text style={styles.subtitle}>
-          Pick a name you want to see on Hylift. You can change it later.
-        </Text>
+        <Text style={styles.title}>{t("onboarding.username.title")}</Text>
+        <Text style={styles.subtitle}>{t("onboarding.username.subtitle")}</Text>
 
         <View style={styles.inputWrap}>
-          <Text style={styles.label}>Preferred username</Text>
+          <Text style={styles.label}>{t("onboarding.username.label")}</Text>
           <TextInput
             value={username}
             onChangeText={setUsername}
-            placeholder="e.g. alex_fitness"
+            placeholder={t("onboarding.username.placeholder")}
             placeholderTextColor={theme.foreground.gray}
             autoCapitalize="none"
             autoCorrect={false}
             maxLength={24}
             style={styles.input}
           />
-          <Text style={styles.hint}>2 to 24 characters</Text>
+          <Text style={styles.hint}>{t("onboarding.username.hint")}</Text>
         </View>
       </Animated.View>
 
       <ChipButton
-        title="Continue"
+        title={t("common.continue")}
         onPress={handleContinue}
         variant="primary"
         size="lg"

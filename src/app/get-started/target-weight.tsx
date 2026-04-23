@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -11,6 +11,8 @@ import ChipButton from "../../components/ui/ChipButton";
 
 export default function TargetWeightScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ flow?: string }>();
+  const isSignupFlow = params.flow === "signup";
   const { theme } = useTheme();
   const { t } = useTranslation();
   const styles = createStyles(theme);
@@ -31,11 +33,19 @@ export default function TargetWeightScreen() {
 
   const handleContinue = async () => {
     await AsyncStorage.setItem("@hylift_target_weight", value.toString());
-    router.push("/get-started/workout-frequency");
+    if (isSignupFlow) {
+      router.push("/get-started/workout-frequency?flow=signup");
+    } else {
+      router.push("/get-started/workout-frequency");
+    }
   };
 
   const handleSkip = () => {
-    router.push("/get-started/workout-frequency");
+    if (isSignupFlow) {
+      router.push("/get-started/workout-frequency?flow=signup");
+    } else {
+      router.push("/get-started/workout-frequency");
+    }
   };
 
   const diff = Math.abs(currentWeight - value);

@@ -131,7 +131,7 @@ export default function SignIn() {
     try {
       await signIn(email, password);
       const doneGetStarted = await hasCompletedGetStarted();
-      router.navigate(doneGetStarted ? "/(tabs)/home" : "/get-started/gender");
+      router.navigate(doneGetStarted ? "/(tabs)/home" : "/get-started/username");
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : "Sign in failed";

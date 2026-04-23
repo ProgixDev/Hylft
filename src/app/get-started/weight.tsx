@@ -21,7 +21,7 @@ export default function WeightScreen() {
   const handleContinue = async () => {
     await AsyncStorage.setItem("@hylift_weight", value.toString());
     if (isSignupFlow) {
-      router.push("/get-started/weekly-goal");
+      router.push("/get-started/target-weight?flow=signup");
     } else {
       router.push("/get-started/target-weight");
     }

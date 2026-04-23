@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Animated,
   Easing,
@@ -21,29 +22,31 @@ const GOALS: {
   label: string;
   desc: string;
   icon: keyof typeof Ionicons.glyphMap;
+  recommended?: boolean;
 }[] = [
   {
     id: "lose_weight",
     label: "Lose weight",
-    desc: "Burn fat, feel lighter",
+    desc: "Burn fat, feel lighter and more energetic",
     icon: "trending-down-outline",
+    recommended: true,
   },
   {
     id: "maintain",
     label: "Maintain weight",
-    desc: "Stay where you are",
+    desc: "Keep your current weight and stay consistent",
     icon: "remove-outline",
   },
   {
     id: "gain_weight",
     label: "Gain weight",
-    desc: "Fuel up, add size",
+    desc: "Fuel up, add size and healthy mass",
     icon: "trending-up-outline",
   },
   {
     id: "build_muscle",
     label: "Build muscle",
-    desc: "Get stronger and leaner",
+    desc: "Get stronger, leaner and more defined",
     icon: "barbell-outline",
   },
 ];
@@ -51,27 +54,50 @@ const GOALS: {
 export default function GoalScreen() {
   const router = useRouter();
   const { theme } = useTheme();
-  const styles = createStyles(theme);
+  const { t } = useTranslation();
   const [selected, setSelected] = useState<string>("");
   const fade = useRef(new Animated.Value(0)).current;
-  const slide = useRef(new Animated.Value(24)).current;
+  const slide = useRef(new Animated.Value(28)).current;
+
+  const goals = [
+    {
+      ...GOALS[0],
+      label: t("onboarding.goalFlow.options.lose_weight.label"),
+      desc: t("onboarding.goalFlow.options.lose_weight.description"),
+    },
+    {
+      ...GOALS[1],
+      label: t("onboarding.goalFlow.options.maintain.label"),
+      desc: t("onboarding.goalFlow.options.maintain.description"),
+    },
+    {
+      ...GOALS[2],
+      label: t("onboarding.goalFlow.options.gain_weight.label"),
+      desc: t("onboarding.goalFlow.options.gain_weight.description"),
+    },
+    {
+      ...GOALS[3],
+      label: t("onboarding.goalFlow.options.build_muscle.label"),
+      desc: t("onboarding.goalFlow.options.build_muscle.description"),
+    },
+  ];
 
   useEffect(() => {
     Animated.parallel([
       Animated.timing(fade, {
         toValue: 1,
-        duration: 420,
+        duration: 440,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }),
       Animated.timing(slide, {
         toValue: 0,
-        duration: 420,
+        duration: 440,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }),
     ]).start();
-  }, [fade, slide]);
+  }, []);
 
   const handleContinue = async () => {
     if (!selected) return;
@@ -79,29 +105,31 @@ export default function GoalScreen() {
     router.push("/get-started/goal-congrats");
   };
 
+  const styles = createStyles(theme);
+
   return (
     <View style={styles.container}>
       <Animated.View
-        style={{
-          flex: 1,
-          opacity: fade,
-          transform: [{ translateY: slide }],
-        }}
+        style={{ flex: 1, opacity: fade, transform: [{ translateY: slide }] }}
       >
         <SignupProgress current={2} total={13} />
 
-        <Text style={styles.title}>What's your main goal?</Text>
-        <Text style={styles.subtitle}>
-          Pick one — we'll tailor everything in Hylift around it.
-        </Text>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.title}>{t("onboarding.goalFlow.title")}</Text>
+          <Text style={styles.subtitle}>
+            {t("onboarding.goalFlow.subtitle")}
+          </Text>
+        </View>
 
+        {/* Cards */}
         <View style={styles.list}>
-          {GOALS.map((g) => {
+          {goals.map((g) => {
             const isSelected = selected === g.id;
             return (
               <TouchableOpacity
                 key={g.id}
-                activeOpacity={0.8}
+                activeOpacity={0.82}
                 onPress={() => setSelected(g.id)}
                 style={[
                   styles.card,
@@ -110,56 +138,92 @@ export default function GoalScreen() {
                       ? theme.primary.main
                       : theme.background.accent,
                     backgroundColor: isSelected
-                      ? theme.primary.main + "14"
+                      ? theme.primary.main + "16"
                       : theme.background.darker,
                   },
                 ]}
               >
+                {/* Left icon */}
                 <View
                   style={[
                     styles.iconWrap,
                     {
                       backgroundColor: isSelected
-                        ? theme.primary.main + "22"
+                        ? theme.primary.main + "28"
                         : theme.background.accent,
                     },
                   ]}
                 >
                   <Ionicons
                     name={g.icon}
-                    size={22}
+                    size={26}
                     color={
                       isSelected ? theme.primary.main : theme.foreground.gray
                     }
                   />
                 </View>
+
+                {/* Text */}
                 <View style={{ flex: 1 }}>
+                  <View style={styles.labelRow}>
+                    <Text
+                      style={[
+                        styles.cardTitle,
+                        {
+                          color: isSelected
+                            ? theme.primary.main
+                            : theme.foreground.white,
+                        },
+                      ]}
+                    >
+                      {g.label}
+                    </Text>
+                    {g.recommended && (
+                      <View
+                        style={[
+                          styles.tag,
+                          {
+                            backgroundColor: theme.primary.main + "22",
+                            borderColor: theme.primary.main + "55",
+                          },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.tagText,
+                            { color: theme.primary.main },
+                          ]}
+                        >
+                          {t("onboarding.goalFlow.popular")}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
                   <Text
-                    style={[
-                      styles.cardTitle,
-                      {
-                        color: isSelected
-                          ? theme.primary.main
-                          : theme.foreground.white,
-                      },
-                    ]}
+                    style={[styles.cardDesc, { color: theme.foreground.gray }]}
                   >
-                    {g.label}
-                  </Text>
-                  <Text style={[styles.cardDesc, { color: theme.foreground.gray }]}>
                     {g.desc}
                   </Text>
                 </View>
-                {isSelected && (
-                  <View
-                    style={[
-                      styles.check,
-                      { backgroundColor: theme.primary.main },
-                    ]}
-                  >
+
+                {/* Checkmark */}
+                <View
+                  style={[
+                    styles.check,
+                    {
+                      backgroundColor: isSelected
+                        ? theme.primary.main
+                        : "transparent",
+                      borderColor: isSelected
+                        ? theme.primary.main
+                        : theme.background.accent,
+                    },
+                  ]}
+                >
+                  {isSelected && (
                     <Ionicons name="checkmark" size={14} color="#fff" />
-                  </View>
-                )}
+                  )}
+                </View>
               </TouchableOpacity>
             );
           })}
@@ -167,7 +231,7 @@ export default function GoalScreen() {
       </Animated.View>
 
       <ChipButton
-        title="Continue"
+        title={t("common.continue")}
         onPress={handleContinue}
         variant="primary"
         size="lg"
@@ -186,48 +250,69 @@ function createStyles(theme: Theme) {
       paddingHorizontal: 20,
       paddingBottom: 16,
     },
+    header: {
+      marginBottom: 20,
+    },
     title: {
-      fontSize: 24,
-      fontFamily: FONTS.bold,
+      fontSize: 26,
+      fontFamily: FONTS.extraBold,
       color: theme.foreground.white,
       marginBottom: 6,
+      lineHeight: 32,
     },
     subtitle: {
-      fontSize: 13,
+      fontSize: 14,
       color: theme.foreground.gray,
-      lineHeight: 20,
-      marginBottom: 18,
+      lineHeight: 21,
     },
     list: {
-      gap: 10,
+      gap: 12,
     },
     card: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 12,
+      gap: 14,
       borderWidth: 1.5,
-      borderRadius: 14,
-      padding: 14,
+      borderRadius: 18,
+      padding: 16,
     },
     iconWrap: {
-      width: 42,
-      height: 42,
-      borderRadius: 12,
+      width: 54,
+      height: 54,
+      borderRadius: 16,
       alignItems: "center",
       justifyContent: "center",
     },
+    labelRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      marginBottom: 4,
+    },
     cardTitle: {
-      fontSize: 15,
+      fontSize: 16,
       fontFamily: FONTS.bold,
-      marginBottom: 2,
+    },
+    tag: {
+      borderWidth: 1,
+      borderRadius: 100,
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+    },
+    tagText: {
+      fontSize: 10,
+      fontFamily: FONTS.bold,
+      letterSpacing: 0.5,
     },
     cardDesc: {
-      fontSize: 12,
+      fontSize: 13,
+      lineHeight: 18,
     },
     check: {
-      width: 22,
-      height: 22,
-      borderRadius: 11,
+      width: 26,
+      height: 26,
+      borderRadius: 13,
+      borderWidth: 2,
       alignItems: "center",
       justifyContent: "center",
     },

@@ -14,10 +14,26 @@
     "seeAll": "Voir tout",
     "all": "Tout"
   },
+  "proModal": {
+    "restore": "Restaurer",
+    "title": "Hylft Pro",
+    "subtitle": "Débloquez l'expérience de fitness ultime",
+    "loadingStatus": "Chargement de votre période d'essai...",
+    "countdownMsg": "Il reste {{days}} jours, {{hours}} heures et {{minutes}} minutes avant la fin de votre essai gratuit",
+    "feature1": "Plans d'entraînement IA personnalisés",
+    "feature2": "Suivi nutritionnel avancé",
+    "feature3": "Routines exclusives illimitées",
+    "monthly": "Mensuel",
+    "billedMonthly": "Facturation mensuelle",
+    "yearly": "Annuel",
+    "saveAmount": "Économisez 39.89$",
+    "billedYearly": "Facturation annuelle",
+    "purchaseBtn": "Acheter un abonnement"
+  },
   "auth": {
     "signUpToGetStarted": "Inscrivez-vous pour commencer",
     "continueWithGoogle": "Continuer avec Google",
-    "continueWithEmail": "Continuer avec Email",
+    "continueWithEmail": "Commencer",
     "alreadyHaveAccount": "Vous avez déjà un compte ? ",
     "logIn": "Se connecter",
     "welcomeBack": "Bon retour",
@@ -209,6 +225,117 @@
       "male": "Homme",
       "female": "Femme"
     },
+    "username": {
+      "title": "D'abord, comment peut-on vous appeler ?",
+      "subtitle": "Choisissez un nom que vous voulez voir dans Hylift. Vous pourrez le modifier plus tard.",
+      "label": "Nom d'utilisateur ",
+      "placeholder": "ex. alex_fitness",
+      "hint": "2 a 24 caracteres"
+    },
+    "goalFlow": {
+      "title": "Quel est votre objectif principal ?",
+      "subtitle": "Choisissez-en un - nous adapterons toute l'experience Hylift autour de lui.",
+      "popular": "Populaire",
+      "options": {
+        "lose_weight": {
+          "label": "Perdre du poids",
+          "description": "Bruler du gras, se sentir plus leger et plus energique"
+        },
+        "maintain": {
+          "label": "Maintenir son poids",
+          "description": "Garder votre poids actuel et rester regulier"
+        },
+        "gain_weight": {
+          "label": "Prendre du poids",
+          "description": "Manger davantage, prendre en volume et en masse saine"
+        },
+        "build_muscle": {
+          "label": "Prendre du muscle",
+          "description": "Devenir plus fort, plus sec et plus dessine"
+        }
+      }
+    },
+    "goalCongrats": {
+      "headlineWithName": "Super, {{name}} !",
+      "headlineDefault": "Excellent choix !",
+      "message": "Vous venez de franchir une grande etape dans votre parcours. Gardons cet elan."
+    },
+    "habits": {
+      "title": "Quelles habitudes comptent pour vous ?",
+      "subtitle": "Selectionnez tout ce qui vous correspond - nous vous guiderons sur celles que vous choisissez.",
+      "options": {
+        "eat_balanced": "Manger equilibre",
+        "drink_water": "Boire plus d'eau",
+        "sleep_well": "Mieux dormir",
+        "move_daily": "Bouger chaque jour",
+        "strength": "Developper sa force",
+        "reduce_stress": "Reduire le stress",
+        "cut_sugar": "Reduire le sucre",
+        "track_progress": "Suivre ses progres",
+        "mindful_eating": "Manger en pleine conscience"
+      }
+    },
+    "habitsCongrats": {
+      "badge": "Votre parcours",
+      "headline": "On s'occupe de tout",
+      "message": "Aucun souci - nous serons votre guide, a chaque etape."
+    },
+    "mealPlanning": {
+      "title": "A quelle frequence planifiez-vous vos repas ?",
+      "subtitle": "Sans jugement - nous vous accompagnons exactement ou vous en etes.",
+      "options": {
+        "never": {
+          "label": "Jamais",
+          "description": "Je mange ce qu'il y a"
+        },
+        "rarely": {
+          "label": "Rarement",
+          "description": "De temps en temps"
+        },
+        "occasionally": {
+          "label": "Parfois",
+          "description": "Certains jours, pas la plupart"
+        },
+        "frequently": {
+          "label": "Souvent",
+          "description": "La plupart des jours, je planifie a l'avance"
+        },
+        "always": {
+          "label": "Toujours",
+          "description": "Je planifie chaque repas"
+        }
+      }
+    },
+    "mealCongrats": {
+      "headline": "Nous avons un plan solide pour vous",
+      "message": "Encore quelques questions pour ajuster votre programme parfaitement."
+    },
+    "activityLevel": {
+      "title": "Quel est votre niveau d'activite ?",
+      "subtitle": "Choisissez l'option qui decrit le mieux votre semaine type.",
+      "options": {
+        "sedentary": {
+          "label": "Sedentaire",
+          "description": "Majoritairement assis, peu ou pas d'exercice"
+        },
+        "light": {
+          "label": "Legerement actif",
+          "description": "Marches legeres, entrainements occasionnels"
+        },
+        "moderate": {
+          "label": "Modere",
+          "description": "3-5 entrainements par semaine ou travail actif"
+        },
+        "active": {
+          "label": "Tres actif",
+          "description": "Entrainements quotidiens, toujours en mouvement"
+        },
+        "very_active": {
+          "label": "Extra actif",
+          "description": "Entrainement intense ou travail physique"
+        }
+      }
+    },
     "healthConnect": {
       "title": "Connectez vos données de santé",
       "subtitle": "Synchronisez automatiquement vos données fitness pour suivre vos progrès et obtenir des recommandations personnalisées",
@@ -225,6 +352,19 @@
     "ready": {
       "title": "Vous êtes prêt !",
       "subtitle": "Commençons votre parcours fitness ensemble"
+    },
+    "account": {
+      "title": "Une dernière étape",
+      "titleWithName": "Une dernière étape, {{name}}",
+      "subtitle": "Créez votre compte pour enregistrer votre plan et suivre vos progrès.",
+      "emailPlaceholder": "vous@exemple.com",
+      "passwordPlaceholder": "Au moins 6 caractères",
+      "agreePrefix": "J'accepte les",
+      "agreeAnd": "et la",
+      "createAccount": "Créer un compte",
+      "creatingAccount": "Création du compte...",
+      "signUpError": "Erreur d'inscription",
+      "signUpFailed": "Échec de l'inscription"
     }
   },
   "tabs": {

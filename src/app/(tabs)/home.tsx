@@ -17,6 +17,7 @@ import {
 } from "react-native";
 import AnimatedScreen from "../../components/ui/AnimatedScreen";
 import AnimatedSection from "../../components/ui/AnimatedSection";
+import ProModal from "../../components/ui/ProModal";
 import { FONTS } from "../../constants/fonts";
 import { Theme } from "../../constants/themes";
 import { useAuth } from "../../contexts/AuthContext";
@@ -35,7 +36,6 @@ const OBJECTIVE_DAYS_KEY = "@hylift_home_weekly_objective_days";
 const DISPLAY_NAME_KEY = "@hylift_display_name";
 
 type DayStatus = "completed" | "missed" | "pending" | "off";
-
 
 // Difficulty bolts component
 function DifficultyBolts({ level, theme }: { level: number; theme: Theme }) {
@@ -65,6 +65,7 @@ export default function Home() {
   const [weeklyObjective, setWeeklyObjective] = useState(3);
   const [weeklyObjectiveDays, setWeeklyObjectiveDays] = useState<number[]>([]);
   const [displayName, setDisplayName] = useState("");
+  const [isProModalVisible, setIsProModalVisible] = useState(false);
 
   const now = new Date();
   const todayDayIndex = (now.getDay() + 6) % 7; // Convert Sun=0 to Mon=0 based
@@ -110,7 +111,7 @@ export default function Home() {
       return () => {
         isMounted = false;
       };
-    }, [])
+    }, []),
   );
 
   const weekDays = useMemo(() => {
@@ -164,11 +165,26 @@ export default function Home() {
   const caloriesConsumed = todaySummary.totalCalories;
   const caloriesBurned = todayCaloriesBurned;
 
-  const macros = useMemo(() => ({
-    protein: { current: todaySummary.totalProtein, goal: goals.proteinGoal, color: "#4A90D9" },
-    carbs: { current: todaySummary.totalCarbs, goal: goals.carbsGoal, color: "#F5A623" },
-    fat: { current: todaySummary.totalFat, goal: goals.fatGoal, color: "#ED6665" },
-  }), [todaySummary, goals]);
+  const macros = useMemo(
+    () => ({
+      protein: {
+        current: todaySummary.totalProtein,
+        goal: goals.proteinGoal,
+        color: "#4A90D9",
+      },
+      carbs: {
+        current: todaySummary.totalCarbs,
+        goal: goals.carbsGoal,
+        color: "#F5A623",
+      },
+      fat: {
+        current: todaySummary.totalFat,
+        goal: goals.fatGoal,
+        color: "#ED6665",
+      },
+    }),
+    [todaySummary, goals],
+  );
 
   const bodyFocusOptions = [
     t("home.abs"),
@@ -210,21 +226,30 @@ export default function Home() {
       duration: "15 mins",
       exercises: 16,
       difficulty: 1,
-      image: genderedImages.bodyFocus[selectedBodyFocus % genderedImages.bodyFocus.length],
+      image:
+        genderedImages.bodyFocus[
+          selectedBodyFocus % genderedImages.bodyFocus.length
+        ],
     },
     {
       name: selectedLabel + " " + t("home.intermediate"),
       duration: "24 mins",
       exercises: 21,
       difficulty: 2,
-      image: genderedImages.bodyFocus[(selectedBodyFocus + 1) % genderedImages.bodyFocus.length],
+      image:
+        genderedImages.bodyFocus[
+          (selectedBodyFocus + 1) % genderedImages.bodyFocus.length
+        ],
     },
     {
       name: selectedLabel + " " + t("home.advanced"),
       duration: "27 mins",
       exercises: 21,
       difficulty: 3,
-      image: genderedImages.bodyFocus[(selectedBodyFocus + 2) % genderedImages.bodyFocus.length],
+      image:
+        genderedImages.bodyFocus[
+          (selectedBodyFocus + 2) % genderedImages.bodyFocus.length
+        ],
     },
   ];
 
@@ -260,6 +285,10 @@ export default function Home() {
 
   return (
     <AnimatedScreen style={styles.container}>
+      <ProModal
+        visible={isProModalVisible}
+        onClose={() => setIsProModalVisible(false)}
+      />
       {themeType === "female" && (
         <Image
           source={require("../../../assets/girly.png")}
@@ -273,72 +302,48 @@ export default function Home() {
       >
         {/* ── Header ──────────────────────────────────────────────── */}
         <AnimatedSection delay={0}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>{t("home.homeWorkout")}</Text>
-          <View style={styles.headerRight}>
-            {themeType === "female" && (
+          <View style={styles.header}>
+            <Text style={styles.headerTitle}>{t("home.homeWorkout")}</Text>
+            <View style={styles.headerRight}>
               <Pressable
-                onPress={() => setTheme("male")}
                 style={({ pressed }) => [
-                  styles.darkModeBtn,
-                  pressed && { opacity: 0.7 },
+                  styles.proBadge,
+                  pressed && { opacity: 0.8 },
                 ]}
+                onPress={() => setIsProModalVisible(true)}
               >
-                <Ionicons name="male" size={20} color={theme.foreground.gray} />
+                <Ionicons name="diamond" size={13} color="#fff" />
+                <Text style={styles.proBadgeText}>Pro</Text>
               </Pressable>
-            )}
-            {(themeType === "male" || themeType === "dark") && (
-              <Pressable
-                onPress={() => setTheme(themeType === "dark" ? "male" : "dark")}
-                style={({ pressed }) => [
-                  styles.darkModeBtn,
-                  pressed && { opacity: 0.7 },
-                ]}
-              >
-                <Ionicons
-                  name={themeType === "dark" ? "sunny" : "moon"}
-                  size={20}
-                  color={themeType === "dark" ? "#D4A44C" : theme.foreground.gray}
-                />
-              </Pressable>
-            )}
-            <Ionicons name="flame" size={26} color="#FF4444" />
-            <Pressable
-              style={({ pressed }) => [
-                styles.proBadge,
-                pressed && { opacity: 0.8 },
-              ]}
-              onPress={() => router.navigate("/settings" as any)}
-            >
-              <Ionicons name="diamond" size={13} color="#fff" />
-              <Text style={styles.proBadgeText}>{t("home.pro")}</Text>
-            </Pressable>
+            </View>
           </View>
-        </View>
         </AnimatedSection>
 
         {/* ── Greeting ────────────────────────────────────────── */}
         <AnimatedSection delay={80}>
-        <Text style={styles.greeting}>
-          {(() => {
-            const name =
-              displayName ||
-              (user?.user_metadata as { username?: string } | undefined)?.username ||
-              user?.email?.split("@")[0] ||
-              "";
-            const greeting =
-              now.getHours() < 18
-                ? t("home.goodMorning", "Good morning")
-                : t("home.goodEvening", "Good evening");
-            return name ? `${greeting}, ${name}` : greeting;
-          })()}
-        </Text>
+          <Text style={styles.greeting}>
+            {(() => {
+              const name =
+                displayName ||
+                (user?.user_metadata as { username?: string } | undefined)
+                  ?.username ||
+                user?.email?.split("@")[0] ||
+                "";
+              const greeting =
+                now.getHours() < 18
+                  ? t("home.goodMorning", "Good morning")
+                  : t("home.goodEvening", "Good evening");
+              return name ? `${greeting}, ${name}` : greeting;
+            })()}
+          </Text>
         </AnimatedSection>
 
         {/* ── Calorie Summary (Donut + Stats) ─────────────────────── */}
-{/* ── Résumé Santé (Bento Grid) ───────────────────────── */}
+        {/* ── Résumé Santé (Bento Grid) ───────────────────────── */}
         <AnimatedSection delay={160}>
-        <Text style={styles.sectionTitle}>{t("home.healthSummary", "RÉSUMÉ SANTÉ")}</Text>
+          <Text style={styles.sectionTitle}>
+            {t("home.healthSummary", "RÉSUMÉ SANTÉ")}
+          </Text>
         </AnimatedSection>
         <View style={styles.healthGrid}>
           {[
@@ -387,259 +392,279 @@ export default function Home() {
               unit: "min",
             },
           ].map((item, index) => {
-            const percent = Math.min(Math.round((item.value / item.goal) * 100), 100);
+            const percent = Math.min(
+              Math.round((item.value / item.goal) * 100),
+              100,
+            );
             return (
-              <AnimatedSection
-                key={index}
-                delay={200 + index * 90}
-                scale
-              >
-              <ImageBackground
-                source={item.image}
-                style={styles.healthTile}
-                imageStyle={styles.healthTileImage}
-                resizeMode="cover"
-              >
-                <LinearGradient
-                  colors={[item.gradient[0], item.gradient[1]]}
-                  style={styles.healthTileOverlay}
+              <AnimatedSection key={index} delay={200 + index * 90} scale>
+                <ImageBackground
+                  source={item.image}
+                  style={styles.healthTile}
+                  imageStyle={styles.healthTileImage}
+                  resizeMode="cover"
                 >
-                  <View style={styles.healthTileTop}>
-                    <View style={styles.healthTileIcon}>
-                      {item.iconType === "mci" ? (
-                        <MaterialCommunityIcons name={item.icon as any} size={18} color="#FFF" />
-                      ) : (
-                        <Ionicons name={item.icon as any} size={18} color="#FFF" />
-                      )}
+                  <LinearGradient
+                    colors={[item.gradient[0], item.gradient[1]]}
+                    style={styles.healthTileOverlay}
+                  >
+                    <View style={styles.healthTileTop}>
+                      <View style={styles.healthTileIcon}>
+                        {item.iconType === "mci" ? (
+                          <MaterialCommunityIcons
+                            name={item.icon as any}
+                            size={18}
+                            color="#FFF"
+                          />
+                        ) : (
+                          <Ionicons
+                            name={item.icon as any}
+                            size={18}
+                            color="#FFF"
+                          />
+                        )}
+                      </View>
+                      <Text style={styles.healthTilePercent}>{percent}%</Text>
                     </View>
-                    <Text style={styles.healthTilePercent}>{percent}%</Text>
-                  </View>
-                  <Text style={styles.healthTileValue}>
-                    {item.goal >= 10000 ? `${(item.value / 1000).toFixed(1)}k` : Math.round(item.value)}
-                  </Text>
-                  <Text style={styles.healthTileLabel}>{item.label}</Text>
-                  <Text style={styles.healthTileGoal}>
-                    / {item.goal >= 10000 ? `${item.goal / 1000}k` : item.goal} {item.unit}
-                  </Text>
-                </LinearGradient>
-              </ImageBackground>
+                    <Text style={styles.healthTileValue}>
+                      {item.goal >= 10000
+                        ? `${(item.value / 1000).toFixed(1)}k`
+                        : Math.round(item.value)}
+                    </Text>
+                    <Text style={styles.healthTileLabel}>{item.label}</Text>
+                    <Text style={styles.healthTileGoal}>
+                      /{" "}
+                      {item.goal >= 10000 ? `${item.goal / 1000}k` : item.goal}{" "}
+                      {item.unit}
+                    </Text>
+                  </LinearGradient>
+                </ImageBackground>
               </AnimatedSection>
             );
           })}
         </View>
 
-
         {/* ── Séances de la semaine ─────────────────────────────── */}
         <AnimatedSection delay={560} scale>
-        <View style={styles.weekSessionsCard}>
-          <View style={styles.weekSessionsHeader}>
-            <Text style={styles.weekSessionsTitle}>
-              {t("home.weekSessions", "SÉANCES DE LA SEMAINE")}
-            </Text>
-            <Text style={styles.weekObjectiveText}>
-              {t("home.objectiveOption", "{{count}} x semaine", {
-                count: weeklyObjective,
-              })}
-            </Text>
-            <Pressable
-              style={({ pressed }) => [
-                styles.objectiveBtn,
-                pressed && { opacity: 0.85 },
-              ]}
-              onPress={() => router.push("/objective")}
-            >
-              <Text style={styles.objectiveBtnText}>
-                {t("home.objective", "OBJECTIVE")}
+          <View style={styles.weekSessionsCard}>
+            <View style={styles.weekSessionsHeader}>
+              <Text style={styles.weekSessionsTitle}>
+                {t("home.weekSessions", "SÉANCES DE LA SEMAINE")}
               </Text>
-            </Pressable>
-          </View>
-
-          {/* Day chips row */}
-          <View style={styles.weekChipsRow}>
-            {weekDays.map((day, index) => {
-              const status = weekDayStatuses[index];
-              const isCompleted = status === "completed";
-              const isMissed = status === "missed";
-              const isOff = status === "off";
-              return (
-                <View
-                  key={index}
-                  style={[
-                    styles.weekChip,
-                    isCompleted && styles.weekChipCompleted,
-                    isMissed && styles.weekChipMissed,
-                    isOff && styles.weekChipOff,
-                    !isCompleted && !isMissed && styles.weekChipPending,
-                    day.isToday && styles.weekChipToday,
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.weekChipLabel,
-                      (isCompleted || isMissed || day.isToday) &&
-                        styles.weekChipLabelActive,
-                    ]}
-                  >
-                    {day.label}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.weekChipDate,
-                      (isCompleted || isMissed || day.isToday) &&
-                        styles.weekChipLabelActive,
-                    ]}
-                  >
-                    {day.dayOfMonth}
-                  </Text>
-                  {isCompleted && (
-                    <Ionicons name="checkmark" size={18} color="#fff" />
-                  )}
-                  {isMissed && (
-                    <Ionicons name="close" size={18} color="#fff" />
-                  )}
-                  {!isCompleted && !isMissed && !isOff && (
-                    <Text style={styles.weekChipDash}>—</Text>
-                  )}
-                  {isOff && <Text style={styles.weekChipOffMark}>•</Text>}
-                </View>
-              );
-            })}
-          </View>
-
-          {/* Today's session card */}
-          <Pressable
-            style={({ pressed }) => [
-              styles.nextWorkoutCard,
-              pressed && { opacity: 0.95, transform: [{ scale: 0.98 }] },
-            ]}
-            onPress={() => router.navigate("/workout" as any)}
-          >
-            <Image
-              source={genderedImages.nextWorkout}
-              style={styles.nextWorkoutImage}
-              resizeMode="cover"
-            />
-            <LinearGradient
-              colors={["rgba(0,0,0,0.1)", "rgba(0,0,0,0.75)"]}
-              style={styles.nextWorkoutGradient}
-            />
-            <View style={styles.nextWorkoutContent}>
-              <View style={styles.nextWorkoutInfo}>
-                <Text style={styles.nextWorkoutName}>
-                  LEGS DAY: CUISSES & MOLLETS
-                </Text>
-                <View style={styles.sessionDetails}>
-                  <View style={styles.sessionTag}>
-                    <Ionicons name="barbell-outline" size={12} color="rgba(255,255,255,0.8)" />
-                    <Text style={styles.sessionTagText}>Squats, Soulevé de terre, Presse</Text>
-                  </View>
-                  <View style={styles.sessionTag}>
-                    <Ionicons name="time-outline" size={12} color="rgba(255,255,255,0.8)" />
-                    <Text style={styles.sessionTagText}>17:30 · 50 min</Text>
-                  </View>
-                </View>
-              </View>
+              <Text style={styles.weekObjectiveText}>
+                {t("home.objectiveOption", "{{count}} x semaine", {
+                  count: weeklyObjective,
+                })}
+              </Text>
               <Pressable
                 style={({ pressed }) => [
-                  styles.nextWorkoutBtn,
-                  pressed && { opacity: 0.9 },
+                  styles.objectiveBtn,
+                  pressed && { opacity: 0.85 },
                 ]}
-                onPress={() => router.navigate("/workout" as any)}
+                onPress={() => router.push("/objective")}
               >
-                <Text style={styles.nextWorkoutBtnText}>
-                  {t("home.start", "DÉMARRER")}
+                <Text style={styles.objectiveBtnText}>
+                  {t("home.objective", "OBJECTIVE")}
                 </Text>
               </Pressable>
             </View>
-          </Pressable>
-        </View>
+
+            {/* Day chips row */}
+            <View style={styles.weekChipsRow}>
+              {weekDays.map((day, index) => {
+                const status = weekDayStatuses[index];
+                const isCompleted = status === "completed";
+                const isMissed = status === "missed";
+                const isOff = status === "off";
+                return (
+                  <View
+                    key={index}
+                    style={[
+                      styles.weekChip,
+                      isCompleted && styles.weekChipCompleted,
+                      isMissed && styles.weekChipMissed,
+                      isOff && styles.weekChipOff,
+                      !isCompleted && !isMissed && styles.weekChipPending,
+                      day.isToday && styles.weekChipToday,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.weekChipLabel,
+                        (isCompleted || isMissed || day.isToday) &&
+                          styles.weekChipLabelActive,
+                      ]}
+                    >
+                      {day.label}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.weekChipDate,
+                        (isCompleted || isMissed || day.isToday) &&
+                          styles.weekChipLabelActive,
+                      ]}
+                    >
+                      {day.dayOfMonth}
+                    </Text>
+                    {isCompleted && (
+                      <Ionicons name="checkmark" size={18} color="#fff" />
+                    )}
+                    {isMissed && (
+                      <Ionicons name="close" size={18} color="#fff" />
+                    )}
+                    {!isCompleted && !isMissed && !isOff && (
+                      <Text style={styles.weekChipDash}>—</Text>
+                    )}
+                    {isOff && <Text style={styles.weekChipOffMark}>•</Text>}
+                  </View>
+                );
+              })}
+            </View>
+
+            {/* Today's session card */}
+            <Pressable
+              style={({ pressed }) => [
+                styles.nextWorkoutCard,
+                pressed && { opacity: 0.95, transform: [{ scale: 0.98 }] },
+              ]}
+              onPress={() => router.navigate("/workout" as any)}
+            >
+              <Image
+                source={genderedImages.nextWorkout}
+                style={styles.nextWorkoutImage}
+                resizeMode="cover"
+              />
+              <LinearGradient
+                colors={["rgba(0,0,0,0.1)", "rgba(0,0,0,0.75)"]}
+                style={styles.nextWorkoutGradient}
+              />
+              <View style={styles.nextWorkoutContent}>
+                <View style={styles.nextWorkoutInfo}>
+                  <Text style={styles.nextWorkoutName}>
+                    LEGS DAY: CUISSES & MOLLETS
+                  </Text>
+                  <View style={styles.sessionDetails}>
+                    <View style={styles.sessionTag}>
+                      <Ionicons
+                        name="barbell-outline"
+                        size={12}
+                        color="rgba(255,255,255,0.8)"
+                      />
+                      <Text style={styles.sessionTagText}>
+                        Squats, Soulevé de terre, Presse
+                      </Text>
+                    </View>
+                    <View style={styles.sessionTag}>
+                      <Ionicons
+                        name="time-outline"
+                        size={12}
+                        color="rgba(255,255,255,0.8)"
+                      />
+                      <Text style={styles.sessionTagText}>17:30 · 50 min</Text>
+                    </View>
+                  </View>
+                </View>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.nextWorkoutBtn,
+                    pressed && { opacity: 0.9 },
+                  ]}
+                  onPress={() => router.navigate("/workout" as any)}
+                >
+                  <Text style={styles.nextWorkoutBtnText}>
+                    {t("home.start", "DÉMARRER")}
+                  </Text>
+                </Pressable>
+              </View>
+            </Pressable>
+          </View>
         </AnimatedSection>
 
         {/* ── Challenge Section ───────────────────────────────────── */}
         <AnimatedSection delay={640}>
-        <Text style={styles.sectionTitle}>{t("home.challenge")}</Text>
+          <Text style={styles.sectionTitle}>{t("home.challenge")}</Text>
         </AnimatedSection>
         <AnimatedSection delay={700} direction="left" offset={40}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.challengeScroll}
-          snapToInterval={CHALLENGE_CARD_WIDTH + 14}
-          decelerationRate="fast"
-        >
-          {challenges.map((challenge, index) => (
-            <View key={index} style={styles.challengeCard}>
-              <Image
-                source={challenge.image}
-                style={styles.challengeImage}
-                resizeMode="cover"
-              />
-              <LinearGradient
-                colors={[
-                  "transparent",
-                  "rgba(0,0,0,0.3)",
-                  challenge.color + "E6",
-                ]}
-                style={styles.challengeGradient}
-              />
-              <View style={styles.challengeContent}>
-                <View style={styles.challengeDaysBadge}>
-                  <Text style={styles.challengeDaysText}>
-                    {challenge.days} {t("home.days")}
-                  </Text>
-                </View>
-                <Text style={styles.challengeTitle}>{challenge.title}</Text>
-                <Text style={styles.challengeDesc} numberOfLines={3}>
-                  {challenge.desc}
-                </Text>
-                <Pressable
-                  style={({ pressed }) => [
-                    styles.challengeStartBtn,
-                    pressed && { opacity: 0.9, transform: [{ scale: 0.97 }] },
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.challengeScroll}
+            snapToInterval={CHALLENGE_CARD_WIDTH + 14}
+            decelerationRate="fast"
+          >
+            {challenges.map((challenge, index) => (
+              <View key={index} style={styles.challengeCard}>
+                <Image
+                  source={challenge.image}
+                  style={styles.challengeImage}
+                  resizeMode="cover"
+                />
+                <LinearGradient
+                  colors={[
+                    "transparent",
+                    "rgba(0,0,0,0.3)",
+                    challenge.color + "E6",
                   ]}
-                >
-                  <Text style={styles.challengeStartText}>
-                    {t("home.start").toUpperCase()}
+                  style={styles.challengeGradient}
+                />
+                <View style={styles.challengeContent}>
+                  <View style={styles.challengeDaysBadge}>
+                    <Text style={styles.challengeDaysText}>
+                      {challenge.days} {t("home.days")}
+                    </Text>
+                  </View>
+                  <Text style={styles.challengeTitle}>{challenge.title}</Text>
+                  <Text style={styles.challengeDesc} numberOfLines={3}>
+                    {challenge.desc}
                   </Text>
-                </Pressable>
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.challengeStartBtn,
+                      pressed && { opacity: 0.9, transform: [{ scale: 0.97 }] },
+                    ]}
+                  >
+                    <Text style={styles.challengeStartText}>
+                      {t("home.start").toUpperCase()}
+                    </Text>
+                  </Pressable>
+                </View>
               </View>
-            </View>
-          ))}
-        </ScrollView>
+            ))}
+          </ScrollView>
         </AnimatedSection>
 
         {/* ── Body Focus Section ──────────────────────────────────── */}
         <AnimatedSection delay={780}>
-        <Text style={styles.sectionTitle}>{t("home.bodyFocus")}</Text>
+          <Text style={styles.sectionTitle}>{t("home.bodyFocus")}</Text>
         </AnimatedSection>
 
         {/* Filter Chips */}
         <AnimatedSection delay={840} direction="left" offset={30}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.chipsScroll}
-        >
-          {bodyFocusOptions.map((option, index) => (
-            <Pressable
-              key={index}
-              style={[
-                styles.chip,
-                selectedBodyFocus === index && styles.chipActive,
-              ]}
-              onPress={() => setSelectedBodyFocus(index)}
-            >
-              <Text
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.chipsScroll}
+          >
+            {bodyFocusOptions.map((option, index) => (
+              <Pressable
+                key={index}
                 style={[
-                  styles.chipText,
-                  selectedBodyFocus === index && styles.chipTextActive,
+                  styles.chip,
+                  selectedBodyFocus === index && styles.chipActive,
                 ]}
+                onPress={() => setSelectedBodyFocus(index)}
               >
-                {option}
-              </Text>
-            </Pressable>
-          ))}
-        </ScrollView>
+                <Text
+                  style={[
+                    styles.chipText,
+                    selectedBodyFocus === index && styles.chipTextActive,
+                  ]}
+                >
+                  {option}
+                </Text>
+              </Pressable>
+            ))}
+          </ScrollView>
         </AnimatedSection>
 
         {/* Exercise List */}
@@ -651,86 +676,86 @@ export default function Home() {
               direction="left"
               offset={30}
             >
-            <Pressable
-              style={({ pressed }) => [
-                styles.exerciseRow,
-                pressed && { opacity: 0.8 },
-              ]}
-            >
-              <Image
-                source={exercise.image}
-                style={styles.exerciseImage}
-                resizeMode="cover"
-              />
-              <View style={styles.exerciseInfo}>
-                <Text style={styles.exerciseName}>{exercise.name}</Text>
-                <Text style={styles.exerciseMeta}>
-                  {exercise.duration} · {exercise.exercises}{" "}
-                  {t("home.exercises")}
-                </Text>
-                <DifficultyBolts level={exercise.difficulty} theme={theme} />
-              </View>
-            </Pressable>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.exerciseRow,
+                  pressed && { opacity: 0.8 },
+                ]}
+              >
+                <Image
+                  source={exercise.image}
+                  style={styles.exerciseImage}
+                  resizeMode="cover"
+                />
+                <View style={styles.exerciseInfo}>
+                  <Text style={styles.exerciseName}>{exercise.name}</Text>
+                  <Text style={styles.exerciseMeta}>
+                    {exercise.duration} · {exercise.exercises}{" "}
+                    {t("home.exercises")}
+                  </Text>
+                  <DifficultyBolts level={exercise.difficulty} theme={theme} />
+                </View>
+              </Pressable>
             </AnimatedSection>
           ))}
         </View>
 
         {/* ── Custom Workout Section ──────────────────────────────── */}
         <AnimatedSection delay={1100}>
-        <Text style={styles.sectionTitle}>{t("home.customWorkout")}</Text>
+          <Text style={styles.sectionTitle}>{t("home.customWorkout")}</Text>
         </AnimatedSection>
         <AnimatedSection delay={1160} scale>
-        <Pressable
-          style={({ pressed }) => [
-            styles.customWorkoutCard,
-            pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
-          ]}
-          onPress={() => router.navigate("/create-routine" as any)}
-        >
-          <LinearGradient
-            colors={[theme.primary.light, theme.primary.main]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.customWorkoutGradient}
+          <Pressable
+            style={({ pressed }) => [
+              styles.customWorkoutCard,
+              pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
+            ]}
+            onPress={() => router.navigate("/create-routine" as any)}
           >
-            <View style={styles.customWorkoutContent}>
-              <Text style={styles.customWorkoutTitle}>
-                {t("home.createYourOwn")}
-              </Text>
-              <Pressable
-                style={({ pressed }) => [
-                  styles.goButton,
-                  pressed && { opacity: 0.9, transform: [{ scale: 0.95 }] },
-                ]}
-                onPress={() => router.navigate("/create-routine" as any)}
-              >
-                <Text style={styles.goButtonText}>GO</Text>
-              </Pressable>
-            </View>
-            <View style={styles.customWorkoutIconContainer}>
-              <MaterialCommunityIcons
-                name="pencil-ruler"
-                size={56}
-                color="rgba(255,255,255,0.25)"
-              />
-            </View>
-          </LinearGradient>
-        </Pressable>
+            <LinearGradient
+              colors={[theme.primary.light, theme.primary.main]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.customWorkoutGradient}
+            >
+              <View style={styles.customWorkoutContent}>
+                <Text style={styles.customWorkoutTitle}>
+                  {t("home.createYourOwn")}
+                </Text>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.goButton,
+                    pressed && { opacity: 0.9, transform: [{ scale: 0.95 }] },
+                  ]}
+                  onPress={() => router.navigate("/create-routine" as any)}
+                >
+                  <Text style={styles.goButtonText}>GO</Text>
+                </Pressable>
+              </View>
+              <View style={styles.customWorkoutIconContainer}>
+                <MaterialCommunityIcons
+                  name="pencil-ruler"
+                  size={56}
+                  color="rgba(255,255,255,0.25)"
+                />
+              </View>
+            </LinearGradient>
+          </Pressable>
         </AnimatedSection>
 
         {/* ── Just For You Section ─────────────────────────────────── */}
         <AnimatedSection delay={1240}>
-        <View style={styles.sectionHeaderRow}>
-          <Text style={styles.sectionTitle}>{t("home.justForYou")}</Text>
-          <Pressable
-            onPress={() => router.navigate("/search" as any)}
-            style={({ pressed }) => pressed && { opacity: 0.7 }}
-          >
-            <Text style={styles.moreLink}>
-              {t("home.more")} {">"}
-            </Text>
-          </Pressable>
-        </View>
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.sectionTitle}>{t("home.justForYou")}</Text>
+            <Pressable
+              onPress={() => router.navigate("/search" as any)}
+              style={({ pressed }) => pressed && { opacity: 0.7 }}
+            >
+              <Text style={styles.moreLink}>
+                {t("home.more")} {">"}
+              </Text>
+            </Pressable>
+          </View>
         </AnimatedSection>
         <View style={styles.justForYouList}>
           {justForYouWorkouts.map((workout, index) => (
@@ -740,73 +765,73 @@ export default function Home() {
               direction="left"
               offset={30}
             >
-            <Pressable
-              style={({ pressed }) => [
-                styles.justForYouRow,
-                pressed && { opacity: 0.8 },
-              ]}
-            >
-              <Image
-                source={workout.image}
-                style={styles.justForYouImage}
-                resizeMode="cover"
-              />
-              <View style={styles.justForYouInfo}>
-                <Text style={styles.justForYouName}>{workout.name}</Text>
-                <Text style={styles.justForYouMeta}>
-                  {workout.duration} · {workout.level}
-                </Text>
-              </View>
-            </Pressable>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.justForYouRow,
+                  pressed && { opacity: 0.8 },
+                ]}
+              >
+                <Image
+                  source={workout.image}
+                  style={styles.justForYouImage}
+                  resizeMode="cover"
+                />
+                <View style={styles.justForYouInfo}>
+                  <Text style={styles.justForYouName}>{workout.name}</Text>
+                  <Text style={styles.justForYouMeta}>
+                    {workout.duration} · {workout.level}
+                  </Text>
+                </View>
+              </Pressable>
             </AnimatedSection>
           ))}
         </View>
 
         {/* ── Stretch & Warm Up Section ────────────────────────────── */}
         <AnimatedSection delay={1460}>
-        <View style={styles.sectionHeaderRow}>
-          <Text style={styles.sectionTitle}>
-            {t("home.stretchAndWarmUp")}
-          </Text>
-          <Pressable
-            onPress={() => router.navigate("/search" as any)}
-            style={({ pressed }) => pressed && { opacity: 0.7 }}
-          >
-            <Text style={styles.moreLink}>
-              {t("home.more")} {">"}
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.sectionTitle}>
+              {t("home.stretchAndWarmUp")}
             </Text>
-          </Pressable>
-        </View>
-        </AnimatedSection>
-        <AnimatedSection delay={1520} direction="left" offset={40}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.stretchScroll}
-        >
-          {stretchWorkouts.map((workout, index) => (
             <Pressable
-              key={index}
-              style={({ pressed }) => [
-                styles.stretchCard,
-                pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
-              ]}
+              onPress={() => router.navigate("/search" as any)}
+              style={({ pressed }) => pressed && { opacity: 0.7 }}
             >
-              <Image
-                source={workout.image}
-                style={styles.stretchImage}
-                resizeMode="cover"
-              />
-              <LinearGradient
-                colors={["transparent", "rgba(0,0,0,0.6)"]}
-                style={styles.stretchGradient}
-              />
-              <Text style={styles.stretchName} numberOfLines={2}>
-                {workout.name}
+              <Text style={styles.moreLink}>
+                {t("home.more")} {">"}
               </Text>
             </Pressable>
-          ))}
-        </ScrollView>
+          </View>
+        </AnimatedSection>
+        <AnimatedSection delay={1520} direction="left" offset={40}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.stretchScroll}
+          >
+            {stretchWorkouts.map((workout, index) => (
+              <Pressable
+                key={index}
+                style={({ pressed }) => [
+                  styles.stretchCard,
+                  pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
+                ]}
+              >
+                <Image
+                  source={workout.image}
+                  style={styles.stretchImage}
+                  resizeMode="cover"
+                />
+                <LinearGradient
+                  colors={["transparent", "rgba(0,0,0,0.6)"]}
+                  style={styles.stretchGradient}
+                />
+                <Text style={styles.stretchName} numberOfLines={2}>
+                  {workout.name}
+                </Text>
+              </Pressable>
+            ))}
+          </ScrollView>
         </AnimatedSection>
       </ScrollView>
     </AnimatedScreen>
@@ -1421,7 +1446,7 @@ function createStyles(theme: Theme) {
       fontSize: 15,
       color: theme.primary.main,
     },
-// ── Résumé Santé (Bento Grid) ─────────────────────────
+    // ── Résumé Santé (Bento Grid) ─────────────────────────
     healthGrid: {
       flexDirection: "row",
       flexWrap: "wrap",

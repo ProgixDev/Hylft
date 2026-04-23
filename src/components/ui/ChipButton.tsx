@@ -14,11 +14,12 @@ import { useTheme } from "../../contexts/ThemeContext";
 interface ChipButtonProps {
   title: string;
   onPress: () => void;
-  variant?: "primary" | "secondary" | "chip";
+  variant?: "primary" | "secondary" | "chip" | "white" | "google";
   size?: "sm" | "md" | "lg";
   fullWidth?: boolean;
   disabled?: boolean;
   icon?: React.ReactNode;
+  iconPosition?: "left" | "right";
   loading?: boolean;
 }
 
@@ -36,6 +37,7 @@ export default function ChipButton({
   fullWidth = false,
   disabled = false,
   icon,
+  iconPosition = "left",
   loading = false,
 }: ChipButtonProps) {
   const { theme } = useTheme();
@@ -56,6 +58,8 @@ export default function ChipButton({
         variant === "primary" && styles.primary,
         variant === "secondary" && styles.secondary,
         variant === "chip" && styles.chip,
+        variant === "white" && styles.white,
+        variant === "google" && styles.google,
         fullWidth && styles.fullWidth,
         isDisabled && styles.disabled,
         pressed && !isDisabled && { opacity: 0.8 },
@@ -66,11 +70,19 @@ export default function ChipButton({
       {loading ? (
         <ActivityIndicator
           size="small"
-          color={variant === "secondary" ? theme.primary.main : theme.background.dark}
+          color={
+            variant === "secondary"
+              ? theme.primary.main
+              : variant === "google"
+                ? GOOGLE_BLUE
+              : variant === "white"
+                ? theme.background.dark
+                : theme.background.dark
+          }
         />
       ) : (
         <View style={styles.content}>
-          {icon && <View style={styles.iconWrapper}>{icon}</View>}
+          {icon && iconPosition === "left" && <View style={styles.iconLeft}>{icon}</View>}
           <Text
             style={[
               styles.text,
@@ -78,15 +90,20 @@ export default function ChipButton({
               variant === "primary" && styles.primaryText,
               variant === "secondary" && styles.secondaryText,
               variant === "chip" && styles.chipText,
+              variant === "white" && styles.whiteText,
+              variant === "google" && styles.googleText,
             ]}
           >
             {title}
           </Text>
+          {icon && iconPosition === "right" && <View style={styles.iconRight}>{icon}</View>}
         </View>
       )}
     </Pressable>
   );
 }
+
+const GOOGLE_BLUE = "#1A73E8";
 
 function createStyles(theme: Theme) {
   return StyleSheet.create({
@@ -117,6 +134,36 @@ function createStyles(theme: Theme) {
     chip: {
       backgroundColor: theme.primary.main,
     },
+    white: {
+      backgroundColor: "#FFFFFF",
+      ...Platform.select({
+        ios: {
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.12,
+          shadowRadius: 4,
+        },
+        android: {
+          elevation: 2,
+        },
+      }),
+    },
+    google: {
+      backgroundColor: "#FFFFFF",
+      borderWidth: 1,
+      borderColor: GOOGLE_BLUE,
+      ...Platform.select({
+        ios: {
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.08,
+          shadowRadius: 4,
+        },
+        android: {
+          elevation: 1,
+        },
+      }),
+    },
     fullWidth: {
       width: "100%",
     },
@@ -128,8 +175,11 @@ function createStyles(theme: Theme) {
       alignItems: "center",
       justifyContent: "center",
     },
-    iconWrapper: {
+    iconLeft: {
       marginRight: 10,
+    },
+    iconRight: {
+      marginLeft: 10,
     },
     text: {
       fontFamily: FONTS.semiBold,
@@ -143,6 +193,12 @@ function createStyles(theme: Theme) {
     chipText: {
       fontFamily: FONTS.medium,
       color: theme.background.dark,
+    },
+    whiteText: {
+      color: theme.background.dark,
+    },
+    googleText: {
+      color: GOOGLE_BLUE,
     },
   });
 }

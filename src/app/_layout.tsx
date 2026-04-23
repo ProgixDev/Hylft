@@ -11,14 +11,19 @@ import { StatusBar } from "expo-status-bar";
 import React, { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+import {
+    SafeAreaProvider,
+    useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { ActiveWorkoutProvider } from "../contexts/ActiveWorkoutContext";
-import { AuthProvider } from "../contexts/AuthContext";
+import { AuthProvider, useAuth } from "../contexts/AuthContext";
 import { CreateRoutineProvider } from "../contexts/CreateRoutineContext";
 import { HealthProvider } from "../contexts/HealthContext";
 import { I18nProvider, useI18n } from "../contexts/I18nContext";
 import { NutritionProvider } from "../contexts/NutritionContext";
-import { ThemeProvider } from "../contexts/ThemeContext";
+import { ThemeProvider, useTheme } from "../contexts/ThemeContext";
+
+import ProModal from "../components/ui/ProModal";
 
 SplashScreen.preventAutoHideAsync().catch(() => {
   // Ignore errors if splash screen was already prevented.
@@ -26,6 +31,23 @@ SplashScreen.preventAutoHideAsync().catch(() => {
 
 function AppContent() {
   const { isLoading } = useI18n();
+  const { user } = useAuth();
+  const { theme, themeType } = useTheme();
+  const insets = useSafeAreaInsets();
+  const [showProModal, setShowProModal] = React.useState(false);
+  const previousUser = React.useRef(user);
+
+  React.useEffect(() => {
+    // Show ProModal when user transitions from null to logged in
+    if (!previousUser.current && user) {
+      // In a real app we'd check if user.isPro here
+      // const isPro = false;
+      // if (!isPro) {
+      setShowProModal(true);
+      // }
+    }
+    previousUser.current = user;
+  }, [user]);
 
   if (isLoading) {
     return (
@@ -34,22 +56,37 @@ function AppContent() {
           flex: 1,
           justifyContent: "center",
           alignItems: "center",
-          backgroundColor: "#FFFFFF",
+          backgroundColor: theme.background.dark,
         }}
       >
-        <ActivityIndicator size="large" color="#004BFF" />
+        <ActivityIndicator size="large" color={theme.primary.main} />
       </View>
     );
   }
 
   return (
     <>
-      <StatusBar style="dark" translucent backgroundColor="transparent" />
+      <StatusBar
+        style={themeType === "dark" ? "light" : "dark"}
+        translucent
+        backgroundColor="transparent"
+      />
+
+      <ProModal visible={showProModal} onClose={() => setShowProModal(false)} />
+
       <Stack
         screenOptions={{
           headerShown: false,
-          contentStyle: { backgroundColor: "#FFFFFF" },
-          statusBarStyle: "dark",
+          contentStyle: {
+            backgroundColor: theme.background.dark,
+            paddingTop: insets.top,
+            paddingBottom: insets.bottom,
+            paddingLeft: insets.left,
+            paddingRight: insets.right,
+          },
+          statusBarStyle: themeType === "dark" ? "light" : "dark",
+          statusBarTranslucent: true,
+          navigationBarColor: "transparent",
         }}
       >
         <Stack.Screen name="index" />
@@ -80,10 +117,6 @@ function AppContent() {
         <Stack.Screen name="get-started/health-connect" />
         <Stack.Screen name="get-started/ready" />
         <Stack.Screen name="get-started/email-preferences" />
-        <Stack.Screen
-          name="get-started/flow"
-          options={{ animation: "slide_from_right" }}
-        />
         <Stack.Screen
           name="get-started/username"
           options={{ animation: "slide_from_right" }}
@@ -169,17 +202,17 @@ export default function RootLayout() {
           <ThemeProvider>
             <AuthProvider>
               <HealthProvider>
-              <NutritionProvider>
-              <ActiveWorkoutProvider>
-                <CreateRoutineProvider>
-                <SafeAreaProvider>
-                  <SafeAreaView style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
-                    <AppContent />
-                  </SafeAreaView>
-                </SafeAreaProvider>
-                </CreateRoutineProvider>
-              </ActiveWorkoutProvider>
-              </NutritionProvider>
+                <NutritionProvider>
+                  <ActiveWorkoutProvider>
+                    <CreateRoutineProvider>
+                      <SafeAreaProvider>
+                        <View style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
+                          <AppContent />
+                        </View>
+                      </SafeAreaProvider>
+                    </CreateRoutineProvider>
+                  </ActiveWorkoutProvider>
+                </NutritionProvider>
               </HealthProvider>
             </AuthProvider>
           </ThemeProvider>

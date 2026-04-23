@@ -1,5 +1,5 @@
 import { MaterialIcons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import {
   ScrollView,
@@ -17,18 +17,20 @@ import ChipButton from "../../components/ui/ChipButton";
 
 export default function EmailPreferences() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ flow?: string }>();
+  const isSignupFlow = params.flow === "signup";
   const { theme } = useTheme();
   const { t } = useTranslation();
   const styles = createStyles(theme);
 
   const handleAccept = () => {
     // TODO: Save email preference
-    router.navigate("/get-started/ready");
+    router.navigate(isSignupFlow ? "/get-started/account" : "/get-started/ready");
   };
 
   const handleDecline = () => {
     // TODO: Save email preference
-    router.navigate("/get-started/ready");
+    router.navigate(isSignupFlow ? "/get-started/account" : "/get-started/ready");
   };
 
   return (

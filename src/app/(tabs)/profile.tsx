@@ -31,6 +31,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { api } from "../../services/api";
 import { pickAndUploadAvatar } from "../../services/avatarUploader";
 import { WeightEntry, WeightHistory } from "../../services/weightHistory";
+import { Shimmer } from "../../components/ui/PostSkeleton";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -103,6 +104,7 @@ export default function Profile() {
   const { user } = useAuth();
 
   const [myProfile, setMyProfile] = useState<MyProfile | null>(null);
+  const [isProfileLoading, setIsProfileLoading] = useState(true);
   const [userStats, setUserStats] = useState<UserStats>({
     posts_count: 0,
     followers_count: 0,
@@ -129,6 +131,7 @@ export default function Profile() {
 
   const loadProfileAndStats = useCallback(async () => {
     if (!user?.id) return;
+    setIsProfileLoading(true);
     try {
       const [prof, stats] = await Promise.all([
         api.getProfile() as Promise<MyProfile>,
@@ -138,6 +141,8 @@ export default function Profile() {
       setUserStats(stats);
     } catch {
       // swallow; header will still render with defaults.
+    } finally {
+      setIsProfileLoading(false);
     }
   }, [user?.id]);
 
@@ -224,6 +229,8 @@ export default function Profile() {
         <Image source={require("../../../assets/girly.png")} style={styles.bgOverlay} resizeMode="cover" />
       )}
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: 4, paddingBottom: Math.max(100, 24 + insets.bottom) }}>
+        {isProfileLoading ? <ProfileSkeleton /> : (
+          <>
 
         {/* ── Profile Header ─────────────────────────────────────── */}
         <ProfileHeader
@@ -446,6 +453,8 @@ export default function Profile() {
         </View>
 
         <DevRoutesSection />
+          </>
+        )}
 
       </ScrollView>
 
@@ -568,10 +577,253 @@ function DevRoutesSection() {
 }
 
 // ── Styles ──────────────────────────────────────────────────────────────────
+function ProfileSkeleton() {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
+  const isDark = theme.background.dark === "#0B0D0E";
+  const base = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)";
+  const highlight = isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.10)";
+
+  return (
+    <>
+      <View style={styles.skeletonHeaderWrap}>
+        <Shimmer style={styles.skeletonCover} baseColor={base} highlightColor={highlight} />
+        <View style={styles.skeletonAvatarShell}>
+          <Shimmer style={styles.skeletonAvatar} baseColor={base} highlightColor={highlight} />
+        </View>
+        <View style={styles.skeletonHeaderBody}>
+          <Shimmer style={styles.skeletonMemberSince} baseColor={base} highlightColor={highlight} />
+          <Shimmer style={styles.skeletonName} baseColor={base} highlightColor={highlight} />
+          <Shimmer style={styles.skeletonHandle} baseColor={base} highlightColor={highlight} />
+          <View style={styles.skeletonStatsRow}>
+            {Array.from({ length: 3 }).map((_, index) => (
+              <Shimmer key={index} style={styles.skeletonStatCard} baseColor={base} highlightColor={highlight} />
+            ))}
+          </View>
+          <View style={styles.skeletonActionRow}>
+            <Shimmer style={styles.skeletonPrimaryAction} baseColor={base} highlightColor={highlight} />
+            <Shimmer style={styles.skeletonSecondaryAction} baseColor={base} highlightColor={highlight} />
+          </View>
+        </View>
+      </View>
+
+      <Shimmer style={styles.skeletonSectionTitle} baseColor={base} highlightColor={highlight} />
+      <View style={styles.periodRow}>
+        {Array.from({ length: 3 }).map((_, index) => (
+          <Shimmer key={index} style={styles.skeletonPeriodTab} baseColor={base} highlightColor={highlight} />
+        ))}
+      </View>
+
+      <Shimmer style={styles.skeletonSectionTitle} baseColor={base} highlightColor={highlight} />
+      <View style={styles.chartCard}>
+        <View style={styles.skeletonWeightHeader}>
+          <View>
+            <Shimmer style={styles.skeletonMetricLarge} baseColor={base} highlightColor={highlight} />
+            <Shimmer style={styles.skeletonMetricSmall} baseColor={base} highlightColor={highlight} />
+          </View>
+          <Shimmer style={styles.skeletonBadge} baseColor={base} highlightColor={highlight} />
+        </View>
+        <Shimmer style={styles.skeletonChart} baseColor={base} highlightColor={highlight} />
+      </View>
+
+      <Shimmer style={styles.skeletonSectionTitle} baseColor={base} highlightColor={highlight} />
+      <View style={styles.bodyRow}>
+        {Array.from({ length: 3 }).map((_, index) => (
+          <View key={index} style={styles.bodyCard}>
+            <Shimmer style={styles.skeletonBodyLabel} baseColor={base} highlightColor={highlight} />
+            <Shimmer style={styles.skeletonBodyValue} baseColor={base} highlightColor={highlight} />
+            <Shimmer style={styles.skeletonBodyMeta} baseColor={base} highlightColor={highlight} />
+          </View>
+        ))}
+      </View>
+
+      <Shimmer style={styles.skeletonSectionTitle} baseColor={base} highlightColor={highlight} />
+      <View style={styles.chartCard}>
+        <Shimmer style={styles.skeletonMetricLarge} baseColor={base} highlightColor={highlight} />
+        <Shimmer style={styles.skeletonChart} baseColor={base} highlightColor={highlight} />
+      </View>
+
+      <Shimmer style={styles.skeletonSectionTitle} baseColor={base} highlightColor={highlight} />
+      <View style={styles.chartCard}>
+        <Shimmer style={styles.skeletonChart} baseColor={base} highlightColor={highlight} />
+        <View style={styles.skeletonLegendColumn}>
+          {Array.from({ length: 3 }).map((_, index) => (
+            <Shimmer key={index} style={styles.skeletonLegendRow} baseColor={base} highlightColor={highlight} />
+          ))}
+        </View>
+      </View>
+
+      <View style={styles.summaryHeader}>
+        <Shimmer style={styles.skeletonSummaryTitle} baseColor={base} highlightColor={highlight} />
+        <Shimmer style={styles.skeletonSummarySwitch} baseColor={base} highlightColor={highlight} />
+      </View>
+      <View style={styles.summaryGrid}>
+        {Array.from({ length: 4 }).map((_, index) => (
+          <Shimmer key={index} style={styles.skeletonSummaryCard} baseColor={base} highlightColor={highlight} />
+        ))}
+      </View>
+    </>
+  );
+}
+
 function createStyles(theme: Theme) {
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: theme.background.dark },
     bgOverlay: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, width: "100%", height: "100%", opacity: 0.3 },
+
+    skeletonHeaderWrap: {
+      marginBottom: 8,
+    },
+    skeletonCover: {
+      height: 220,
+      borderRadius: 0,
+    },
+    skeletonAvatarShell: {
+      marginTop: -44,
+      marginLeft: 20,
+      width: 96,
+      height: 96,
+      borderRadius: 48,
+      padding: 4,
+      backgroundColor: theme.background.dark,
+    },
+    skeletonAvatar: {
+      width: "100%",
+      height: "100%",
+      borderRadius: 44,
+    },
+    skeletonHeaderBody: {
+      paddingHorizontal: 20,
+      paddingTop: 16,
+    },
+    skeletonMemberSince: {
+      height: 12,
+      width: 120,
+      borderRadius: 6,
+      marginBottom: 14,
+    },
+    skeletonName: {
+      height: 24,
+      width: "58%",
+      borderRadius: 8,
+      marginBottom: 10,
+    },
+    skeletonHandle: {
+      height: 16,
+      width: "34%",
+      borderRadius: 8,
+      marginBottom: 18,
+    },
+    skeletonStatsRow: {
+      flexDirection: "row",
+      gap: 10,
+      marginBottom: 16,
+    },
+    skeletonStatCard: {
+      flex: 1,
+      height: 82,
+      borderRadius: 20,
+    },
+    skeletonActionRow: {
+      flexDirection: "row",
+      gap: 12,
+    },
+    skeletonPrimaryAction: {
+      flex: 1,
+      height: 50,
+      borderRadius: 16,
+    },
+    skeletonSecondaryAction: {
+      width: 120,
+      height: 50,
+      borderRadius: 16,
+    },
+    skeletonSectionTitle: {
+      height: 20,
+      width: 140,
+      borderRadius: 8,
+      marginHorizontal: 20,
+      marginTop: 16,
+      marginBottom: 12,
+    },
+    skeletonPeriodTab: {
+      width: 92,
+      height: 38,
+      borderRadius: 24,
+    },
+    skeletonWeightHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 16,
+    },
+    skeletonMetricLarge: {
+      height: 28,
+      width: 120,
+      borderRadius: 10,
+      marginBottom: 8,
+    },
+    skeletonMetricSmall: {
+      height: 12,
+      width: 84,
+      borderRadius: 6,
+    },
+    skeletonBadge: {
+      height: 34,
+      width: 110,
+      borderRadius: 18,
+    },
+    skeletonChart: {
+      width: "100%",
+      height: 150,
+      borderRadius: 16,
+    },
+    skeletonBodyLabel: {
+      width: "55%",
+      height: 10,
+      borderRadius: 5,
+      marginBottom: 10,
+    },
+    skeletonBodyValue: {
+      width: "65%",
+      height: 24,
+      borderRadius: 8,
+      marginBottom: 8,
+    },
+    skeletonBodyMeta: {
+      width: "45%",
+      height: 10,
+      borderRadius: 5,
+    },
+    skeletonLegendColumn: {
+      gap: 10,
+      marginTop: 14,
+    },
+    skeletonLegendRow: {
+      width: "100%",
+      height: 18,
+      borderRadius: 9,
+    },
+    skeletonSummaryTitle: {
+      width: 120,
+      height: 20,
+      borderRadius: 8,
+      marginHorizontal: 20,
+      marginTop: 16,
+      marginBottom: 12,
+    },
+    skeletonSummarySwitch: {
+      width: 90,
+      height: 32,
+      borderRadius: 16,
+      marginTop: 16,
+      marginBottom: 12,
+    },
+    skeletonSummaryCard: {
+      width: (SCREEN_WIDTH - 60) / 3,
+      minHeight: 120,
+      borderRadius: 18,
+    },
 
     // Header
     header: {

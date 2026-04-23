@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   ScrollView,
@@ -34,6 +34,8 @@ const FREQUENCIES: FreqOption[] = [
 
 export default function WorkoutFrequency() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ flow?: string }>();
+  const isSignupFlow = params.flow === "signup";
   const { theme } = useTheme();
   const { t } = useTranslation();
   const styles = createStyles(theme);
@@ -42,7 +44,11 @@ export default function WorkoutFrequency() {
   const handleContinue = async () => {
     if (!selected) return;
     await AsyncStorage.setItem("@hylift_workout_frequency", selected);
-    router.navigate("/get-started/focus-areas");
+    if (isSignupFlow) {
+      router.navigate("/get-started/health-connect?flow=signup");
+    } else {
+      router.navigate("/get-started/focus-areas");
+    }
   };
 
   return (

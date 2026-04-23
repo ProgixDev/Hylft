@@ -40,6 +40,11 @@
       "backgroundColor": "#00000000",
       "barStyle": "light-content"
     },
+    "androidNavigationBar": {
+      "visible": "sticky-immersive",
+      "backgroundColor": "#00000000",
+      "barStyle": "dark-content"
+    },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",

@@ -14,10 +14,26 @@
     "seeAll": "See All",
     "all": "All"
   },
+  "proModal": {
+    "restore": "Restore",
+    "title": "Hylft Pro",
+    "subtitle": "Unlock the ultimate fitness experience",
+    "loadingStatus": "Loading free trial status...",
+    "countdownMsg": "{{days}} days, {{hours}} hours & {{minutes}} minutes till your free trial ends",
+    "feature1": "Personalized AI workout plans",
+    "feature2": "Advanced nutrition tracking",
+    "feature3": "Unlimited exclusive routines",
+    "monthly": "Monthly",
+    "billedMonthly": "Billed Monthly",
+    "yearly": "Yearly",
+    "saveAmount": "Save $39.89",
+    "billedYearly": "Billed Yearly",
+    "purchaseBtn": "Purchase Subscription"
+  },
   "auth": {
     "signUpToGetStarted": "Sign up to get started",
     "continueWithGoogle": "Continue with Google",
-    "continueWithEmail": "Continue with Email",
+    "continueWithEmail": "Get Started",
     "alreadyHaveAccount": "Already have an account? ",
     "logIn": "Log in",
     "welcomeBack": "Welcome Back",
@@ -209,6 +225,117 @@
       "male": "Male",
       "female": "Female"
     },
+    "username": {
+      "title": "First, what can we call you?",
+      "subtitle": "Pick a name you want to see on Hylift. You can change it later.",
+      "label": "Preferred username",
+      "placeholder": "e.g. alex_fitness",
+      "hint": "2 to 24 characters"
+    },
+    "goalFlow": {
+      "title": "What's your main goal?",
+      "subtitle": "Pick one - we'll tailor everything in Hylift around it.",
+      "popular": "Popular",
+      "options": {
+        "lose_weight": {
+          "label": "Lose weight",
+          "description": "Burn fat, feel lighter and more energetic"
+        },
+        "maintain": {
+          "label": "Maintain weight",
+          "description": "Keep your current weight and stay consistent"
+        },
+        "gain_weight": {
+          "label": "Gain weight",
+          "description": "Fuel up, add size and healthy mass"
+        },
+        "build_muscle": {
+          "label": "Build muscle",
+          "description": "Get stronger, leaner and more defined"
+        }
+      }
+    },
+    "goalCongrats": {
+      "headlineWithName": "Great, {{name}}!",
+      "headlineDefault": "Great choice!",
+      "message": "You've just taken a big step on your journey. Let's keep the momentum going."
+    },
+    "habits": {
+      "title": "Which habits matter to you?",
+      "subtitle": "Select all that apply - we'll nudge you on the ones you pick.",
+      "options": {
+        "eat_balanced": "Eat balanced",
+        "drink_water": "Drink more water",
+        "sleep_well": "Sleep better",
+        "move_daily": "Move daily",
+        "strength": "Build strength",
+        "reduce_stress": "Reduce stress",
+        "cut_sugar": "Cut sugar",
+        "track_progress": "Track progress",
+        "mindful_eating": "Eat mindfully"
+      }
+    },
+    "habitsCongrats": {
+      "badge": "Your Journey",
+      "headline": "We've got you covered",
+      "message": "No problem - we'll be your guide, every step of the way."
+    },
+    "mealPlanning": {
+      "title": "How often do you plan meals?",
+      "subtitle": "No judgment - we'll meet you exactly where you are.",
+      "options": {
+        "never": {
+          "label": "Never",
+          "description": "I eat whatever shows up"
+        },
+        "rarely": {
+          "label": "Rarely",
+          "description": "Once in a while"
+        },
+        "occasionally": {
+          "label": "Sometimes",
+          "description": "Some days, not most"
+        },
+        "frequently": {
+          "label": "Frequently",
+          "description": "Most days I plan ahead"
+        },
+        "always": {
+          "label": "Always",
+          "description": "I plan every single meal"
+        }
+      }
+    },
+    "mealCongrats": {
+      "headline": "We have a solid system for you",
+      "message": "Just a few more questions so we can dial in your plan perfectly."
+    },
+    "activityLevel": {
+      "title": "What's your activity level?",
+      "subtitle": "Pick the one that best describes your typical week.",
+      "options": {
+        "sedentary": {
+          "label": "Sedentary",
+          "description": "Mostly sitting, little to no exercise"
+        },
+        "light": {
+          "label": "Lightly active",
+          "description": "Light walks, occasional workouts"
+        },
+        "moderate": {
+          "label": "Moderately active",
+          "description": "3-5 workouts per week or active job"
+        },
+        "active": {
+          "label": "Very active",
+          "description": "Daily workouts, always on your feet"
+        },
+        "very_active": {
+          "label": "Extra active",
+          "description": "Intense training or physical labor"
+        }
+      }
+    },
     "healthConnect": {
       "title": "Connect Your Health Data",
       "subtitle": "Sync your fitness data automatically to track your progress and get personalized insights",
@@ -225,6 +352,19 @@
     "ready": {
       "title": "You're Ready!",
       "subtitle": "Let's start your fitness journey together"
+    },
+    "account": {
+      "title": "One last step",
+      "titleWithName": "One last step, {{name}}",
+      "subtitle": "Create your account to save your plan and track progress.",
+      "emailPlaceholder": "you@example.com",
+      "passwordPlaceholder": "At least 6 characters",
+      "agreePrefix": "I agree to the",
+      "agreeAnd": "and",
+      "createAccount": "Create account",
+      "creatingAccount": "Creating account...",
+      "signUpError": "Sign up error",
+      "signUpFailed": "Sign up failed"
     }
   },
   "tabs": {

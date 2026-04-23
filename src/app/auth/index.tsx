@@ -155,7 +155,7 @@ export default function AuthLanding() {
   }, [user]);
 
   const handleEmailSignUp = () => {
-    router.navigate("/get-started/flow");
+    router.navigate("/get-started/username");
   };
 
   const handleGoogleSignUp = async () => {
