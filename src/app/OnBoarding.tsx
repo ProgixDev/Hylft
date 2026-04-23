@@ -86,12 +86,11 @@ export default function OnBoarding() {
     if (page !== currentPage) setCurrentPage(page);
   };
 
-  const { user, setOnboardingCompleted } = useAuth();
+  const { setOnboardingCompleted } = useAuth();
 
   const handleFinish = async () => {
     await setOnboardingCompleted();
-    if (user) router.replace("/(tabs)/home");
-    else router.replace("/auth");
+    router.replace("/get-started/username");
   };
 
   const handleNext = () => {

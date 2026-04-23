@@ -120,7 +120,7 @@ export default function SignUp() {
     return emailRegex.test(email);
   };
 
-  const { signUp } = useAuth();
+  const { signUp, setOnboardingCompleted, setGetStartedCompleted } = useAuth();
 
   const handleSignUp = async () => {
     if (!username || !email || !password || !confirmPassword) {
@@ -145,8 +145,14 @@ export default function SignUp() {
 
     setIsLoading(true);
     try {
-      await signUp(email, password, username);
-      router.navigate("/get-started/gender");
+      const createdUser = await signUp(email, password, username);
+      await setOnboardingCompleted();
+      try {
+        await setGetStartedCompleted(createdUser?.id);
+      } catch {
+        // Ignore profile sync timing issues and keep the auth flow moving.
+      }
+      router.replace("/(tabs)/home");
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : "Sign up failed";

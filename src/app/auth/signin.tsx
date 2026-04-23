@@ -119,7 +119,7 @@ export default function SignIn() {
 
   const styles = createStyles(theme);
 
-  const { signIn, hasCompletedGetStarted } = useAuth();
+  const { signIn, setOnboardingCompleted, hasCompletedGetStarted } = useAuth();
 
   const handleSignIn = async () => {
     if (!email || !password) {
@@ -130,8 +130,9 @@ export default function SignIn() {
     setIsLoading(true);
     try {
       await signIn(email, password);
+      await setOnboardingCompleted();
       const doneGetStarted = await hasCompletedGetStarted();
-      router.navigate(doneGetStarted ? "/(tabs)/home" : "/get-started/username");
+      router.replace(doneGetStarted ? "/(tabs)/home" : "/get-started/username");
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : "Sign in failed";
@@ -142,7 +143,7 @@ export default function SignIn() {
   };
 
   const handleSignUp = () => {
-    router.navigate("/auth/signup");
+    router.navigate("/get-started/username");
   };
 
   const handleForgotPassword = () => {

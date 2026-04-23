@@ -4,6 +4,7 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { CreateMealDto } from './dto/create-meal.dto';
 import { UpdateGoalsDto } from './dto/update-goals.dto';
 import { UpsertDailyDto } from './dto/upsert-daily.dto';
+import { searchFallbackFoods } from './food-catalog';
 
 interface OFFProduct {
   product_name?: string;
@@ -23,7 +24,8 @@ interface OFFResponse {
 }
 
 const OFF_MAX_RESULTS = 20;
-const OFF_MAX_RETRIES = 2;
+const OFF_MAX_RETRIES = 1;
+const OFF_TIMEOUT_MS = 4000;
 
 function genId(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
@@ -276,23 +278,38 @@ export class NutritionService {
     const trimmed = (q || '').trim();
     if (!trimmed) return [];
 
+    const remoteResults = await this.searchFoodViaOpenFoodFacts(trimmed, lang);
+    if (remoteResults.length > 0) return remoteResults;
+
+    return searchFallbackFoods(trimmed, lang);
+  }
+
+  private async searchFoodViaOpenFoodFacts(
+    trimmed: string,
+    lang: 'fr' | 'en',
+  ) {
     for (let attempt = 1; attempt <= OFF_MAX_RETRIES + 1; attempt++) {
       try {
-        const subdomain = lang === 'fr' ? 'fr' : 'world';
         const url =
-          `https://${subdomain}.openfoodfacts.net/cgi/search.pl` +
+          `https://world.openfoodfacts.org/cgi/search.pl` +
           `?search_terms=${encodeURIComponent(trimmed)}` +
           `&search_simple=1&json=1&page_size=25&lc=${lang}` +
           `&fields=code,product_name,product_name_fr,product_name_en,nutriments` +
           `&app_name=HylftApp&app_version=1.0&app_platform=server`;
 
         const controller = new AbortController();
-        const tid = setTimeout(() => controller.abort(), 12000);
-        const res = await fetch(url, { signal: controller.signal });
+        const tid = setTimeout(() => controller.abort(), OFF_TIMEOUT_MS);
+        const res = await fetch(url, {
+          signal: controller.signal,
+          headers: {
+            Accept: 'application/json',
+            'User-Agent': 'HylftApp/1.0 (+https://hylft.app)',
+          },
+        });
         clearTimeout(tid);
 
         if ((res.status === 503 || res.status === 429) && attempt <= OFF_MAX_RETRIES) {
-          await new Promise((r) => setTimeout(r, 2000 * attempt));
+          await new Promise((r) => setTimeout(r, 750 * attempt));
           continue;
         }
         if (!res.ok) throw new Error(`OFF error: ${res.status}`);
@@ -300,7 +317,7 @@ export class NutritionService {
         const data = (await res.json()) as OFFResponse;
         if (!Array.isArray(data.products)) return [];
 
-        return data.products
+        const results = data.products
           .filter(offIsValid)
           .slice(0, OFF_MAX_RESULTS)
           .map((p, i) => ({
@@ -312,12 +329,17 @@ export class NutritionService {
             fat: safeNum(p.nutriments?.fat_100g),
           }))
           .filter((it) => it.name !== 'Unknown');
+
+        if (results.length > 0) return results;
       } catch (error) {
         if (attempt <= OFF_MAX_RETRIES) {
-          await new Promise((r) => setTimeout(r, 2000 * attempt));
+          await new Promise((r) => setTimeout(r, 750 * attempt));
           continue;
         }
-        this.logger.error('OFF search failed', error as any);
+        this.logger.warn(
+          `OFF search failed for "${trimmed}" (${lang}), using fallback catalog`,
+          error instanceof Error ? error.message : String(error),
+        );
         return [];
       }
     }

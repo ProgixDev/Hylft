@@ -120,7 +120,7 @@ export default function AuthLanding() {
     return () => clearInterval(interval);
   }, [fadeAnim]);
 
-  const { user, signInWithGoogle, hasCompletedGetStarted } = useAuth();
+  const { user, signInWithGoogle, setOnboardingCompleted, hasCompletedGetStarted } = useAuth();
   const hasNavigated = useRef(false);
 
   // Android/Expo Go: Chrome Custom Tabs redirects to exp://... which it can't load
@@ -149,10 +149,12 @@ export default function AuthLanding() {
   useEffect(() => {
     if (!user || hasNavigated.current) return;
     hasNavigated.current = true;
-    hasCompletedGetStarted(user.id).then((done) => {
-      router.navigate(done ? "/(tabs)/home" : "/get-started/gender");
-    });
-  }, [user]);
+    void (async () => {
+      await setOnboardingCompleted();
+      const doneGetStarted = await hasCompletedGetStarted(user.id);
+      router.replace(doneGetStarted ? "/(tabs)/home" : "/get-started/username");
+    })();
+  }, [hasCompletedGetStarted, router, setOnboardingCompleted, user]);
 
   const handleEmailSignUp = () => {
     router.navigate("/get-started/username");
