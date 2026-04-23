@@ -67,28 +67,26 @@ const RoutineCard = ({
         </View>
       </View>
 
-      <View style={styles.musclesContainer}>
-        {routine.targetMuscles.slice(0, 3).map((m, i) => (
-          <View key={i} style={styles.muscleTag}>
-            <Text style={styles.muscleTagText}>
-              {translateExerciseTerm(m, "targetMuscles")}
-            </Text>
-          </View>
-        ))}
-      </View>
+      <View style={styles.bottomRow}>
+        <View style={styles.musclesContainer}>
+          {routine.targetMuscles.slice(0, 3).map((m, i) => (
+            <View key={i} style={styles.muscleTag}>
+              <Text style={styles.muscleTagText}>
+                {translateExerciseTerm(m, "targetMuscles")}
+              </Text>
+            </View>
+          ))}
+        </View>
 
-      <TouchableOpacity
-        onPress={onStart}
-        style={styles.startButton}
-        activeOpacity={0.85}
-      >
-        <Text style={styles.startButtonText}>{t("routines.startRoutine")}</Text>
-        <Ionicons
-          name="arrow-forward"
-          size={14}
-          color={theme.background.dark}
-        />
-      </TouchableOpacity>
+        <TouchableOpacity
+          onPress={onStart}
+          style={styles.playButton}
+          activeOpacity={0.85}
+          accessibilityLabel={t("routines.startRoutine")}
+        >
+          <Ionicons name="play" size={18} color={theme.background.dark} />
+        </TouchableOpacity>
+      </View>
     </TouchableOpacity>
   );
 };
@@ -167,11 +165,17 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       color: theme.foreground.gray,
       fontSize: 12,
     },
+    bottomRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: 10,
+    },
     musclesContainer: {
+      flex: 1,
       flexDirection: "row",
       flexWrap: "wrap",
       gap: 5,
-      marginBottom: 8,
     },
     muscleTag: {
       backgroundColor: theme.background.dark,
@@ -187,20 +191,13 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       color: theme.primary.main,
       textTransform: "capitalize",
     },
-    startButton: {
+    playButton: {
+      width: 38,
+      height: 38,
+      borderRadius: 19,
       backgroundColor: theme.primary.main,
-      paddingVertical: 8,
-      paddingHorizontal: 12,
-      borderRadius: 16,
-      flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
-      gap: 6,
-    },
-    startButtonText: {
-      fontSize: 13,
-      fontFamily: FONTS.bold,
-      color: theme.background.dark,
     },
   });
 

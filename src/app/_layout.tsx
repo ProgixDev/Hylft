@@ -80,6 +80,50 @@ function AppContent() {
         <Stack.Screen name="get-started/health-connect" />
         <Stack.Screen name="get-started/ready" />
         <Stack.Screen name="get-started/email-preferences" />
+        <Stack.Screen
+          name="get-started/flow"
+          options={{ animation: "slide_from_right" }}
+        />
+        <Stack.Screen
+          name="get-started/username"
+          options={{ animation: "slide_from_right" }}
+        />
+        <Stack.Screen
+          name="get-started/goal"
+          options={{ animation: "slide_from_right" }}
+        />
+        <Stack.Screen
+          name="get-started/goal-congrats"
+          options={{ animation: "fade" }}
+        />
+        <Stack.Screen
+          name="get-started/habits"
+          options={{ animation: "slide_from_right" }}
+        />
+        <Stack.Screen
+          name="get-started/habits-congrats"
+          options={{ animation: "fade" }}
+        />
+        <Stack.Screen
+          name="get-started/meal-planning"
+          options={{ animation: "slide_from_right" }}
+        />
+        <Stack.Screen
+          name="get-started/meal-congrats"
+          options={{ animation: "fade" }}
+        />
+        <Stack.Screen
+          name="get-started/activity-level"
+          options={{ animation: "slide_from_right" }}
+        />
+        <Stack.Screen
+          name="get-started/weekly-goal"
+          options={{ animation: "slide_from_right" }}
+        />
+        <Stack.Screen
+          name="get-started/account"
+          options={{ animation: "slide_from_right" }}
+        />
         <Stack.Screen name="objective/index" />
         <Stack.Screen name="food-search" />
         <Stack.Screen name="share-workout/index" />

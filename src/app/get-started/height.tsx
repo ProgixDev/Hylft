@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -25,6 +25,8 @@ const MAX = 250;
 
 export default function HeightScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ flow?: string }>();
+  const isSignupFlow = params.flow === "signup";
   const { theme } = useTheme();
   const { t } = useTranslation();
   const styles = createStyles(theme);
@@ -81,7 +83,11 @@ export default function HeightScreen() {
 
   const handleContinue = async () => {
     await AsyncStorage.setItem("@hylift_height", value.toString());
-    router.push("/get-started/weight");
+    if (isSignupFlow) {
+      router.push("/get-started/weight?flow=signup");
+    } else {
+      router.push("/get-started/weight");
+    }
   };
 
   // Fill percentage for the visual bar
@@ -119,7 +125,10 @@ export default function HeightScreen() {
       <View style={{ flex: 1 }}>
         <View style={styles.stepRow}>
           <Text style={[styles.stepText, { color: theme.primary.main }]}>
-            {t("onboarding.stepOf", { current: 6, total: 13 })}
+            {t("onboarding.stepOf", {
+              current: isSignupFlow ? 8 : 6,
+              total: 13,
+            })}
           </Text>
           <View style={styles.progressBar}>
             <View
@@ -127,7 +136,7 @@ export default function HeightScreen() {
                 styles.progressFill,
                 {
                   backgroundColor: theme.primary.main,
-                  width: `${(6 / 13) * 100}%`,
+                  width: `${((isSignupFlow ? 8 : 6) / 13) * 100}%`,
                 },
               ]}
             />

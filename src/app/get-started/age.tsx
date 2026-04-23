@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { StyleSheet, Text, View } from "react-native";
@@ -11,14 +11,20 @@ import { useTheme } from "../../contexts/ThemeContext";
 
 export default function AgeScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ flow?: string }>();
   const { theme } = useTheme();
   const { t } = useTranslation();
   const styles = createStyles(theme);
   const [value, setValue] = useState(25);
+  const isSignupFlow = params.flow === "signup";
 
   const handleContinue = async () => {
     await AsyncStorage.setItem("@hylift_age", value.toString());
-    router.push("/get-started/height");
+    if (isSignupFlow) {
+      router.push("/get-started/height?flow=signup");
+    } else {
+      router.push("/get-started/height");
+    }
   };
 
   return (
@@ -26,7 +32,10 @@ export default function AgeScreen() {
       <View style={{ flex: 1 }}>
         <View style={styles.stepRow}>
           <Text style={[styles.stepText, { color: theme.primary.main }]}>
-            {t("onboarding.stepOf", { current: 5, total: 13 })}
+            {t("onboarding.stepOf", {
+              current: isSignupFlow ? 7 : 5,
+              total: 13,
+            })}
           </Text>
           <View style={styles.progressBar}>
             <View
@@ -34,7 +43,7 @@ export default function AgeScreen() {
                 styles.progressFill,
                 {
                   backgroundColor: theme.primary.main,
-                  width: `${(5 / 13) * 100}%`,
+                  width: `${((isSignupFlow ? 7 : 5) / 13) * 100}%`,
                 },
               ]}
             />

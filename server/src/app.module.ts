@@ -12,6 +12,7 @@ import { RoutinesModule } from './routines/routines.module';
 import { ScheduleModule } from './schedule/schedule.module';
 import { SocialModule } from './social/social.module';
 import { UsersModule } from './users/users.module';
+import { WallpapersModule } from './wallpapers/wallpapers.module';
 import { WeightEntriesModule } from './weight-entries/weight-entries.module';
 
 @Module({
@@ -32,6 +33,7 @@ import { WeightEntriesModule } from './weight-entries/weight-entries.module';
     WeightEntriesModule,
     NotificationsModule,
     ExercisesModule,
+    WallpapersModule,
   ],
   controllers: [AppController],
 })

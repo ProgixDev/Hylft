@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
@@ -14,19 +13,23 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { FONTS } from "../../constants/fonts";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
-import { getUserById } from "../../data/mockData";
+import { api } from "../../services/api";
+import { pickAndUploadAvatar } from "../../services/avatarUploader";
 
-import { FONTS } from "../../constants/fonts";
-
-const MY_USER_ID = "1";
-const KEYS = {
-  displayName: "@hylift_display_name",
-  username: "@hylift_username",
-  bio: "@hylift_bio",
-  website: "@hylift_website",
+type MyProfile = {
+  id: string;
+  username: string | null;
+  display_name: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  avatar_url: string | null;
+  bio?: string | null;
 };
+
+const USERNAME_RE = /^[a-z0-9_.]{3,30}$/;
 
 function createStyles(theme: Theme) {
   return StyleSheet.create({
@@ -53,6 +56,7 @@ function createStyles(theme: Theme) {
       borderRadius: 22,
       backgroundColor: theme.primary.main,
     },
+    saveBtnDisabled: { opacity: 0.5 },
     saveBtnText: {
       fontSize: 15,
       fontFamily: FONTS.bold,
@@ -71,6 +75,7 @@ function createStyles(theme: Theme) {
       borderRadius: 48,
       borderWidth: 3,
       borderColor: theme.primary.main,
+      backgroundColor: theme.background.accent,
     },
     avatarBadge: {
       position: "absolute",
@@ -89,6 +94,8 @@ function createStyles(theme: Theme) {
       color: theme.primary.main,
     },
     form: { paddingHorizontal: 16, paddingTop: 8, gap: 4 },
+    nameRow: { flexDirection: "row", gap: 12 },
+    nameCol: { flex: 1 },
     fieldGroup: { marginTop: 20 },
     fieldLabel: {
       fontSize: 12,
@@ -110,6 +117,34 @@ function createStyles(theme: Theme) {
     },
     inputFocused: { borderColor: theme.primary.main },
     inputMultiline: { minHeight: 90, textAlignVertical: "top", paddingTop: 12 },
+    usernameRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: theme.background.accent,
+      borderRadius: 10,
+      paddingLeft: 14,
+      borderWidth: 1,
+      borderColor: "transparent",
+    },
+    usernameRowFocused: { borderColor: theme.primary.main },
+    atSign: {
+      fontSize: 15,
+      color: theme.foreground.gray,
+      fontFamily: FONTS.semiBold,
+      marginRight: 2,
+    },
+    usernameInput: {
+      flex: 1,
+      paddingHorizontal: 2,
+      paddingVertical: 13,
+      fontSize: 15,
+      color: theme.foreground.white,
+    },
+    hint: {
+      fontSize: 11,
+      color: theme.foreground.gray,
+      marginTop: 6,
+    },
     charCount: {
       fontSize: 11,
       color: theme.foreground.gray,
@@ -117,21 +152,6 @@ function createStyles(theme: Theme) {
       marginTop: 4,
     },
     charCountWarn: { color: "#f87171" },
-    divider: {
-      height: 1,
-      backgroundColor: theme.background.accent,
-      marginTop: 28,
-      marginBottom: 8,
-    },
-    sectionLabel: {
-      fontSize: 12,
-      fontFamily: FONTS.semiBold,
-      color: theme.foreground.gray,
-      textTransform: "uppercase",
-      letterSpacing: 0.6,
-      marginTop: 8,
-      marginBottom: 4,
-    },
   });
 }
 
@@ -139,54 +159,89 @@ export default function EditProfile() {
   const router = useRouter();
   const { theme } = useTheme();
   const styles = createStyles(theme);
-  const user = getUserById(MY_USER_ID);
 
-  const [displayName, setDisplayName] = useState(user?.username ?? "");
-  const [username, setUsername] = useState(user?.username ?? "");
-  const [bio, setBio] = useState(user?.bio ?? "");
-  const [website, setWebsite] = useState("");
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-
+  const [originalUsername, setOriginalUsername] = useState<string>("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [username, setUsername] = useState("");
+  const [bio, setBio] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [focusedField, setFocusedField] = useState<string | null>(null);
 
   useEffect(() => {
-    const load = async () => {
-      const [dn, un, b, w] = await Promise.all([
-        AsyncStorage.getItem(KEYS.displayName),
-        AsyncStorage.getItem(KEYS.username),
-        AsyncStorage.getItem(KEYS.bio),
-        AsyncStorage.getItem(KEYS.website),
-      ]);
-      if (dn) setDisplayName(dn);
-      if (un) setUsername(un);
-      if (b) setBio(b);
-      if (w) setWebsite(w);
-    };
-    load();
+    (async () => {
+      try {
+        const p = (await api.getProfile()) as MyProfile;
+        const [fallbackFirst, ...rest] = (p.display_name ?? "").trim().split(/\s+/);
+        setFirstName(p.first_name ?? fallbackFirst ?? "");
+        setLastName(p.last_name ?? rest.join(" "));
+        setUsername(p.username ?? "");
+        setOriginalUsername(p.username ?? "");
+        setBio(p.bio ?? "");
+        setAvatarUrl(p.avatar_url ?? null);
+      } catch (e) {
+        Alert.alert(
+          "Error",
+          e instanceof Error ? e.message : "Could not load profile.",
+        );
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, []);
 
+  const handleChangePhoto = async () => {
+    try {
+      const publicUrl = await pickAndUploadAvatar("library");
+      if (!publicUrl) return;
+      const updated = (await api.updateProfile({
+        avatar_url: publicUrl,
+      })) as MyProfile;
+      setAvatarUrl(updated.avatar_url ?? null);
+    } catch (e) {
+      Alert.alert(
+        "Error",
+        e instanceof Error ? e.message : "Failed to update photo.",
+      );
+    }
+  };
+
   const handleSave = async () => {
-    if (!username.trim()) {
-      Alert.alert("Validation", "Username cannot be empty.");
+    const trimmedUsername = username.trim().toLowerCase();
+    if (!USERNAME_RE.test(trimmedUsername)) {
+      Alert.alert(
+        "Invalid username",
+        "Use 3–30 characters: lowercase letters, numbers, underscore or dot.",
+      );
       return;
     }
-    if (username.includes(" ")) {
-      Alert.alert("Validation", "Username cannot contain spaces.");
+
+    const first = firstName.trim();
+    const last = lastName.trim();
+    if (!first) {
+      Alert.alert("Validation", "First name cannot be empty.");
       return;
     }
+
     setSaving(true);
     try {
-      await Promise.all([
-        AsyncStorage.setItem(KEYS.displayName, displayName.trim()),
-        AsyncStorage.setItem(KEYS.username, username.trim()),
-        AsyncStorage.setItem(KEYS.bio, bio.trim()),
-        AsyncStorage.setItem(KEYS.website, website.trim()),
-      ]);
+      const payload: Record<string, unknown> = {
+        first_name: first,
+        last_name: last,
+        bio: bio.trim(),
+      };
+      if (trimmedUsername !== originalUsername) {
+        payload.username = trimmedUsername;
+      }
+      await api.updateProfile(payload);
       Alert.alert("Saved", "Your profile has been updated.", [
         { text: "OK", onPress: () => router.back() },
       ]);
-    } catch {
-      Alert.alert("Error", "Failed to save. Please try again.");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Failed to save.";
+      Alert.alert("Error", msg);
     } finally {
       setSaving(false);
     }
@@ -197,7 +252,6 @@ export default function EditProfile() {
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <TouchableOpacity
@@ -213,9 +267,12 @@ export default function EditProfile() {
           <Text style={styles.headerTitle}>Edit Profile</Text>
         </View>
         <TouchableOpacity
-          style={styles.saveBtn}
+          style={[
+            styles.saveBtn,
+            (saving || loading) && styles.saveBtnDisabled,
+          ]}
           onPress={handleSave}
-          disabled={saving}
+          disabled={saving || loading}
           activeOpacity={0.8}
         >
           <Text style={styles.saveBtnText}>{saving ? "Saving…" : "Save"}</Text>
@@ -227,79 +284,105 @@ export default function EditProfile() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 40 }}
       >
-        {/* Avatar */}
         <View style={styles.avatarSection}>
           <TouchableOpacity
             style={styles.avatarWrapper}
             activeOpacity={0.8}
-            onPress={() =>
-              Alert.alert("Change Photo", "Photo picker coming soon.")
-            }
+            onPress={handleChangePhoto}
           >
-            <Image
-              source={{
-                uri: user?.avatar ?? "https://i.pravatar.cc/150?img=12",
-              }}
-              style={styles.avatar}
-            />
+            {avatarUrl ? (
+              <Image source={{ uri: avatarUrl }} style={styles.avatar} />
+            ) : (
+              <View
+                style={[
+                  styles.avatar,
+                  { alignItems: "center", justifyContent: "center" },
+                ]}
+              >
+                <Ionicons
+                  name="person"
+                  size={44}
+                  color={theme.foreground.gray}
+                />
+              </View>
+            )}
             <View style={styles.avatarBadge}>
               <Ionicons name="camera" size={15} color={theme.background.dark} />
             </View>
           </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() =>
-              Alert.alert("Change Photo", "Photo picker coming soon.")
-            }
-          >
+          <TouchableOpacity onPress={handleChangePhoto}>
             <Text style={styles.changePhotoText}>Change Profile Photo</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Form */}
         <View style={styles.form}>
-          {/* Display Name */}
-          <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>Display Name</Text>
-            <TextInput
-              style={[
-                styles.input,
-                focusedField === "name" && styles.inputFocused,
-              ]}
-              value={displayName}
-              onChangeText={setDisplayName}
-              onFocus={() => setFocusedField("name")}
-              onBlur={() => setFocusedField(null)}
-              placeholder="Your display name"
-              placeholderTextColor={theme.foreground.gray}
-              maxLength={50}
-              returnKeyType="next"
-            />
+          <View style={styles.nameRow}>
+            <View style={[styles.fieldGroup, styles.nameCol]}>
+              <Text style={styles.fieldLabel}>First Name</Text>
+              <TextInput
+                style={[
+                  styles.input,
+                  focusedField === "first" && styles.inputFocused,
+                ]}
+                value={firstName}
+                onChangeText={setFirstName}
+                onFocus={() => setFocusedField("first")}
+                onBlur={() => setFocusedField(null)}
+                placeholder="First"
+                placeholderTextColor={theme.foreground.gray}
+                maxLength={40}
+                returnKeyType="next"
+              />
+            </View>
+            <View style={[styles.fieldGroup, styles.nameCol]}>
+              <Text style={styles.fieldLabel}>Last Name</Text>
+              <TextInput
+                style={[
+                  styles.input,
+                  focusedField === "last" && styles.inputFocused,
+                ]}
+                value={lastName}
+                onChangeText={setLastName}
+                onFocus={() => setFocusedField("last")}
+                onBlur={() => setFocusedField(null)}
+                placeholder="Last"
+                placeholderTextColor={theme.foreground.gray}
+                maxLength={40}
+                returnKeyType="next"
+              />
+            </View>
           </View>
 
-          {/* Username */}
           <View style={styles.fieldGroup}>
             <Text style={styles.fieldLabel}>Username</Text>
-            <TextInput
+            <View
               style={[
-                styles.input,
-                focusedField === "username" && styles.inputFocused,
+                styles.usernameRow,
+                focusedField === "username" && styles.usernameRowFocused,
               ]}
-              value={username}
-              onChangeText={(t) =>
-                setUsername(t.toLowerCase().replace(/\s/g, ""))
-              }
-              onFocus={() => setFocusedField("username")}
-              onBlur={() => setFocusedField(null)}
-              placeholder="username"
-              placeholderTextColor={theme.foreground.gray}
-              autoCapitalize="none"
-              autoCorrect={false}
-              maxLength={30}
-              returnKeyType="next"
-            />
+            >
+              <Text style={styles.atSign}>@</Text>
+              <TextInput
+                style={styles.usernameInput}
+                value={username}
+                onChangeText={(t) =>
+                  setUsername(t.toLowerCase().replace(/[^a-z0-9_.]/g, ""))
+                }
+                onFocus={() => setFocusedField("username")}
+                onBlur={() => setFocusedField(null)}
+                placeholder="username"
+                placeholderTextColor={theme.foreground.gray}
+                autoCapitalize="none"
+                autoCorrect={false}
+                maxLength={30}
+                returnKeyType="next"
+              />
+            </View>
+            <Text style={styles.hint}>
+              3–30 chars. Lowercase letters, numbers, "_" and "." only.
+            </Text>
           </View>
 
-          {/* Bio */}
           <View style={styles.fieldGroup}>
             <Text style={styles.fieldLabel}>Bio</Text>
             <TextInput
@@ -325,27 +408,6 @@ export default function EditProfile() {
             >
               {bio.length}/150
             </Text>
-          </View>
-
-          {/* Website */}
-          <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>Website</Text>
-            <TextInput
-              style={[
-                styles.input,
-                focusedField === "website" && styles.inputFocused,
-              ]}
-              value={website}
-              onChangeText={setWebsite}
-              onFocus={() => setFocusedField("website")}
-              onBlur={() => setFocusedField(null)}
-              placeholder="https://yourwebsite.com"
-              placeholderTextColor={theme.foreground.gray}
-              autoCapitalize="none"
-              autoCorrect={false}
-              keyboardType="url"
-              returnKeyType="done"
-            />
           </View>
         </View>
       </ScrollView>

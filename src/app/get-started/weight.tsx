@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { StyleSheet, Text, View } from "react-native";
@@ -11,6 +11,8 @@ import { useTheme } from "../../contexts/ThemeContext";
 
 export default function WeightScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ flow?: string }>();
+  const isSignupFlow = params.flow === "signup";
   const { theme } = useTheme();
   const { t } = useTranslation();
   const styles = createStyles(theme);
@@ -18,7 +20,11 @@ export default function WeightScreen() {
 
   const handleContinue = async () => {
     await AsyncStorage.setItem("@hylift_weight", value.toString());
-    router.push("/get-started/target-weight");
+    if (isSignupFlow) {
+      router.push("/get-started/weekly-goal");
+    } else {
+      router.push("/get-started/target-weight");
+    }
   };
 
   return (
@@ -26,7 +32,10 @@ export default function WeightScreen() {
       <View style={{ flex: 1 }}>
         <View style={styles.stepRow}>
           <Text style={[styles.stepText, { color: theme.primary.main }]}>
-            {t("onboarding.stepOf", { current: 7, total: 13 })}
+            {t("onboarding.stepOf", {
+              current: isSignupFlow ? 9 : 7,
+              total: 13,
+            })}
           </Text>
           <View style={styles.progressBar}>
             <View
@@ -34,7 +43,7 @@ export default function WeightScreen() {
                 styles.progressFill,
                 {
                   backgroundColor: theme.primary.main,
-                  width: `${(7 / 13) * 100}%`,
+                  width: `${((isSignupFlow ? 9 : 7) / 13) * 100}%`,
                 },
               ]}
             />

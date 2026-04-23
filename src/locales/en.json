@@ -338,7 +338,14 @@
     "languageSubtitle": "Choose your preferred language"
   },
   "feed": {
-    "title": "Feed"
+    "title": "Feed",
+    "empty": "No posts yet"
+  },
+  "composer": {
+    "placeholder": "What's on your mind?",
+    "post": "Post",
+    "addPhoto": "Photos",
+    "errorTitle": "Error"
   },
   "food": {
     "title": "Food Diary",
@@ -394,7 +401,7 @@
     "startWorkout": "Workout",
     "explore": "Explore",
     "feed": "Feed",
-    "homeWorkout": "HOME WORKOUT",
+    "homeWorkout": "HOME",
     "searchPlaceholder": "Search workouts, plans...",
     "weeklyGoal": "Weekly Goal",
     "motivationalMessage": "Your workout awaits you! Time to make the first step!",
@@ -585,7 +592,19 @@
     "sharePost": "Share Post",
     "checkOutPost": "Check out this post by",
     "likes": "likes",
-    "viewAllComments": "View all {count} comments"
+    "viewAllComments": "View all {count} comments",
+    "edit": "Edit",
+    "delete": "Delete",
+    "deleteTitle": "Delete post?",
+    "deleteBody": "This action cannot be undone.",
+    "changePrivacy": "Privacy",
+    "privacy_public": "Public",
+    "privacy_followers": "Followers only",
+    "privacy_private": "Private",
+    "share": "Share",
+    "report": "Report",
+    "reportTitle": "Report",
+    "reportBody": "Thanks, this post will be reviewed."
   },
   "user": {
     "posts": "Posts",
@@ -711,10 +730,14 @@
     "endAndSave": "End and save"
   },
   "search": {
-    "findPeople": "Find People",
-    "searchPeople": "Search people...",
-    "noUsersFound": "No users found",
-    "tryDifferentUsername": "Try searching for a different username"
+    "findPeople": "Search",
+    "searchPeople": "Username, name...",
+    "noUsersFound": "No results",
+    "tryDifferentUsername": "Try a different username",
+    "startTyping": "Start typing to search",
+    "startTypingHint": "Find and follow other athletes to see their posts in your feed.",
+    "pending": "Pending",
+    "private": "Private"
   },
   "filters": {
     "allLevels": "All Levels",

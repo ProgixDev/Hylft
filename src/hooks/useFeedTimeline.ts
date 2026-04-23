@@ -116,6 +116,15 @@ export function useFeedTimeline({
     setPosts((prev) => prev.filter((p) => p.id !== postId));
   }, []);
 
+  const patchPost = useCallback(
+    (postId: string, patch: Partial<PostData>) => {
+      setPosts((prev) =>
+        prev.map((p) => (p.id === postId ? { ...p, ...patch } : p)),
+      );
+    },
+    [],
+  );
+
   return {
     posts,
     loading,
@@ -128,6 +137,7 @@ export function useFeedTimeline({
     toggleLike,
     prependPost,
     removePost,
+    patchPost,
     reload: initialLoad,
   };
 }

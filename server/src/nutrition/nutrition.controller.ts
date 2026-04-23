@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Put,
   Delete,
   Patch,
   Body,
@@ -17,51 +18,53 @@ import {
 import { NutritionService } from './nutrition.service';
 import { CreateMealDto } from './dto/create-meal.dto';
 import { UpdateGoalsDto } from './dto/update-goals.dto';
-import { CreateCustomFoodDto } from './dto/create-custom-food.dto';
+import { UpsertDailyDto } from './dto/upsert-daily.dto';
+import { SearchFoodQueryDto } from './dto/search-food-query.dto';
 
 @Controller('nutrition')
 @UseGuards(SupabaseJwtGuard)
 export class NutritionController {
   constructor(private readonly nutritionService: NutritionService) {}
 
+  // ── Food search proxy (Open Food Facts) ────────────────────────────────
+
+  @Get('search')
+  searchFood(@Query() query: SearchFoodQueryDto) {
+    return this.nutritionService.searchFood(query.q, query.lang ?? 'fr');
+  }
+
   // ── Meals ──────────────────────────────────────────────────────────────
 
   @Get('meals')
-  getMeals(
-    @CurrentUser() user: AuthUser,
-    @Query('date') date: string,
-  ) {
+  getMeals(@CurrentUser() user: AuthUser, @Query('date') date: string) {
     return this.nutritionService.getMeals(user.id, date);
   }
 
-  @Get('meals/range')
-  getMealsRange(
-    @CurrentUser() user: AuthUser,
-    @Query('start') startDate: string,
-    @Query('end') endDate: string,
-  ) {
-    return this.nutritionService.getMealsRange(user.id, startDate, endDate);
-  }
-
   @Post('meals')
-  addMeal(
-    @CurrentUser() user: AuthUser,
-    @Body() dto: CreateMealDto,
-  ) {
+  addMeal(@CurrentUser() user: AuthUser, @Body() dto: CreateMealDto) {
     return this.nutritionService.addMeal(user.id, dto);
   }
 
   @Delete('meals/:id')
-  deleteMeal(
-    @CurrentUser() user: AuthUser,
-    @Param('id') mealId: string,
-  ) {
+  deleteMeal(@CurrentUser() user: AuthUser, @Param('id') mealId: string) {
     return this.nutritionService.deleteMeal(user.id, mealId);
   }
 
-  // ── Summaries ──────────────────────────────────────────────────────────
+  // ── Daily (water / weight / notes) ─────────────────────────────────────
 
-  @Get('summary/daily')
+  @Get('daily')
+  getDaily(@CurrentUser() user: AuthUser, @Query('date') date: string) {
+    return this.nutritionService.getDaily(user.id, date);
+  }
+
+  @Put('daily')
+  upsertDaily(@CurrentUser() user: AuthUser, @Body() dto: UpsertDailyDto) {
+    return this.nutritionService.upsertDaily(user.id, dto);
+  }
+
+  // ── Summary & History ──────────────────────────────────────────────────
+
+  @Get('summary')
   getDailySummary(
     @CurrentUser() user: AuthUser,
     @Query('date') date: string,
@@ -69,13 +72,13 @@ export class NutritionController {
     return this.nutritionService.getDailySummary(user.id, date);
   }
 
-  @Get('summary/weekly')
-  getWeeklySummary(
+  @Get('history')
+  getHistory(
     @CurrentUser() user: AuthUser,
     @Query('start') startDate: string,
     @Query('end') endDate: string,
   ) {
-    return this.nutritionService.getWeeklySummary(user.id, startDate, endDate);
+    return this.nutritionService.getHistory(user.id, startDate, endDate);
   }
 
   // ── Goals ──────────────────────────────────────────────────────────────
@@ -86,33 +89,7 @@ export class NutritionController {
   }
 
   @Patch('goals')
-  updateGoals(
-    @CurrentUser() user: AuthUser,
-    @Body() dto: UpdateGoalsDto,
-  ) {
+  updateGoals(@CurrentUser() user: AuthUser, @Body() dto: UpdateGoalsDto) {
     return this.nutritionService.updateGoals(user.id, dto);
-  }
-
-  // ── Custom Foods ───────────────────────────────────────────────────────
-
-  @Get('custom-foods')
-  getCustomFoods(@CurrentUser() user: AuthUser) {
-    return this.nutritionService.getCustomFoods(user.id);
-  }
-
-  @Post('custom-foods')
-  createCustomFood(
-    @CurrentUser() user: AuthUser,
-    @Body() dto: CreateCustomFoodDto,
-  ) {
-    return this.nutritionService.createCustomFood(user.id, dto);
-  }
-
-  @Delete('custom-foods/:id')
-  deleteCustomFood(
-    @CurrentUser() user: AuthUser,
-    @Param('id') foodId: string,
-  ) {
-    return this.nutritionService.deleteCustomFood(user.id, foodId);
   }
 }

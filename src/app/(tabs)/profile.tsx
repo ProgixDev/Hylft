@@ -1,4 +1,5 @@
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useMemo, useState } from "react";
@@ -6,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import {
   Dimensions,
   Image,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -15,11 +17,19 @@ import {
 import { BarChart, LineChart } from "react-native-gifted-charts";
 import Svg, { Circle } from "react-native-svg";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import AnimatedScreen from "../../components/ui/AnimatedScreen";
+import AvatarActionSheet from "../../components/profile/AvatarActionSheet";
+import CoverPickerModal from "../../components/profile/CoverPickerModal";
+import ProfileHeader from "../../components/profile/ProfileHeader";
+import ShareProfileModal from "../../components/profile/ShareProfileModal";
 import { FONTS } from "../../constants/fonts";
 import { Theme } from "../../constants/themes";
+import { useAuth } from "../../contexts/AuthContext";
 import { useHealth } from "../../contexts/HealthContext";
 import { useNutrition } from "../../contexts/NutritionContext";
 import { useTheme } from "../../contexts/ThemeContext";
+import { api } from "../../services/api";
+import { pickAndUploadAvatar } from "../../services/avatarUploader";
 import { WeightEntry, WeightHistory } from "../../services/weightHistory";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -67,6 +77,22 @@ function ProgressRing({ pct, size, color, strokeWidth = 6, children }: {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+type MyProfile = {
+  id: string;
+  username: string | null;
+  display_name: string | null;
+  avatar_url: string | null;
+  cover_url: string | null;
+  created_at: string | null;
+};
+
+type UserStats = {
+  posts_count: number;
+  followers_count: number;
+  following_count: number;
+  likes_count: number;
+};
+
 export default function Profile() {
   const { i18n } = useTranslation();
   const { theme, themeType } = useTheme();
@@ -74,6 +100,18 @@ export default function Profile() {
   const insets = useSafeAreaInsets();
   const styles = createStyles(theme);
   const isFr = i18n.language?.startsWith("fr");
+  const { user } = useAuth();
+
+  const [myProfile, setMyProfile] = useState<MyProfile | null>(null);
+  const [userStats, setUserStats] = useState<UserStats>({
+    posts_count: 0,
+    followers_count: 0,
+    following_count: 0,
+    likes_count: 0,
+  });
+  const [coverPickerOpen, setCoverPickerOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [avatarSheetOpen, setAvatarSheetOpen] = useState(false);
 
   const { todayCaloriesBurned, weeklyCaloriesBurned } = useHealth();
   const { goals, todaySummary, weekSummaries } = useNutrition();
@@ -88,6 +126,47 @@ export default function Profile() {
   const [weightHistory, setWeightHistory] = useState<WeightEntry[]>([]);
   const [activityPeriod, setActivityPeriod] = useState<Period>("weekly");
   const [summaryMode, setSummaryMode] = useState<"total" | "average">("total");
+
+  const loadProfileAndStats = useCallback(async () => {
+    if (!user?.id) return;
+    try {
+      const [prof, stats] = await Promise.all([
+        api.getProfile() as Promise<MyProfile>,
+        api.getUserStats(user.id) as Promise<UserStats>,
+      ]);
+      setMyProfile(prof);
+      setUserStats(stats);
+    } catch {
+      // swallow; header will still render with defaults.
+    }
+  }, [user?.id]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadProfileAndStats();
+    }, [loadProfileAndStats]),
+  );
+
+  const handleSelectCover = async (url: string) => {
+    const updated = (await api.updateProfile({ cover_url: url })) as MyProfile;
+    setMyProfile((p) => (p ? { ...p, cover_url: updated.cover_url } : updated));
+  };
+
+  const handleUploadAvatar = async (source: "library" | "camera") => {
+    const publicUrl = await pickAndUploadAvatar(source);
+    if (!publicUrl) return;
+    const updated = (await api.updateProfile({
+      avatar_url: publicUrl,
+    })) as MyProfile;
+    setMyProfile((p) =>
+      p ? { ...p, avatar_url: updated.avatar_url } : updated,
+    );
+  };
+
+  const handleRemoveAvatar = async () => {
+    await api.deleteAvatar();
+    setMyProfile((p) => (p ? { ...p, avatar_url: null } : p));
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -140,22 +219,38 @@ export default function Profile() {
   }, [weightHistory, weight, isFr]);
 
   return (
-    <View style={styles.container}>
+    <AnimatedScreen style={styles.container}>
       {themeType === "female" && (
         <Image source={require("../../../assets/girly.png")} style={styles.bgOverlay} resizeMode="cover" />
       )}
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: 4, paddingBottom: Math.max(100, 24 + insets.bottom) }}>
 
-        {/* ── Header ─────────────────────────────────────────────── */}
-        <View style={styles.header}>
-          <Pressable onPress={() => router.back()} hitSlop={12}>
-            <Ionicons name="chevron-back" size={24} color={theme.foreground.white} />
-          </Pressable>
-          <Text style={styles.headerTitle}>{isFr ? "PROFIL" : "PROFILE"}</Text>
-          <Pressable style={styles.headerBtn} onPress={() => router.push("/settings" as any)}>
-            <Ionicons name="settings-outline" size={18} color={theme.foreground.white} />
-          </Pressable>
-        </View>
+        {/* ── Profile Header ─────────────────────────────────────── */}
+        <ProfileHeader
+          mode="self"
+          coverUrl={myProfile?.cover_url ?? null}
+          avatarUrl={myProfile?.avatar_url ?? null}
+          displayName={
+            myProfile?.display_name ||
+            myProfile?.username ||
+            displayName ||
+            (isFr ? "Profil" : "Profile")
+          }
+          username={myProfile?.username ?? null}
+          memberSinceIso={myProfile?.created_at ?? null}
+          badge={null}
+          stats={{
+            posts: userStats.posts_count,
+            followers: userStats.followers_count,
+            likes: userStats.likes_count,
+          }}
+          locale={i18n.language}
+          onSettingsPress={() => router.push("/settings" as any)}
+          onAvatarPress={() => setAvatarSheetOpen(true)}
+          onCoverPress={() => setCoverPickerOpen(true)}
+          onPrimaryPress={() => router.push("/settings/edit-profile" as any)}
+          onSecondaryPress={() => setShareOpen(true)}
+        />
 
         {/* ── Activity Section ───────────────────────────────────── */}
         <Text style={styles.sectionTitle}>{isFr ? "Activité" : "Activity"}</Text>
@@ -315,28 +410,159 @@ export default function Profile() {
             const weekSteps = 48000;
             const weekWater = 10.5;
             const weekActive = 320;
-            const weightVar = weightHistory.length >= 2
-              ? weightHistory[weightHistory.length - 1].weight - weightHistory[0].weight
-              : 0;
-            return [
-              { icon: "flame-outline" as const, value: `${Math.round(totalBurned / divisor)}`, unit: "kcal", label: isFr ? "Brûlées" : "Burned", color: "#FF6B35" },
-              { icon: "walk-outline" as const, value: `${Math.round(weekSteps / divisor).toLocaleString()}`, unit: "", label: isFr ? "Pas" : "Steps", color: "#4A90D9" },
-              { icon: "water-outline" as const, value: `${(weekWater / divisor).toFixed(1)}`, unit: "L", label: isFr ? "Eau" : "Water", color: "#34C759" },
-              { icon: "time-outline" as const, value: `${Math.round(weekActive / divisor)}`, unit: "min", label: isFr ? "Actif" : "Active", color: "#F5A623" },
-              { icon: "trending-up-outline" as const, value: `${weightVar >= 0 ? "+" : ""}${weightVar.toFixed(1)}`, unit: "kg", label: isFr ? "Variation" : "Change", color: weightVar <= 0 ? "#34C759" : "#ED6665" },
+            type Item = {
+              icon: React.ComponentProps<typeof MaterialCommunityIcons>["name"];
+              value: string;
+              unit: string;
+              label: string;
+              gradient: [string, string];
+            };
+            const items: Item[] = [
+              { icon: "fire", value: `${Math.round(totalBurned / divisor)}`, unit: "kcal", label: isFr ? "Brûlées" : "Burned", gradient: ["#FF8A3D", "#FF3D6B"] },
+              { icon: "shoe-print", value: `${Math.round(weekSteps / divisor).toLocaleString()}`, unit: "", label: isFr ? "Pas" : "Steps", gradient: ["#5AA9FF", "#2E6BFF"] },
+              { icon: "water", value: `${(weekWater / divisor).toFixed(1)}`, unit: "L", label: isFr ? "Eau" : "Water", gradient: ["#4FD1C5", "#1FA37A"] },
+              { icon: "timer-sand", value: `${Math.round(weekActive / divisor)}`, unit: "min", label: isFr ? "Actif" : "Active", gradient: ["#FFC75A", "#F59E0B"] },
             ];
+            return items;
           })().map((s, i) => (
             <View key={i} style={styles.summaryItem}>
-              <View style={[styles.summaryIcon, { backgroundColor: `${s.color}15` }]}>
-                <Ionicons name={s.icon} size={20} color={s.color} />
-              </View>
-              <Text style={styles.summaryValue}>{s.value}<Text style={styles.summaryUnit}> {s.unit}</Text></Text>
-              <Text style={styles.summaryLabel}>{s.label}</Text>
+              <LinearGradient
+                colors={s.gradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.summaryCardGradient}
+              >
+                <View style={styles.summaryIconWrap}>
+                  <MaterialCommunityIcons name={s.icon} size={22} color="#fff" />
+                </View>
+                <Text style={styles.summaryValue}>
+                  {s.value}
+                  {s.unit ? <Text style={styles.summaryUnit}> {s.unit}</Text> : null}
+                </Text>
+                <Text style={styles.summaryLabel}>{s.label}</Text>
+              </LinearGradient>
             </View>
           ))}
         </View>
 
+        <DevRoutesSection />
+
       </ScrollView>
+
+      <CoverPickerModal
+        visible={coverPickerOpen}
+        currentUrl={myProfile?.cover_url ?? null}
+        onClose={() => setCoverPickerOpen(false)}
+        onSelect={handleSelectCover}
+      />
+
+      <AvatarActionSheet
+        visible={avatarSheetOpen}
+        hasAvatar={!!myProfile?.avatar_url}
+        onClose={() => setAvatarSheetOpen(false)}
+        onTakePhoto={() => handleUploadAvatar("camera")}
+        onChooseLibrary={() => handleUploadAvatar("library")}
+        onRemove={handleRemoveAvatar}
+      />
+
+      <ShareProfileModal
+        visible={shareOpen}
+        userId={user?.id ?? null}
+        username={myProfile?.username ?? null}
+        displayName={myProfile?.display_name ?? null}
+        onClose={() => setShareOpen(false)}
+      />
+    </AnimatedScreen>
+  );
+}
+
+const DEV_ROUTES: { label: string; path: string }[] = [
+  { label: "Home (tab)", path: "/(tabs)/home" },
+  { label: "Workout (tab)", path: "/(tabs)/workout" },
+  { label: "Alimentation (tab)", path: "/(tabs)/alimentation" },
+  { label: "Feed (tab)", path: "/(tabs)/feed" },
+  { label: "Profile (tab)", path: "/(tabs)/profile" },
+  { label: "Onboarding", path: "/OnBoarding" },
+  { label: "Auth — index", path: "/auth" },
+  { label: "Auth — sign in", path: "/auth/signin" },
+  { label: "Auth — sign up", path: "/auth/signup" },
+  { label: "Get Started — language", path: "/get-started/language" },
+  { label: "Get Started — gender", path: "/get-started/gender" },
+  { label: "Get Started — age", path: "/get-started/age" },
+  { label: "Get Started — height", path: "/get-started/height" },
+  { label: "Get Started — weight", path: "/get-started/weight" },
+  { label: "Get Started — target weight", path: "/get-started/target-weight" },
+  { label: "Get Started — fitness goal", path: "/get-started/fitness-goal" },
+  { label: "Get Started — focus areas", path: "/get-started/focus-areas" },
+  { label: "Get Started — experience level", path: "/get-started/experience-level" },
+  { label: "Get Started — workout frequency", path: "/get-started/workout-frequency" },
+  { label: "Get Started — units", path: "/get-started/units" },
+  { label: "Get Started — email preferences", path: "/get-started/email-preferences" },
+  { label: "Get Started — health connect", path: "/get-started/health-connect" },
+  { label: "Get Started — ready", path: "/get-started/ready" },
+  { label: "Settings — index", path: "/settings" },
+  { label: "Settings — edit profile", path: "/settings/edit-profile" },
+  { label: "Settings — change password", path: "/settings/change-password" },
+  { label: "Settings — privacy", path: "/settings/privacy" },
+  { label: "Settings — terms", path: "/settings/terms" },
+  { label: "Settings — about", path: "/settings/about" },
+  { label: "Settings — help center", path: "/settings/help-center" },
+  { label: "Routines — list", path: "/routines" },
+  { label: "Explore Routines", path: "/explore-routines" },
+  { label: "Create Routine", path: "/create-routine" },
+  { label: "Exercise Picker", path: "/exercise-picker" },
+  { label: "Workouts — list", path: "/workouts" },
+  { label: "Workout Player", path: "/workout-player" },
+  { label: "Share Workout", path: "/share-workout" },
+  { label: "Food Search", path: "/food-search" },
+  { label: "Alimentation History", path: "/alimentation-history" },
+  { label: "Search", path: "/search" },
+  { label: "Search — scan", path: "/search/scan" },
+  { label: "Notifications", path: "/notifications" },
+  { label: "Objective", path: "/objective" },
+  { label: "User Posts", path: "/user/posts" },
+];
+
+function DevRoutesSection() {
+  const router = useRouter();
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
+  const [open, setOpen] = useState(false);
+
+  return (
+    <View style={styles.devContainer}>
+      <Pressable
+        onPress={() => setOpen((v) => !v)}
+        style={({ pressed }) => [styles.devToggle, pressed && { opacity: 0.85 }]}
+      >
+        <Ionicons name="construct" size={16} color={theme.foreground.white} />
+        <Text style={styles.devToggleText}>
+          DEV · {open ? "Hide" : "Show"} all screens
+        </Text>
+        <Ionicons
+          name={open ? "chevron-up" : "chevron-down"}
+          size={16}
+          color={theme.foreground.white}
+        />
+      </Pressable>
+
+      {open && (
+        <View style={styles.devList}>
+          {DEV_ROUTES.map((r) => (
+            <Pressable
+              key={r.path}
+              onPress={() => router.push(r.path as any)}
+              style={({ pressed }) => [
+                styles.devItem,
+                pressed && { opacity: 0.7 },
+              ]}
+            >
+              <Text style={styles.devItemLabel}>{r.label}</Text>
+              <Text style={styles.devItemPath}>{r.path}</Text>
+            </Pressable>
+          ))}
+        </View>
+      )}
     </View>
   );
 }
@@ -432,15 +658,98 @@ function createStyles(theme: Theme) {
       gap: 10, marginBottom: 16,
     },
     summaryItem: {
-      width: (SCREEN_WIDTH - 60) / 3, padding: 14, borderRadius: 16,
-      backgroundColor: theme.background.darker, alignItems: "center", gap: 6,
+      width: (SCREEN_WIDTH - 60) / 3,
+      borderRadius: 18,
+      overflow: "hidden",
+      ...(Platform.OS === "ios"
+        ? {
+            shadowColor: "#000",
+            shadowOpacity: 0.18,
+            shadowRadius: 10,
+            shadowOffset: { width: 0, height: 6 },
+          }
+        : { elevation: 4 }),
     },
-    summaryIcon: {
-      width: 40, height: 40, borderRadius: 20,
-      alignItems: "center", justifyContent: "center",
+    summaryCardGradient: {
+      paddingVertical: 16,
+      paddingHorizontal: 10,
+      alignItems: "center",
+      gap: 8,
+      minHeight: 120,
+      justifyContent: "center",
     },
-    summaryValue: { fontFamily: FONTS.extraBold, fontSize: 18, color: theme.foreground.white },
-    summaryUnit: { fontSize: 11, color: theme.foreground.gray },
-    summaryLabel: { fontFamily: FONTS.medium, fontSize: 10, color: theme.foreground.gray, textTransform: "uppercase" },
+    summaryIconWrap: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: "rgba(255,255,255,0.22)",
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: "rgba(255,255,255,0.35)",
+    },
+    summaryValue: {
+      fontFamily: FONTS.extraBold,
+      fontSize: 18,
+      color: "#fff",
+      textAlign: "center",
+    },
+    summaryUnit: { fontSize: 11, color: "rgba(255,255,255,0.85)" },
+    summaryLabel: {
+      fontFamily: FONTS.bold,
+      fontSize: 10,
+      color: "rgba(255,255,255,0.9)",
+      textTransform: "uppercase",
+      letterSpacing: 0.6,
+    },
+
+    // Dev navigation
+    devContainer: {
+      marginHorizontal: 20,
+      marginTop: 20,
+      marginBottom: 40,
+    },
+    devToggle: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      borderRadius: 12,
+      backgroundColor: theme.background.darker,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: theme.primary.main + "40",
+    },
+    devToggleText: {
+      fontFamily: FONTS.bold,
+      fontSize: 12,
+      color: theme.foreground.white,
+      letterSpacing: 0.5,
+      textTransform: "uppercase",
+    },
+    devList: {
+      marginTop: 10,
+      borderRadius: 12,
+      backgroundColor: theme.background.darker,
+      overflow: "hidden",
+    },
+    devItem: {
+      paddingVertical: 10,
+      paddingHorizontal: 14,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: theme.foreground.gray + "20",
+    },
+    devItemLabel: {
+      fontFamily: FONTS.semiBold,
+      fontSize: 13,
+      color: theme.foreground.white,
+    },
+    devItemPath: {
+      fontFamily: FONTS.regular,
+      fontSize: 11,
+      color: theme.foreground.gray,
+      marginTop: 2,
+    },
   });
 }

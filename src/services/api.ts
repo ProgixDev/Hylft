@@ -53,30 +53,47 @@ export const api = {
       body: JSON.stringify(data),
     }),
   getPublicProfile: (userId: string) => authFetch(`/users/${userId}`),
+  getUserStats: (userId: string) => authFetch(`/users/${userId}/stats`),
+  searchUsers: (q: string, limit = 20) => {
+    const qs = new URLSearchParams({ q, limit: String(limit) });
+    return authFetch(`/users/search?${qs.toString()}`);
+  },
+  signAvatarUpload: (data: { ext?: string } = {}) =>
+    authFetch("/users/me/avatar/sign-upload", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  deleteAvatar: () =>
+    authFetch("/users/me/avatar", { method: "DELETE" }),
 
-  // ── Nutrition ────────────────────────────────────────────
+  // ── Wallpapers ──────────────────────────────────────────
+  listWallpapers: () => authFetch("/wallpapers"),
+
+  // ── Nutrition / Alimentation ────────────────────────────
+  searchFood: (q: string, lang: "fr" | "en" = "fr") =>
+    authFetch(`/nutrition/search?q=${encodeURIComponent(q)}&lang=${lang}`),
   getMeals: (date: string) =>
     authFetch(`/nutrition/meals?date=${date}`),
-  getMealsRange: (start: string, end: string) =>
-    authFetch(`/nutrition/meals/range?start=${start}&end=${end}`),
   addMeal: (data: Record<string, unknown>) =>
     authFetch("/nutrition/meals", { method: "POST", body: JSON.stringify(data) }),
   deleteMeal: (id: string) =>
     authFetch(`/nutrition/meals/${id}`, { method: "DELETE" }),
+  getAlimentationDaily: (date: string) =>
+    authFetch(`/nutrition/daily?date=${date}`),
+  upsertAlimentationDaily: (data: {
+    date: string;
+    water_ml?: number;
+    weight_kg?: number;
+    notes?: string;
+  }) =>
+    authFetch("/nutrition/daily", { method: "PUT", body: JSON.stringify(data) }),
   getDailySummary: (date: string) =>
-    authFetch(`/nutrition/summary/daily?date=${date}`),
-  getWeeklySummary: (start: string, end: string) =>
-    authFetch(`/nutrition/summary/weekly?start=${start}&end=${end}`),
-  getNutritionGoals: () =>
-    authFetch("/nutrition/goals"),
+    authFetch(`/nutrition/summary?date=${date}`),
+  getAlimentationHistory: (start: string, end: string) =>
+    authFetch(`/nutrition/history?start=${start}&end=${end}`),
+  getNutritionGoals: () => authFetch("/nutrition/goals"),
   updateNutritionGoals: (data: Record<string, unknown>) =>
     authFetch("/nutrition/goals", { method: "PATCH", body: JSON.stringify(data) }),
-  getCustomFoods: () =>
-    authFetch("/nutrition/custom-foods"),
-  createCustomFood: (data: Record<string, unknown>) =>
-    authFetch("/nutrition/custom-foods", { method: "POST", body: JSON.stringify(data) }),
-  deleteCustomFood: (id: string) =>
-    authFetch(`/nutrition/custom-foods/${id}`, { method: "DELETE" }),
 
   // ── Routines ─────────────────────────────────────────────
   getRoutines: () =>

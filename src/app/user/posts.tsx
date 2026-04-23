@@ -28,10 +28,6 @@ interface UserPost {
     username: string;
     avatar: string;
   };
-  weight?: string;
-  sets?: string;
-  reps?: string;
-  duration?: string;
 }
 
 export default function UserPosts() {
@@ -60,10 +56,6 @@ export default function UserPosts() {
         username: user?.username || "",
         avatar: user?.avatar || "",
       },
-      weight: post.weight,
-      sets: post.sets,
-      reps: post.reps,
-      duration: post.duration,
     })),
   );
 
@@ -108,36 +100,6 @@ export default function UserPosts() {
         <Image source={{ uri: item.user.avatar }} style={styles.avatar} />
         <Text style={styles.username}>{item.user.username}</Text>
       </TouchableOpacity>
-
-      {/* Metrics */}
-      {(item.weight || item.sets || item.reps || item.duration) && (
-        <View style={styles.metricsContainer}>
-          {item.weight && (
-            <View style={styles.metricItem}>
-              <Ionicons name="barbell" size={16} color={theme.primary.main} />
-              <Text style={styles.metricText}>{item.weight}</Text>
-            </View>
-          )}
-          {item.sets && (
-            <View style={styles.metricItem}>
-              <Ionicons name="repeat" size={16} color={theme.primary.main} />
-              <Text style={styles.metricText}>{item.sets} {t("user.sets")}</Text>
-            </View>
-          )}
-          {item.reps && (
-            <View style={styles.metricItem}>
-              <Ionicons name="fitness" size={16} color={theme.primary.main} />
-              <Text style={styles.metricText}>{item.reps} {t("user.reps")}</Text>
-            </View>
-          )}
-          {item.duration && (
-            <View style={styles.metricItem}>
-              <Ionicons name="time" size={16} color={theme.primary.main} />
-              <Text style={styles.metricText}>{item.duration}</Text>
-            </View>
-          )}
-        </View>
-      )}
 
       {/* Post Images */}
       <ImageCarousel

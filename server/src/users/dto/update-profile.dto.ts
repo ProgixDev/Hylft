@@ -18,7 +18,23 @@ export class UpdateProfileDto {
 
   @IsString()
   @IsOptional()
-  avatar_url?: string;
+  first_name?: string;
+
+  @IsString()
+  @IsOptional()
+  last_name?: string;
+
+  @IsString()
+  @IsOptional()
+  bio?: string;
+
+  @IsString()
+  @IsOptional()
+  avatar_url?: string | null;
+
+  @IsString()
+  @IsOptional()
+  cover_url?: string | null;
 
   @IsString()
   @IsOptional()

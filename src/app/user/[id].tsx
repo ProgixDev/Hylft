@@ -11,6 +11,7 @@ import {
   View,
 } from "react-native";
 import { useTranslation } from "react-i18next";
+import ProfileHeader from "../../components/profile/ProfileHeader";
 import { useTheme } from "../../contexts/ThemeContext";
 import { api } from "../../services/api";
 import { mapPostToUi, type BackendPost } from "../../services/feedMappers";
@@ -23,16 +24,20 @@ type PublicProfile = {
   username: string | null;
   display_name: string | null;
   avatar_url: string | null;
+  cover_url: string | null;
   bio: string | null;
   is_private: boolean;
+  created_at: string | null;
 };
 
 type FollowStats = { followers_count: number; following_count: number };
 
-function compactNumber(n: number): string {
-  if (n < 1000) return String(n);
-  return `${(n / 1000).toFixed(1)}k`;
-}
+type UserStats = {
+  posts_count: number;
+  followers_count: number;
+  following_count: number;
+  likes_count: number;
+};
 
 export default function UserProfile() {
   const { t } = useTranslation();
@@ -46,6 +51,12 @@ export default function UserProfile() {
     followers_count: 0,
     following_count: 0,
   });
+  const [userStats, setUserStats] = useState<UserStats>({
+    posts_count: 0,
+    followers_count: 0,
+    following_count: 0,
+    likes_count: 0,
+  });
   const [isFollowing, setIsFollowing] = useState(false);
   const [pendingRequest, setPendingRequest] = useState(false);
   const [posts, setPosts] = useState<PostData[]>([]);
@@ -58,13 +69,15 @@ export default function UserProfile() {
     setLoading(true);
     setError(null);
     try {
-      const [profileRes, statsRes, followRes] = await Promise.all([
+      const [profileRes, statsRes, followRes, userStatsRes] = await Promise.all([
         api.getPublicProfile(id) as Promise<PublicProfile>,
         api.getFollowStats(id) as Promise<FollowStats>,
         api.isFollowing(id) as Promise<{ is_following: boolean }>,
+        api.getUserStats(id) as Promise<UserStats>,
       ]);
       setProfile(profileRes);
       setStats(statsRes);
+      setUserStats(userStatsRes);
       setIsFollowing(!!followRes.is_following);
 
       // Fetch posts only if public or already following.
@@ -99,12 +112,14 @@ export default function UserProfile() {
     // Optimistic
     const wasFollowing = isFollowing;
     setIsFollowing(!wasFollowing);
+    const delta = wasFollowing ? -1 : 1;
     setStats((s) => ({
       ...s,
-      followers_count: Math.max(
-        s.followers_count + (wasFollowing ? -1 : 1),
-        0,
-      ),
+      followers_count: Math.max(s.followers_count + delta, 0),
+    }));
+    setUserStats((s) => ({
+      ...s,
+      followers_count: Math.max(s.followers_count + delta, 0),
     }));
     try {
       if (wasFollowing) {
@@ -122,17 +137,23 @@ export default function UserProfile() {
             ...s,
             followers_count: Math.max(s.followers_count - 1, 0),
           }));
+          setUserStats((s) => ({
+            ...s,
+            followers_count: Math.max(s.followers_count - 1, 0),
+          }));
         }
       }
     } catch {
       // rollback
       setIsFollowing(wasFollowing);
+      const rollback = wasFollowing ? 1 : -1;
       setStats((s) => ({
         ...s,
-        followers_count: Math.max(
-          s.followers_count + (wasFollowing ? 1 : -1),
-          0,
-        ),
+        followers_count: Math.max(s.followers_count + rollback, 0),
+      }));
+      setUserStats((s) => ({
+        ...s,
+        followers_count: Math.max(s.followers_count + rollback, 0),
       }));
     } finally {
       setToggling(false);
@@ -162,93 +183,48 @@ export default function UserProfile() {
   const displayName =
     profile.display_name ?? profile.username ?? t("user.userNotFound");
 
-  const followLabel = pendingRequest
-    ? t("user.requested", "Requested")
-    : isFollowing
-      ? t("user.following")
-      : t("user.follow");
-
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={28} color={theme.foreground.white} />
+      <View style={styles.topBar}>
+        <TouchableOpacity onPress={() => router.back()} hitSlop={10}>
+          <Ionicons
+            name="chevron-back"
+            size={28}
+            color={theme.foreground.white}
+          />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{displayName}</Text>
-        <View style={styles.spacer} />
       </View>
 
       <ScrollView
         style={styles.content}
         contentContainerStyle={styles.scrollContent}
       >
-        <View style={styles.profileHeader}>
-          <Image
-            source={{ uri: profile.avatar_url || undefined }}
-            style={styles.avatar}
-          />
-          <View style={styles.profileInfo}>
-            <View style={styles.nameContainer}>
-              <Text style={styles.username}>{displayName}</Text>
-              {profile.is_private && (
-                <Ionicons
-                  name="lock-closed"
-                  size={16}
-                  color={theme.foreground.gray}
-                  style={styles.lockIcon}
-                />
-              )}
-            </View>
-            {profile.bio ? <Text style={styles.bio}>{profile.bio}</Text> : null}
-          </View>
-        </View>
-
-        <View style={styles.statsContainer}>
-          <View style={styles.statBox}>
-            <Text style={styles.statNumber}>{posts.length}</Text>
-            <Text style={styles.statLabel}>{t("user.posts")}</Text>
-          </View>
-          <TouchableOpacity
-            style={styles.statBox}
-            onPress={() =>
-              router.navigate(`/user/follows/${profile.id}?tab=followers` as any)
-            }
-          >
-            <Text style={styles.statNumber}>
-              {compactNumber(stats.followers_count)}
-            </Text>
-            <Text style={styles.statLabel}>{t("user.followers")}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.statBox}
-            onPress={() =>
-              router.navigate(`/user/follows/${profile.id}?tab=following` as any)
-            }
-          >
-            <Text style={styles.statNumber}>
-              {compactNumber(stats.following_count)}
-            </Text>
-            <Text style={styles.statLabel}>{t("user.following")}</Text>
-          </TouchableOpacity>
-        </View>
-
-        <TouchableOpacity
-          style={[
-            styles.followButton,
-            (isFollowing || pendingRequest) && styles.followingButton,
-          ]}
-          onPress={handleToggleFollow}
-          disabled={toggling}
-        >
-          <Text
-            style={[
-              styles.followButtonText,
-              (isFollowing || pendingRequest) && styles.followingButtonText,
-            ]}
-          >
-            {followLabel}
-          </Text>
-        </TouchableOpacity>
+        <ProfileHeader
+          mode="public"
+          coverUrl={profile.cover_url ?? null}
+          avatarUrl={profile.avatar_url ?? null}
+          displayName={displayName}
+          username={profile.username ?? null}
+          memberSinceIso={profile.created_at ?? null}
+          badge={null}
+          isFollowing={isFollowing}
+          followPending={pendingRequest}
+          stats={{
+            posts: userStats.posts_count,
+            followers: userStats.followers_count,
+            likes: userStats.likes_count,
+          }}
+          locale={undefined}
+          onActivityPress={() =>
+            router.navigate(
+              `/user/follows/${profile.id}?tab=followers` as any,
+            )
+          }
+          onPrimaryPress={toggling ? undefined : handleToggleFollow}
+          onSecondaryPress={() => {
+            // Chat flow TBD — route to DM once available.
+          }}
+        />
 
         {profile.is_private && !isFollowing ? (
           <View style={styles.privateContainer}>
@@ -314,85 +290,15 @@ export default function UserProfile() {
 const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
   StyleSheet.create({
     container: { flex: 1, backgroundColor: theme.background.dark },
-    header: {
+    topBar: {
       flexDirection: "row",
       alignItems: "center",
-      justifyContent: "space-between",
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.background.darker,
+      paddingHorizontal: 12,
+      paddingTop: 8,
+      paddingBottom: 4,
     },
-    headerTitle: {
-      fontSize: 20,
-      fontFamily: FONTS.bold,
-      color: theme.foreground.white,
-    },
-    spacer: { width: 28 },
     content: { flex: 1 },
     scrollContent: { paddingBottom: 24 },
-    profileHeader: {
-      flexDirection: "row",
-      alignItems: "flex-start",
-      paddingHorizontal: 16,
-      paddingVertical: 16,
-    },
-    avatar: {
-      width: 80,
-      height: 80,
-      borderRadius: 40,
-      marginRight: 16,
-      backgroundColor: theme.background.darker,
-    },
-    profileInfo: { flex: 1 },
-    nameContainer: {
-      flexDirection: "row",
-      alignItems: "center",
-      marginBottom: 4,
-    },
-    username: {
-      fontSize: 18,
-      fontFamily: FONTS.bold,
-      color: theme.foreground.white,
-    },
-    lockIcon: { marginLeft: 8 },
-    bio: { fontSize: 13, color: theme.foreground.gray, marginBottom: 8 },
-    statsContainer: {
-      flexDirection: "row",
-      justifyContent: "space-around",
-      paddingHorizontal: 16,
-      marginBottom: 20,
-    },
-    statBox: { alignItems: "center" },
-    statNumber: {
-      fontSize: 18,
-      fontFamily: FONTS.bold,
-      color: theme.foreground.white,
-    },
-    statLabel: {
-      fontSize: 12,
-      color: theme.foreground.gray,
-      marginTop: 4,
-    },
-    followButton: {
-      marginHorizontal: 16,
-      paddingVertical: 12,
-      borderRadius: 22,
-      backgroundColor: theme.primary.main,
-      alignItems: "center",
-      marginBottom: 24,
-    },
-    followingButton: {
-      backgroundColor: theme.background.accent,
-      borderWidth: 1,
-      borderColor: theme.primary.main,
-    },
-    followButtonText: {
-      fontSize: 15,
-      fontFamily: FONTS.semiBold,
-      color: theme.background.dark,
-    },
-    followingButtonText: { color: theme.primary.main },
     privateContainer: { alignItems: "center", paddingVertical: 60 },
     privateTitle: {
       fontSize: 18,

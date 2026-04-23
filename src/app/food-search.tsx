@@ -15,8 +15,8 @@ import { FONTS } from "../constants/fonts";
 import { Theme } from "../constants/themes";
 import { useNutrition } from "../contexts/NutritionContext";
 import { useTheme } from "../contexts/ThemeContext";
+import { api } from "../services/api";
 import type { FoodItem, MealType } from "../services/nutritionApi";
-import { NutritionApi } from "../services/nutritionApi";
 
 const VALID_MEAL_TYPES: MealType[] = ["breakfast", "lunch", "dinner", "snack"];
 
@@ -38,7 +38,7 @@ const DEFAULT_QUERY: Record<string, Record<MealType, string>> = {
 
 export default function FoodSearchScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ mealType?: string }>();
+  const params = useLocalSearchParams<{ mealType?: string; date?: string }>();
   const { theme } = useTheme();
   const { i18n } = useTranslation();
   const { addMeal } = useNutrition();
@@ -75,7 +75,7 @@ export default function FoodSearchScreen() {
     try {
       const langKey = lang === "fr" ? "fr" : "en";
       const q = DEFAULT_QUERY[langKey][selectedMealType];
-      const items = await NutritionApi.searchFood(q, lang);
+      const items: FoodItem[] = await api.searchFood(q, lang);
       setResults(items.slice(0, 12));
     } catch (error) {
       console.error("[Food Search] Failed to load defaults:", error);
@@ -89,7 +89,7 @@ export default function FoodSearchScreen() {
 
     setIsSearching(true);
     try {
-      const items = await NutritionApi.searchFood(query, lang);
+      const items: FoodItem[] = await api.searchFood(query, lang);
       setResults(items);
     } catch (error) {
       console.error("[Food Search] Search failed:", error);
@@ -101,12 +101,17 @@ export default function FoodSearchScreen() {
 
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
 
-  const handleAddFood = async (food: FoodItem) => {
-    const today = new Date().toISOString().split("T")[0];
+  const targetDate = (() => {
+    const raw = Array.isArray(params.date) ? params.date[0] : params.date;
+    return raw && /^\d{4}-\d{2}-\d{2}$/.test(raw)
+      ? raw
+      : new Date().toISOString().split("T")[0];
+  })();
 
+  const handleAddFood = async (food: FoodItem) => {
     try {
       await addMeal({
-        date: today,
+        date: targetDate,
         mealType: selectedMealType,
         foodId: food.id,
         foodName: food.name,

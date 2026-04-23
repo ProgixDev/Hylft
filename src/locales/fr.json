@@ -338,7 +338,14 @@
     "languageSubtitle": "Choisissez votre langue préférée"
   },
   "feed": {
-    "title": "Fil"
+    "title": "Fil",
+    "empty": "Aucune publication pour le moment"
+  },
+  "composer": {
+    "placeholder": "Quoi de neuf ?",
+    "post": "Publier",
+    "addPhoto": "Photos",
+    "errorTitle": "Erreur"
   },
   "food": {
     "title": "Journal alimentaire",
@@ -394,7 +401,7 @@
     "startWorkout": "Entraînement",
     "explore": "Explorer",
     "feed": "Fil",
-    "homeWorkout": "HOME WORKOUT",
+    "homeWorkout": "HOME",
     "searchPlaceholder": "Rechercher entraînements, plans...",
     "weeklyGoal": "Objectif hebdomadaire",
     "motivationalMessage": "Votre entraînement vous attend ! Il est temps de faire le premier pas !",
@@ -585,7 +592,19 @@
     "sharePost": "Partager la publication",
     "checkOutPost": "Découvrez cette publication de",
     "likes": "j'aime",
-    "viewAllComments": "Voir tous les {count} commentaires"
+    "viewAllComments": "Voir tous les {count} commentaires",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "deleteTitle": "Supprimer la publication ?",
+    "deleteBody": "Cette action est irréversible.",
+    "changePrivacy": "Confidentialité",
+    "privacy_public": "Public",
+    "privacy_followers": "Abonnés uniquement",
+    "privacy_private": "Privé",
+    "share": "Partager",
+    "report": "Signaler",
+    "reportTitle": "Signaler",
+    "reportBody": "Merci, cette publication sera examinée."
   },
   "user": {
     "posts": "Publications",
@@ -711,10 +730,14 @@
     "endAndSave": "Terminer et enregistrer"
   },
   "search": {
-    "findPeople": "Trouver des personnes",
-    "searchPeople": "Rechercher des personnes...",
-    "noUsersFound": "Aucun utilisateur trouvé",
-    "tryDifferentUsername": "Essayez de rechercher un autre nom d'utilisateur"
+    "findPeople": "Rechercher",
+    "searchPeople": "Nom d'utilisateur, prénom...",
+    "noUsersFound": "Aucun résultat",
+    "tryDifferentUsername": "Essayez un autre nom d'utilisateur",
+    "startTyping": "Commencez à taper pour rechercher",
+    "startTypingHint": "Trouvez et suivez d'autres athlètes pour voir leurs publications dans votre fil.",
+    "pending": "En attente",
+    "private": "Privé"
   },
   "filters": {
     "allLevels": "Tous les niveaux",

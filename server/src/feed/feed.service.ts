@@ -150,19 +150,12 @@ export class FeedService {
       query = query.eq('author_id', q.author_id);
       // Visibility filter applied per row below.
     } else {
-      // Timeline: own posts + public posts + followers-only posts from people I follow.
-      // PostgREST "or" expression.
+      // Timeline: own posts + every post by someone the viewer follows.
+      // Privacy is still enforced per row via canView() (private posts by
+      // followees are filtered out there).
       const followeeIds = await this.getFolloweeIds(userId);
-      const followeesClause =
-        followeeIds.length > 0
-          ? `and(privacy.eq.followers,author_id.in.(${followeeIds.join(',')}))`
-          : null;
-      const orParts = [
-        `author_id.eq.${userId}`,
-        `privacy.eq.public`,
-        followeesClause,
-      ].filter(Boolean) as string[];
-      query = query.or(orParts.join(','));
+      const authorIds = Array.from(new Set([userId, ...followeeIds]));
+      query = query.in('author_id', authorIds);
     }
 
     const { data, error } = await query;

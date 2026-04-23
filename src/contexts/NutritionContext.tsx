@@ -1,23 +1,18 @@
 /**
- * NutritionContext
- * Manages meal logging, daily calorie/macro tracking, and nutrition goals.
- * Uses AsyncStorage for local persistence by default.
- * Optional remote sync can be enabled with EXPO_PUBLIC_ENABLE_NUTRITION_SYNC=true.
+ * NutritionContext — backend-only (Supabase via /nutrition API).
+ * Source of truth is the server. No AsyncStorage, no local fallback.
  */
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, {
-    createContext,
-    useCallback,
-    useContext,
-    useEffect,
-    useMemo,
-    useState,
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
 } from "react";
 import { api } from "../services/api";
 import type { MealEntry, MealType } from "../services/nutritionApi";
-
-const ENABLE_REMOTE_NUTRITION_SYNC =
-  String(process.env.EXPO_PUBLIC_ENABLE_NUTRITION_SYNC || "false").toLowerCase() === "true";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 export interface NutritionGoals {
@@ -27,6 +22,12 @@ export interface NutritionGoals {
   fatGoal: number;
 }
 
+export interface AlimentationDaily {
+  waterMl: number;
+  weightKg: number | null;
+  notes: string[]; // stored as JSON-encoded array in the `notes` column
+}
+
 export interface DailyNutritionSummary {
   date: string;
   totalCalories: number;
@@ -34,21 +35,27 @@ export interface DailyNutritionSummary {
   totalCarbs: number;
   totalFat: number;
   meals: MealEntry[];
+  daily: AlimentationDaily;
 }
 
 interface NutritionContextType {
   goals: NutritionGoals;
+  selectedDate: string; // YYYY-MM-DD
   todayMeals: MealEntry[];
   todaySummary: DailyNutritionSummary;
-  weekSummaries: DailyNutritionSummary[];
+  daily: AlimentationDaily;
   isLoading: boolean;
+
+  selectDate: (date: string) => void;
+  refresh: () => Promise<void>;
 
   addMeal: (meal: Omit<MealEntry, "id" | "userId" | "loggedAt">) => Promise<void>;
   removeMeal: (mealId: string) => Promise<void>;
   updateGoals: (goals: Partial<NutritionGoals>) => Promise<void>;
-  refreshToday: () => Promise<void>;
-  refreshWeek: () => Promise<void>;
-  getMealsForDate: (date: string) => Promise<MealEntry[]>;
+
+  setWater: (ml: number) => void;
+  setWeight: (kg: number) => void;
+  addNote: (text: string) => void;
 }
 
 const DEFAULT_GOALS: NutritionGoals = {
@@ -58,44 +65,33 @@ const DEFAULT_GOALS: NutritionGoals = {
   fatGoal: 70,
 };
 
-const STORAGE_KEYS = {
-  goals: "@hylift_nutrition_goals",
-  todayMeals: "@hylift_today_meals",
+const EMPTY_DAILY: AlimentationDaily = {
+  waterMl: 0,
+  weightKg: null,
+  notes: [],
 };
 
 const NutritionContext = createContext<NutritionContextType | undefined>(
-  undefined
+  undefined,
 );
 
 function getToday(): string {
   return new Date().toISOString().split("T")[0];
 }
 
-function getWeekRange(): { start: string; end: string } {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const day = today.getDay();
-  const monday = new Date(today);
-  monday.setDate(today.getDate() - ((day + 6) % 7));
-  const sunday = new Date(monday);
-  sunday.setDate(monday.getDate() + 6);
-
-  return {
-    start: monday.toISOString().split("T")[0],
-    end: sunday.toISOString().split("T")[0],
-  };
-}
-
-function summarizeMeals(date: string, meals: MealEntry[]): DailyNutritionSummary {
-  const dayMeals = meals.filter((m) => m.date === date);
-  return {
-    date,
-    totalCalories: dayMeals.reduce((s, m) => s + m.calories, 0),
-    totalProtein: dayMeals.reduce((s, m) => s + m.protein, 0),
-    totalCarbs: dayMeals.reduce((s, m) => s + m.carbs, 0),
-    totalFat: dayMeals.reduce((s, m) => s + m.fat, 0),
-    meals: dayMeals,
-  };
+function parseNotes(raw: unknown): string[] {
+  if (!raw) return [];
+  if (Array.isArray(raw)) return raw.filter((n) => typeof n === "string");
+  if (typeof raw !== "string") return [];
+  const trimmed = raw.trim();
+  if (!trimmed) return [];
+  try {
+    const parsed = JSON.parse(trimmed);
+    if (Array.isArray(parsed)) return parsed.filter((n) => typeof n === "string");
+  } catch {
+    // fallback: treat as single note
+  }
+  return [trimmed];
 }
 
 function mapServerMeal(row: any): MealEntry {
@@ -104,95 +100,92 @@ function mapServerMeal(row: any): MealEntry {
     userId: row.user_id,
     date: row.date,
     mealType: row.meal_type as MealType,
-    foodId: row.food_id,
+    foodId: row.food_id ?? undefined,
     foodName: row.food_name,
-    servings: row.servings,
-    calories: row.calories,
-    protein: row.protein,
-    carbs: row.carbs,
-    fat: row.fat,
-    loggedAt: row.logged_at ?? row.created_at,
+    servings: Number(row.servings) || 0,
+    calories: Number(row.calories) || 0,
+    protein: Number(row.protein) || 0,
+    carbs: Number(row.carbs) || 0,
+    fat: Number(row.fat) || 0,
+    loggedAt: row.logged_at ?? new Date().toISOString(),
+  };
+}
+
+function mapServerDaily(row: any): AlimentationDaily {
+  if (!row) return { ...EMPTY_DAILY };
+  return {
+    waterMl: Number(row.water_ml) || 0,
+    weightKg: row.weight_kg != null ? Number(row.weight_kg) : null,
+    notes: parseNotes(row.notes),
+  };
+}
+
+function mapServerGoals(row: any): NutritionGoals {
+  if (!row) return DEFAULT_GOALS;
+  return {
+    calorieGoal: Number(row.calorie_goal) || DEFAULT_GOALS.calorieGoal,
+    proteinGoal: Number(row.protein_goal) || DEFAULT_GOALS.proteinGoal,
+    carbsGoal: Number(row.carbs_goal) || DEFAULT_GOALS.carbsGoal,
+    fatGoal: Number(row.fat_goal) || DEFAULT_GOALS.fatGoal,
   };
 }
 
 export function NutritionProvider({ children }: { children: React.ReactNode }) {
   const [goals, setGoals] = useState<NutritionGoals>(DEFAULT_GOALS);
-  const [todayMeals, setTodayMeals] = useState<MealEntry[]>([]);
-  const [weekMeals, setWeekMeals] = useState<MealEntry[]>([]);
+  const [selectedDate, setSelectedDate] = useState<string>(getToday());
+  const [meals, setMeals] = useState<MealEntry[]>([]);
+  const [daily, setDaily] = useState<AlimentationDaily>(EMPTY_DAILY);
   const [isLoading, setIsLoading] = useState(true);
 
-  const today = getToday();
+  // Debounce timers for daily upserts
+  const dailyDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // ── Load cached data on mount ──────────────────────────────────────────
+  // ── Load goals once on mount ───────────────────────────────────────────
   useEffect(() => {
-    (async () => {
-      try {
-        const [storedGoals, storedMeals] = await Promise.all([
-          AsyncStorage.getItem(STORAGE_KEYS.goals),
-          AsyncStorage.getItem(STORAGE_KEYS.todayMeals),
-        ]);
-
-        if (storedGoals) setGoals(JSON.parse(storedGoals));
-        if (storedMeals) {
-          const parsed: MealEntry[] = JSON.parse(storedMeals);
-          const todayOnly = parsed.filter((m) => m.date === today);
-          console.log("[NutritionContext] Loaded meals:", JSON.stringify(todayOnly.map(m => ({ id: m.id, name: m.foodName, type: m.mealType }))));
-          setTodayMeals(todayOnly);
-        }
-      } catch (error) {
-        console.warn("[NutritionContext] Load cache failed:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    })();
-  }, [today]);
-
-  // ── Optional remote goals sync on mount ────────────────────────────────
-  useEffect(() => {
-    if (!ENABLE_REMOTE_NUTRITION_SYNC) return;
-
     (async () => {
       try {
         const serverGoals = await api.getNutritionGoals();
-        if (serverGoals) {
-          const mapped: NutritionGoals = {
-            calorieGoal: serverGoals.calorie_goal ?? DEFAULT_GOALS.calorieGoal,
-            proteinGoal: serverGoals.protein_goal ?? DEFAULT_GOALS.proteinGoal,
-            carbsGoal: serverGoals.carbs_goal ?? DEFAULT_GOALS.carbsGoal,
-            fatGoal: serverGoals.fat_goal ?? DEFAULT_GOALS.fatGoal,
-          };
-          setGoals(mapped);
-          AsyncStorage.setItem(STORAGE_KEYS.goals, JSON.stringify(mapped));
-        }
-      } catch {
-        // Use cached goals — user may be offline
+        setGoals(mapServerGoals(serverGoals));
+      } catch (error) {
+        console.warn("[NutritionContext] Load goals failed:", error);
       }
     })();
   }, []);
 
+  // ── Load summary for selectedDate ──────────────────────────────────────
+  const loadSummary = useCallback(async (date: string) => {
+    setIsLoading(true);
+    try {
+      const summary = await api.getDailySummary(date);
+      const rows = Array.isArray(summary?.meals) ? summary.meals : [];
+      setMeals(rows.map(mapServerMeal));
+      setDaily(mapServerDaily(summary?.daily));
+    } catch (error) {
+      console.warn("[NutritionContext] Load summary failed:", error);
+      setMeals([]);
+      setDaily(EMPTY_DAILY);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadSummary(selectedDate);
+  }, [selectedDate, loadSummary]);
+
   // ── Actions ────────────────────────────────────────────────────────────
+  const selectDate = useCallback((date: string) => {
+    setSelectedDate(date);
+  }, []);
+
+  const refresh = useCallback(async () => {
+    await loadSummary(selectedDate);
+  }, [loadSummary, selectedDate]);
+
   const addMeal = useCallback(
     async (meal: Omit<MealEntry, "id" | "userId" | "loggedAt">) => {
-      // Optimistic: update UI instantly
-      const localId = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-      const localMeal: MealEntry = {
-        ...meal,
-        id: localId,
-        userId: "local",
-        loggedAt: new Date().toISOString(),
-      };
-
-      console.log(`[NutritionContext] Adding meal: "${localMeal.foodName}" → mealType="${localMeal.mealType}"`);
-
-      setTodayMeals((prev) => {
-        const updated = [...prev, localMeal];
-        AsyncStorage.setItem(STORAGE_KEYS.todayMeals, JSON.stringify(updated));
-        return updated;
-      });
-
-      if (ENABLE_REMOTE_NUTRITION_SYNC) {
-        // Optional background sync; local data is source of truth by default.
-        api.addMeal({
+      try {
+        const row = await api.addMeal({
           date: meal.date,
           meal_type: meal.mealType,
           food_id: meal.foodId,
@@ -202,128 +195,148 @@ export function NutritionProvider({ children }: { children: React.ReactNode }) {
           protein: meal.protein,
           carbs: meal.carbs,
           fat: meal.fat,
-        }).catch((error) => {
-          const message = error instanceof Error ? error.message : String(error);
-          const isNetworkIssue = /Network request failed|fetch|network/i.test(message);
-          if (!isNetworkIssue) {
-            console.warn("[NutritionContext] Server sync failed (data saved locally):", error);
-          }
         });
+        const mapped = mapServerMeal(row);
+        if (mapped.date === selectedDate) {
+          setMeals((prev) => [...prev, mapped]);
+        }
+      } catch (error) {
+        console.warn("[NutritionContext] addMeal failed:", error);
+        throw error;
       }
     },
-    []
+    [selectedDate],
   );
 
   const removeMeal = useCallback(async (mealId: string) => {
-    setTodayMeals((prev) => {
-      const updated = prev.filter((m) => m.id !== mealId);
-      AsyncStorage.setItem(STORAGE_KEYS.todayMeals, JSON.stringify(updated));
-      return updated;
-    });
-
-    if (ENABLE_REMOTE_NUTRITION_SYNC) {
-      try {
-        await api.deleteMeal(mealId);
-      } catch (error) {
-        console.warn("[NutritionContext] deleteMeal failed:", error);
-      }
-    }
-  }, []);
-
-  const updateGoals = useCallback(async (newGoals: Partial<NutritionGoals>) => {
-    setGoals((prev) => {
-      const updated = { ...prev, ...newGoals };
-      AsyncStorage.setItem(STORAGE_KEYS.goals, JSON.stringify(updated));
-
-      if (ENABLE_REMOTE_NUTRITION_SYNC) {
-        api.updateNutritionGoals({
-          calorie_goal: updated.calorieGoal,
-          protein_goal: updated.proteinGoal,
-          carbs_goal: updated.carbsGoal,
-          fat_goal: updated.fatGoal,
-        }).catch((e) => console.warn("[NutritionContext] updateGoals failed:", e));
-      }
-
-      return updated;
-    });
-  }, []);
-
-  const refreshToday = useCallback(async () => {
-    if (!ENABLE_REMOTE_NUTRITION_SYNC) return;
-
+    const prev = meals;
+    setMeals((m) => m.filter((x) => x.id !== mealId));
     try {
-      const serverMeals = await api.getMeals(today);
-      const meals = (serverMeals ?? []).map(mapServerMeal);
-      setTodayMeals(meals);
-      AsyncStorage.setItem(STORAGE_KEYS.todayMeals, JSON.stringify(meals));
+      await api.deleteMeal(mealId);
     } catch (error) {
-      console.warn("[NutritionContext] refreshToday failed:", error);
+      console.warn("[NutritionContext] deleteMeal failed, reverting:", error);
+      setMeals(prev);
     }
-  }, [today]);
+  }, [meals]);
 
-  const refreshWeek = useCallback(async () => {
-    if (!ENABLE_REMOTE_NUTRITION_SYNC) return;
-
+  const updateGoals = useCallback(async (patch: Partial<NutritionGoals>) => {
+    const next = { ...goals, ...patch };
+    setGoals(next);
     try {
-      const { start, end } = getWeekRange();
-      const serverMeals = await api.getMealsRange(start, end);
-      const meals = (serverMeals ?? []).map(mapServerMeal);
-      setWeekMeals(meals);
+      await api.updateNutritionGoals({
+        calorie_goal: next.calorieGoal,
+        protein_goal: next.proteinGoal,
+        carbs_goal: next.carbsGoal,
+        fat_goal: next.fatGoal,
+      });
     } catch (error) {
-      console.warn("[NutritionContext] refreshWeek failed:", error);
+      console.warn("[NutritionContext] updateGoals failed:", error);
     }
-  }, []);
+  }, [goals]);
 
-  const getMealsForDate = useCallback(async (date: string): Promise<MealEntry[]> => {
-    if (!ENABLE_REMOTE_NUTRITION_SYNC) {
-      return todayMeals.filter((meal) => meal.date === date);
-    }
-
-    try {
-      const serverMeals = await api.getMeals(date);
-      return (serverMeals ?? []).map(mapServerMeal);
-    } catch {
-      return [];
-    }
-  }, [todayMeals]);
-
-  // ── Computed ───────────────────────────────────────────────────────────
-  const todaySummary = useMemo(
-    () => summarizeMeals(today, todayMeals),
-    [today, todayMeals]
+  // ── Daily upsert (debounced) ───────────────────────────────────────────
+  const scheduleDailyUpsert = useCallback(
+    (payload: { water_ml?: number; weight_kg?: number; notes?: string }) => {
+      if (dailyDebounceRef.current) clearTimeout(dailyDebounceRef.current);
+      const date = selectedDate;
+      dailyDebounceRef.current = setTimeout(() => {
+        api
+          .upsertAlimentationDaily({ date, ...payload })
+          .catch((err) =>
+            console.warn("[NutritionContext] upsertDaily failed:", err),
+          );
+      }, 400);
+    },
+    [selectedDate],
   );
 
-  const weekSummaries = useMemo(() => {
-    const todayObj = new Date();
-    todayObj.setHours(0, 0, 0, 0);
-    const day = todayObj.getDay();
-    const monday = new Date(todayObj);
-    monday.setDate(todayObj.getDate() - ((day + 6) % 7));
+  const setWater = useCallback((ml: number) => {
+    const value = Math.max(0, Math.round(ml));
+    setDaily((d) => ({ ...d, waterMl: value }));
+    scheduleDailyUpsert({ water_ml: value });
+  }, [scheduleDailyUpsert]);
 
-    const allMeals = [...weekMeals, ...todayMeals];
-    return Array.from({ length: 7 }, (_, i) => {
-      const d = new Date(monday);
-      d.setDate(monday.getDate() + i);
-      const dateStr = d.toISOString().split("T")[0];
-      return summarizeMeals(dateStr, allMeals);
+  const setWeight = useCallback((kg: number) => {
+    const value = Math.max(0, kg);
+    setDaily((d) => ({ ...d, weightKg: value }));
+    scheduleDailyUpsert({ weight_kg: value });
+  }, [scheduleDailyUpsert]);
+
+  const addNote = useCallback((text: string) => {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    let nextNotes: string[] = [];
+    setDaily((d) => {
+      nextNotes = [trimmed, ...d.notes];
+      return { ...d, notes: nextNotes };
     });
-  }, [weekMeals, todayMeals]);
+    // Fire immediately (not debounced) so new notes aren't swallowed
+    if (dailyDebounceRef.current) clearTimeout(dailyDebounceRef.current);
+    api
+      .upsertAlimentationDaily({
+        date: selectedDate,
+        notes: JSON.stringify(nextNotes),
+      })
+      .catch((err) =>
+        console.warn("[NutritionContext] upsertDaily(notes) failed:", err),
+      );
+  }, [selectedDate]);
+
+  // ── Computed summary ───────────────────────────────────────────────────
+  const todaySummary = useMemo<DailyNutritionSummary>(() => {
+    const totals = meals.reduce(
+      (acc, m) => ({
+        calories: acc.calories + m.calories,
+        protein: acc.protein + m.protein,
+        carbs: acc.carbs + m.carbs,
+        fat: acc.fat + m.fat,
+      }),
+      { calories: 0, protein: 0, carbs: 0, fat: 0 },
+    );
+    return {
+      date: selectedDate,
+      totalCalories: totals.calories,
+      totalProtein: totals.protein,
+      totalCarbs: totals.carbs,
+      totalFat: totals.fat,
+      meals,
+      daily,
+    };
+  }, [selectedDate, meals, daily]);
 
   const value = useMemo(
     () => ({
       goals,
-      todayMeals,
+      selectedDate,
+      todayMeals: meals,
       todaySummary,
-      weekSummaries,
+      daily,
       isLoading,
+      selectDate,
+      refresh,
       addMeal,
       removeMeal,
       updateGoals,
-      refreshToday,
-      refreshWeek,
-      getMealsForDate,
+      setWater,
+      setWeight,
+      addNote,
     }),
-    [goals, todayMeals, todaySummary, weekSummaries, isLoading, addMeal, removeMeal, updateGoals, refreshToday, refreshWeek, getMealsForDate]
+    [
+      goals,
+      selectedDate,
+      meals,
+      todaySummary,
+      daily,
+      isLoading,
+      selectDate,
+      refresh,
+      addMeal,
+      removeMeal,
+      updateGoals,
+      setWater,
+      setWeight,
+      addNote,
+    ],
   );
 
   return (

@@ -41,9 +41,6 @@ export type BackendPost = {
 
 export function mapPostToUi(p: BackendPost): PostData {
   const author = p.author;
-  const toStr = (v: unknown): string | undefined =>
-    v === null || v === undefined ? undefined : String(v);
-
   return {
     id: p.id,
     user: {
@@ -60,9 +57,6 @@ export function mapPostToUi(p: BackendPost): PostData {
     comments: p.comments_count,
     timestamp: p.created_at,
     isLiked: !!p.is_liked,
-    weight: toStr(p.stats?.weight),
-    reps: toStr(p.stats?.reps),
-    sets: toStr(p.stats?.sets),
-    duration: toStr(p.stats?.duration),
+    privacy: p.privacy,
   };
 }

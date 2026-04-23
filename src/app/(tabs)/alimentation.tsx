@@ -1,7 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Dimensions,
@@ -14,26 +13,21 @@ import {
   View,
 } from "react-native";
 import Svg, { Circle } from "react-native-svg";
+import AnimatedScreen from "../../components/ui/AnimatedScreen";
 import { FONTS } from "../../constants/fonts";
 import { Theme } from "../../constants/themes";
 import { useHealth } from "../../contexts/HealthContext";
 import { useNutrition } from "../../contexts/NutritionContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import type { MealType } from "../../services/nutritionApi";
-import { WeightHistory } from "../../services/weightHistory";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-
-const STORAGE_KEYS = {
-  waterMl: "@hylift_food_water_ml",
-  weightCurrent: "@hylift_food_weight_current",
-  weightTarget: "@hylift_food_weight_target",
-  notesByDate: "@hylift_food_notes_by_date",
-};
 
 const WATER_GOAL_ML = 2000;
 const GLASS_STEP_ML = 250;
 const TOTAL_GLASSES = 8;
+const DEFAULT_WEIGHT_KG = 70;
+const DEFAULT_WEIGHT_TARGET = 65;
 
 const MEAL_TABS: { type: MealType; emoji: string; color: string; ratio: number }[] = [
   { type: "breakfast", emoji: "🥐", color: "#F5A623", ratio: 0.25 },
@@ -47,6 +41,15 @@ const MONTHS = [
   "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
   "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre",
 ];
+
+function toISODate(d: Date): string {
+  return d.toISOString().split("T")[0];
+}
+
+function fromISODate(s: string): Date {
+  const [y, m, day] = s.split("-").map(Number);
+  return new Date(y, (m || 1) - 1, day || 1);
+}
 
 // ── Ring ────────────────────────────────────────────────────────────────────
 function Ring({ pct, size, strokeWidth, color, bgColor, children }: {
@@ -74,44 +77,27 @@ export default function Alimentation() {
   const { t, i18n } = useTranslation();
   const isFr = i18n.language?.startsWith("fr");
   const { todayCaloriesBurned } = useHealth();
-  const { goals, todayMeals, todaySummary, removeMeal } = useNutrition();
+  const {
+    goals,
+    selectedDate,
+    todayMeals,
+    todaySummary,
+    daily,
+    selectDate,
+    removeMeal,
+    setWater,
+    setWeight,
+    addNote,
+  } = useNutrition();
   const styles = createStyles(theme);
 
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [waterMl, setWaterMl] = useState(0);
-  const [weightCurrent, setWeightCurrent] = useState(70);
-  const [weightTarget, setWeightTarget] = useState(65);
+  const selectedDateObj = useMemo(() => fromISODate(selectedDate), [selectedDate]);
   const [noteInput, setNoteInput] = useState("");
-  const [dailyNotes, setDailyNotes] = useState<string[]>([]);
+  const [weightTarget] = useState(DEFAULT_WEIGHT_TARGET); // UI only, out of scope for backend
 
-  const today = useMemo(() => new Date().toISOString().split("T")[0], []);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const [savedWater, savedWeight, savedTarget, savedNotes] = await Promise.all([
-          AsyncStorage.getItem(STORAGE_KEYS.waterMl),
-          AsyncStorage.getItem(STORAGE_KEYS.weightCurrent),
-          AsyncStorage.getItem(STORAGE_KEYS.weightTarget),
-          AsyncStorage.getItem(STORAGE_KEYS.notesByDate),
-        ]);
-        if (savedWater) setWaterMl(Number(savedWater) || 0);
-        if (savedWeight) setWeightCurrent(Number(savedWeight) || 70);
-        if (savedTarget) setWeightTarget(Number(savedTarget) || 65);
-        if (savedNotes) {
-          const parsed = JSON.parse(savedNotes) as Record<string, string[]>;
-          setDailyNotes(parsed[today] ?? []);
-        }
-      } catch { /* */ }
-    })();
-  }, [today]);
-
-  useEffect(() => { AsyncStorage.setItem(STORAGE_KEYS.waterMl, String(waterMl)); }, [waterMl]);
-  useEffect(() => {
-    AsyncStorage.setItem(STORAGE_KEYS.weightCurrent, String(weightCurrent));
-    WeightHistory.log(weightCurrent);
-  }, [weightCurrent]);
-  useEffect(() => { AsyncStorage.setItem(STORAGE_KEYS.weightTarget, String(weightTarget)); }, [weightTarget]);
+  const waterMl = daily.waterMl;
+  const weightCurrent = daily.weightKg ?? DEFAULT_WEIGHT_KG;
+  const dailyNotes = daily.notes;
 
   const caloriesEaten = todaySummary.totalCalories;
   const caloriesBurned = todayCaloriesBurned;
@@ -121,34 +107,28 @@ export default function Alimentation() {
   const getMealsForType = (type: MealType) => todayMeals.filter((m) => m.mealType === type);
   const getMealTypeCalories = (type: MealType) => getMealsForType(type).reduce((s, m) => s + m.calories, 0);
   const mealCalorieGoal = (ratio: number) => Math.round(goals.calorieGoal * ratio);
-  const openFoodSearch = (mealType: MealType) => router.push(`/food-search?mealType=${mealType}` as any);
+  const openFoodSearch = (mealType: MealType) =>
+    router.push(`/food-search?mealType=${mealType}&date=${selectedDate}` as any);
 
-  const saveDailyNotes = async (nextNotes: string[]) => {
-    try {
-      const raw = await AsyncStorage.getItem(STORAGE_KEYS.notesByDate);
-      const parsed: Record<string, string[]> = raw ? JSON.parse(raw) : {};
-      parsed[today] = nextNotes;
-      await AsyncStorage.setItem(STORAGE_KEYS.notesByDate, JSON.stringify(parsed));
-    } catch { /* */ }
-  };
-  const handleAddNote = async () => {
+  const handleAddNote = () => {
     const trimmed = noteInput.trim();
     if (!trimmed) return;
-    const updated = [trimmed, ...dailyNotes];
-    setDailyNotes(updated);
+    addNote(trimmed);
     setNoteInput("");
-    await saveDailyNotes(updated);
   };
 
   const waterGlasses = Math.floor(waterMl / GLASS_STEP_ML);
 
-  const isToday = (d: Date) => {
-    const now = new Date();
-    return d.getDate() === now.getDate() && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  const shiftDate = (delta: number) => {
+    const d = new Date(selectedDateObj);
+    d.setDate(d.getDate() + delta);
+    selectDate(toISODate(d));
   };
 
+  const isTodaySelected = toISODate(new Date()) === selectedDate;
+
   return (
-    <View style={styles.container}>
+    <AnimatedScreen style={styles.container}>
       {themeType === "female" && (
         <Image source={require("../../../assets/girly.png")} style={styles.bgOverlay} resizeMode="cover" />
       )}
@@ -159,21 +139,22 @@ export default function Alimentation() {
         <View style={styles.header}>
           <View>
             <Text style={styles.headerTitle}>
-              {isToday(selectedDate) ? (isFr ? "Aujourd'hui" : "Today") : SHORT_DAY[selectedDate.getDay()] + " " + selectedDate.getDate()}
+              {isTodaySelected
+                ? (isFr ? "Aujourd'hui" : "Today")
+                : SHORT_DAY[selectedDateObj.getDay()] + " " + selectedDateObj.getDate()}
             </Text>
             <Text style={styles.headerSub}>
-              {selectedDate.getDate()} {MONTHS[selectedDate.getMonth()]} {selectedDate.getFullYear()}
+              {selectedDateObj.getDate()} {MONTHS[selectedDateObj.getMonth()]} {selectedDateObj.getFullYear()}
             </Text>
           </View>
           <View style={styles.headerActions}>
-            <Pressable onPress={() => {
-              const d = new Date(selectedDate); d.setDate(d.getDate() - 1); setSelectedDate(d);
-            }} style={styles.headerIconBtn} hitSlop={8}>
+            <Pressable onPress={() => router.push("/alimentation-history" as any)} style={styles.headerIconBtn} hitSlop={8}>
+              <Ionicons name="time-outline" size={18} color={theme.foreground.gray} />
+            </Pressable>
+            <Pressable onPress={() => shiftDate(-1)} style={styles.headerIconBtn} hitSlop={8}>
               <Ionicons name="chevron-back" size={18} color={theme.foreground.gray} />
             </Pressable>
-            <Pressable onPress={() => {
-              const d = new Date(selectedDate); d.setDate(d.getDate() + 1); setSelectedDate(d);
-            }} style={styles.headerIconBtn} hitSlop={8}>
+            <Pressable onPress={() => shiftDate(1)} style={styles.headerIconBtn} hitSlop={8}>
               <Ionicons name="chevron-forward" size={18} color={theme.foreground.gray} />
             </Pressable>
           </View>
@@ -182,11 +163,12 @@ export default function Alimentation() {
         {/* ── Résumé ─────────────────────────────────────────── */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>{isFr ? "Résumé" : "Summary"}</Text>
-          <Pressable><Text style={styles.sectionLink}>{isFr ? "Détails" : "Details"}</Text></Pressable>
+          <Pressable onPress={() => router.push("/alimentation-history" as any)}>
+            <Text style={styles.sectionLink}>{isFr ? "Historique" : "History"}</Text>
+          </Pressable>
         </View>
 
         <View style={styles.summaryCard}>
-          {/* 3 columns: Mangées | Ring Restantes | Brûlées */}
           <View style={styles.summaryRow}>
             <View style={styles.summaryCol}>
               <Text style={styles.summaryNum}>{Math.round(caloriesEaten)}</Text>
@@ -204,7 +186,6 @@ export default function Alimentation() {
             </View>
           </View>
 
-          {/* Macros row */}
           <View style={styles.macroRow}>
             {[
               { label: isFr ? "Glucides" : "Carbs", current: todaySummary.totalCarbs, goal: goals.carbsGoal },
@@ -270,13 +251,9 @@ export default function Alimentation() {
           <Text style={styles.waterGoal}>{isFr ? "Objectif" : "Goal"} : {(WATER_GOAL_ML / 1000).toFixed(2)} {isFr ? "litres" : "liters"}</Text>
           <Text style={styles.waterValue}>{(waterMl / 1000).toFixed(2)} L</Text>
 
-          {/* Glass icons */}
           <View style={styles.glassRow}>
             {Array.from({ length: TOTAL_GLASSES }, (_, i) => (
-              <Pressable
-                key={i}
-                onPress={() => setWaterMl((i + 1) * GLASS_STEP_ML)}
-              >
+              <Pressable key={i} onPress={() => setWater((i + 1) * GLASS_STEP_ML)}>
                 <Ionicons
                   name={i < waterGlasses ? "water" : "water-outline"}
                   size={28}
@@ -287,10 +264,10 @@ export default function Alimentation() {
           </View>
 
           <View style={styles.waterBtns}>
-            <Pressable style={styles.waterBtn} onPress={() => setWaterMl((v) => Math.max(0, v - GLASS_STEP_ML))}>
+            <Pressable style={styles.waterBtn} onPress={() => setWater(Math.max(0, waterMl - GLASS_STEP_ML))}>
               <Ionicons name="remove" size={18} color={theme.foreground.gray} />
             </Pressable>
-            <Pressable style={[styles.waterBtn, { backgroundColor: "#4A90D9" }]} onPress={() => setWaterMl((v) => Math.min(WATER_GOAL_ML * 2, v + GLASS_STEP_ML))}>
+            <Pressable style={[styles.waterBtn, { backgroundColor: "#4A90D9" }]} onPress={() => setWater(Math.min(WATER_GOAL_ML * 2, waterMl + GLASS_STEP_ML))}>
               <Ionicons name="add" size={18} color="#fff" />
             </Pressable>
           </View>
@@ -305,11 +282,11 @@ export default function Alimentation() {
           <Text style={styles.weightLabel}>{isFr ? "Poids" : "Weight"}</Text>
           <Text style={styles.weightGoal}>{isFr ? "Objectif" : "Goal"} : {weightTarget} kg</Text>
           <View style={styles.weightRow}>
-            <Pressable style={styles.weightBtn} onPress={() => setWeightCurrent((v) => Math.max(30, v - 0.1))}>
+            <Pressable style={styles.weightBtn} onPress={() => setWeight(Math.max(30, weightCurrent - 0.1))}>
               <Ionicons name="remove-circle-outline" size={32} color={theme.foreground.gray} />
             </Pressable>
             <Text style={styles.weightValue}>{weightCurrent.toFixed(1)} kg</Text>
-            <Pressable style={styles.weightBtn} onPress={() => setWeightCurrent((v) => Math.min(300, v + 0.1))}>
+            <Pressable style={styles.weightBtn} onPress={() => setWeight(Math.min(300, weightCurrent + 0.1))}>
               <Ionicons name="add-circle-outline" size={32} color={theme.primary.main} />
             </Pressable>
           </View>
@@ -346,7 +323,7 @@ export default function Alimentation() {
         </View>
 
       </ScrollView>
-    </View>
+    </AnimatedScreen>
   );
 }
 
@@ -360,7 +337,6 @@ function createStyles(theme: Theme) {
     },
     scrollContent: { paddingBottom: 100, paddingTop: 8 },
 
-    // Header
     header: {
       flexDirection: "row", alignItems: "center", justifyContent: "space-between",
       paddingHorizontal: 20, paddingVertical: 10,
@@ -373,7 +349,6 @@ function createStyles(theme: Theme) {
       alignItems: "center", justifyContent: "center",
     },
 
-    // Section
     sectionHeader: {
       flexDirection: "row", alignItems: "center", justifyContent: "space-between",
       paddingHorizontal: 20, marginTop: 18, marginBottom: 10,
@@ -381,7 +356,6 @@ function createStyles(theme: Theme) {
     sectionTitle: { fontFamily: FONTS.extraBold, fontSize: 17, color: theme.foreground.white },
     sectionLink: { fontFamily: FONTS.bold, fontSize: 13, color: theme.primary.main },
 
-    // Summary card (Yazio style)
     summaryCard: {
       marginHorizontal: 20, padding: 18, borderRadius: 18,
       backgroundColor: theme.background.darker,
@@ -395,7 +369,6 @@ function createStyles(theme: Theme) {
     ringNum: { fontFamily: FONTS.extraBold, fontSize: 18, color: theme.foreground.white },
     ringLabel: { fontFamily: FONTS.regular, fontSize: 10, color: theme.foreground.gray, marginTop: -2 },
 
-    // Macros
     macroRow: { marginTop: 16, gap: 10 },
     macroItem: { flexDirection: "row", alignItems: "center", gap: 8 },
     macroLabel: { fontFamily: FONTS.medium, fontSize: 12, color: theme.foreground.gray, width: 70 },
@@ -403,7 +376,6 @@ function createStyles(theme: Theme) {
     macroBarFill: { height: "100%", borderRadius: 3 },
     macroVal: { fontFamily: FONTS.medium, fontSize: 11, color: theme.foreground.gray, width: 75, textAlign: "right" },
 
-    // Meal rows
     mealRow: {
       flexDirection: "row", alignItems: "center", gap: 12,
       marginHorizontal: 20, paddingVertical: 14, paddingHorizontal: 14,
@@ -415,7 +387,6 @@ function createStyles(theme: Theme) {
     mealKcal: { fontFamily: FONTS.regular, fontSize: 12, color: theme.foreground.gray, marginTop: 1 },
     mealPlusBtn: { padding: 4 },
 
-    // Food items under meal
     foodItem: {
       flexDirection: "row", alignItems: "center", gap: 10,
       marginHorizontal: 20, paddingVertical: 10, paddingHorizontal: 14,
@@ -425,7 +396,6 @@ function createStyles(theme: Theme) {
     foodName: { fontFamily: FONTS.medium, fontSize: 13, color: theme.foreground.white },
     foodInfo: { fontFamily: FONTS.regular, fontSize: 11, color: theme.foreground.gray, marginTop: 1 },
 
-    // Water card
     waterCard: {
       marginHorizontal: 20, padding: 18, borderRadius: 18,
       backgroundColor: theme.background.darker, alignItems: "center",
@@ -440,7 +410,6 @@ function createStyles(theme: Theme) {
       alignItems: "center", justifyContent: "center",
     },
 
-    // Weight card
     weightCard: {
       marginHorizontal: 20, padding: 18, borderRadius: 18,
       backgroundColor: theme.background.darker, alignItems: "center",
@@ -451,7 +420,6 @@ function createStyles(theme: Theme) {
     weightValue: { fontFamily: FONTS.extraBold, fontSize: 28, color: theme.foreground.white },
     weightBtn: {},
 
-    // Notes card
     noteCard: {
       marginHorizontal: 20, padding: 18, borderRadius: 18,
       backgroundColor: theme.background.darker, marginBottom: 16,

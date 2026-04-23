@@ -1,12 +1,27 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { memo, useState } from "react";
+import React, { memo, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Image, Pressable, Share, StyleSheet, Text, View } from "react-native";
+import {
+  Alert,
+  Image,
+  Modal,
+  Pressable,
+  Share,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
+import { api } from "../../services/api";
+import { formatPostTimestamp } from "../../utils/format";
 import ImageCarousel from "./ImageCarousel";
 
 import { FONTS } from "../../constants/fonts";
+
+export type PostPrivacy = "public" | "followers" | "private";
 
 export type PostData = {
   id: string;
@@ -16,30 +31,41 @@ export type PostData = {
     avatar: string;
     bio?: string;
   };
-  images: string[]; // Support multiple images (1-4)
+  images: string[]; // Support multiple images (0-4)
   likes: number;
   caption: string;
   comments: number;
   timestamp: string;
   isLiked: boolean;
-  // Bodybuilding specific
-  weight?: string;
-  reps?: string;
-  sets?: string;
-  duration?: string;
+  privacy?: PostPrivacy;
 };
 
 type PostProps = {
   post: PostData;
   onLike: (postId: string) => void;
+  onDeleted?: (postId: string) => void;
+  onUpdated?: (postId: string, patch: { caption?: string; privacy?: PostPrivacy }) => void;
 };
 
 const Post = memo(
-  ({ post, onLike }: PostProps) => {
-    const { t } = useTranslation();
+  ({ post, onLike, onDeleted, onUpdated }: PostProps) => {
+    const { t, i18n } = useTranslation();
     const router = useRouter();
     const { theme } = useTheme();
+    const { user } = useAuth();
     const [isSaved, setIsSaved] = useState(false);
+    const [menuOpen, setMenuOpen] = useState(false);
+    const [editOpen, setEditOpen] = useState(false);
+    const [privacyOpen, setPrivacyOpen] = useState(false);
+    const [editCaption, setEditCaption] = useState(post.caption);
+    const [busy, setBusy] = useState(false);
+
+    const isOwner = !!user && user.id === post.user.id;
+    const isSeed = post.id.startsWith("mock-");
+    const formattedTime = useMemo(
+      () => formatPostTimestamp(post.timestamp, i18n.language),
+      [post.timestamp, i18n.language],
+    );
 
     const handleUserPress = () => {
       router.navigate(`/user/${post.user.id}` as any);
@@ -65,6 +91,67 @@ const Post = memo(
       router.navigate(`/comments/${post.id}` as any);
     };
 
+    const confirmDelete = () => {
+      Alert.alert(
+        t("post.deleteTitle", "Supprimer la publication ?"),
+        t("post.deleteBody", "Cette action est irréversible."),
+        [
+          { text: t("common.cancel", "Annuler"), style: "cancel" },
+          {
+            text: t("post.delete", "Supprimer"),
+            style: "destructive",
+            onPress: async () => {
+              try {
+                setBusy(true);
+                await api.deletePost(post.id);
+                onDeleted?.(post.id);
+              } catch (e) {
+                Alert.alert(
+                  t("common.error", "Erreur"),
+                  e instanceof Error ? e.message : String(e),
+                );
+              } finally {
+                setBusy(false);
+              }
+            },
+          },
+        ],
+      );
+    };
+
+    const saveEdit = async () => {
+      const next = editCaption.trim();
+      try {
+        setBusy(true);
+        await api.updatePost(post.id, { caption: next });
+        onUpdated?.(post.id, { caption: next });
+        setEditOpen(false);
+      } catch (e) {
+        Alert.alert(
+          t("common.error", "Erreur"),
+          e instanceof Error ? e.message : String(e),
+        );
+      } finally {
+        setBusy(false);
+      }
+    };
+
+    const setPrivacy = async (value: PostPrivacy) => {
+      try {
+        setBusy(true);
+        await api.updatePost(post.id, { privacy: value });
+        onUpdated?.(post.id, { privacy: value });
+        setPrivacyOpen(false);
+      } catch (e) {
+        Alert.alert(
+          t("common.error", "Erreur"),
+          e instanceof Error ? e.message : String(e),
+        );
+      } finally {
+        setBusy(false);
+      }
+    };
+
     const styles = createStyles(theme);
 
     return (
@@ -83,61 +170,57 @@ const Post = memo(
             </View>
             <View style={styles.userInfo}>
               <Text style={styles.username}>{post.user.username}</Text>
-              <Text style={styles.timestamp}>{post.timestamp}</Text>
+              <Text style={styles.timestamp}>{formattedTime}</Text>
             </View>
+          </Pressable>
+          <Pressable
+            onPress={() => setMenuOpen(true)}
+            style={({ pressed }) => [
+              styles.moreButton,
+              pressed && { opacity: 0.6 },
+            ]}
+            hitSlop={8}
+          >
+            <Ionicons
+              name="ellipsis-vertical"
+              size={18}
+              color={theme.foreground.white}
+            />
           </Pressable>
         </View>
 
-        {/* Metrics Info - Above Image */}
-        {(post.weight || post.reps || post.sets) && (
-          <View style={styles.metricsSection}>
-            <View style={styles.metricsContainer}>
-              {post.weight && (
-                <View style={styles.metricItem}>
-                  <Text style={styles.metricLabel}>{t("post.weight")}</Text>
-                  <Text style={styles.metricValue}>{post.weight}</Text>
-                </View>
-              )}
-              {post.sets && (
-                <View style={styles.metricItem}>
-                  <Text style={styles.metricLabel}>{t("post.sets")}</Text>
-                  <Text style={styles.metricValue}>{post.sets}</Text>
-                </View>
-              )}
-              {post.reps && (
-                <View style={styles.metricItem}>
-                  <Text style={styles.metricLabel}>{t("post.reps")}</Text>
-                  <Text style={styles.metricValue}>{post.reps}</Text>
-                </View>
-              )}
-              {post.duration && (
-                <View style={styles.metricItem}>
-                  <Text style={styles.metricLabel}>{t("post.duration")}</Text>
-                  <Text style={styles.metricValue}>{post.duration}</Text>
-                </View>
-              )}
-            </View>
-          </View>
-        )}
-
-        {/* Post Images — or workout banner when no images */}
-        {post.images.length > 0 ? (
+        {/* Post Images */}
+        {post.images.length > 0 && (
           <ImageCarousel
             images={post.images}
             style={styles.postImage}
             onLike={() => onLike(post.id)}
             isLiked={post.isLiked}
           />
-        ) : (
-          <View style={styles.workoutBanner}>
-            <View style={styles.workoutBannerIcon}>
-              <Ionicons
-                name="barbell-outline"
-                size={32}
-                color={theme.primary.main}
-              />
-            </View>
-            <Text style={styles.workoutBannerTitle}>Workout Complete! 🏆</Text>
+        )}
+
+        {/* Caption + view comments (above actions) */}
+        {(post.caption.length > 0 || post.comments > 0) && (
+          <View style={styles.postInfo}>
+            {post.caption.length > 0 && (
+              <Text style={styles.caption}>
+                <Text style={styles.username}>{post.user.username} </Text>
+                {post.caption}
+              </Text>
+            )}
+            {post.comments > 0 && (
+              <Pressable
+                onPress={handleComments}
+                style={({ pressed }) => pressed && { opacity: 0.7 }}
+              >
+                <Text style={styles.viewComments}>
+                  {t("post.viewAllComments").replace(
+                    "{count}",
+                    String(post.comments),
+                  )}
+                </Text>
+              </Pressable>
+            )}
           </View>
         )}
 
@@ -214,27 +297,236 @@ const Post = memo(
           </Pressable>
         </View>
 
-        {/* Post Info */}
-        <View style={styles.postInfo}>
-          <Text style={styles.caption}>
-            <Text style={styles.username}>{post.user.username} </Text>
-            {post.caption}
-          </Text>
-          {post.comments > 0 && (
-            <Pressable
-              onPress={handleComments}
-              style={({ pressed }) => pressed && { opacity: 0.7 }}
-            >
-              <Text style={styles.viewComments}>
-                {t("post.viewAllComments").replace(
-                  "{count}",
-                  String(post.comments),
-                )}
-              </Text>
-            </Pressable>
-          )}
-        </View>
         <View style={styles.divider} />
+
+        {/* Action menu */}
+        <Modal
+          visible={menuOpen}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setMenuOpen(false)}
+        >
+          <Pressable
+            style={styles.menuBackdrop}
+            onPress={() => setMenuOpen(false)}
+          >
+            <Pressable style={styles.menuSheet} onPress={() => {}}>
+              {isOwner && !isSeed && (
+                <>
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.menuItem,
+                      pressed && { opacity: 0.6 },
+                    ]}
+                    onPress={() => {
+                      setMenuOpen(false);
+                      setEditCaption(post.caption);
+                      setEditOpen(true);
+                    }}
+                  >
+                    <Ionicons
+                      name="create-outline"
+                      size={18}
+                      color={theme.foreground.white}
+                    />
+                    <Text style={styles.menuItemText}>
+                      {t("post.edit", "Modifier")}
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.menuItem,
+                      pressed && { opacity: 0.6 },
+                    ]}
+                    onPress={() => {
+                      setMenuOpen(false);
+                      setPrivacyOpen(true);
+                    }}
+                  >
+                    <Ionicons
+                      name="lock-closed-outline"
+                      size={18}
+                      color={theme.foreground.white}
+                    />
+                    <Text style={styles.menuItemText}>
+                      {t("post.changePrivacy", "Confidentialité")}
+                      {post.privacy ? `  · ${t(`post.privacy_${post.privacy}`, post.privacy)}` : ""}
+                    </Text>
+                  </Pressable>
+                  <View style={styles.menuDivider} />
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.menuItem,
+                      pressed && { opacity: 0.6 },
+                    ]}
+                    onPress={() => {
+                      setMenuOpen(false);
+                      confirmDelete();
+                    }}
+                  >
+                    <Ionicons
+                      name="trash-outline"
+                      size={18}
+                      color="#ff6b6b"
+                    />
+                    <Text style={[styles.menuItemText, { color: "#ff6b6b" }]}>
+                      {t("post.delete", "Supprimer")}
+                    </Text>
+                  </Pressable>
+                </>
+              )}
+              {(!isOwner || isSeed) && (
+                <>
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.menuItem,
+                      pressed && { opacity: 0.6 },
+                    ]}
+                    onPress={() => {
+                      setMenuOpen(false);
+                      handleShare();
+                    }}
+                  >
+                    <Ionicons
+                      name="share-outline"
+                      size={18}
+                      color={theme.foreground.white}
+                    />
+                    <Text style={styles.menuItemText}>
+                      {t("post.share", "Partager")}
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.menuItem,
+                      pressed && { opacity: 0.6 },
+                    ]}
+                    onPress={() => {
+                      setMenuOpen(false);
+                      Alert.alert(
+                        t("post.reportTitle", "Signaler"),
+                        t("post.reportBody", "Merci, cette publication sera examinée."),
+                      );
+                    }}
+                  >
+                    <Ionicons
+                      name="flag-outline"
+                      size={18}
+                      color={theme.foreground.white}
+                    />
+                    <Text style={styles.menuItemText}>
+                      {t("post.report", "Signaler")}
+                    </Text>
+                  </Pressable>
+                </>
+              )}
+            </Pressable>
+          </Pressable>
+        </Modal>
+
+        {/* Edit caption modal */}
+        <Modal
+          visible={editOpen}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setEditOpen(false)}
+        >
+          <Pressable
+            style={styles.menuBackdrop}
+            onPress={() => setEditOpen(false)}
+          >
+            <Pressable style={styles.editSheet} onPress={() => {}}>
+              <Text style={styles.editTitle}>
+                {t("post.edit", "Modifier la publication")}
+              </Text>
+              <TextInput
+                style={styles.editInput}
+                value={editCaption}
+                onChangeText={setEditCaption}
+                multiline
+                maxLength={2200}
+                placeholder={t("composer.placeholder", "Quoi de neuf ?")}
+                placeholderTextColor={theme.foreground.gray}
+              />
+              <View style={styles.editActions}>
+                <Pressable
+                  onPress={() => setEditOpen(false)}
+                  style={({ pressed }) => [
+                    styles.editBtnGhost,
+                    pressed && { opacity: 0.7 },
+                  ]}
+                >
+                  <Text style={styles.editBtnGhostText}>
+                    {t("common.cancel", "Annuler")}
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={saveEdit}
+                  disabled={busy}
+                  style={({ pressed }) => [
+                    styles.editBtnPrimary,
+                    pressed && { opacity: 0.85 },
+                    busy && { opacity: 0.5 },
+                  ]}
+                >
+                  <Text style={styles.editBtnPrimaryText}>
+                    {t("common.save", "Enregistrer")}
+                  </Text>
+                </Pressable>
+              </View>
+            </Pressable>
+          </Pressable>
+        </Modal>
+
+        {/* Privacy modal */}
+        <Modal
+          visible={privacyOpen}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setPrivacyOpen(false)}
+        >
+          <Pressable
+            style={styles.menuBackdrop}
+            onPress={() => setPrivacyOpen(false)}
+          >
+            <Pressable style={styles.menuSheet} onPress={() => {}}>
+              {(
+                [
+                  { key: "public", icon: "earth-outline" },
+                  { key: "followers", icon: "people-outline" },
+                  { key: "private", icon: "lock-closed-outline" },
+                ] as const
+              ).map(({ key, icon }) => (
+                <Pressable
+                  key={key}
+                  onPress={() => setPrivacy(key)}
+                  disabled={busy}
+                  style={({ pressed }) => [
+                    styles.menuItem,
+                    pressed && { opacity: 0.6 },
+                  ]}
+                >
+                  <Ionicons
+                    name={icon as any}
+                    size={18}
+                    color={theme.foreground.white}
+                  />
+                  <Text style={styles.menuItemText}>
+                    {t(`post.privacy_${key}`, key)}
+                  </Text>
+                  {post.privacy === key && (
+                    <Ionicons
+                      name="checkmark"
+                      size={18}
+                      color={theme.primary.main}
+                      style={{ marginLeft: "auto" }}
+                    />
+                  )}
+                </Pressable>
+              ))}
+            </Pressable>
+          </Pressable>
+        </Modal>
       </View>
     );
   },
@@ -243,7 +535,10 @@ const Post = memo(
     return (
       prevProps.post.id === nextProps.post.id &&
       prevProps.post.isLiked === nextProps.post.isLiked &&
-      prevProps.post.likes === nextProps.post.likes
+      prevProps.post.likes === nextProps.post.likes &&
+      prevProps.post.caption === nextProps.post.caption &&
+      prevProps.post.privacy === nextProps.post.privacy &&
+      prevProps.post.timestamp === nextProps.post.timestamp
     );
   },
 );
@@ -254,29 +549,6 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
   StyleSheet.create({
     postContainer: {
       marginBottom: 0,
-    },
-    workoutBanner: {
-      marginHorizontal: 12,
-      borderRadius: 12,
-      backgroundColor: theme.background.darker,
-      borderWidth: 1,
-      borderColor: theme.primary.main + "33",
-      paddingVertical: 22,
-      alignItems: "center",
-      gap: 8,
-    },
-    workoutBannerIcon: {
-      width: 56,
-      height: 56,
-      borderRadius: 28,
-      backgroundColor: theme.primary.main + "20",
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    workoutBannerTitle: {
-      fontSize: 15,
-      fontFamily: FONTS.bold,
-      color: theme.foreground.white,
     },
     divider: {
       height: 6,
@@ -320,7 +592,8 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       marginTop: 1,
     },
     moreButton: {
-      padding: 4,
+      padding: 6,
+      marginLeft: 4,
     },
     postImage: {
       width: "100%",
@@ -350,60 +623,10 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       fontFamily: FONTS.semiBold,
       color: theme.foreground.white,
     },
-    metricsSection: {
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: "rgba(0,0,0,0.08)",
-    },
-    metricsContainer: {
-      flexDirection: "row",
-      gap: 8,
-      flexWrap: "wrap",
-    },
-    metricItem: {
-      flex: 1,
-      minWidth: 60,
-      alignItems: "center",
-      paddingVertical: 4,
-    },
-    metricLabel: {
-      fontSize: 10,
-      color: theme.foreground.gray,
-      marginBottom: 2,
-    },
-    metricValue: {
-      fontSize: 13,
-      fontFamily: FONTS.bold,
-      color: theme.foreground.white,
-    },
     postInfo: {
       paddingHorizontal: 12,
-      paddingTop: 2,
-      paddingBottom: 8,
-    },
-    metadataContainer: {
-      flexDirection: "row",
-      gap: 6,
-      marginBottom: 8,
-      flexWrap: "wrap",
-    },
-    metadataTag: {
-      backgroundColor: theme.primary.main,
-      paddingHorizontal: 10,
-      paddingVertical: 4,
-      borderRadius: 16,
-    },
-    metadataLabel: {
-      fontSize: 11,
-      fontFamily: FONTS.semiBold,
-      color: theme.background.dark,
-    },
-    likes: {
-      fontSize: 13,
-      fontFamily: FONTS.semiBold,
-      color: theme.foreground.white,
-      marginBottom: 6,
+      paddingTop: 6,
+      paddingBottom: 4,
     },
     caption: {
       fontSize: 13,
@@ -415,6 +638,91 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       fontSize: 13,
       color: theme.foreground.gray,
       marginTop: 3,
+    },
+    menuBackdrop: {
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.5)",
+      justifyContent: "center",
+      alignItems: "center",
+      padding: 24,
+    },
+    menuSheet: {
+      width: "100%",
+      maxWidth: 320,
+      backgroundColor: theme.background.darker,
+      borderRadius: 14,
+      paddingVertical: 6,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: "rgba(255,255,255,0.08)",
+    },
+    menuItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+    },
+    menuItemText: {
+      fontSize: 14,
+      fontFamily: FONTS.semiBold,
+      color: theme.foreground.white,
+    },
+    menuDivider: {
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: "rgba(255,255,255,0.08)",
+      marginHorizontal: 10,
+    },
+    editSheet: {
+      width: "100%",
+      maxWidth: 380,
+      backgroundColor: theme.background.darker,
+      borderRadius: 14,
+      padding: 16,
+      gap: 12,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: "rgba(255,255,255,0.08)",
+    },
+    editTitle: {
+      fontSize: 15,
+      fontFamily: FONTS.bold,
+      color: theme.foreground.white,
+    },
+    editInput: {
+      minHeight: 90,
+      maxHeight: 200,
+      fontSize: 14,
+      color: theme.foreground.white,
+      fontFamily: FONTS.regular,
+      backgroundColor: theme.background.dark,
+      borderRadius: 10,
+      padding: 10,
+      textAlignVertical: "top",
+    },
+    editActions: {
+      flexDirection: "row",
+      justifyContent: "flex-end",
+      gap: 8,
+    },
+    editBtnGhost: {
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      borderRadius: 10,
+    },
+    editBtnGhostText: {
+      fontSize: 13,
+      fontFamily: FONTS.semiBold,
+      color: theme.foreground.gray,
+    },
+    editBtnPrimary: {
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderRadius: 10,
+      backgroundColor: theme.primary.main,
+    },
+    editBtnPrimaryText: {
+      fontSize: 13,
+      fontFamily: FONTS.bold,
+      color: theme.background.dark,
     },
   });
 

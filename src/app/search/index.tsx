@@ -1,151 +1,367 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
+  ActivityIndicator,
   FlatList,
   Image,
+  Platform,
+  Pressable,
   StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
   View,
 } from "react-native";
-import { useTranslation } from "react-i18next";
-import { useTheme } from "../../contexts/ThemeContext";
-import { getAllUsers, User } from "../../data/mockData";
-
 import { FONTS } from "../../constants/fonts";
+import { Theme } from "../../constants/themes";
+import { useTheme } from "../../contexts/ThemeContext";
+import { api } from "../../services/api";
+
+type SearchUser = {
+  id: string;
+  username: string | null;
+  display_name: string | null;
+  avatar_url: string | null;
+  bio: string | null;
+  is_private: boolean;
+  is_following: boolean;
+  has_pending_request: boolean;
+};
+
+type FollowState = "idle" | "following" | "pending";
+
+function stateFor(user: SearchUser): FollowState {
+  if (user.is_following) return "following";
+  if (user.has_pending_request) return "pending";
+  return "idle";
+}
 
 export default function Search() {
   const router = useRouter();
   const { t } = useTranslation();
   const { theme } = useTheme();
   const styles = createStyles(theme);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [users, setUsers] = useState<User[]>(getAllUsers());
 
-  const filteredUsers = useMemo(() => {
-    if (!searchQuery.trim()) return users;
-    return users.filter((user) =>
-      user.username.toLowerCase().includes(searchQuery.toLowerCase()),
-    );
-  }, [searchQuery, users]);
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<SearchUser[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const reqIdRef = useRef(0);
+  const inputRef = useRef<TextInput | null>(null);
 
-  const handleToggleFollow = (userId: string) => {
-    setUsers((prev) =>
-      prev.map((user) =>
-        user.id === userId ? { ...user, isFollowing: !user.isFollowing } : user,
+  useEffect(() => {
+    const id = setTimeout(() => inputRef.current?.focus(), 80);
+    return () => clearTimeout(id);
+  }, []);
+
+  const runSearch = useCallback(async (q: string) => {
+    const reqId = ++reqIdRef.current;
+    setError(null);
+    if (!q.trim()) {
+      setResults([]);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = (await api.searchUsers(q.trim())) as { items: SearchUser[] };
+      if (reqId !== reqIdRef.current) return;
+      setResults(res.items ?? []);
+    } catch (e) {
+      if (reqId !== reqIdRef.current) return;
+      setError(e instanceof Error ? e.message : String(e));
+      setResults([]);
+    } finally {
+      if (reqId === reqIdRef.current) setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => runSearch(query), 220);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [query, runSearch]);
+
+  const toggleFollow = useCallback(async (target: SearchUser) => {
+    const prev = stateFor(target);
+    // Optimistic update.
+    setResults((rows) =>
+      rows.map((u) =>
+        u.id !== target.id
+          ? u
+          : {
+              ...u,
+              is_following: prev === "idle" ? !u.is_private : false,
+              has_pending_request:
+                prev === "idle" ? u.is_private : false,
+            },
       ),
     );
-  };
+    try {
+      if (prev === "idle") {
+        const res = (await api.follow(target.id)) as { state?: string };
+        setResults((rows) =>
+          rows.map((u) =>
+            u.id !== target.id
+              ? u
+              : {
+                  ...u,
+                  is_following: res.state === "following",
+                  has_pending_request: res.state === "pending",
+                },
+          ),
+        );
+      } else if (prev === "following") {
+        await api.unfollow(target.id);
+      } else if (prev === "pending") {
+        await api.cancelOutgoingFollowRequest(target.id);
+      }
+    } catch {
+      // Rollback on error.
+      setResults((rows) =>
+        rows.map((u) =>
+          u.id !== target.id
+            ? u
+            : {
+                ...u,
+                is_following: prev === "following",
+                has_pending_request: prev === "pending",
+              },
+        ),
+      );
+    }
+  }, []);
 
-  const renderUserItem = ({ item }: { item: User }) => (
-    <TouchableOpacity
-      style={styles.userItemContainer}
-      onPress={() => {
-        // Navigate using the dynamic route pattern
-        router.navigate(`/user/${item.id}` as any);
-      }}
-      activeOpacity={0.7}
-    >
-      <View style={styles.userItem}>
-        <Image source={{ uri: item.avatar }} style={styles.userAvatar} />
-        <View style={styles.userInfo}>
-          <Text style={styles.username}>{item.username}</Text>
-          <Text style={styles.bio}>{item.bio}</Text>
-        </View>
-        <TouchableOpacity
-          style={[
-            styles.followButton,
-            item.isFollowing && styles.followingButton,
+  const renderItem = useCallback(
+    ({ item }: { item: SearchUser }) => {
+      const state = stateFor(item);
+      const label =
+        state === "following"
+          ? t("user.following")
+          : state === "pending"
+            ? t("search.pending", "Pending")
+            : t("user.follow");
+      return (
+        <Pressable
+          onPress={() => router.navigate(`/user/${item.id}` as any)}
+          style={({ pressed }) => [
+            styles.row,
+            pressed && { opacity: 0.8 },
           ]}
-          onPress={(e) => {
-            e.stopPropagation();
-            handleToggleFollow(item.id);
-          }}
         >
-          <Text
-            style={[
-              styles.followButtonText,
-              item.isFollowing && styles.followingButtonText,
+          <View style={styles.avatarWrap}>
+            {item.avatar_url ? (
+              <Image
+                source={{ uri: item.avatar_url }}
+                style={styles.avatar}
+              />
+            ) : (
+              <View style={[styles.avatar, styles.avatarFallback]}>
+                <Ionicons
+                  name="person"
+                  size={18}
+                  color={theme.foreground.gray}
+                />
+              </View>
+            )}
+          </View>
+          <View style={styles.rowText}>
+            <View style={styles.nameRow}>
+              <Text style={styles.username} numberOfLines={1}>
+                {item.username ?? "—"}
+              </Text>
+              {item.is_private && (
+                <View style={styles.privateBadge}>
+                  <Ionicons
+                    name="lock-closed"
+                    size={10}
+                    color={theme.foreground.gray}
+                  />
+                  <Text style={styles.privateBadgeText}>
+                    {t("search.private", "Private")}
+                  </Text>
+                </View>
+              )}
+            </View>
+            {item.display_name ? (
+              <Text style={styles.displayName} numberOfLines={1}>
+                {item.display_name}
+              </Text>
+            ) : null}
+            {item.bio ? (
+              <Text style={styles.bio} numberOfLines={1}>
+                {item.bio}
+              </Text>
+            ) : null}
+          </View>
+          <Pressable
+            onPress={(e) => {
+              e.stopPropagation();
+              toggleFollow(item);
+            }}
+            style={({ pressed }) => [
+              styles.followBtn,
+              state === "following" && styles.followBtnActive,
+              state === "pending" && styles.followBtnPending,
+              pressed && { opacity: 0.85 },
             ]}
           >
-            {item.isFollowing ? t("user.following") : t("user.follow")}
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </TouchableOpacity>
+            <Text
+              style={[
+                styles.followBtnText,
+                (state === "following" || state === "pending") &&
+                  styles.followBtnTextAlt,
+              ]}
+            >
+              {label}
+            </Text>
+          </Pressable>
+        </Pressable>
+      );
+    },
+    [theme, styles, t, toggleFollow, router],
   );
+
+  const listHeader =
+    query.trim().length === 0 ? (
+      <View style={styles.intro}>
+        <View style={styles.introIcon}>
+          <Ionicons
+            name="people-outline"
+            size={26}
+            color={theme.primary.main}
+          />
+        </View>
+        <Text style={styles.introTitle}>
+          {t("search.startTyping", "Start typing to search")}
+        </Text>
+        <Text style={styles.introHint}>
+          {t(
+            "search.startTypingHint",
+            "Find and follow other athletes to see their posts in your feed.",
+          )}
+        </Text>
+      </View>
+    ) : null;
+
+  const listEmpty = loading ? (
+    <View style={styles.emptyWrap}>
+      <ActivityIndicator color={theme.primary.main} />
+    </View>
+  ) : query.trim().length > 0 ? (
+    <View style={styles.emptyWrap}>
+      <Ionicons
+        name="search-outline"
+        size={32}
+        color={theme.foreground.gray}
+      />
+      <Text style={styles.emptyTitle}>{t("search.noUsersFound")}</Text>
+      <Text style={styles.emptyHint}>
+        {t("search.tryDifferentUsername")}
+      </Text>
+    </View>
+  ) : null;
 
   return (
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <Pressable
+          onPress={() => router.back()}
+          style={({ pressed }) => [
+            styles.backBtn,
+            pressed && { opacity: 0.6 },
+          ]}
+          hitSlop={8}
+        >
           <Ionicons
             name="chevron-back"
-            size={24}
+            size={22}
             color={theme.foreground.white}
           />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t("search.findPeople")}</Text>
-        <View style={styles.spacer} />
+        </Pressable>
+        <Text style={styles.title}>{t("search.findPeople")}</Text>
+        <Pressable
+          onPress={() => router.push("/search/scan" as any)}
+          style={({ pressed }) => [
+            styles.backBtn,
+            pressed && { opacity: 0.6 },
+          ]}
+          hitSlop={8}
+        >
+          <Ionicons
+            name="qr-code-outline"
+            size={22}
+            color={theme.foreground.white}
+          />
+        </Pressable>
       </View>
 
-      {/* Search Input */}
-      <View style={styles.searchContainer}>
-        <Ionicons
-          name="search"
-          size={20}
-          color={theme.foreground.gray}
-          style={styles.searchIcon}
-        />
+      {/* Search bar */}
+      <View style={styles.searchBar}>
+        <Ionicons name="search" size={18} color={theme.foreground.gray} />
         <TextInput
+          ref={inputRef}
           style={styles.searchInput}
           placeholder={t("search.searchPeople")}
           placeholderTextColor={theme.foreground.gray}
-          value={searchQuery}
-          onChangeText={setSearchQuery}
+          value={query}
+          onChangeText={setQuery}
+          autoCapitalize="none"
+          autoCorrect={false}
+          returnKeyType="search"
+          onSubmitEditing={() => runSearch(query)}
         />
-        {searchQuery.length > 0 && (
-          <TouchableOpacity onPress={() => setSearchQuery("")}>
+        {loading && query.trim().length > 0 ? (
+          <ActivityIndicator size="small" color={theme.foreground.gray} />
+        ) : query.length > 0 ? (
+          <Pressable
+            onPress={() => setQuery("")}
+            hitSlop={6}
+            style={({ pressed }) => pressed && { opacity: 0.6 }}
+          >
             <Ionicons
               name="close-circle"
-              size={20}
+              size={18}
               color={theme.foreground.gray}
             />
-          </TouchableOpacity>
-        )}
+          </Pressable>
+        ) : null}
       </View>
 
-      {/* Users List */}
-      {filteredUsers.length > 0 ? (
-        <FlatList
-          data={filteredUsers}
-          renderItem={renderUserItem}
-          keyExtractor={(item) => item.id}
-          scrollEnabled={true}
-          contentContainerStyle={styles.listContent}
-        />
-      ) : (
-        <View style={styles.emptyState}>
-          <Ionicons
-            name="search-outline"
-            size={36}
-            color={theme.foreground.gray}
-          />
-          <Text style={styles.emptyText}>{t("search.noUsersFound")}</Text>
-          <Text style={styles.emptySubtext}>
-            {t("search.tryDifferentUsername")}
-          </Text>
-        </View>
-      )}
+      {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+      <FlatList
+        data={results}
+        keyExtractor={(item) => item.id}
+        renderItem={renderItem}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        contentContainerStyle={styles.listContent}
+        ListHeaderComponent={listHeader}
+        ListEmptyComponent={listEmpty}
+        ItemSeparatorComponent={() => <View style={styles.separator} />}
+      />
     </View>
   );
 }
 
-const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
-  StyleSheet.create({
+function createStyles(theme: Theme) {
+  const cardShadow = Platform.select({
+    ios: {
+      shadowColor: "#000",
+      shadowOpacity: 0.2,
+      shadowRadius: 10,
+      shadowOffset: { width: 0, height: 4 },
+    },
+    android: { elevation: 2 },
+    default: {},
+  });
+  return StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: theme.background.dark,
@@ -154,109 +370,195 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      paddingHorizontal: 16,
-      paddingVertical: 8,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.background.darker,
+      paddingHorizontal: 12,
+      paddingTop: 8,
+      paddingBottom: 6,
     },
-    headerTitle: {
+    backBtn: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    title: {
       fontSize: 17,
       fontFamily: FONTS.bold,
       color: theme.foreground.white,
     },
-    spacer: {
-      width: 24,
-    },
-    searchContainer: {
+    searchBar: {
       flexDirection: "row",
       alignItems: "center",
+      gap: 8,
       marginHorizontal: 12,
-      marginVertical: 8,
-      paddingHorizontal: 10,
-      borderRadius: 10,
+      marginTop: 4,
+      marginBottom: 8,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      borderRadius: 14,
       backgroundColor: theme.background.darker,
-    },
-    searchIcon: {
-      marginRight: 6,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: "rgba(255,255,255,0.06)",
+      ...cardShadow,
     },
     searchInput: {
       flex: 1,
-      paddingVertical: 9,
       color: theme.foreground.white,
-      fontSize: 13,
+      fontSize: 14,
+      fontFamily: FONTS.regular,
+      paddingVertical: 0,
+    },
+    errorText: {
+      color: "#e27171",
+      fontSize: 12,
+      textAlign: "center",
+      paddingHorizontal: 16,
+      paddingVertical: 6,
     },
     listContent: {
       paddingHorizontal: 12,
-      paddingVertical: 4,
+      paddingBottom: 24,
     },
-    userItemContainer: {
-      marginHorizontal: 0,
+    separator: {
+      height: 6,
     },
-    userItem: {
+    row: {
       flexDirection: "row",
       alignItems: "center",
-      paddingHorizontal: 10,
-      paddingVertical: 8,
-      marginVertical: 3,
-      borderRadius: 10,
+      gap: 12,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      borderRadius: 14,
       backgroundColor: theme.background.darker,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: "rgba(255,255,255,0.05)",
     },
-    userAvatar: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      marginRight: 10,
+    avatarWrap: {
+      width: 46,
+      height: 46,
+      borderRadius: 23,
+      padding: 2,
+      backgroundColor: theme.primary.main + "30",
     },
-    userInfo: {
+    avatar: {
+      width: "100%",
+      height: "100%",
+      borderRadius: 21,
+      backgroundColor: theme.background.accent,
+    },
+    avatarFallback: {
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    rowText: {
       flex: 1,
     },
+    nameRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+    },
     username: {
-      fontSize: 13,
+      fontSize: 14,
       fontFamily: FONTS.semiBold,
       color: theme.foreground.white,
-      marginBottom: 2,
+      flexShrink: 1,
+    },
+    privateBadge: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 3,
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: 8,
+      backgroundColor: theme.background.accent,
+    },
+    privateBadgeText: {
+      fontSize: 10,
+      color: theme.foreground.gray,
+      fontFamily: FONTS.semiBold,
+    },
+    displayName: {
+      fontSize: 12,
+      color: theme.foreground.white,
+      marginTop: 1,
+      opacity: 0.8,
     },
     bio: {
       fontSize: 11,
       color: theme.foreground.gray,
+      marginTop: 2,
     },
-    followButton: {
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      borderRadius: 7,
+    followBtn: {
+      minWidth: 84,
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      borderRadius: 18,
       backgroundColor: theme.primary.main,
+      alignItems: "center",
+      justifyContent: "center",
     },
-    followingButton: {
-      backgroundColor: theme.background.accent,
+    followBtnActive: {
+      backgroundColor: "transparent",
       borderWidth: 1,
       borderColor: theme.primary.main,
     },
-    followButtonText: {
-      fontSize: 11,
-      fontFamily: FONTS.semiBold,
+    followBtnPending: {
+      backgroundColor: theme.background.accent,
+      borderWidth: 1,
+      borderColor: "rgba(255,255,255,0.12)",
+    },
+    followBtnText: {
+      fontSize: 12,
+      fontFamily: FONTS.bold,
       color: theme.background.dark,
     },
-    followingButtonText: {
-      color: theme.primary.main,
+    followBtnTextAlt: {
+      color: theme.foreground.white,
     },
-    emptyState: {
-      flex: 1,
-      justifyContent: "center",
+    intro: {
       alignItems: "center",
       paddingHorizontal: 24,
+      paddingTop: 36,
+      paddingBottom: 12,
     },
-    emptyText: {
+    introIcon: {
+      width: 64,
+      height: 64,
+      borderRadius: 32,
+      backgroundColor: theme.primary.main + "1A",
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 12,
+    },
+    introTitle: {
       fontSize: 15,
-      fontFamily: FONTS.semiBold,
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
-      marginTop: 12,
       marginBottom: 6,
     },
-    emptySubtext: {
+    introHint: {
+      fontSize: 12,
+      color: theme.foreground.gray,
+      textAlign: "center",
+      lineHeight: 16,
+      maxWidth: 280,
+    },
+    emptyWrap: {
+      alignItems: "center",
+      paddingTop: 48,
+      paddingHorizontal: 32,
+      gap: 8,
+    },
+    emptyTitle: {
+      fontSize: 14,
+      fontFamily: FONTS.semiBold,
+      color: theme.foreground.white,
+    },
+    emptyHint: {
       fontSize: 12,
       color: theme.foreground.gray,
       textAlign: "center",
     },
   });
-
-
+}

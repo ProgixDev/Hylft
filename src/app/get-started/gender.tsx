@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -86,15 +86,21 @@ function createStyles(theme: Theme) {
 
 export default function GenderSelection() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ flow?: string }>();
   const { theme, setTheme } = useTheme();
   const { t } = useTranslation();
   const [selectedGender, setSelectedGender] = useState<string>("");
+  const isSignupFlow = params.flow === "signup";
 
   const handleContinue = async () => {
     if (!selectedGender) return;
     setTheme(selectedGender as "male" | "female");
     await AsyncStorage.setItem("@hylift_gender", selectedGender);
-    router.navigate("/get-started/units");
+    if (isSignupFlow) {
+      router.push("/get-started/age?flow=signup");
+    } else {
+      router.navigate("/get-started/units");
+    }
   };
 
   const styles = createStyles(theme);
@@ -104,7 +110,10 @@ export default function GenderSelection() {
       <View style={styles.content}>
         <View style={styles.stepRow}>
           <Text style={[styles.stepText, { color: theme.primary.main }]}>
-            {t("onboarding.stepOf", { current: 1, total: 13 })}
+            {t("onboarding.stepOf", {
+              current: isSignupFlow ? 6 : 1,
+              total: 13,
+            })}
           </Text>
           <View style={styles.progressBar}>
             <View
@@ -112,7 +121,7 @@ export default function GenderSelection() {
                 styles.progressFill,
                 {
                   backgroundColor: theme.primary.main,
-                  width: `${(1 / 13) * 100}%`,
+                  width: `${((isSignupFlow ? 6 : 1) / 13) * 100}%`,
                 },
               ]}
             />

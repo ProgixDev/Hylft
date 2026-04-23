@@ -8,10 +8,14 @@
 //      supabase.storage.uploadToSignedUrl.
 //   3) Return storage_paths — caller sends them with createPost().
 
+import * as ImagePicker from "expo-image-picker";
+import { Alert } from "react-native";
 import { api } from "./api";
 import { supabase } from "./supabase";
 
 const BUCKET = "post-media";
+export const MAX_POST_IMAGES = 4;
+export const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
 type SignedUpload = {
   storage_path: string;
@@ -51,6 +55,17 @@ function mimeFromExt(ext: string): string {
   }
 }
 
+async function fetchAsArrayBuffer(uri: string): Promise<ArrayBuffer> {
+  // React Native's `fetch(localUri).blob()` returns a zero-byte blob on some
+  // platforms. `arrayBuffer()` is reliable and Supabase accepts ArrayBuffer
+  // as the body for uploadToSignedUrl.
+  const res = await fetch(uri);
+  if (!res.ok) {
+    throw new Error(`Failed to read local image (${res.status})`);
+  }
+  return res.arrayBuffer();
+}
+
 async function fetchAsBlob(uri: string): Promise<Blob> {
   const res = await fetch(uri);
   if (!res.ok) {
@@ -84,10 +99,10 @@ export async function uploadPostImages(
   await Promise.all(
     images.map(async (img, idx) => {
       const slot = signed.uploads[idx];
-      const blob = await fetchAsBlob(img.uri);
+      const body = await fetchAsArrayBuffer(img.uri);
       const { error } = await supabase.storage
         .from(BUCKET)
-        .uploadToSignedUrl(slot.storage_path, slot.token, blob, {
+        .uploadToSignedUrl(slot.storage_path, slot.token, body, {
           contentType: mime,
           upsert: false,
         });
@@ -100,4 +115,77 @@ export async function uploadPostImages(
     width: img.width,
     height: img.height,
   }));
+}
+
+async function ensureLibraryPermission(): Promise<boolean> {
+  const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  if (status !== "granted") {
+    Alert.alert("Permission requise", "L'accès à la photothèque est nécessaire.");
+    return false;
+  }
+  return true;
+}
+
+async function resolveSize(
+  asset: ImagePicker.ImagePickerAsset,
+): Promise<number | undefined> {
+  if (typeof asset.fileSize === "number") return asset.fileSize;
+  try {
+    const blob = await fetchAsBlob(asset.uri);
+    return blob.size;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Opens the media library and returns validated picked images (≤ 5 MB each,
+ * up to `MAX_POST_IMAGES` total including `currentCount` already chosen).
+ * Oversized picks are dropped and the user is alerted.
+ */
+export async function pickPostImages(
+  currentCount = 0,
+): Promise<LocalImage[]> {
+  const remaining = MAX_POST_IMAGES - currentCount;
+  if (remaining <= 0) {
+    Alert.alert(
+      "Limite atteinte",
+      `Maximum ${MAX_POST_IMAGES} images par publication.`,
+    );
+    return [];
+  }
+  const allowed = await ensureLibraryPermission();
+  if (!allowed) return [];
+
+  const res = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    allowsMultipleSelection: true,
+    selectionLimit: remaining,
+    quality: 0.85,
+  });
+  if (res.canceled || !res.assets || res.assets.length === 0) return [];
+
+  const kept: LocalImage[] = [];
+  let rejected = 0;
+  for (const a of res.assets) {
+    const size = await resolveSize(a);
+    if (size != null && size > MAX_IMAGE_BYTES) {
+      rejected++;
+      continue;
+    }
+    kept.push({
+      uri: a.uri,
+      mimeType: a.mimeType,
+      fileName: a.fileName ?? undefined,
+      width: a.width,
+      height: a.height,
+    });
+  }
+  if (rejected > 0) {
+    Alert.alert(
+      "Image trop volumineuse",
+      `${rejected} image(s) dépassent la taille maximale de 5 MB et ont été ignorées.`,
+    );
+  }
+  return kept;
 }

@@ -50,12 +50,19 @@ export default function CreateRoutineScreen() {
   const DIFFICULTIES = getDifficulties(t);
 
   const {
+    isCreating,
     draft,
+    initCreation,
     updateDraft,
     removeExerciseFromRoutine,
     updateRoutineExercise,
     clearCreation,
   } = useCreateRoutine();
+
+  useEffect(() => {
+    if (!isCreating) initCreation();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [editingExerciseId, setEditingExerciseId] = useState<string | null>(
     null,

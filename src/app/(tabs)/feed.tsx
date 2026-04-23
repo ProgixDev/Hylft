@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
@@ -13,106 +13,14 @@ import {
   Text,
   View,
 } from "react-native";
+import FeedComposer from "../../components/feed/FeedComposer";
+import AnimatedScreen from "../../components/ui/AnimatedScreen";
 import Post, { PostData } from "../../components/ui/Post";
-
-const MOCK_POSTS: PostData[] = [
-  {
-    id: "mock-1",
-    user: {
-      id: "u-mock-1",
-      username: "alex_lifts",
-      avatar: "https://i.pravatar.cc/150?img=12",
-    },
-    images: [
-      "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800",
-    ],
-    likes: 1284,
-    caption: "New bench PR today! 💪 Hard work pays off.",
-    comments: 47,
-    timestamp: "2h ago",
-    isLiked: false,
-    weight: "225 lb",
-    sets: "5",
-    reps: "5",
-  },
-  {
-    id: "mock-2",
-    user: {
-      id: "u-mock-2",
-      username: "sarah_fit",
-      avatar: "https://i.pravatar.cc/150?img=47",
-    },
-    images: [
-      "https://images.unsplash.com/photo-1518611012118-696072aa579a?w=800",
-      "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=800",
-    ],
-    likes: 2841,
-    caption: "Leg day done 🔥 Who's training with me tomorrow?",
-    comments: 132,
-    timestamp: "5h ago",
-    isLiked: true,
-    weight: "185 lb",
-    sets: "4",
-    reps: "8",
-  },
-  {
-    id: "mock-3",
-    user: {
-      id: "u-mock-3",
-      username: "mike_beast",
-      avatar: "https://i.pravatar.cc/150?img=33",
-    },
-    images: [],
-    likes: 421,
-    caption: "Full body workout complete. Feeling unstoppable.",
-    comments: 18,
-    timestamp: "8h ago",
-    isLiked: false,
-    duration: "62 min",
-  },
-  {
-    id: "mock-4",
-    user: {
-      id: "u-mock-4",
-      username: "emma_strong",
-      avatar: "https://i.pravatar.cc/150?img=24",
-    },
-    images: [
-      "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800",
-    ],
-    likes: 892,
-    caption: "Deadlift day! New personal best 🏆",
-    comments: 64,
-    timestamp: "1d ago",
-    isLiked: false,
-    weight: "315 lb",
-    sets: "3",
-    reps: "3",
-  },
-  {
-    id: "mock-5",
-    user: {
-      id: "u-mock-5",
-      username: "chris_gains",
-      avatar: "https://i.pravatar.cc/150?img=58",
-    },
-    images: [
-      "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=800",
-      "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=800",
-      "https://images.unsplash.com/photo-1599058917212-d750089bc07e?w=800",
-    ],
-    likes: 3567,
-    caption: "Morning pump hits different ☀️ Let's get it!",
-    comments: 201,
-    timestamp: "2d ago",
-    isLiked: true,
-  },
-];
+import { PostSkeletonList } from "../../components/ui/PostSkeleton";
 import { FONTS } from "../../constants/fonts";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useFeedTimeline } from "../../hooks/useFeedTimeline";
-import { api } from "../../services/api";
 
 const controlShadow = Platform.select({
   ios: {
@@ -136,6 +44,7 @@ function createStyles(theme: Theme) {
       alignItems: "center",
       justifyContent: "space-between",
       paddingHorizontal: 20,
+      paddingTop: 8,
       paddingBottom: 8,
     },
     title: {
@@ -143,39 +52,28 @@ function createStyles(theme: Theme) {
       fontSize: 22,
       color: theme.foreground.white,
     },
-    headerIcons: {
+    searchPill: {
       flexDirection: "row",
+      alignItems: "center",
       gap: 8,
-      alignItems: "center",
-    },
-    iconButton: {
-      width: 36,
-      height: 36,
-      borderRadius: 12,
-      alignItems: "center",
-      justifyContent: "center",
-      backgroundColor: theme.background.accent,
+      paddingHorizontal: 14,
+      paddingVertical: 9,
+      borderRadius: 22,
+      backgroundColor: theme.background.darker,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: "rgba(0,0,0,0.08)",
+      borderColor: "rgba(255,255,255,0.08)",
       ...controlShadow,
     },
-    notificationBadge: {
-      position: "absolute",
-      top: 7,
-      right: 7,
-      width: 7,
-      height: 7,
-      borderRadius: 3.5,
-      backgroundColor: theme.primary.main,
-      borderWidth: 1.5,
-      borderColor: theme.background.darker,
+    searchPillText: {
+      fontSize: 12,
+      fontFamily: FONTS.semiBold,
+      color: theme.foreground.gray,
     },
     emptyWrap: {
-      flex: 1,
       alignItems: "center",
       justifyContent: "center",
       paddingHorizontal: 32,
-      paddingVertical: 64,
+      paddingVertical: 40,
     },
     emptyText: {
       fontFamily: FONTS.regular,
@@ -212,32 +110,54 @@ export default function Feed() {
     refresh,
     loadMore,
     toggleLike,
+    prependPost,
+    removePost,
+    patchPost,
   } = useFeedTimeline({ scope: "timeline" });
-  const [unreadCount, setUnreadCount] = useState(0);
-
   const styles = createStyles(theme);
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const res: { unread: number } = await api.getUnreadNotificationsCount();
-        if (!cancelled) setUnreadCount(res.unread ?? 0);
-      } catch {
-        /* silent */
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
   const renderPost = useCallback(
-    ({ item }: { item: PostData }) => <Post post={item} onLike={toggleLike} />,
-    [toggleLike],
+    ({ item }: { item: PostData }) => (
+      <Post
+        post={item}
+        onLike={toggleLike}
+        onDeleted={removePost}
+        onUpdated={patchPost}
+      />
+    ),
+    [toggleLike, removePost, patchPost],
   );
 
-  const listEmpty = loading ? null : (
+  const listHeader = (
+    <View>
+      <View style={styles.header}>
+        <Text style={styles.title}>{t("tabs.feed")}</Text>
+        <Pressable
+          onPress={() => router.navigate("/search" as any)}
+          style={({ pressed }) => [
+            styles.searchPill,
+            pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] },
+          ]}
+          hitSlop={6}
+        >
+          <Ionicons
+            name="search"
+            size={16}
+            color={theme.foreground.white}
+          />
+          <Text style={styles.searchPillText}>
+            {t("search.findPeople")}
+          </Text>
+        </Pressable>
+      </View>
+      <FeedComposer onCreated={prependPost} />
+      {error ? <Text style={styles.errorText}>{error}</Text> : null}
+    </View>
+  );
+
+  const listEmpty = loading ? (
+    <PostSkeletonList count={4} />
+  ) : (
     <View style={styles.emptyWrap}>
       <Text style={styles.emptyText}>{t("feed.empty", "No posts yet")}</Text>
     </View>
@@ -250,51 +170,33 @@ export default function Feed() {
   ) : null;
 
   return (
-    <View style={styles.container}>
+    <AnimatedScreen style={styles.container}>
       {themeType === "female" && (
         <Image
           source={require("../../../assets/girly.png")}
-          style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, width: "100%", height: "100%", opacity: 0.3 }}
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: "100%",
+            height: "100%",
+            opacity: 0.3,
+          }}
           resizeMode="cover"
         />
       )}
-      <View style={styles.header}>
-        <Text style={styles.title}>{t("tabs.feed")}</Text>
-        <View style={styles.headerIcons}>
-          <Pressable
-            style={({ pressed }) => [
-              styles.iconButton,
-              pressed && { opacity: 0.7, transform: [{ scale: 0.92 }] },
-            ]}
-            onPress={() => router.navigate("/search" as any)}
-          >
-            <Ionicons name="search" size={20} color={theme.foreground.white} />
-          </Pressable>
-          <Pressable
-            style={({ pressed }) => [
-              styles.iconButton,
-              pressed && { opacity: 0.7, transform: [{ scale: 0.92 }] },
-            ]}
-            onPress={() => router.navigate("/notifications" as any)}
-          >
-            <Ionicons
-              name="notifications-outline"
-              size={20}
-              color={theme.foreground.white}
-            />
-            {unreadCount > 0 && <View style={styles.notificationBadge} />}
-          </Pressable>
-        </View>
-      </View>
-
-      {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
       <FlatList
-        data={[...MOCK_POSTS, ...posts]}
+        data={posts}
         renderItem={renderPost}
         keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 90 }}
+        ListHeaderComponent={listHeader}
+        ListEmptyComponent={listEmpty}
+        ListFooterComponent={listFooter}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -305,9 +207,7 @@ export default function Feed() {
         }
         onEndReached={hasMore ? loadMore : undefined}
         onEndReachedThreshold={0.4}
-        ListEmptyComponent={listEmpty}
-        ListFooterComponent={listFooter}
       />
-    </View>
+    </AnimatedScreen>
   );
 }

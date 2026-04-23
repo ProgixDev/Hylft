@@ -6,9 +6,13 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "splash": {
-      "image": "./assets/images/icon.png",
+      "image": "./assets/images/LogoBlue.png",
       "resizeMode": "contain",
-      "backgroundColor": "#FFFFFF"
+      "backgroundColor": "#E6F4FE",
+      "dark": {
+        "image": "./assets/images/LogoBlue.png",
+        "backgroundColor": "#0B0D0E"
+      }
     },
     "scheme": "hylift",
     "userInterfaceStyle": "automatic",
@@ -23,7 +27,8 @@
       "infoPlist": {
         "UIViewControllerBasedStatusBarAppearance": false,
         "NSHealthShareUsageDescription": "Hylift needs access to your health data to track your calories burned, steps, and workouts.",
-        "NSHealthUpdateUsageDescription": "Hylift needs to save your workout and nutrition data to Apple Health."
+        "NSHealthUpdateUsageDescription": "Hylift needs to save your workout and nutrition data to Apple Health.",
+        "NSCameraUsageDescription": "Hylift uses the camera to scan profile QR codes."
       },
       "entitlements": {
         "com.apple.developer.healthkit": true,
@@ -82,7 +87,13 @@
           "isClinicalDataEnabled": false
         }
       ],
-      "expo-localization"
+      "expo-localization",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Hylift uses the camera to scan profile QR codes."
+        }
+      ]
     ],
     "extra": {
       "router": {

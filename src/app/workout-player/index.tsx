@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   BackHandler,
@@ -103,9 +103,12 @@ export default function WorkoutPlayerScreen() {
   const completedSets = guidedPlayer.loggedSets.length;
   const progress = totalSets > 0 ? completedSets / totalSets : 0;
 
+  const isRest = guidedPlayer.phase === "REST";
+
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, isRest && styles.rootRest]}>
       {/* Top bar */}
+      {!isRest && (
       <View style={styles.topBar}>
         <Pressable style={styles.iconButton} onPress={confirmExit}>
           <Ionicons name="close" size={22} color={theme.foreground.white} />
@@ -131,6 +134,7 @@ export default function WorkoutPlayerScreen() {
           </Text>
         </View>
       </View>
+      )}
 
       {(guidedPlayer.phase === "EXERCISE" ||
         guidedPlayer.phase === "LOG_SET") && (
@@ -364,27 +368,6 @@ function RestPhase({ theme }: { theme: Theme }) {
   const restTime = currentExercise?.restTime ?? 60;
   const [remaining, setRemaining] = useState(restTime);
 
-  // What comes next after this rest?
-  const next = useMemo(() => {
-    if (!currentExercise) return null;
-    const isLastSet =
-      guidedPlayer.currentSetIndex + 1 >= currentExercise.sets;
-    if (isLastSet) {
-      const nextEx = guidedPlayer.exercises[guidedPlayer.currentExerciseIndex + 1];
-      if (!nextEx) return null;
-      return {
-        label: t("workoutPlayer.nextExercise"),
-        name: translateExerciseName(nextEx.name),
-        gifUrl: nextEx.gifUrl,
-      };
-    }
-    return {
-      label: t("workoutPlayer.nextSet"),
-      name: translateExerciseName(currentExercise.name),
-      gifUrl: currentExercise.gifUrl,
-    };
-  }, [guidedPlayer, currentExercise, t]);
-
   useEffect(() => {
     setRemaining(restTime);
   }, [restTime, guidedPlayer.currentExerciseIndex, guidedPlayer.currentSetIndex]);
@@ -399,52 +382,20 @@ function RestPhase({ theme }: { theme: Theme }) {
   }, [remaining]);
 
   return (
-    <View style={styles.phaseContainer}>
-      <Text style={styles.restTitle}>{t("workoutPlayer.rest")}</Text>
-      <Text style={styles.restCountdown}>{formatSeconds(remaining)}</Text>
-      <Text style={styles.restSubtitle}>
-        {t("workoutPlayer.catchYourBreath")}
-      </Text>
-
-      {next && (
-        <View style={styles.nextCard}>
-          <Text style={styles.nextLabel}>{next.label}</Text>
-          <View style={styles.nextRow}>
-            {next.gifUrl ? (
-              <Image
-                source={{ uri: next.gifUrl }}
-                style={styles.nextGif}
-                contentFit="cover"
-              />
-            ) : (
-              <View style={[styles.nextGif, styles.gifPlaceholder]}>
-                <Ionicons
-                  name="barbell-outline"
-                  size={22}
-                  color={theme.foreground.gray}
-                />
-              </View>
-            )}
-            <Text style={styles.nextName} numberOfLines={2}>
-              {next.name}
-            </Text>
-          </View>
-        </View>
-      )}
+    <View style={styles.restContainer}>
+      <View style={styles.restCenter}>
+        <Text style={styles.restLabel}>{t("workoutPlayer.rest")}</Text>
+        <Text style={styles.restCountdownWhite}>{formatSeconds(remaining)}</Text>
+      </View>
 
       <Pressable
         style={({ pressed }) => [
-          styles.primaryButton,
-          pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
+          styles.skipRestButton,
+          pressed && { opacity: 0.85, transform: [{ scale: 0.98 }] },
         ]}
         onPress={skipRest}
       >
-        <Ionicons
-          name="play-skip-forward"
-          size={20}
-          color={theme.background.dark}
-        />
-        <Text style={styles.primaryButtonText}>
+        <Text style={styles.skipRestButtonText}>
           {t("workoutPlayer.skipRest")}
         </Text>
       </Pressable>
@@ -562,6 +513,48 @@ const createStyles = (theme: Theme) =>
     root: {
       flex: 1,
       backgroundColor: theme.background.dark,
+    },
+    rootRest: {
+      backgroundColor: "#004BFF",
+    },
+    restContainer: {
+      flex: 1,
+      paddingHorizontal: 24,
+      paddingBottom: 40,
+      paddingTop: 24,
+      backgroundColor: "#004BFF",
+    },
+    restCenter: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    restLabel: {
+      color: "#fff",
+      fontSize: 14,
+      fontFamily: FONTS.semiBold,
+      textTransform: "uppercase",
+      letterSpacing: 3,
+      opacity: 0.85,
+      marginBottom: 16,
+    },
+    restCountdownWhite: {
+      color: "#fff",
+      fontSize: 120,
+      fontFamily: FONTS.extraBold,
+    },
+    skipRestButton: {
+      alignItems: "center",
+      justifyContent: "center",
+      paddingVertical: 14,
+      width: "100%",
+    },
+    skipRestButtonText: {
+      color: "#fff",
+      fontSize: 16,
+      fontFamily: FONTS.extraBold,
+      textTransform: "uppercase",
+      letterSpacing: 1,
     },
     centered: {
       justifyContent: "center",

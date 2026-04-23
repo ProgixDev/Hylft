@@ -13,6 +13,8 @@ import {
   Text,
   View,
 } from "react-native";
+import AnimatedScreen from "../../components/ui/AnimatedScreen";
+import AnimatedSection from "../../components/ui/AnimatedSection";
 import RoutineCard from "../../components/ui/RoutineCard";
 import { FONTS } from "../../constants/fonts";
 import { Theme } from "../../constants/themes";
@@ -141,7 +143,7 @@ export default function Workout() {
   const totalExercises = workouts.reduce((s, w) => s + w.exercises.length, 0);
 
   return (
-    <View style={styles.container}>
+    <AnimatedScreen style={styles.container}>
       {themeType === "female" && (
         <Image
           source={require("../../../assets/girly.png")}
@@ -159,15 +161,11 @@ export default function Workout() {
         />
       )}
       {/* Header */}
+      <AnimatedSection delay={0}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>WORKOUT</Text>
-        <Pressable
-          style={({ pressed }) => [styles.addBtn, pressed && { opacity: 0.8 }]}
-          onPress={handleCreateRoutine}
-        >
-          <Ionicons name="add" size={22} color={theme.foreground.white} />
-        </Pressable>
       </View>
+      </AnimatedSection>
 
       <ScrollView
         ref={scrollRef}
@@ -175,6 +173,7 @@ export default function Workout() {
         contentContainerStyle={{ paddingBottom: 90 }}
       >
         {/* ── Quick Start Hero ──────────────────────────────── */}
+        <AnimatedSection delay={80} scale>
         <Pressable
           style={({ pressed }) => [
             styles.quickStartCard,
@@ -208,8 +207,10 @@ export default function Workout() {
             </View>
           </View>
         </Pressable>
+        </AnimatedSection>
 
         {/* ── My Routines ────────────────────────────────────── */}
+        <AnimatedSection delay={180}>
         <View style={styles.sectionHeaderRow}>
           <Text style={styles.sectionTitle}>{t("workout.myRoutines")}</Text>
           {routines.length > 0 && (
@@ -223,7 +224,9 @@ export default function Workout() {
             </Pressable>
           )}
         </View>
+        </AnimatedSection>
 
+        <AnimatedSection delay={240} direction="left" offset={40}>
         {routines.length === 0 ? (
           <Pressable
             onPress={handleCreateRoutine}
@@ -263,10 +266,12 @@ export default function Workout() {
             ))}
           </ScrollView>
         )}
+        </AnimatedSection>
 
         {/* ── Recent Workouts ───────────────────────────────── */}
         {workouts.length > 0 && (
           <>
+            <AnimatedSection delay={320}>
             <View style={styles.sectionHeaderRow}>
               <Text style={styles.sectionTitle}>
                 {t("workout.recentWorkouts")}
@@ -280,7 +285,9 @@ export default function Workout() {
                 </Text>
               </Pressable>
             </View>
+            </AnimatedSection>
 
+            <AnimatedSection delay={380} direction="left" offset={40}>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -331,13 +338,17 @@ export default function Workout() {
                 </Pressable>
               ))}
             </ScrollView>
+            </AnimatedSection>
           </>
         )}
 
         {/* ── Create Routine CTA ─────────────────────────────── */}
+        <AnimatedSection delay={460}>
         <View style={styles.sectionHeaderRow}>
           <Text style={styles.sectionTitle}>{t("home.customWorkout")}</Text>
         </View>
+        </AnimatedSection>
+        <AnimatedSection delay={520} scale>
         <Pressable
           style={({ pressed }) => [
             styles.createCard,
@@ -382,8 +393,10 @@ export default function Workout() {
             />
           </LinearGradient>
         </Pressable>
+        </AnimatedSection>
 
         {/* ── Explore Banner ────────────────────────────────── */}
+        <AnimatedSection delay={620} scale>
         <Pressable
           style={({ pressed }) => [
             styles.exploreCard,
@@ -410,8 +423,9 @@ export default function Workout() {
             </Text>
           </View>
         </Pressable>
+        </AnimatedSection>
       </ScrollView>
-    </View>
+    </AnimatedScreen>
   );
 }
 

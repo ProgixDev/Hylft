@@ -15,6 +15,8 @@ import {
   Text,
   View,
 } from "react-native";
+import AnimatedScreen from "../../components/ui/AnimatedScreen";
+import AnimatedSection from "../../components/ui/AnimatedSection";
 import { FONTS } from "../../constants/fonts";
 import { Theme } from "../../constants/themes";
 import { useAuth } from "../../contexts/AuthContext";
@@ -257,7 +259,7 @@ export default function Home() {
   ];
 
   return (
-    <View style={styles.container}>
+    <AnimatedScreen style={styles.container}>
       {themeType === "female" && (
         <Image
           source={require("../../../assets/girly.png")}
@@ -270,6 +272,7 @@ export default function Home() {
         contentContainerStyle={{ paddingBottom: 90 }}
       >
         {/* ── Header ──────────────────────────────────────────────── */}
+        <AnimatedSection delay={0}>
         <View style={styles.header}>
           <Text style={styles.headerTitle}>{t("home.homeWorkout")}</Text>
           <View style={styles.headerRight}>
@@ -312,8 +315,10 @@ export default function Home() {
             </Pressable>
           </View>
         </View>
+        </AnimatedSection>
 
         {/* ── Greeting ────────────────────────────────────────── */}
+        <AnimatedSection delay={80}>
         <Text style={styles.greeting}>
           {(() => {
             const name =
@@ -328,10 +333,13 @@ export default function Home() {
             return name ? `${greeting}, ${name}` : greeting;
           })()}
         </Text>
+        </AnimatedSection>
 
         {/* ── Calorie Summary (Donut + Stats) ─────────────────────── */}
 {/* ── Résumé Santé (Bento Grid) ───────────────────────── */}
+        <AnimatedSection delay={160}>
         <Text style={styles.sectionTitle}>{t("home.healthSummary", "RÉSUMÉ SANTÉ")}</Text>
+        </AnimatedSection>
         <View style={styles.healthGrid}>
           {[
             {
@@ -381,8 +389,12 @@ export default function Home() {
           ].map((item, index) => {
             const percent = Math.min(Math.round((item.value / item.goal) * 100), 100);
             return (
-              <ImageBackground
+              <AnimatedSection
                 key={index}
+                delay={200 + index * 90}
+                scale
+              >
+              <ImageBackground
                 source={item.image}
                 style={styles.healthTile}
                 imageStyle={styles.healthTileImage}
@@ -403,7 +415,7 @@ export default function Home() {
                     <Text style={styles.healthTilePercent}>{percent}%</Text>
                   </View>
                   <Text style={styles.healthTileValue}>
-                    {item.goal >= 10000 ? `${(item.value / 1000).toFixed(1)}k` : item.value}
+                    {item.goal >= 10000 ? `${(item.value / 1000).toFixed(1)}k` : Math.round(item.value)}
                   </Text>
                   <Text style={styles.healthTileLabel}>{item.label}</Text>
                   <Text style={styles.healthTileGoal}>
@@ -411,12 +423,14 @@ export default function Home() {
                   </Text>
                 </LinearGradient>
               </ImageBackground>
+              </AnimatedSection>
             );
           })}
         </View>
 
 
         {/* ── Séances de la semaine ─────────────────────────────── */}
+        <AnimatedSection delay={560} scale>
         <View style={styles.weekSessionsCard}>
           <View style={styles.weekSessionsHeader}>
             <Text style={styles.weekSessionsTitle}>
@@ -539,9 +553,13 @@ export default function Home() {
             </View>
           </Pressable>
         </View>
+        </AnimatedSection>
 
         {/* ── Challenge Section ───────────────────────────────────── */}
+        <AnimatedSection delay={640}>
         <Text style={styles.sectionTitle}>{t("home.challenge")}</Text>
+        </AnimatedSection>
+        <AnimatedSection delay={700} direction="left" offset={40}>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -588,11 +606,15 @@ export default function Home() {
             </View>
           ))}
         </ScrollView>
+        </AnimatedSection>
 
         {/* ── Body Focus Section ──────────────────────────────────── */}
+        <AnimatedSection delay={780}>
         <Text style={styles.sectionTitle}>{t("home.bodyFocus")}</Text>
+        </AnimatedSection>
 
         {/* Filter Chips */}
+        <AnimatedSection delay={840} direction="left" offset={30}>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -618,12 +640,18 @@ export default function Home() {
             </Pressable>
           ))}
         </ScrollView>
+        </AnimatedSection>
 
         {/* Exercise List */}
         <View style={styles.exerciseList}>
           {bodyFocusExercises.map((exercise, index) => (
-            <Pressable
+            <AnimatedSection
               key={index}
+              delay={900 + index * 70}
+              direction="left"
+              offset={30}
+            >
+            <Pressable
               style={({ pressed }) => [
                 styles.exerciseRow,
                 pressed && { opacity: 0.8 },
@@ -643,11 +671,15 @@ export default function Home() {
                 <DifficultyBolts level={exercise.difficulty} theme={theme} />
               </View>
             </Pressable>
+            </AnimatedSection>
           ))}
         </View>
 
         {/* ── Custom Workout Section ──────────────────────────────── */}
+        <AnimatedSection delay={1100}>
         <Text style={styles.sectionTitle}>{t("home.customWorkout")}</Text>
+        </AnimatedSection>
+        <AnimatedSection delay={1160} scale>
         <Pressable
           style={({ pressed }) => [
             styles.customWorkoutCard,
@@ -684,8 +716,10 @@ export default function Home() {
             </View>
           </LinearGradient>
         </Pressable>
+        </AnimatedSection>
 
         {/* ── Just For You Section ─────────────────────────────────── */}
+        <AnimatedSection delay={1240}>
         <View style={styles.sectionHeaderRow}>
           <Text style={styles.sectionTitle}>{t("home.justForYou")}</Text>
           <Pressable
@@ -697,10 +731,16 @@ export default function Home() {
             </Text>
           </Pressable>
         </View>
+        </AnimatedSection>
         <View style={styles.justForYouList}>
           {justForYouWorkouts.map((workout, index) => (
-            <Pressable
+            <AnimatedSection
               key={index}
+              delay={1300 + index * 70}
+              direction="left"
+              offset={30}
+            >
+            <Pressable
               style={({ pressed }) => [
                 styles.justForYouRow,
                 pressed && { opacity: 0.8 },
@@ -718,10 +758,12 @@ export default function Home() {
                 </Text>
               </View>
             </Pressable>
+            </AnimatedSection>
           ))}
         </View>
 
         {/* ── Stretch & Warm Up Section ────────────────────────────── */}
+        <AnimatedSection delay={1460}>
         <View style={styles.sectionHeaderRow}>
           <Text style={styles.sectionTitle}>
             {t("home.stretchAndWarmUp")}
@@ -735,6 +777,8 @@ export default function Home() {
             </Text>
           </Pressable>
         </View>
+        </AnimatedSection>
+        <AnimatedSection delay={1520} direction="left" offset={40}>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -763,8 +807,9 @@ export default function Home() {
             </Pressable>
           ))}
         </ScrollView>
+        </AnimatedSection>
       </ScrollView>
-    </View>
+    </AnimatedScreen>
   );
 }
 
