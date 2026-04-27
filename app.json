@@ -56,7 +56,11 @@
           "apiKey": "YOUR_GOOGLE_MAPS_API_KEY"
         }
       },
-      "package": "com.anonymous.hylift"
+      "package": "com.anonymous.hylift",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "output": "static",
@@ -105,9 +109,9 @@
         "root": "./src/app"
       },
       "eas": {
-        "projectId": "1d120403-38ea-4df0-a54f-d53f36e5d531"
+        "projectId": "b48102f2-259b-4b25-92ab-fef0895b608d"
       }
     },
-    "owner": "achrefdev"
+    "owner": "mohameddev7"
   }
 }

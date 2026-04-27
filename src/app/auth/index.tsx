@@ -1,4 +1,4 @@
-import { AntDesign, MaterialIcons } from "@expo/vector-icons";
+import { AntDesign, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import * as Linking from "expo-linking";
 import { supabase } from "../../services/supabase";
 import { useRouter } from "expo-router";
@@ -7,81 +7,87 @@ import {
   Alert,
   Animated,
   Dimensions,
-  Image,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ChipButton from "../../components/ui/ChipButton";
 import { useTranslation } from "react-i18next";
 import { Theme } from "../../constants/themes";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
-
 import { FONTS } from "../../constants/fonts";
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
-const BACKGROUND_IMAGES = [
-  require("../../../assets/images/AuthPage/DeadLiftIGuess.jpg"),
-  require("../../../assets/images/AuthPage/HoldingTwoWeights.jpg"),
-  require("../../../assets/images/AuthPage/OneKneeOnTheGround.jpg"),
-  require("../../../assets/images/AuthPage/PullUp.jpg"),
-];
+type IconName = React.ComponentProps<typeof MaterialCommunityIcons>["name"];
+
+const ICONS: IconName[] = ["dumbbell", "run-fast", "heart-pulse"];
 
 function createStyles(theme: Theme) {
   return StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: "#000000",
+      backgroundColor: theme.primary.main,
     },
-    backgroundImage: {
-      position: "absolute",
-      width: SCREEN_WIDTH,
-      height: SCREEN_HEIGHT,
-    },
-    overlay: {
-      position: "absolute",
-      width: SCREEN_WIDTH,
-      height: SCREEN_HEIGHT,
-      backgroundColor: "rgba(0, 0, 0, 0.5)",
-    },
-    content: {
-      flex: 1,
-      justifyContent: "space-between",
-      paddingVertical: 30,
-    },
-    logoContainer: {
+    carouselSection: {
+      height: SCREEN_HEIGHT * 0.62,
+      backgroundColor: "#FFFFFF",
+      borderBottomLeftRadius: 40,
+      marginBottom: -30,
+      zIndex: 2,
+      elevation: 8,
       alignItems: "center",
-      marginTop: 14,
+      justifyContent: "center",
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.18,
+      shadowRadius: 10,
     },
-    logo: {
-      width: 120,
-      height: 42,
+    iconCircle: {
+      width: 130,
+      height: 130,
+      borderRadius: 65,
+      backgroundColor: "rgba(10, 22, 40, 0.07)",
+      alignItems: "center",
+      justifyContent: "center",
     },
-    bottomSection: {
+    bottomPanel: {
+      flex: 1,
+      zIndex: 1,
       paddingHorizontal: 28,
-      paddingBottom: 16,
+      paddingTop: 46,
+    },
+    dotsRow: {
+      flexDirection: "row",
+      justifyContent: "center",
+      gap: 6,
+      marginBottom: 16,
     },
     title: {
-      fontSize: 24,
+      fontSize: 22,
       fontFamily: FONTS.bold,
       color: "#FFFFFF",
       textAlign: "center",
-      marginBottom: 24,
+      marginBottom: 20,
+    },
+    buttonGap: {
+      marginBottom: 10,
     },
     signInContainer: {
       flexDirection: "row",
       justifyContent: "center",
       alignItems: "center",
+      marginTop: 12,
     },
     signInText: {
-      color: "#FFFFFF",
+      color: "rgba(255,255,255,0.8)",
       fontSize: 13,
     },
     signInLink: {
-      color: theme.primary.main,
+      color: "#FFFFFF",
       fontSize: 13,
       fontFamily: FONTS.semiBold,
     },
@@ -92,33 +98,34 @@ export default function AuthLanding() {
   const { t } = useTranslation();
   const router = useRouter();
   const { theme } = useTheme();
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const insets = useSafeAreaInsets();
+  const [currentIndex, setCurrentIndex] = useState(0);
   const fadeAnim = useRef(new Animated.Value(1)).current;
+  const scaleAnim = useRef(new Animated.Value(1)).current;
 
   const styles = createStyles(theme);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      // Fade out
-      Animated.timing(fadeAnim, {
-        toValue: 0,
-        duration: 500,
-        useNativeDriver: true,
-      }).start(() => {
-        // Change image
-        setCurrentImageIndex((prev) => (prev + 1) % BACKGROUND_IMAGES.length);
-
-        // Fade in
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 500,
-          useNativeDriver: true,
-        }).start();
+      Animated.parallel([
+        Animated.timing(fadeAnim, { toValue: 0, duration: 350, useNativeDriver: true }),
+        Animated.timing(scaleAnim, { toValue: 0.65, duration: 350, useNativeDriver: true }),
+      ]).start(() => {
+        setCurrentIndex((prev) => (prev + 1) % ICONS.length);
+        Animated.parallel([
+          Animated.timing(fadeAnim, { toValue: 1, duration: 350, useNativeDriver: true }),
+          Animated.spring(scaleAnim, {
+            toValue: 1,
+            useNativeDriver: true,
+            damping: 12,
+            stiffness: 160,
+          }),
+        ]).start();
       });
-    }, 4000); // Change image every 4 seconds
+    }, 3000);
 
     return () => clearInterval(interval);
-  }, [fadeAnim]);
+  }, [fadeAnim, scaleAnim]);
 
   const { user, signInWithGoogle, setOnboardingCompleted, hasCompletedGetStarted } = useAuth();
   const hasNavigated = useRef(false);
@@ -136,16 +143,11 @@ export default function AuthLanding() {
       supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
     };
 
-    // Handle URL if app was opened from cold start via deep link
     Linking.getInitialURL().then((url) => { if (url) processUrl(url); });
-
-    // Handle URL if app was already running and receives a deep link
     const subscription = Linking.addEventListener("url", ({ url }) => processUrl(url));
     return () => subscription.remove();
   }, []);
 
-  // Navigate as soon as a session is established (covers both iOS direct redirect
-  // and Android deep link path)
   useEffect(() => {
     if (!user || hasNavigated.current) return;
     hasNavigated.current = true;
@@ -156,91 +158,88 @@ export default function AuthLanding() {
     })();
   }, [hasCompletedGetStarted, router, setOnboardingCompleted, user]);
 
-  const handleEmailSignUp = () => {
-    router.navigate("/get-started/username");
-  };
+  const handleEmailSignUp = () => router.navigate("/get-started/username");
 
   const handleGoogleSignUp = async () => {
     try {
       await signInWithGoogle();
-      // Navigation is handled by the user state watcher above
     } catch (error: unknown) {
-      const message =
-        error instanceof Error ? error.message : "Google sign in failed";
+      const message = error instanceof Error ? error.message : "Google sign in failed";
       Alert.alert("Error", message);
     }
   };
 
-  const handleSignIn = () => {
-    router.navigate("/auth/signin");
-  };
+  const handleSignIn = () => router.navigate("/auth/signin");
 
   return (
     <View style={styles.container}>
-      {/* Background Image with fade animation */}
-      <Animated.Image
-        source={BACKGROUND_IMAGES[currentImageIndex]}
-        style={[styles.backgroundImage, { opacity: fadeAnim }]}
-        resizeMode="cover"
-      />
+      {/* Carousel — white card, rounded bottom, floats above panel */}
+      <View style={[styles.carouselSection, { paddingTop: insets.top }]}>
+        <Animated.View
+          style={{
+            opacity: fadeAnim,
+            transform: [{ scale: scaleAnim }],
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <View style={styles.iconCircle}>
+            <MaterialCommunityIcons
+              name={ICONS[currentIndex]}
+              size={68}
+              color={theme.primary.main}
+            />
+          </View>
+        </Animated.View>
+      </View>
 
-      {/* Overlay */}
-      <View style={styles.overlay} />
-
-      {/* Content */}
-      <View style={styles.content}>
-        {/* Logo */}
-        <View style={styles.logoContainer}>
-          <Image source={theme.logo} style={styles.logo} resizeMode="contain" />
+      {/* Bottom panel — sits behind carousel */}
+      <View style={[styles.bottomPanel, { paddingBottom: insets.bottom + 12 }]}>
+        {/* Dots synced with icon index */}
+        <View style={styles.dotsRow}>
+          {ICONS.map((_, i) => (
+            <View
+              key={i}
+              style={{
+                width: i === currentIndex ? 24 : 8,
+                height: 8,
+                borderRadius: 4,
+                backgroundColor:
+                  i === currentIndex ? "#FFFFFF" : "rgba(255,255,255,0.35)",
+              }}
+            />
+          ))}
         </View>
 
-        {/* Bottom Section */}
-        <View style={styles.bottomSection}>
-          <Text style={styles.title}>{t("auth.signUpToGetStarted")}</Text>
+        <Text style={styles.title}>{t("auth.signUpToGetStarted")}</Text>
 
-          {/* Google Sign Up Button */}
-          <View style={{ marginBottom: 12 }}>
-            <ChipButton
-              title={t("auth.continueWithGoogle")}
-              onPress={handleGoogleSignUp}
-              variant="primary"
-              size="lg"
-              fullWidth
-              icon={
-                <AntDesign
-                  name="google"
-                  size={20}
-                  color={theme.background.dark}
-                />
-              }
-            />
-          </View>
+        <View style={styles.buttonGap}>
+          <ChipButton
+            title={t("auth.continueWithGoogle")}
+            onPress={handleGoogleSignUp}
+            variant="white"
+            size="lg"
+            fullWidth
+            icon={<AntDesign name="google" size={20} color={theme.primary.main} />}
+          />
+        </View>
 
-          {/* Email Sign Up Button */}
-          <View style={{ marginBottom: 18 }}>
-            <ChipButton
-              title={t("auth.continueWithEmail")}
-              onPress={handleEmailSignUp}
-              variant="secondary"
-              size="lg"
-              fullWidth
-              icon={
-                <MaterialIcons
-                  name="email"
-                  size={20}
-                  color={theme.primary.main}
-                />
-              }
-            />
-          </View>
+        <View style={styles.buttonGap}>
+          <ChipButton
+            title={t("auth.continueWithEmail")}
+            onPress={handleEmailSignUp}
+            variant="white"
+            size="lg"
+            fullWidth
+            icon={<MaterialIcons name="email" size={20} color={theme.primary.main} />}
+          />
+        </View>
 
-          {/* Sign In Link */}
-          <View style={styles.signInContainer}>
-            <Text style={styles.signInText}>{t("auth.alreadyHaveAccount")}</Text>
-            <TouchableOpacity onPress={handleSignIn} activeOpacity={0.7}>
-              <Text style={styles.signInLink}>{t("auth.logIn")}</Text>
-            </TouchableOpacity>
-          </View>
+        <View style={styles.signInContainer}>
+          <Text style={styles.signInText}>{t("auth.alreadyHaveAccount")}</Text>
+          <TouchableOpacity onPress={handleSignIn} activeOpacity={0.7}>
+            <Text style={styles.signInLink}>{t("auth.logIn")}</Text>
+          </TouchableOpacity>
         </View>
       </View>
     </View>

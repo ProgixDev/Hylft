@@ -6,7 +6,7 @@ import { useAuth } from "../contexts/AuthContext";
 
 export default function Index() {
   const router = useRouter();
-  const { user, isLoading, hasCompletedOnboarding } = useAuth();
+  const { user, isLoading } = useAuth();
   const [splashDone, setSplashDone] = useState(false);
   const [destination, setDestination] = useState<string | null>(null);
   const hasNavigated = useRef(false);
@@ -23,9 +23,8 @@ export default function Index() {
           return;
         }
 
-        const hasSeenOnboarding = await hasCompletedOnboarding();
         if (!user) {
-          setDestination(hasSeenOnboarding ? "/auth" : "/OnBoarding");
+          setDestination("/OnBoarding");
           return;
         }
 
@@ -35,7 +34,7 @@ export default function Index() {
         setDestination("/OnBoarding");
       }
     })();
-  }, [isLoading, user, hasCompletedOnboarding]);
+  }, [isLoading, user]);
 
   // Navigate only when BOTH the splash animation is done AND the auth check is resolved
   useEffect(() => {

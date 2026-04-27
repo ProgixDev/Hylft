@@ -24,6 +24,10 @@ interface AuthContextType {
 }
 
 const ONBOARDING_KEY = "@hylift_onboarding_completed";
+const GET_STARTED_COMPLETED_KEY = "@hylift_get_started_completed";
+
+const getStartedCompletedKey = (userId: string) =>
+  `${GET_STARTED_COMPLETED_KEY}:${userId}`;
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -160,6 +164,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const hasCompletedGetStarted = async (userId?: string) => {
     const id = userId ?? session?.user?.id;
     if (!id) return false;
+
+    const localFlag = await AsyncStorage.getItem(getStartedCompletedKey(id));
+    if (localFlag === "true") return true;
+
     const { data, error } = await supabase
       .from("user_profiles")
       .select("onboarding_completed")
@@ -169,12 +177,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error("[Auth] Failed to read onboarding status", error);
       return false;
     }
-    return data?.onboarding_completed === true;
+    const completed = data?.onboarding_completed === true;
+    if (completed) {
+      await AsyncStorage.setItem(getStartedCompletedKey(id), "true");
+    }
+
+    return completed;
   };
 
   const setGetStartedCompleted = async (userId?: string) => {
     const id = userId ?? session?.user?.id;
     if (!id) return;
+
+    await AsyncStorage.setItem(getStartedCompletedKey(id), "true");
+
     const { error } = await supabase
       .from("user_profiles")
       .update({ onboarding_completed: true })

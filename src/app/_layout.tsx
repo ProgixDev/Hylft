@@ -5,7 +5,7 @@ import {
     Zain_800ExtraBold,
     useFonts,
 } from "@expo-google-fonts/zain";
-import { Stack } from "expo-router";
+import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect } from "react";
@@ -33,9 +33,26 @@ function AppContent() {
   const { isLoading } = useI18n();
   const { user } = useAuth();
   const { theme, themeType } = useTheme();
+  const router = useRouter();
+  const segments = useSegments();
   const insets = useSafeAreaInsets();
   const [showProModal, setShowProModal] = React.useState(false);
   const previousUser = React.useRef(user);
+
+  useEffect(() => {
+    if (isLoading || user) return;
+
+    const firstSegment = segments[0];
+    const isPublicRoute =
+      firstSegment === undefined ||
+      firstSegment === "OnBoarding" ||
+      firstSegment === "auth" ||
+      firstSegment === "get-started";
+
+    if (!isPublicRoute) {
+      router.replace("/OnBoarding");
+    }
+  }, [isLoading, user, segments, router]);
 
   React.useEffect(() => {
     // Show ProModal when user transitions from null to logged in
@@ -101,6 +118,7 @@ function AppContent() {
         <Stack.Screen name="settings/about" />
         <Stack.Screen name="settings/terms" />
         <Stack.Screen name="settings/privacy" />
+        <Stack.Screen name="dev/routes" />
         <Stack.Screen name="user/follows/[id]" />
         <Stack.Screen name="schedule/[date]" />
         <Stack.Screen name="get-started/language" />

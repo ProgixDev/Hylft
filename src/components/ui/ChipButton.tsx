@@ -195,7 +195,7 @@ function createStyles(theme: Theme) {
       color: theme.background.dark,
     },
     whiteText: {
-      color: theme.background.dark,
+      color: "#111111",
     },
     googleText: {
       color: GOOGLE_BLUE,

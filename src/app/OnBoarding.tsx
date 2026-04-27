@@ -5,24 +5,24 @@ import { useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-    Dimensions,
-    Image,
-    NativeScrollEvent,
-    NativeSyntheticEvent,
-    Platform,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
+  Dimensions,
+  Image,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
-    runOnJS,
-    useAnimatedStyle,
-    useSharedValue,
-    withSpring,
-    withTiming,
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
 } from "react-native-reanimated";
 import { FONTS } from "../constants/fonts";
 import { useAuth } from "../contexts/AuthContext";
@@ -152,7 +152,6 @@ export default function OnBoarding() {
 
   return (
     <View style={styles.container}>
-      {/* Paged background */}
       <ScrollView
         ref={scrollViewRef}
         horizontal
@@ -183,7 +182,6 @@ export default function OnBoarding() {
         ))}
       </ScrollView>
 
-      {/* Logo */}
       <View style={styles.logoContainer} pointerEvents="none">
         <Image
           source={require("../../assets/images/Logo.png")}
@@ -193,7 +191,6 @@ export default function OnBoarding() {
         />
       </View>
 
-      {/* Bottom glass card */}
       <View style={styles.bottomCard}>
         {Platform.OS !== "android" ? (
           <BlurView
@@ -264,6 +261,7 @@ export default function OnBoarding() {
           </View>
         </View>
       </View>
+
     </View>
   );
 }
@@ -283,7 +281,6 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       height: "100%",
     },
 
-    // Logo
     logoContainer: {
       position: "absolute",
       top: 60,
@@ -295,7 +292,6 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       height: 40,
     },
 
-    // Bottom glass card (flush to bottom, top corners rounded)
     bottomCard: {
       position: "absolute",
       left: 0,
@@ -328,13 +324,13 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
         Platform.OS === "android" ? "rgba(10,12,16,0.78)" : "transparent",
       ...(Platform.OS === "web"
         ? ({
-            // @ts-ignore — CSS property for web
+            // @ts-ignore � CSS property for web
             backdropFilter: "blur(40px)",
             // @ts-ignore
             WebkitBackdropFilter: "blur(40px)",
           } as any)
         : {
-            // @ts-ignore — experimental RN style accepted by Fabric on 0.76+
+            // @ts-ignore � experimental RN style accepted by Fabric on 0.76+
             experimental_backgroundImage: undefined,
           }),
     },

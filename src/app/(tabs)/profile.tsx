@@ -259,6 +259,22 @@ export default function Profile() {
           onSecondaryPress={() => setShareOpen(true)}
         />
 
+        {__DEV__ ? (
+          <Pressable
+            style={styles.devRoutesButton}
+            onPress={() => router.push("/dev/routes" as any)}
+          >
+            <Ionicons
+              name="code-slash-outline"
+              size={16}
+              color={theme.background.dark}
+            />
+            <Text style={styles.devRoutesButtonText}>
+              {isFr ? "Routes de dev" : "Dev routes"}
+            </Text>
+          </Pressable>
+        ) : null}
+
         {/* ── Activity Section ───────────────────────────────────── */}
         <Text style={styles.sectionTitle}>{isFr ? "Activité" : "Activity"}</Text>
 
@@ -504,7 +520,11 @@ function ProfileSkeleton() {
           <Shimmer style={styles.skeletonHandle} baseColor={base} highlightColor={highlight} />
           <View style={styles.skeletonStatsRow}>
             {Array.from({ length: 3 }).map((_, index) => (
-              <Shimmer key={index} style={styles.skeletonStatCard} baseColor={base} highlightColor={highlight} />
+              <View key={index} style={styles.skeletonStatCell}>
+                <Shimmer style={styles.skeletonStatIcon} baseColor={base} highlightColor={highlight} />
+                <Shimmer style={styles.skeletonStatValue} baseColor={base} highlightColor={highlight} />
+                <Shimmer style={styles.skeletonStatLabel} baseColor={base} highlightColor={highlight} />
+              </View>
             ))}
           </View>
           <View style={styles.skeletonActionRow}>
@@ -580,19 +600,25 @@ function createStyles(theme: Theme) {
 
     skeletonHeaderWrap: {
       marginBottom: 8,
+      paddingBottom: 16,
     },
     skeletonCover: {
       height: 220,
-      borderRadius: 0,
+      marginHorizontal: 12,
+      marginTop: 12,
+      borderRadius: 24,
     },
     skeletonAvatarShell: {
-      marginTop: -44,
-      marginLeft: 20,
+      position: "absolute",
+      top: 188,
       width: 96,
       height: 96,
       borderRadius: 48,
       padding: 4,
       backgroundColor: theme.background.dark,
+      alignSelf: "center",
+      alignItems: "center",
+      justifyContent: "center",
     },
     skeletonAvatar: {
       width: "100%",
@@ -601,7 +627,8 @@ function createStyles(theme: Theme) {
     },
     skeletonHeaderBody: {
       paddingHorizontal: 20,
-      paddingTop: 16,
+      paddingTop: 60,
+      alignItems: "center",
     },
     skeletonMemberSince: {
       height: 12,
@@ -611,7 +638,7 @@ function createStyles(theme: Theme) {
     },
     skeletonName: {
       height: 24,
-      width: "58%",
+      width: "62%",
       borderRadius: 8,
       marginBottom: 10,
     },
@@ -623,27 +650,43 @@ function createStyles(theme: Theme) {
     },
     skeletonStatsRow: {
       flexDirection: "row",
-      gap: 10,
+      alignSelf: "stretch",
       marginBottom: 16,
     },
-    skeletonStatCard: {
+    skeletonStatCell: {
       flex: 1,
-      height: 82,
-      borderRadius: 20,
+      alignItems: "center",
+      gap: 6,
+    },
+    skeletonStatIcon: {
+      width: 18,
+      height: 18,
+      borderRadius: 9,
+    },
+    skeletonStatValue: {
+      width: 40,
+      height: 18,
+      borderRadius: 8,
+    },
+    skeletonStatLabel: {
+      width: 52,
+      height: 12,
+      borderRadius: 6,
     },
     skeletonActionRow: {
       flexDirection: "row",
       gap: 12,
+      alignSelf: "stretch",
     },
     skeletonPrimaryAction: {
       flex: 1,
-      height: 50,
-      borderRadius: 16,
+      height: 48,
+      borderRadius: 14,
     },
     skeletonSecondaryAction: {
-      width: 120,
-      height: 50,
-      borderRadius: 16,
+      flex: 1,
+      height: 48,
+      borderRadius: 14,
     },
     skeletonSectionTitle: {
       height: 20,
@@ -762,6 +805,26 @@ function createStyles(theme: Theme) {
       borderRadius: 20, backgroundColor: theme.background.darker,
     },
     chartWrap: { alignItems: "center", overflow: "hidden" },
+
+    devRoutesButton: {
+      marginHorizontal: 20,
+      marginTop: 10,
+      marginBottom: 2,
+      paddingVertical: 12,
+      borderRadius: 12,
+      backgroundColor: theme.primary.main,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+    },
+    devRoutesButtonText: {
+      fontFamily: FONTS.bold,
+      fontSize: 14,
+      color: theme.background.dark,
+      textTransform: "uppercase",
+      letterSpacing: 0.6,
+    },
 
     // Weight progress header
     weightHeader: {
