@@ -85,14 +85,11 @@ export function CelebrationScreen({
     ]).start();
   }, []);
 
-  // Light themes need slightly different treatment for the glow
-  const isLight =
-    theme.background.dark === "#FFFFFF" || theme.background.dark === "#FFF8F3";
-
-  const glowStrength = isLight ? "20" : "28";
+  // The get-started celebration steps are pinned to the light onboarding surface.
+  const isLight = true;
 
   return (
-    <View style={[s.root, { backgroundColor: theme.background.dark }]}>
+    <View style={[s.root, { backgroundColor: "#FFFFFF" }]}>
       {/* Full-screen gradient layer */}
 
       {/* ── Visual zone (top ~55%) ── */}
@@ -145,7 +142,7 @@ export function CelebrationScreen({
           },
         ]}
       >
-        <Text style={[s.headline, { color: theme.foreground.white }]}>
+        <Text style={[s.headline, { color: "#111827" }]}>
           {headline}
         </Text>
         <Text style={[s.message, { color: theme.foreground.gray }]}>

@@ -6,6 +6,8 @@ import { useTranslation } from "react-i18next";
 import {
   Animated,
   Easing,
+  Image,
+  ImageSourcePropType,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -14,41 +16,25 @@ import {
 import ChipButton from "../../components/ui/ChipButton";
 import SignupProgress from "../../components/ui/SignupProgress";
 import { FONTS } from "../../constants/fonts";
-import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
+
+const BG = "#FFFFFF";
+const SURFACE = "#F6F8FA";
+const BORDER = "#DDE3EA";
 
 const GOALS: {
   id: "lose_weight" | "maintain" | "gain_weight" | "build_muscle";
-  label: string;
-  desc: string;
-  icon: keyof typeof Ionicons.glyphMap;
+  image: ImageSourcePropType;
   recommended?: boolean;
 }[] = [
   {
     id: "lose_weight",
-    label: "Lose weight",
-    desc: "Burn fat, feel lighter and more energetic",
-    icon: "trending-down-outline",
+    image: require("../../../assets/weight__loss.gif"),
     recommended: true,
   },
-  {
-    id: "maintain",
-    label: "Maintain weight",
-    desc: "Keep your current weight and stay consistent",
-    icon: "remove-outline",
-  },
-  {
-    id: "gain_weight",
-    label: "Gain weight",
-    desc: "Fuel up, add size and healthy mass",
-    icon: "trending-up-outline",
-  },
-  {
-    id: "build_muscle",
-    label: "Build muscle",
-    desc: "Get stronger, leaner and more defined",
-    icon: "barbell-outline",
-  },
+  { id: "maintain", image: require("../../../assets/maintain_weight.gif") },
+  { id: "gain_weight", image: require("../../../assets/weight_gain.gif") },
+  { id: "build_muscle", image: require("../../../assets/muscle_gain.gif") },
 ];
 
 export default function GoalScreen() {
@@ -56,31 +42,9 @@ export default function GoalScreen() {
   const { theme } = useTheme();
   const { t } = useTranslation();
   const [selected, setSelected] = useState<string>("");
+
   const fade = useRef(new Animated.Value(0)).current;
   const slide = useRef(new Animated.Value(28)).current;
-
-  const goals = [
-    {
-      ...GOALS[0],
-      label: t("onboarding.goalFlow.options.lose_weight.label"),
-      desc: t("onboarding.goalFlow.options.lose_weight.description"),
-    },
-    {
-      ...GOALS[1],
-      label: t("onboarding.goalFlow.options.maintain.label"),
-      desc: t("onboarding.goalFlow.options.maintain.description"),
-    },
-    {
-      ...GOALS[2],
-      label: t("onboarding.goalFlow.options.gain_weight.label"),
-      desc: t("onboarding.goalFlow.options.gain_weight.description"),
-    },
-    {
-      ...GOALS[3],
-      label: t("onboarding.goalFlow.options.build_muscle.label"),
-      desc: t("onboarding.goalFlow.options.build_muscle.description"),
-    },
-  ];
 
   useEffect(() => {
     Animated.parallel([
@@ -99,13 +63,15 @@ export default function GoalScreen() {
     ]).start();
   }, []);
 
+  const handleSelect = (id: string) => {
+    setSelected(id);
+  };
+
   const handleContinue = async () => {
     if (!selected) return;
     await AsyncStorage.setItem("@hylift_goal", selected);
     router.push("/get-started/goal-congrats");
   };
-
-  const styles = createStyles(theme);
 
   return (
     <View style={styles.container}>
@@ -114,7 +80,6 @@ export default function GoalScreen() {
       >
         <SignupProgress current={2} total={13} />
 
-        {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>{t("onboarding.goalFlow.title")}</Text>
           <Text style={styles.subtitle}>
@@ -122,109 +87,98 @@ export default function GoalScreen() {
           </Text>
         </View>
 
-        {/* Cards */}
         <View style={styles.list}>
-          {goals.map((g) => {
+          {GOALS.map((g) => {
             const isSelected = selected === g.id;
             return (
-              <TouchableOpacity
-                key={g.id}
-                activeOpacity={0.82}
-                onPress={() => setSelected(g.id)}
-                style={[
-                  styles.card,
-                  {
-                    borderColor: isSelected
-                      ? theme.primary.main
-                      : theme.background.accent,
-                    backgroundColor: isSelected
-                      ? theme.primary.main + "16"
-                      : theme.background.darker,
-                  },
-                ]}
-              >
-                {/* Left icon */}
-                <View
+              <View key={g.id}>
+                <TouchableOpacity
+                  activeOpacity={0.72}
+                  onPress={() => handleSelect(g.id)}
                   style={[
-                    styles.iconWrap,
+                    styles.card,
                     {
+                      borderColor: isSelected ? theme.primary.main : BORDER,
                       backgroundColor: isSelected
-                        ? theme.primary.main + "28"
-                        : theme.background.accent,
+                        ? theme.primary.main + "10"
+                        : SURFACE,
                     },
                   ]}
                 >
-                  <Ionicons
-                    name={g.icon}
-                    size={26}
-                    color={
-                      isSelected ? theme.primary.main : theme.foreground.gray
-                    }
-                  />
-                </View>
+                  <View
+                    style={[
+                      styles.iconWrap,
+                      {
+                        backgroundColor: isSelected
+                          ? theme.primary.main + "18"
+                          : "#FFFFFF",
+                      },
+                    ]}
+                  >
+                    <Image source={g.image} style={styles.goalImage} />
+                  </View>
 
-                {/* Text */}
-                <View style={{ flex: 1 }}>
-                  <View style={styles.labelRow}>
-                    <Text
-                      style={[
-                        styles.cardTitle,
-                        {
-                          color: isSelected
-                            ? theme.primary.main
-                            : theme.foreground.white,
-                        },
-                      ]}
-                    >
-                      {g.label}
-                    </Text>
-                    {g.recommended && (
-                      <View
+                  <View style={{ flex: 1 }}>
+                    <View style={styles.labelRow}>
+                      <Text
                         style={[
-                          styles.tag,
+                          styles.cardTitle,
                           {
-                            backgroundColor: theme.primary.main + "22",
-                            borderColor: theme.primary.main + "55",
+                            color: isSelected
+                              ? theme.primary.main
+                              : "#111827",
                           },
                         ]}
                       >
-                        <Text
+                        {t(
+                          `onboarding.goalFlow.options.${g.id}.label`
+                        )}
+                      </Text>
+                      {g.recommended && (
+                        <View
                           style={[
-                            styles.tagText,
-                            { color: theme.primary.main },
+                            styles.tag,
+                            {
+                              backgroundColor: theme.primary.main + "22",
+                              borderColor: theme.primary.main + "55",
+                            },
                           ]}
                         >
-                          {t("onboarding.goalFlow.popular")}
-                        </Text>
-                      </View>
+                          <Text
+                            style={[
+                              styles.tagText,
+                              { color: theme.primary.main },
+                            ]}
+                          >
+                            {t("onboarding.goalFlow.popular")}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                    <Text style={styles.cardDesc}>
+                      {t(`onboarding.goalFlow.options.${g.id}.description`)}
+                    </Text>
+                  </View>
+
+                  <View
+                    style={[
+                      styles.check,
+                      {
+                        backgroundColor: isSelected
+                          ? theme.primary.main
+                          : "transparent",
+                        borderColor: isSelected
+                          ? theme.primary.main
+                          : "#64748B",
+                      },
+                    ]}
+                  >
+                    {isSelected && (
+                      <Ionicons name="checkmark" size={14} color="#fff" />
                     )}
                   </View>
-                  <Text
-                    style={[styles.cardDesc, { color: theme.foreground.gray }]}
-                  >
-                    {g.desc}
-                  </Text>
-                </View>
-
-                {/* Checkmark */}
-                <View
-                  style={[
-                    styles.check,
-                    {
-                      backgroundColor: isSelected
-                        ? theme.primary.main
-                        : "transparent",
-                      borderColor: isSelected
-                        ? theme.primary.main
-                        : theme.background.accent,
-                    },
-                  ]}
-                >
-                  {isSelected && (
-                    <Ionicons name="checkmark" size={14} color="#fff" />
-                  )}
-                </View>
-              </TouchableOpacity>
+                </TouchableOpacity>
+              </View>
             );
           })}
         </View>
@@ -242,79 +196,84 @@ export default function GoalScreen() {
   );
 }
 
-function createStyles(theme: Theme) {
-  return StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.background.dark,
-      paddingHorizontal: 20,
-      paddingBottom: 16,
-    },
-    header: {
-      marginBottom: 20,
-    },
-    title: {
-      fontSize: 26,
-      fontFamily: FONTS.extraBold,
-      color: theme.foreground.white,
-      marginBottom: 6,
-      lineHeight: 32,
-    },
-    subtitle: {
-      fontSize: 14,
-      color: theme.foreground.gray,
-      lineHeight: 21,
-    },
-    list: {
-      gap: 12,
-    },
-    card: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 14,
-      borderWidth: 1.5,
-      borderRadius: 18,
-      padding: 16,
-    },
-    iconWrap: {
-      width: 54,
-      height: 54,
-      borderRadius: 16,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    labelRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 8,
-      marginBottom: 4,
-    },
-    cardTitle: {
-      fontSize: 16,
-      fontFamily: FONTS.bold,
-    },
-    tag: {
-      borderWidth: 1,
-      borderRadius: 100,
-      paddingHorizontal: 8,
-      paddingVertical: 2,
-    },
-    tagText: {
-      fontSize: 10,
-      fontFamily: FONTS.bold,
-      letterSpacing: 0.5,
-    },
-    cardDesc: {
-      fontSize: 13,
-      lineHeight: 18,
-    },
-    check: {
-      width: 26,
-      height: 26,
-      borderRadius: 13,
-      borderWidth: 2,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-  });
-}
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: BG,
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+  },
+  header: {
+    marginBottom: 20,
+  },
+  title: {
+    fontSize: 26,
+    fontFamily: FONTS.extraBold,
+    color: "#111827",
+    marginBottom: 6,
+    lineHeight: 32,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: "#64748B",
+    lineHeight: 21,
+  },
+  list: {
+    gap: 10,
+  },
+  card: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 16,
+  },
+  iconWrap: {
+    width: 58,
+    height: 58,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+  },
+  goalImage: {
+    width: 50,
+    height: 50,
+    resizeMode: "contain",
+  },
+  labelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 4,
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontFamily: FONTS.bold,
+  },
+  tag: {
+    borderWidth: 1,
+    borderRadius: 100,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  tagText: {
+    fontSize: 10,
+    fontFamily: FONTS.bold,
+    letterSpacing: 0.5,
+  },
+  cardDesc: {
+    fontSize: 13,
+    lineHeight: 18,
+    color: "#64748B",
+  },
+  check: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+});

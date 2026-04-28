@@ -21,12 +21,13 @@ interface ChipButtonProps {
   icon?: React.ReactNode;
   iconPosition?: "left" | "right";
   loading?: boolean;
+  borderRadius?: number;
 }
 
 const SIZE_CONFIG = {
   sm: { height: 32, paddingHorizontal: 16, fontSize: 13 },
   md: { height: 44, paddingHorizontal: 24, fontSize: 15 },
-  lg: { height: 52, paddingHorizontal: 32, fontSize: 17 },
+  lg: { height: 56, paddingHorizontal: 32, fontSize: 16 },
 } as const;
 
 export default function ChipButton({
@@ -39,6 +40,7 @@ export default function ChipButton({
   icon,
   iconPosition = "left",
   loading = false,
+  borderRadius,
 }: ChipButtonProps) {
   const { theme } = useTheme();
   const styles = createStyles(theme);
@@ -53,7 +55,7 @@ export default function ChipButton({
           height: config.height,
           minHeight: 44,
           paddingHorizontal: config.paddingHorizontal,
-          borderRadius: config.height / 2,
+          borderRadius: borderRadius ?? config.height / 2,
         },
         variant === "primary" && styles.primary,
         variant === "secondary" && styles.secondary,
@@ -62,7 +64,7 @@ export default function ChipButton({
         variant === "google" && styles.google,
         fullWidth && styles.fullWidth,
         isDisabled && styles.disabled,
-        pressed && !isDisabled && { opacity: 0.8 },
+        pressed && !isDisabled && styles.pressed,
       ]}
       onPress={onPress}
       disabled={isDisabled}
@@ -111,18 +113,21 @@ function createStyles(theme: Theme) {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
+      overflow: "hidden",
     },
     primary: {
       backgroundColor: theme.primary.main,
+      borderWidth: 1,
+      borderColor: "rgba(255,255,255,0.22)",
       ...Platform.select({
         ios: {
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.15,
-          shadowRadius: 4,
+          shadowColor: theme.primary.main,
+          shadowOffset: { width: 0, height: 8 },
+          shadowOpacity: 0.28,
+          shadowRadius: 16,
         },
         android: {
-          elevation: 3,
+          elevation: 6,
         },
       }),
     },
@@ -168,7 +173,11 @@ function createStyles(theme: Theme) {
       width: "100%",
     },
     disabled: {
-      opacity: 0.4,
+      opacity: 0.45,
+    },
+    pressed: {
+      opacity: 0.88,
+      transform: [{ translateY: 1 }],
     },
     content: {
       flexDirection: "row",
@@ -186,6 +195,7 @@ function createStyles(theme: Theme) {
     },
     primaryText: {
       color: theme.background.dark,
+      fontFamily: FONTS.bold,
     },
     secondaryText: {
       color: theme.primary.main,

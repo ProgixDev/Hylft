@@ -25,6 +25,15 @@ In the output, you'll find options to open the app in a
 
 You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
 
+## Google Play Billing
+
+The premium modal now uses Google Play Billing on Android. Add these environment variables before building the app:
+
+- `EXPO_PUBLIC_GOOGLE_PLAY_MONTHLY_PRODUCT_ID`
+- `EXPO_PUBLIC_GOOGLE_PLAY_YEARLY_PRODUCT_ID`
+
+Google Play purchases require a development build or a Play-distributed release build. They do not work inside Expo Go.
+
 ## Get a fresh project
 
 When you're ready, run:

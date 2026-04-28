@@ -1,7 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { Animated, StyleSheet, Text, View, Easing } from "react-native";
-import { FONTS } from "../../constants/fonts";
-import { useTheme } from "../../contexts/ThemeContext";
+import { Animated, StyleSheet, View, Easing } from "react-native";
 
 interface Props {
   current: number;
@@ -9,14 +7,13 @@ interface Props {
 }
 
 export function SignupProgress({ current, total }: Props) {
-  const { theme } = useTheme();
   const pct = Math.max(0, Math.min(1, current / total));
   const anim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.timing(anim, {
       toValue: pct,
-      duration: 420,
+      duration: 360,
       easing: Easing.out(Easing.cubic),
       useNativeDriver: false,
     }).start();
@@ -28,15 +25,16 @@ export function SignupProgress({ current, total }: Props) {
   });
 
   return (
-    <View style={styles.row}>
-      <Text style={[styles.text, { color: theme.primary.main }]}>
-        {`STEP ${current} OF ${total}`}
-      </Text>
-      <View style={[styles.bar, { backgroundColor: theme.background.accent }]}>
+    <View style={styles.container}>
+      <View style={styles.track}>
         <Animated.View
           style={[
             styles.fill,
-            { backgroundColor: theme.primary.main, width },
+            {
+              backgroundColor: "#20F0B2",
+              width,
+              shadowColor: "#20F0B2",
+            },
           ]}
         />
       </View>
@@ -45,24 +43,26 @@ export function SignupProgress({ current, total }: Props) {
 }
 
 const styles = StyleSheet.create({
-  row: {
-    marginBottom: 14,
-    marginTop: 4,
+  container: {
+    marginBottom: 24,
+    marginTop: 8,
+    paddingHorizontal: 2,
   },
-  text: {
-    fontSize: 11,
-    fontFamily: FONTS.bold,
-    letterSpacing: 1.2,
-    marginBottom: 6,
-  },
-  bar: {
-    height: 4,
-    borderRadius: 2,
+  track: {
+    height: 13,
+    borderRadius: 999,
+    backgroundColor: "#E5E7EB",
     overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(15,23,42,0.08)",
   },
   fill: {
     height: "100%",
-    borderRadius: 2,
+    borderRadius: 999,
+    shadowOpacity: 0.65,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 4,
   },
 });
 

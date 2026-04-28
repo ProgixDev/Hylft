@@ -15,16 +15,15 @@ import {
 import ChipButton from "../../components/ui/ChipButton";
 import SignupProgress from "../../components/ui/SignupProgress";
 import { FONTS } from "../../constants/fonts";
-import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
 
+const BG = "#FFFFFF";
 const TOTAL_STEPS = 13;
 
 export default function UsernameScreen() {
   const router = useRouter();
   const { theme } = useTheme();
   const { t } = useTranslation();
-  const styles = createStyles(theme);
   const [username, setUsername] = useState("");
   const fade = useRef(new Animated.Value(0)).current;
   const slide = useRef(new Animated.Value(24)).current;
@@ -80,11 +79,11 @@ export default function UsernameScreen() {
             value={username}
             onChangeText={setUsername}
             placeholder={t("onboarding.username.placeholder")}
-            placeholderTextColor={theme.foreground.gray}
+            placeholderTextColor="#4A5568"
             autoCapitalize="none"
             autoCorrect={false}
             maxLength={24}
-            style={styles.input}
+            style={[styles.input, { borderColor: username.length > 0 ? theme.primary.main + "60" : "#DDE3EA" }]}
           />
           <Text style={styles.hint}>{t("onboarding.username.hint")}</Text>
         </View>
@@ -102,50 +101,47 @@ export default function UsernameScreen() {
   );
 }
 
-function createStyles(theme: Theme) {
-  return StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.background.dark,
-      paddingHorizontal: 20,
-      paddingBottom: 16,
-    },
-    title: {
-      fontSize: 26,
-      fontFamily: FONTS.bold,
-      color: theme.foreground.white,
-      marginBottom: 6,
-    },
-    subtitle: {
-      fontSize: 14,
-      color: theme.foreground.gray,
-      lineHeight: 20,
-      marginBottom: 28,
-    },
-    inputWrap: {
-      marginTop: 12,
-    },
-    label: {
-      fontSize: 13,
-      fontFamily: FONTS.semiBold,
-      color: theme.foreground.white,
-      marginBottom: 8,
-    },
-    input: {
-      backgroundColor: theme.background.darker,
-      borderRadius: 12,
-      paddingHorizontal: 14,
-      paddingVertical: 14,
-      fontSize: 15,
-      color: theme.foreground.white,
-      borderWidth: 1.5,
-      borderColor: theme.background.accent,
-      fontFamily: FONTS.medium,
-    },
-    hint: {
-      marginTop: 8,
-      fontSize: 12,
-      color: theme.foreground.gray,
-    },
-  });
-}
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: BG,
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+  },
+  title: {
+    fontSize: 26,
+    fontFamily: FONTS.bold,
+    color: "#111827",
+    marginBottom: 6,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: "#64748B",
+    lineHeight: 20,
+    marginBottom: 28,
+  },
+  inputWrap: {
+    marginTop: 12,
+  },
+  label: {
+    fontSize: 13,
+    fontFamily: FONTS.semiBold,
+    color: "#111827",
+    marginBottom: 8,
+  },
+  input: {
+    backgroundColor: "#F6F8FA",
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    fontSize: 15,
+    color: "#111827",
+    borderWidth: 1,
+    fontFamily: FONTS.medium,
+  },
+  hint: {
+    marginTop: 8,
+    fontSize: 12,
+    color: "#64748B",
+  },
+});

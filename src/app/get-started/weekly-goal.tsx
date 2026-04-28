@@ -13,8 +13,9 @@ import {
 import ChipButton from "../../components/ui/ChipButton";
 import SignupProgress from "../../components/ui/SignupProgress";
 import { FONTS } from "../../constants/fonts";
-import { Theme } from "../../constants/themes";
-import { useTheme } from "../../contexts/ThemeContext";
+
+const BORDER = "#DDE3EA";
+const SURFACE = "#F6F8FA";
 
 type GoalOption = {
   id: string;
@@ -25,20 +26,20 @@ type GoalOption = {
 };
 
 const LOSS_OPTIONS: GoalOption[] = [
-  { id: "lose_0_25", label: "0.25 kg / week", sub: "Easy and sustainable",  kgPerWeek: -0.25, pace: "slow" },
-  { id: "lose_0_5",  label: "0.5 kg / week",  sub: "Recommended balance",   kgPerWeek: -0.5,  pace: "steady" },
-  { id: "lose_0_75", label: "0.75 kg / week", sub: "Ambitious pace",        kgPerWeek: -0.75, pace: "fast" },
-  { id: "lose_1_0",  label: "1 kg / week",    sub: "Aggressive cut",        kgPerWeek: -1.0,  pace: "fast" },
+  { id: "lose_0_25", label: "0.25 kg / week", sub: "Easy and sustainable", kgPerWeek: -0.25, pace: "slow" },
+  { id: "lose_0_5",  label: "0.5 kg / week",  sub: "Recommended balance",  kgPerWeek: -0.5,  pace: "steady" },
+  { id: "lose_0_75", label: "0.75 kg / week", sub: "Ambitious pace",       kgPerWeek: -0.75, pace: "fast" },
+  { id: "lose_1_0",  label: "1 kg / week",    sub: "Aggressive cut",       kgPerWeek: -1.0,  pace: "fast" },
 ];
 
 const GAIN_OPTIONS: GoalOption[] = [
-  { id: "gain_0_2",  label: "0.2 kg / week",  sub: "Lean, slow bulk",       kgPerWeek: 0.2,  pace: "slow" },
-  { id: "gain_0_35", label: "0.35 kg / week", sub: "Recommended",           kgPerWeek: 0.35, pace: "steady" },
-  { id: "gain_0_5",  label: "0.5 kg / week",  sub: "Aggressive bulk",       kgPerWeek: 0.5,  pace: "fast" },
+  { id: "gain_0_2",  label: "0.2 kg / week",  sub: "Lean, slow bulk",   kgPerWeek: 0.2,  pace: "slow" },
+  { id: "gain_0_35", label: "0.35 kg / week", sub: "Recommended",       kgPerWeek: 0.35, pace: "steady" },
+  { id: "gain_0_5",  label: "0.5 kg / week",  sub: "Aggressive bulk",   kgPerWeek: 0.5,  pace: "fast" },
 ];
 
 const MAINTAIN_OPTIONS: GoalOption[] = [
-  { id: "maintain",  label: "Maintain weight", sub: "Keep your current weight", kgPerWeek: 0, pace: "steady" },
+  { id: "maintain", label: "Maintain weight", sub: "Keep your current weight", kgPerWeek: 0, pace: "steady" },
 ];
 
 const PACE_COLORS = {
@@ -55,7 +56,6 @@ const PACE_LABELS = {
 
 export default function WeeklyGoalScreen() {
   const router = useRouter();
-  const { theme } = useTheme();
   const [goal, setGoal] = useState<string>("");
   const [selected, setSelected] = useState<string>("");
   const fade = useRef(new Animated.Value(0)).current;
@@ -64,8 +64,18 @@ export default function WeeklyGoalScreen() {
   useEffect(() => {
     AsyncStorage.getItem("@hylift_goal").then((v) => setGoal(v || "lose_weight"));
     Animated.parallel([
-      Animated.timing(fade, { toValue: 1, duration: 440, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-      Animated.timing(slide, { toValue: 0, duration: 440, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+      Animated.timing(fade, {
+        toValue: 1,
+        duration: 440,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(slide, {
+        toValue: 0,
+        duration: 440,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
     ]).start();
   }, []);
 
@@ -76,10 +86,15 @@ export default function WeeklyGoalScreen() {
   }, [goal]);
 
   const headline = useMemo(() => {
-    if (goal === "gain_weight" || goal === "build_muscle") return "What's your weekly gain goal?";
+    if (goal === "gain_weight" || goal === "build_muscle")
+      return "What's your weekly gain goal?";
     if (goal === "maintain") return "Confirm your weekly goal";
     return "What's your weekly loss goal?";
   }, [goal]);
+
+  const handleSelect = (id: string) => {
+    setSelected(id);
+  };
 
   const handleContinue = async () => {
     if (!selected) return;
@@ -91,87 +106,102 @@ export default function WeeklyGoalScreen() {
     router.push("/get-started/account");
   };
 
-  const styles = createStyles(theme);
-
   return (
-    <View style={styles.container}>
-      <Animated.View style={{ flex: 1, opacity: fade, transform: [{ translateY: slide }] }}>
+    <View style={s.container}>
+      <Animated.View
+        style={{ flex: 1, opacity: fade, transform: [{ translateY: slide }] }}
+      >
         <SignupProgress current={9} total={13} />
 
-        <View style={styles.header}>
-          <Text style={styles.title}>{headline}</Text>
-          <Text style={styles.subtitle}>
+        <View style={s.header}>
+          <Text style={s.title}>{headline}</Text>
+          <Text style={s.subtitle}>
             Small steady wins compound — you can always adjust later.
           </Text>
         </View>
 
-        <View style={styles.list}>
+        <View style={s.list}>
           {options.map((o) => {
             const isSelected = selected === o.id;
             const paceColor = PACE_COLORS[o.pace];
-            const activeColor = isSelected ? paceColor : undefined;
-
             return (
-              <TouchableOpacity
-                key={o.id}
-                activeOpacity={0.82}
-                onPress={() => setSelected(o.id)}
-                style={[
-                  styles.card,
-                  {
-                    borderColor: isSelected ? paceColor : theme.background.accent,
-                    backgroundColor: isSelected ? paceColor + "14" : theme.background.darker,
-                  },
-                ]}
-              >
-                {/* Direction icon */}
-                <View
+              <View key={o.id}>
+                <TouchableOpacity
+                  activeOpacity={0.72}
+                  onPress={() => handleSelect(o.id)}
                   style={[
-                    styles.iconWrap,
-                    { backgroundColor: isSelected ? paceColor + "28" : theme.background.accent },
-                  ]}
-                >
-                  <Ionicons
-                    name={
-                      o.kgPerWeek < 0 ? "trending-down" :
-                      o.kgPerWeek > 0 ? "trending-up" : "remove"
-                    }
-                    size={26}
-                    color={isSelected ? paceColor : theme.foreground.gray}
-                  />
-                </View>
-
-                <View style={{ flex: 1 }}>
-                  <View style={styles.labelRow}>
-                    <Text
-                      style={[
-                        styles.cardTitle,
-                        { color: isSelected ? paceColor : theme.foreground.white },
-                      ]}
-                    >
-                      {o.label}
-                    </Text>
-                    <View style={[styles.paceTag, { backgroundColor: paceColor + "20", borderColor: paceColor + "55" }]}>
-                      <Text style={[styles.paceTagText, { color: paceColor }]}>
-                        {PACE_LABELS[o.pace]}
-                      </Text>
-                    </View>
-                  </View>
-                  <Text style={[styles.cardDesc, { color: theme.foreground.gray }]}>{o.sub}</Text>
-                </View>
-
-                <View
-                  style={[
-                    styles.check,
+                    s.card,
                     {
-                      backgroundColor: isSelected ? paceColor : "transparent",
-                      borderColor: isSelected ? paceColor : theme.background.accent,
+                      borderColor: isSelected ? paceColor : BORDER,
+                      backgroundColor: isSelected ? paceColor + "10" : SURFACE,
                     },
                   ]}
                 >
-                  {isSelected && <Ionicons name="checkmark" size={14} color="#fff" />}
-                </View>
-              </TouchableOpacity>
+                  <View
+                    style={[
+                      s.iconWrap,
+                      {
+                        backgroundColor: isSelected
+                          ? paceColor + "18"
+                          : "#FFFFFF",
+                      },
+                    ]}
+                  >
+                    <Ionicons
+                      name={
+                        o.kgPerWeek < 0
+                          ? "trending-down"
+                          : o.kgPerWeek > 0
+                            ? "trending-up"
+                            : "remove"
+                      }
+                      size={26}
+                      color={isSelected ? paceColor : "#64748B"}
+                    />
+                  </View>
+
+                  <View style={{ flex: 1 }}>
+                    <View style={s.labelRow}>
+                      <Text
+                        style={[
+                          s.cardTitle,
+                          { color: isSelected ? paceColor : "#111827" },
+                        ]}
+                      >
+                        {o.label}
+                      </Text>
+                      <View
+                        style={[
+                          s.paceTag,
+                          {
+                            backgroundColor: paceColor + "20",
+                            borderColor: paceColor + "55",
+                          },
+                        ]}
+                      >
+                        <Text style={[s.paceTagText, { color: paceColor }]}>
+                          {PACE_LABELS[o.pace]}
+                        </Text>
+                      </View>
+                    </View>
+                    <Text style={s.cardDesc}>{o.sub}</Text>
+                  </View>
+
+                  <View
+                    style={[
+                      s.check,
+                      {
+                        backgroundColor: isSelected ? paceColor : "transparent",
+                        borderColor: isSelected ? paceColor : "#64748B",
+                      },
+                    ]}
+                  >
+                    {isSelected && (
+                      <Ionicons name="checkmark" size={14} color="#fff" />
+                    )}
+                  </View>
+                </TouchableOpacity>
+              </View>
             );
           })}
         </View>
@@ -189,79 +219,78 @@ export default function WeeklyGoalScreen() {
   );
 }
 
-function createStyles(theme: Theme) {
-  return StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.background.dark,
-      paddingHorizontal: 20,
-      paddingBottom: 16,
-    },
-    header: {
-      marginBottom: 20,
-    },
-    title: {
-      fontSize: 26,
-      fontFamily: FONTS.extraBold,
-      color: theme.foreground.white,
-      marginBottom: 6,
-      lineHeight: 32,
-    },
-    subtitle: {
-      fontSize: 14,
-      color: theme.foreground.gray,
-      lineHeight: 21,
-    },
-    list: {
-      gap: 12,
-    },
-    card: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 14,
-      borderWidth: 1.5,
-      borderRadius: 18,
-      padding: 16,
-    },
-    iconWrap: {
-      width: 54,
-      height: 54,
-      borderRadius: 16,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    labelRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 8,
-      marginBottom: 4,
-    },
-    cardTitle: {
-      fontSize: 16,
-      fontFamily: FONTS.bold,
-    },
-    paceTag: {
-      borderWidth: 1,
-      borderRadius: 100,
-      paddingHorizontal: 8,
-      paddingVertical: 2,
-    },
-    paceTagText: {
-      fontSize: 10,
-      fontFamily: FONTS.bold,
-      letterSpacing: 0.5,
-    },
-    cardDesc: {
-      fontSize: 13,
-      lineHeight: 18,
-    },
-    check: {
-      width: 26,
-      height: 26,
-      borderRadius: 13,
-      borderWidth: 2,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-  });
-}
+const s = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+  },
+  header: {
+    marginBottom: 20,
+  },
+  title: {
+    fontSize: 26,
+    fontFamily: FONTS.extraBold,
+    color: "#111827",
+    marginBottom: 6,
+    lineHeight: 32,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: "#64748B",
+    lineHeight: 21,
+  },
+  list: {
+    gap: 12,
+  },
+  card: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 16,
+  },
+  iconWrap: {
+    width: 48,
+    height: 48,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  labelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 4,
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontFamily: FONTS.bold,
+  },
+  paceTag: {
+    borderWidth: 1,
+    borderRadius: 100,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  paceTagText: {
+    fontSize: 10,
+    fontFamily: FONTS.bold,
+    letterSpacing: 0.5,
+  },
+  cardDesc: {
+    fontSize: 13,
+    lineHeight: 18,
+    color: "#64748B",
+  },
+  check: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    borderWidth: 1.5,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+});

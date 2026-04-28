@@ -248,14 +248,14 @@ function createStyles(theme: Theme) {
   return StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: theme.background.dark,
+      backgroundColor: "#FFFFFF",
       paddingHorizontal: 20,
       paddingBottom: 16,
     },
     title: {
       fontSize: 24,
       fontFamily: FONTS.bold,
-      color: theme.foreground.white,
+      color: "#111827",
       marginBottom: 6,
     },
     subtitle: {
@@ -270,18 +270,18 @@ function createStyles(theme: Theme) {
     label: {
       fontSize: 13,
       fontFamily: FONTS.semiBold,
-      color: theme.foreground.white,
+      color: "#111827",
       marginBottom: 8,
     },
     input: {
-      backgroundColor: theme.background.darker,
+      backgroundColor: "#F6F8FA",
       borderRadius: 12,
       paddingHorizontal: 14,
       paddingVertical: 14,
       fontSize: 15,
-      color: theme.foreground.white,
-      borderWidth: 1.5,
-      borderColor: theme.background.accent,
+      color: "#111827",
+      borderWidth: 1,
+      borderColor: "#DDE3EA",
       fontFamily: FONTS.medium,
     },
     passwordRow: {

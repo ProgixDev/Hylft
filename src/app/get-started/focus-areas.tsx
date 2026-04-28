@@ -10,11 +10,14 @@ import {
   View,
 } from "react-native";
 import { useTranslation } from "react-i18next";
-import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
-
 import { FONTS } from "../../constants/fonts";
 import ChipButton from "../../components/ui/ChipButton";
+import SignupProgress from "../../components/ui/SignupProgress";
+
+const BG = "#FFFFFF";
+const SURFACE = "#F6F8FA";
+const BORDER = "#DDE3EA";
 
 interface MuscleGroup {
   id: string;
@@ -34,7 +37,6 @@ export default function FocusAreas() {
   const router = useRouter();
   const { theme } = useTheme();
   const { t } = useTranslation();
-  const styles = createStyles(theme);
   const [selected, setSelected] = useState<string[]>([]);
 
   const toggle = (id: string) => {
@@ -43,7 +45,7 @@ export default function FocusAreas() {
         ? prev.filter((s) => s !== id)
         : prev.length < 5
           ? [...prev, id]
-          : prev,
+          : prev
     );
   };
 
@@ -54,124 +56,92 @@ export default function FocusAreas() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={s.container}>
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={s.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.stepRow}>
-          <Text style={[styles.stepText, { color: theme.primary.main }]}>
-            {t("onboarding.stepOf", { current: 10, total: 13 })}
-          </Text>
-          <View style={styles.progressBar}>
-            <View
-              style={[
-                styles.progressFill,
-                {
-                  backgroundColor: theme.primary.main,
-                  width: `${(10 / 13) * 100}%`,
-                },
-              ]}
-            />
-          </View>
-        </View>
+        <SignupProgress current={10} total={13} />
 
-        <Text style={styles.title}>{t("onboarding.focusAreas.title")}</Text>
-        <Text style={styles.subtitle}>
-          {t("onboarding.focusAreas.subtitle")}
-        </Text>
+        <Text style={s.title}>{t("onboarding.focusAreas.title")}</Text>
+        <Text style={s.subtitle}>{t("onboarding.focusAreas.subtitle")}</Text>
 
-        <View style={styles.grid}>
+        <View style={s.grid}>
           {MUSCLE_GROUPS.map((muscle) => {
             const isSelected = selected.includes(muscle.id);
             return (
-              <TouchableOpacity
-                key={muscle.id}
-                style={[
-                  styles.chip,
-                  {
-                    borderColor: isSelected
-                      ? theme.primary.main
-                      : theme.background.accent,
-                    backgroundColor: isSelected
-                      ? theme.primary.main + "14"
-                      : theme.background.darker,
-                  },
-                ]}
-                onPress={() => toggle(muscle.id)}
-                activeOpacity={0.7}
-              >
-                <View
+              <View key={muscle.id}>
+                <TouchableOpacity
                   style={[
-                    styles.chipIcon,
+                    s.chip,
                     {
+                      borderColor: isSelected ? theme.primary.main : BORDER,
                       backgroundColor: isSelected
-                        ? theme.primary.main + "25"
-                        : theme.background.accent,
+                        ? theme.primary.main + "10"
+                        : SURFACE,
                     },
                   ]}
+                  onPress={() => toggle(muscle.id)}
+                  activeOpacity={0.72}
                 >
-                  <Ionicons
-                    name={muscle.icon}
-                    size={20}
-                    color={
-                      isSelected ? theme.primary.main : theme.foreground.gray
-                    }
-                  />
-                </View>
-                <Text
-                  style={[
-                    styles.chipLabel,
-                    {
-                      color: isSelected
-                        ? theme.primary.main
-                        : theme.foreground.white,
-                    },
-                  ]}
-                >
-                  {t(`onboarding.focusAreas.muscles.${muscle.id}`)}
-                </Text>
-                {isSelected && (
-                  <Ionicons
-                    name="checkmark-circle"
-                    size={18}
-                    color={theme.primary.main}
-                  />
-                )}
-              </TouchableOpacity>
+                  <View
+                    style={[
+                      s.chipIcon,
+                      {
+                        backgroundColor: isSelected
+                          ? theme.primary.main + "18"
+                          : "#FFFFFF",
+                      },
+                    ]}
+                  >
+                    <Ionicons
+                      name={muscle.icon}
+                      size={20}
+                      color={isSelected ? theme.primary.main : "#64748B"}
+                    />
+                  </View>
+                  <Text
+                    style={[
+                      s.chipLabel,
+                      {
+                        color: isSelected ? theme.primary.main : "#111827",
+                      },
+                    ]}
+                  >
+                    {t(`onboarding.focusAreas.muscles.${muscle.id}`)}
+                  </Text>
+                  {isSelected && (
+                    <Ionicons
+                      name="checkmark-circle"
+                      size={18}
+                      color={theme.primary.main}
+                    />
+                  )}
+                </TouchableOpacity>
+              </View>
             );
           })}
         </View>
 
         {selected.length > 0 && (
-          <Text
-            style={[styles.selectedCount, { color: theme.foreground.gray }]}
-          >
-            {t("onboarding.focusAreas.selectedCount", { count: selected.length })}
+          <Text style={s.selectedCount}>
+            {t("onboarding.focusAreas.selectedCount", {
+              count: selected.length,
+            })}
           </Text>
         )}
 
-        {/* Visual preview */}
         {selected.length > 0 && (
-          <View
-            style={[
-              styles.previewBox,
-              { backgroundColor: theme.background.darker },
-            ]}
-          >
+          <View style={s.previewBox}>
             <Ionicons
               name="sparkles-outline"
               size={16}
               color={theme.primary.main}
             />
-            <Text
-              style={[styles.previewText, { color: theme.foreground.gray }]}
-            >
+            <Text style={s.previewText}>
               {t("onboarding.focusAreas.previewPrefix")}{" "}
-              <Text
-                style={{ color: theme.foreground.white, fontFamily: FONTS.semiBold }}
-              >
+              <Text style={{ color: "#111827", fontFamily: FONTS.semiBold }}>
                 {selected
                   .map((id) => t(`onboarding.focusAreas.muscles.${id}`))
                   .join(", ")}
@@ -194,88 +164,70 @@ export default function FocusAreas() {
   );
 }
 
-function createStyles(theme: Theme) {
-  return StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.background.dark,
-      paddingHorizontal: 20,
-      paddingBottom: 16,
-    },
-    scrollContent: {
-      paddingBottom: 16,
-    },
-    stepRow: {
-      marginBottom: 14,
-      marginTop: 4,
-    },
-    stepText: {
-      fontSize: 11,
-      fontFamily: FONTS.bold,
-      letterSpacing: 1.2,
-      marginBottom: 6,
-    },
-    progressBar: {
-      height: 4,
-      borderRadius: 2,
-      backgroundColor: theme.background.accent,
-    },
-    progressFill: {
-      height: "100%",
-      borderRadius: 2,
-    },
-    title: {
-      fontSize: 24,
-      fontFamily: FONTS.bold,
-      color: theme.foreground.white,
-      marginBottom: 6,
-    },
-    subtitle: {
-      fontSize: 13,
-      color: theme.foreground.gray,
-      marginBottom: 18,
-      lineHeight: 20,
-    },
-    grid: {
-      gap: 7,
-    },
-    chip: {
-      flexDirection: "row",
-      alignItems: "center",
-      borderWidth: 1.5,
-      borderRadius: 10,
-      padding: 10,
-      gap: 10,
-    },
-    chipIcon: {
-      width: 32,
-      height: 32,
-      borderRadius: 8,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    chipLabel: {
-      flex: 1,
-      fontSize: 13,
-      fontFamily: FONTS.semiBold,
-    },
-    selectedCount: {
-      textAlign: "center",
-      fontSize: 12,
-      marginTop: 10,
-    },
-    previewBox: {
-      flexDirection: "row",
-      alignItems: "flex-start",
-      gap: 8,
-      padding: 10,
-      borderRadius: 10,
-      marginTop: 10,
-    },
-    previewText: {
-      flex: 1,
-      fontSize: 13,
-      lineHeight: 20,
-    },
-  });
-}
+const s = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: BG,
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+  },
+  scrollContent: {
+    paddingBottom: 16,
+  },
+  title: {
+    fontSize: 26,
+    fontFamily: FONTS.extraBold,
+    color: "#111827",
+    marginBottom: 6,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: "#64748B",
+    marginBottom: 20,
+    lineHeight: 20,
+  },
+  grid: {
+    gap: 8,
+  },
+  chip: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 12,
+    gap: 12,
+  },
+  chipIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  chipLabel: {
+    flex: 1,
+    fontSize: 14,
+    fontFamily: FONTS.semiBold,
+  },
+  selectedCount: {
+    textAlign: "center",
+    fontSize: 12,
+    marginTop: 12,
+    color: "#64748B",
+  },
+  previewBox: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 8,
+    padding: 12,
+    borderRadius: 12,
+    marginTop: 12,
+    backgroundColor: "#F6F8FA",
+  },
+  previewText: {
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 20,
+    color: "#64748B",
+  },
+});

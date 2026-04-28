@@ -4,17 +4,17 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-    Dimensions,
-    FlatList,
-    NativeScrollEvent,
-    NativeSyntheticEvent,
-    StyleSheet,
-    Text,
-    View,
+  Dimensions,
+  FlatList,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
 import ChipButton from "../../components/ui/ChipButton";
+import SignupProgress from "../../components/ui/SignupProgress";
 import { FONTS } from "../../constants/fonts";
-import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -29,7 +29,6 @@ export default function HeightScreen() {
   const isSignupFlow = params.flow === "signup";
   const { theme } = useTheme();
   const { t } = useTranslation();
-  const styles = createStyles(theme);
   const [value, setValue] = useState(175);
   const flatListRef = useRef<FlatList<number>>(null);
   const prevValueRef = useRef(175);
@@ -67,7 +66,7 @@ export default function HeightScreen() {
         Haptics.selectionAsync();
       }
     },
-    [ticks],
+    [ticks]
   );
 
   const handleScrollEnd = useCallback(
@@ -78,7 +77,7 @@ export default function HeightScreen() {
       setValue(ticks[clamped]);
       prevValueRef.current = ticks[clamped];
     },
-    [ticks],
+    [ticks]
   );
 
   const handleContinue = async () => {
@@ -90,76 +89,51 @@ export default function HeightScreen() {
     }
   };
 
-  // Fill percentage for the visual bar
   const fillPercent = ((value - MIN) / (MAX - MIN)) * 100;
 
   const renderTick = useCallback(
     ({ item }: { item: number }) => {
       const isFifth = item % 10 === 0;
       const isMid = item % 5 === 0 && !isFifth;
-
       return (
-        <View style={styles.tickRow}>
-          {isFifth && (
-            <Text style={styles.tickLabel}>{item}</Text>
+        <View style={s.tickRow}>
+          {isFifth ? (
+            <Text style={s.tickLabel}>{item}</Text>
+          ) : (
+            <View style={s.tickLabelSpace} />
           )}
-          {!isFifth && <View style={styles.tickLabelSpace} />}
           <View
             style={[
-              styles.tickLine,
-              isFifth
-                ? styles.tickMajor
-                : isMid
-                  ? styles.tickMedium
-                  : styles.tickMinor,
+              s.tickLine,
+              isFifth ? s.tickMajor : isMid ? s.tickMedium : s.tickMinor,
             ]}
           />
         </View>
       );
     },
-    [styles],
+    []
   );
 
   return (
-    <View style={styles.container}>
+    <View style={s.container}>
       <View style={{ flex: 1 }}>
-        <View style={styles.stepRow}>
-          <Text style={[styles.stepText, { color: theme.primary.main }]}>
-            {t("onboarding.stepOf", {
-              current: isSignupFlow ? 8 : 6,
-              total: 13,
-            })}
-          </Text>
-          <View style={styles.progressBar}>
-            <View
-              style={[
-                styles.progressFill,
-                {
-                  backgroundColor: theme.primary.main,
-                  width: `${((isSignupFlow ? 8 : 6) / 13) * 100}%`,
-                },
-              ]}
-            />
-          </View>
-        </View>
+        <SignupProgress current={isSignupFlow ? 8 : 6} total={13} />
 
-        <Text style={styles.title}>{t("onboarding.height.title")}</Text>
-        <Text style={styles.subtitle}>{t("onboarding.height.subtitle")}</Text>
+        <Text style={s.title}>{t("onboarding.height.title")}</Text>
+        <Text style={s.subtitle}>{t("onboarding.height.subtitle")}</Text>
 
-        <View style={styles.mainArea}>
-          {/* Left: Big number + visual bar */}
-          <View style={styles.leftSection}>
-            <Text style={[styles.bigValue, { color: theme.primary.main }]}>
+        <View style={s.mainArea}>
+          <View style={s.leftSection}>
+            <Text style={[s.bigValue, { color: theme.primary.main }]}>
               {value}
             </Text>
-            <Text style={styles.unitLabel}>cm</Text>
+            <Text style={s.unitLabel}>cm</Text>
 
-            {/* Visual height bar */}
-            <View style={styles.heightBarContainer}>
-              <View style={styles.heightBarBg}>
+            <View style={s.heightBarContainer}>
+              <View style={s.heightBarBg}>
                 <View
                   style={[
-                    styles.heightBarFill,
+                    s.heightBarFill,
                     {
                       height: `${fillPercent}%`,
                       backgroundColor: theme.primary.main,
@@ -170,11 +144,10 @@ export default function HeightScreen() {
             </View>
           </View>
 
-          {/* Right: Vertical ruler */}
-          <View style={styles.rulerSection}>
-            {/* Center indicator */}
-            <View style={[styles.centerIndicator, { backgroundColor: theme.primary.main }]} />
-
+          <View style={s.rulerSection}>
+            <View
+              style={[s.centerIndicator, { backgroundColor: theme.primary.main }]}
+            />
             <FlatList
               ref={flatListRef}
               data={ticks}
@@ -213,142 +186,108 @@ export default function HeightScreen() {
   );
 }
 
-function createStyles(theme: Theme) {
-  return StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.background.dark,
-      paddingHorizontal: 20,
-      paddingBottom: 16,
-    },
-    stepRow: {
-      marginBottom: 14,
-      marginTop: 4,
-    },
-    stepText: {
-      fontSize: 11,
-      fontFamily: FONTS.bold,
-      letterSpacing: 1.2,
-      marginBottom: 6,
-    },
-    progressBar: {
-      height: 4,
-      borderRadius: 2,
-      backgroundColor: theme.background.accent,
-    },
-    progressFill: {
-      height: "100%",
-      borderRadius: 2,
-    },
-    title: {
-      fontSize: 24,
-      fontFamily: FONTS.bold,
-      color: theme.foreground.white,
-      marginBottom: 6,
-    },
-    subtitle: {
-      fontSize: 13,
-      color: theme.foreground.gray,
-      marginBottom: 18,
-      lineHeight: 20,
-    },
-    // Main layout
-    mainArea: {
-      flex: 1,
-      flexDirection: "row",
-      alignItems: "center",
-    },
-    // Left section
-    leftSection: {
-      flex: 1,
-      alignItems: "center",
-      justifyContent: "center",
-      paddingRight: 10,
-    },
-    bigValue: {
-      fontSize: 72,
-      fontFamily: FONTS.extraBold,
-      lineHeight: 80,
-    },
-    unitLabel: {
-      fontSize: 20,
-      fontFamily: FONTS.bold,
-      color: theme.foreground.gray,
-      marginBottom: 24,
-    },
-    // Visual bar
-    heightBarContainer: {
-      height: 140,
-    },
-    heightBarBg: {
-      width: 28,
-      height: "100%",
-      borderRadius: 14,
-      backgroundColor: theme.background.accent,
-      overflow: "hidden",
-      justifyContent: "flex-end",
-    },
-    heightBarFill: {
-      width: "100%",
-      borderRadius: 14,
-    },
-    heightBarLabels: {
-      height: "100%",
-      justifyContent: "space-between",
-    },
-    heightBarLabel: {
-      fontSize: 10,
-      fontFamily: FONTS.medium,
-      color: theme.foreground.gray,
-    },
-    // Right ruler
-    rulerSection: {
-      width: 100,
-      position: "relative",
-    },
-    centerIndicator: {
-      position: "absolute",
-      top: "50%",
-      left: 0,
-      right: 0,
-      height: 2.5,
-      borderRadius: 2,
-      zIndex: 10,
-      marginTop: -1,
-    },
-    tickRow: {
-      height: TICK_HEIGHT,
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "flex-end",
-    },
-    tickLabel: {
-      fontSize: 11,
-      fontFamily: FONTS.bold,
-      color: theme.foreground.gray,
-      marginRight: 8,
-      width: 30,
-      textAlign: "right",
-    },
-    tickLabelSpace: {
-      width: 38,
-    },
-    tickLine: {
-      backgroundColor: theme.foreground.gray,
-    },
-    tickMajor: {
-      width: 30,
-      height: 2,
-      backgroundColor: theme.foreground.white,
-    },
-    tickMedium: {
-      width: 18,
-      height: 1.5,
-    },
-    tickMinor: {
-      width: 10,
-      height: 1,
-      backgroundColor: theme.background.accent,
-    },
-  });
-}
+const s = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+  },
+  title: {
+    fontSize: 26,
+    fontFamily: FONTS.extraBold,
+    color: "#111827",
+    marginBottom: 6,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: "#64748B",
+    marginBottom: 18,
+    lineHeight: 20,
+  },
+  mainArea: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  leftSection: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingRight: 10,
+  },
+  bigValue: {
+    fontSize: 72,
+    fontFamily: FONTS.extraBold,
+    lineHeight: 80,
+  },
+  unitLabel: {
+    fontSize: 20,
+    fontFamily: FONTS.bold,
+    color: "#64748B",
+    marginBottom: 24,
+  },
+  heightBarContainer: {
+    height: 140,
+  },
+  heightBarBg: {
+    width: 28,
+    height: "100%",
+    borderRadius: 14,
+    backgroundColor: "#DDE3EA",
+    overflow: "hidden",
+    justifyContent: "flex-end",
+  },
+  heightBarFill: {
+    width: "100%",
+    borderRadius: 14,
+  },
+  rulerSection: {
+    width: 100,
+    position: "relative",
+  },
+  centerIndicator: {
+    position: "absolute",
+    top: "50%",
+    left: 0,
+    right: 0,
+    height: 2.5,
+    borderRadius: 2,
+    zIndex: 10,
+    marginTop: -1,
+  },
+  tickRow: {
+    height: TICK_HEIGHT,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+  },
+  tickLabel: {
+    fontSize: 11,
+    fontFamily: FONTS.bold,
+    color: "#64748B",
+    marginRight: 8,
+    width: 30,
+    textAlign: "right",
+  },
+  tickLabelSpace: {
+    width: 38,
+  },
+  tickLine: {
+    backgroundColor: "#64748B",
+  },
+  tickMajor: {
+    width: 30,
+    height: 2,
+    backgroundColor: "#111827",
+  },
+  tickMedium: {
+    width: 18,
+    height: 1.5,
+  },
+  tickMinor: {
+    width: 10,
+    height: 1,
+    backgroundColor: "#DDE3EA",
+  },
+});

@@ -24,6 +24,7 @@ import { NutritionProvider } from "../contexts/NutritionContext";
 import { ThemeProvider, useTheme } from "../contexts/ThemeContext";
 
 import ProModal from "../components/ui/ProModal";
+import { hasProEntitlement } from "../services/googlePlayBilling";
 
 SplashScreen.preventAutoHideAsync().catch(() => {
   // Ignore errors if splash screen was already prevented.
@@ -38,6 +39,8 @@ function AppContent() {
   const insets = useSafeAreaInsets();
   const [showProModal, setShowProModal] = React.useState(false);
   const previousUser = React.useRef(user);
+  const [isProEntitled, setIsProEntitled] = React.useState(false);
+  const isGetStartedRoute = segments[0] === "get-started";
 
   useEffect(() => {
     if (isLoading || user) return;
@@ -46,24 +49,44 @@ function AppContent() {
     const isPublicRoute =
       firstSegment === undefined ||
       firstSegment === "OnBoarding" ||
+      firstSegment === "onboarding" ||
       firstSegment === "auth" ||
       firstSegment === "get-started";
 
     if (!isPublicRoute) {
-      router.replace("/OnBoarding");
+      router.replace("/get-started/language");
     }
   }, [isLoading, user, segments, router]);
 
   React.useEffect(() => {
-    // Show ProModal when user transitions from null to logged in
-    if (!previousUser.current && user) {
-      // In a real app we'd check if user.isPro here
-      // const isPro = false;
-      // if (!isPro) {
-      setShowProModal(true);
-      // }
-    }
-    previousUser.current = user;
+    let active = true;
+
+    const syncEntitlement = async () => {
+      if (!user) {
+        if (active) {
+          setIsProEntitled(false);
+          setShowProModal(false);
+          previousUser.current = null;
+        }
+        return;
+      }
+
+      const entitled = await hasProEntitlement(user.id);
+      if (!active) return;
+
+      setIsProEntitled(entitled);
+      const wasLoggedOut = !previousUser.current;
+      previousUser.current = user;
+      if (wasLoggedOut && !entitled) {
+        setShowProModal(true);
+      }
+    };
+
+    void syncEntitlement();
+
+    return () => {
+      active = false;
+    };
   }, [user]);
 
   if (isLoading) {
@@ -84,30 +107,36 @@ function AppContent() {
   return (
     <>
       <StatusBar
-        style={themeType === "dark" ? "light" : "dark"}
+        style={isGetStartedRoute || themeType !== "dark" ? "dark" : "light"}
         translucent
         backgroundColor="transparent"
       />
 
-      <ProModal visible={showProModal} onClose={() => setShowProModal(false)} />
+      <ProModal
+        visible={showProModal && !isProEntitled}
+        onClose={() => setShowProModal(false)}
+      />
 
       <Stack
         screenOptions={{
           headerShown: false,
           contentStyle: {
-            backgroundColor: theme.background.dark,
+            backgroundColor: isGetStartedRoute ? "#FFFFFF" : theme.background.dark,
             paddingTop: insets.top,
             paddingBottom: insets.bottom,
             paddingLeft: insets.left,
             paddingRight: insets.right,
           },
-          statusBarStyle: themeType === "dark" ? "light" : "dark",
+          statusBarStyle: isGetStartedRoute || themeType !== "dark" ? "dark" : "light",
           statusBarTranslucent: true,
           navigationBarColor: "transparent",
         }}
       >
         <Stack.Screen name="index" />
         <Stack.Screen name="OnBoarding" options={{ animation: "none" }} />
+        <Stack.Screen name="onboarding/index" options={{ animation: "none" }} />
+        <Stack.Screen name="onboarding/second" options={{ animation: "none" }} />
+        <Stack.Screen name="onboarding/third" options={{ animation: "none" }} />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="exercise-picker/index" />
         <Stack.Screen name="create-routine/index" />

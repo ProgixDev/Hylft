@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Animated,
+  ActivityIndicator,
   Alert,
   Image,
   Modal,
@@ -17,6 +18,20 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../../contexts/AuthContext";
+import {
+  GOOGLE_PLAY_PRODUCT_IDS,
+  closeGooglePlayBilling,
+  finalizeGooglePlayPurchase,
+  getGooglePlayBillingUnavailableMessage,
+  isGooglePlayBillingAvailable,
+  loadGooglePlaySubscriptions,
+  markProEntitled,
+  requestGooglePlaySubscription,
+  restoreGooglePlaySubscriptions,
+  subscribeToGooglePlayPurchaseEvents,
+  type GooglePlaySubscriptionProduct,
+  type ProPlan,
+} from "../../services/googlePlayBilling";
 
 interface ProModalProps {
   visible: boolean;
@@ -36,9 +51,15 @@ export default function ProModal({ visible, onClose }: ProModalProps) {
     hours: number;
     minutes: number;
   } | null>(null);
+  const [billingProducts, setBillingProducts] = useState<
+    Partial<Record<ProPlan, GooglePlaySubscriptionProduct>>
+  >({});
+  const [isBillingLoading, setIsBillingLoading] = useState(false);
+  const [isPurchasing, setIsPurchasing] = useState(false);
+  const [billingMessage, setBillingMessage] = useState<string | null>(null);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const isCompactWidth = width < 380;
+  const isCompactWidth = width < 420;
   const isCompactHeight = height < 760;
   const isVeryCompactHeight = height < 700;
 
@@ -84,15 +105,213 @@ export default function ProModal({ visible, onClose }: ProModalProps) {
     }
   }, [visible, fadeAnim]);
 
+  useEffect(() => {
+    if (!visible || !isGooglePlayBillingAvailable()) return;
+
+    let active = true;
+
+    const bootstrapBilling = async () => {
+      try {
+        setIsBillingLoading(true);
+        setBillingMessage(null);
+
+        const subscriptions = await loadGooglePlaySubscriptions();
+        if (!active) return;
+
+        const nextProducts: Partial<Record<ProPlan, GooglePlaySubscriptionProduct>> = {};
+        for (const product of subscriptions) {
+          if (product.productId === GOOGLE_PLAY_PRODUCT_IDS.monthly) {
+            nextProducts.monthly = product;
+          }
+
+          if (product.productId === GOOGLE_PLAY_PRODUCT_IDS.yearly) {
+            nextProducts.yearly = product;
+          }
+        }
+
+        setBillingProducts(nextProducts);
+      } catch (error) {
+        if (!active) return;
+        console.error("[ProModal] Failed to load Google Play products", error);
+        setBillingMessage(
+          t(
+            "proModal.googlePlayUnavailable",
+            "Google Play purchases could not be loaded right now.",
+          ),
+        );
+      } finally {
+        if (active) setIsBillingLoading(false);
+      }
+    };
+
+    void bootstrapBilling();
+
+    return () => {
+      active = false;
+      void closeGooglePlayBilling();
+    };
+  }, [t, visible]);
+
+  useEffect(() => {
+    if (!visible || !isGooglePlayBillingAvailable()) return;
+
+    let active = true;
+    let purchaseSubscription: { remove: () => void } | null = null;
+    let errorSubscription: { remove: () => void } | null = null;
+
+    const attachListeners = async () => {
+      const subscriptions = await subscribeToGooglePlayPurchaseEvents(
+        async (purchase) => {
+          try {
+            await finalizeGooglePlayPurchase(purchase);
+            if (user?.id) {
+              await markProEntitled(user.id);
+            }
+            onClose();
+            Alert.alert(
+              t("common.done", "Done"),
+              t(
+                "proModal.purchaseSuccess",
+                "Your Google Play subscription is active.",
+              ),
+            );
+          } catch (error) {
+            console.error("[ProModal] Failed to finish purchase", error);
+            Alert.alert(
+              t("common.error", "Error"),
+              t(
+                "proModal.purchaseFailed",
+                "We could not complete the purchase.",
+              ),
+            );
+          } finally {
+            setIsPurchasing(false);
+          }
+        },
+        (error) => {
+          console.error("[ProModal] Google Play purchase error", error);
+          setIsPurchasing(false);
+          Alert.alert(
+            t("common.error", "Error"),
+            error.message ||
+              t(
+                "proModal.purchaseFailed",
+                "We could not start the purchase flow.",
+              ),
+          );
+        },
+      );
+
+      if (!active) {
+        subscriptions.purchaseSubscription.remove();
+        subscriptions.errorSubscription.remove();
+        return;
+      }
+
+      purchaseSubscription = subscriptions.purchaseSubscription;
+      errorSubscription = subscriptions.errorSubscription;
+    };
+
+    void attachListeners();
+
+    return () => {
+      active = false;
+      purchaseSubscription?.remove();
+      errorSubscription?.remove();
+    };
+  }, [onClose, t, user?.id, visible]);
+
   const features = [
     t("proModal.feature1", "Personalized AI workout plans"),
     t("proModal.feature2", "Advanced nutrition tracking"),
     t("proModal.feature3", "Unlimited exclusive routines"),
   ];
 
+  const getPlanPrice = (plan: ProPlan, fallback: string) =>
+    billingProducts[plan]?.localizedPrice ??
+    billingProducts[plan]?.price ??
+    fallback;
+
+  const handleRestorePress = async () => {
+    if (!user?.id) return;
+
+    if (!isGooglePlayBillingAvailable()) {
+      Alert.alert(
+        "Google Play",
+        getGooglePlayBillingUnavailableMessage(),
+      );
+      return;
+    }
+
+    try {
+      setIsBillingLoading(true);
+      const purchases = await restoreGooglePlaySubscriptions();
+      if (purchases.length === 0) {
+        Alert.alert(
+          t("common.done", "Done"),
+          t(
+            "proModal.noRestorablePurchases",
+            "We could not find an active Google Play subscription for this account.",
+          ),
+        );
+        return;
+      }
+
+      await markProEntitled(user.id);
+      Alert.alert(
+        t("common.done", "Done"),
+        t(
+          "proModal.restoreSuccess",
+          "Your Google Play subscription has been restored.",
+        ),
+      );
+      onClose();
+    } catch (error) {
+      console.error("[ProModal] Failed to restore purchases", error);
+      Alert.alert(
+        t("common.error", "Error"),
+        t(
+          "proModal.restoreFailed",
+          "We could not restore your purchase right now.",
+        ),
+      );
+    } finally {
+      setIsBillingLoading(false);
+    }
+  };
+
+  const handlePurchasePress = async () => {
+    if (!user?.id) return;
+
+    if (!isGooglePlayBillingAvailable()) {
+      Alert.alert(
+        "Google Play",
+        getGooglePlayBillingUnavailableMessage(),
+      );
+      return;
+    }
+
+    try {
+      setIsPurchasing(true);
+      setBillingMessage(null);
+      await requestGooglePlaySubscription(selectedPlan);
+    } catch (error) {
+      console.error("[ProModal] Google Play purchase failed", error);
+      Alert.alert(
+        t("common.error", "Error"),
+        error instanceof Error
+          ? error.message
+          : t(
+              "proModal.purchaseFailed",
+              "We could not start the purchase flow.",
+            ),
+      );
+      setIsPurchasing(false);
+    }
+  };
+
   const handlePlanPress = (plan: "monthly" | "yearly") => {
     setSelectedPlan(plan);
-    Alert.alert("Google Pay", "Please set up Google Pay");
   };
 
   return (
@@ -122,7 +341,7 @@ export default function ProModal({ visible, onClose }: ProModalProps) {
           <TouchableOpacity onPress={onClose} style={styles.iconButton}>
             <Ionicons name="close" size={28} color="#FFFFFF" />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => {}} style={styles.restoreBtn}>
+          <TouchableOpacity onPress={handleRestorePress} style={styles.restoreBtn}>
             <Text style={styles.restoreText}>
               {t("proModal.restore", "Restore")}
             </Text>
@@ -255,7 +474,9 @@ export default function ProModal({ visible, onClose }: ProModalProps) {
                     </View>
                   )}
                   <Text style={styles.planTitle}>{t("proModal.monthly", "Monthly")}</Text>
-                  <Text style={styles.planPrice}>$9.99</Text>
+                  <Text style={styles.planPrice}>
+                    {getPlanPrice("monthly", "$9.99")}
+                  </Text>
                   <Text style={styles.planBilling}>
                     {t("proModal.billedMonthly", "Billed Monthly")}
                   </Text>
@@ -284,7 +505,9 @@ export default function ProModal({ visible, onClose }: ProModalProps) {
                       style={styles.fireIcon}
                     />
                   </View>
-                  <Text style={styles.planPrice}>$79.99</Text>
+                  <Text style={styles.planPrice}>
+                    {getPlanPrice("yearly", "$79.99")}
+                  </Text>
                   <View style={styles.saveBadge}>
                     <Text style={styles.saveText}>
                       {t("proModal.saveAmount", "Save $39.89")}
@@ -295,6 +518,36 @@ export default function ProModal({ visible, onClose }: ProModalProps) {
                   </Text>
                 </Pressable>
               </View>
+
+              {billingMessage && (
+                <Text style={styles.billingMessage}>{billingMessage}</Text>
+              )}
+
+              <Pressable
+                style={({ pressed }) => [
+                  styles.purchaseButton,
+                  (pressed || isPurchasing || isBillingLoading) &&
+                    styles.purchaseButtonPressed,
+                  (!isGooglePlayBillingAvailable() || isPurchasing) &&
+                    styles.purchaseButtonDisabled,
+                ]}
+                onPress={handlePurchasePress}
+                disabled={isPurchasing || isBillingLoading}
+              >
+                {isPurchasing || isBillingLoading ? (
+                  <ActivityIndicator color="#000000" />
+                ) : (
+                  <Text style={styles.purchaseButtonText}>
+                    {t("proModal.purchaseBtn", "Purchase Subscription")}
+                  </Text>
+                )}
+              </Pressable>
+
+              <Pressable onPress={handleRestorePress} style={styles.restoreHintBtn}>
+                <Text style={styles.restoreHintText}>
+                  {t("proModal.restore", "Restore")}
+                </Text>
+              </Pressable>
             </View>
 
           </View>
@@ -513,6 +766,43 @@ const styles = StyleSheet.create({
     color: "#F5CE7A",
     fontSize: 12,
     fontFamily: "Zain_700Bold",
+  },
+  billingMessage: {
+    marginTop: 12,
+    color: "#F5CE7A",
+    fontSize: 13,
+    fontFamily: "Zain_400Regular",
+    textAlign: "center",
+  },
+  purchaseButton: {
+    width: "100%",
+    marginTop: 18,
+    minHeight: 52,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F5CE7A",
+  },
+  purchaseButtonPressed: {
+    opacity: 0.9,
+  },
+  purchaseButtonDisabled: {
+    opacity: 0.55,
+  },
+  purchaseButtonText: {
+    color: "#000000",
+    fontSize: 16,
+    fontFamily: "Zain_700Bold",
+  },
+  restoreHintBtn: {
+    marginTop: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  restoreHintText: {
+    color: "#A0A0A0",
+    fontSize: 13,
+    fontFamily: "Zain_400Regular",
   },
   planBilling: {
     color: "#A0A0A0",

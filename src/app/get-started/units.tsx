@@ -9,11 +9,10 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
-
 import { FONTS } from "../../constants/fonts";
 import ChipButton from "../../components/ui/ChipButton";
+import SignupProgress from "../../components/ui/SignupProgress";
 
 type UnitOption = {
   label: string;
@@ -24,7 +23,6 @@ export default function UnitsSelection() {
   const router = useRouter();
   const { theme } = useTheme();
   const { t } = useTranslation();
-  const styles = createStyles(theme);
   const [selectedWeight, setSelectedWeight] = useState<string>("kg");
   const [selectedDistance, setSelectedDistance] = useState<string>("m");
   const [selectedHeight, setSelectedHeight] = useState<string>("cm");
@@ -54,82 +52,73 @@ export default function UnitsSelection() {
     title: string,
     options: UnitOption[],
     selected: string,
-    onSelect: (value: string) => void,
+    onSelect: (value: string) => void
   ) => (
-    <View style={styles.optionGroup}>
-      <Text style={styles.optionTitle}>{title}</Text>
-      <View style={styles.optionsRow}>
-        {options.map((option) => (
-          <TouchableOpacity
-            key={option.value}
-            style={[
-              styles.optionButton,
-              selected === option.value && styles.optionButtonSelected,
-            ]}
-            onPress={() => onSelect(option.value)}
-            activeOpacity={0.7}
-          >
-            <Text
+    <View style={s.optionGroup}>
+      <Text style={s.optionTitle}>{title}</Text>
+      <View style={s.optionsRow}>
+        {options.map((option) => {
+          const isSelected = selected === option.value;
+          return (
+            <TouchableOpacity
+              key={option.value}
               style={[
-                styles.optionText,
-                selected === option.value && styles.optionTextSelected,
+                s.optionButton,
+                {
+                  borderColor: isSelected ? theme.primary.main : "#DDE3EA",
+                  backgroundColor: isSelected
+                    ? theme.primary.main + "10"
+                    : "#F6F8FA",
+                },
               ]}
+              onPress={() => onSelect(option.value)}
+              activeOpacity={0.8}
             >
-              {option.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
+              <Text
+                style={[
+                  s.optionText,
+                  { color: isSelected ? theme.primary.main : "#64748B" },
+                ]}
+              >
+                {option.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
     </View>
   );
 
   return (
-    <View style={styles.container}>
+    <View style={s.container}>
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={s.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.stepRow}>
-          <Text style={[styles.stepText, { color: theme.primary.main }]}>
-            {t("onboarding.stepOf", { current: 2, total: 13 })}
-          </Text>
-          <View style={styles.progressBar}>
-            <View
-              style={[
-                styles.progressFill,
-                {
-                  backgroundColor: theme.primary.main,
-                  width: `${(2 / 13) * 100}%`,
-                },
-              ]}
-            />
-          </View>
-        </View>
+        <SignupProgress current={2} total={13} />
 
-        <Text style={styles.title}>{t("onboarding.units.title")}</Text>
-        <Text style={styles.subtitle}>
-          {t("onboarding.units.subtitle")}
-        </Text>
+        <Text style={s.title}>{t("onboarding.units.title")}</Text>
+        <Text style={s.subtitle}>{t("onboarding.units.subtitle")}</Text>
 
-        <View style={styles.optionsContainer}>
+        <View style={s.optionsContainer}>
           {renderOptionGroup(
             t("onboarding.units.weight"),
             weightOptions,
             selectedWeight,
-            setSelectedWeight,
+            setSelectedWeight
           )}
           {renderOptionGroup(
             t("onboarding.units.distance"),
             distanceOptions,
             selectedDistance,
-            setSelectedDistance,
+            setSelectedDistance
           )}
           {renderOptionGroup(
             t("onboarding.units.height"),
             heightOptions,
             selectedHeight,
-            setSelectedHeight,
+            setSelectedHeight
           )}
         </View>
       </ScrollView>
@@ -145,87 +134,53 @@ export default function UnitsSelection() {
   );
 }
 
-function createStyles(theme: Theme) {
-  return StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.background.dark,
-      paddingHorizontal: 20,
-      paddingBottom: 16,
-    },
-    scrollContent: {
-      paddingBottom: 16,
-    },
-    stepRow: {
-      marginBottom: 14,
-      marginTop: 4,
-    },
-    stepText: {
-      fontSize: 11,
-      fontFamily: FONTS.bold,
-      letterSpacing: 1.2,
-      marginBottom: 6,
-    },
-    progressBar: {
-      height: 4,
-      borderRadius: 2,
-      backgroundColor: theme.background.accent,
-    },
-    progressFill: {
-      height: "100%",
-      borderRadius: 2,
-    },
-    content: {
-      flex: 1,
-    },
-    title: {
-      fontSize: 24,
-      fontFamily: FONTS.bold,
-      color: theme.foreground.white,
-      marginVertical: 6,
-    },
-    subtitle: {
-      fontSize: 14,
-      color: theme.foreground.gray,
-      marginBottom: 16,
-    },
-    optionsContainer: {
-      gap: 22,
-    },
-    optionGroup: {
-      gap: 10,
-    },
-    optionTitle: {
-      fontSize: 15,
-      fontFamily: FONTS.semiBold,
-      color: theme.foreground.white,
-      marginBottom: 2,
-    },
-    optionsRow: {
-      flexDirection: "row",
-      gap: 12,
-    },
-    optionButton: {
-      flex: 1,
-      paddingVertical: 12,
-      paddingHorizontal: 16,
-      borderRadius: 10,
-      borderWidth: 2,
-      borderColor: theme.foreground.gray,
-      backgroundColor: theme.background.darker,
-      alignItems: "center",
-    },
-    optionButtonSelected: {
-      borderColor: theme.primary.main,
-      backgroundColor: theme.background.accent,
-    },
-    optionText: {
-      fontSize: 14,
-      fontFamily: FONTS.semiBold,
-      color: theme.foreground.gray,
-    },
-    optionTextSelected: {
-      color: theme.primary.main,
-    },
-  });
-}
+const s = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+  },
+  scrollContent: {
+    paddingBottom: 16,
+  },
+  title: {
+    fontSize: 26,
+    fontFamily: FONTS.extraBold,
+    color: "#111827",
+    marginVertical: 6,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: "#64748B",
+    marginBottom: 20,
+  },
+  optionsContainer: {
+    gap: 22,
+  },
+  optionGroup: {
+    gap: 10,
+  },
+  optionTitle: {
+    fontSize: 15,
+    fontFamily: FONTS.semiBold,
+    color: "#111827",
+    marginBottom: 2,
+  },
+  optionsRow: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  optionButton: {
+    flex: 1,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    alignItems: "center",
+  },
+  optionText: {
+    fontSize: 14,
+    fontFamily: FONTS.semiBold,
+  },
+});

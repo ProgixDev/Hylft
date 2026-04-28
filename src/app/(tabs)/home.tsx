@@ -27,6 +27,7 @@ import { useNutrition } from "../../contexts/NutritionContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useGenderedImages } from "../../hooks/useGenderedImages";
 import { api } from "../../services/api";
+import { hasProEntitlement } from "../../services/googlePlayBilling";
 import { ApiRoutine, mapRoutine } from "../../utils/routineMapper";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -392,7 +393,11 @@ export default function Home() {
                   styles.proBadge,
                   pressed && { opacity: 0.8 },
                 ]}
-                onPress={() => setIsProModalVisible(true)}
+                onPress={async () => {
+                  if (!user?.id) return;
+                  if (await hasProEntitlement(user.id)) return;
+                  setIsProModalVisible(true);
+                }}
               >
                 <Ionicons name="diamond" size={13} color="#fff" />
                 <Text style={styles.proBadgeText}>Pro</Text>

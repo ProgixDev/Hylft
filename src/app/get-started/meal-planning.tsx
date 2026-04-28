@@ -1,11 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  Animated,
-  Easing,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -14,8 +12,10 @@ import {
 import ChipButton from "../../components/ui/ChipButton";
 import SignupProgress from "../../components/ui/SignupProgress";
 import { FONTS } from "../../constants/fonts";
-import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
+
+const SURFACE = "#F6F8FA";
+const BORDER = "#DDE3EA";
 
 const OPTIONS: {
   id: "never" | "rarely" | "occasionally" | "frequently" | "always";
@@ -34,25 +34,10 @@ export default function MealPlanningScreen() {
   const { theme } = useTheme();
   const { t } = useTranslation();
   const [selected, setSelected] = useState<string>("");
-  const fade = useRef(new Animated.Value(0)).current;
-  const slide = useRef(new Animated.Value(28)).current;
 
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fade, {
-        toValue: 1,
-        duration: 440,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }),
-      Animated.timing(slide, {
-        toValue: 0,
-        duration: 440,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, []);
+  const handleSelect = (id: string) => {
+    setSelected(id);
+  };
 
   const handleContinue = async () => {
     if (!selected) return;
@@ -60,124 +45,112 @@ export default function MealPlanningScreen() {
     router.push("/get-started/meal-congrats");
   };
 
-  const styles = createStyles(theme);
-
   return (
-    <View style={styles.container}>
-      <Animated.View
-        style={{ flex: 1, opacity: fade, transform: [{ translateY: slide }] }}
-      >
+    <View style={s.container}>
+      <View style={{ flex: 1 }}>
         <SignupProgress current={4} total={13} />
 
-        <View style={styles.header}>
-          <Text style={styles.title}>{t("onboarding.mealPlanning.title")}</Text>
-          <Text style={styles.subtitle}>
+        <View style={s.header}>
+          <Text style={s.title}>{t("onboarding.mealPlanning.title")}</Text>
+          <Text style={s.subtitle}>
             {t("onboarding.mealPlanning.subtitle")}
           </Text>
         </View>
 
-        <View style={styles.list}>
+        <View style={s.list}>
           {OPTIONS.map((o) => {
             const isSelected = selected === o.id;
             return (
-              <TouchableOpacity
-                key={o.id}
-                activeOpacity={0.82}
-                onPress={() => setSelected(o.id)}
-                style={[
-                  styles.card,
-                  {
-                    borderColor: isSelected
-                      ? theme.primary.main
-                      : theme.background.accent,
-                    backgroundColor: isSelected
-                      ? theme.primary.main + "16"
-                      : theme.background.darker,
-                  },
-                ]}
-              >
-                <View
+              <View key={o.id}>
+                <TouchableOpacity
+                  activeOpacity={0.72}
+                  onPress={() => handleSelect(o.id)}
                   style={[
-                    styles.iconWrap,
+                    s.card,
                     {
+                      borderColor: isSelected ? theme.primary.main : BORDER,
                       backgroundColor: isSelected
-                        ? theme.primary.main + "28"
-                        : theme.background.accent,
+                        ? theme.primary.main + "10"
+                        : SURFACE,
                     },
                   ]}
                 >
-                  <Ionicons
-                    name={o.icon}
-                    size={24}
-                    color={
-                      isSelected ? theme.primary.main : theme.foreground.gray
-                    }
-                  />
-                </View>
-
-                <View style={{ flex: 1 }}>
-                  <Text
+                  <View
                     style={[
-                      styles.cardTitle,
+                      s.iconWrap,
                       {
-                        color: isSelected
-                          ? theme.primary.main
-                          : theme.foreground.white,
+                        backgroundColor: isSelected
+                          ? theme.primary.main + "18"
+                          : "#FFFFFF",
                       },
                     ]}
                   >
-                    {t(`onboarding.mealPlanning.options.${o.id}.label`)}
-                  </Text>
-                  <Text
-                    style={[styles.cardDesc, { color: theme.foreground.gray }]}
-                  >
-                    {t(`onboarding.mealPlanning.options.${o.id}.description`)}
-                  </Text>
-
-                  {/* Frequency bars */}
-                  <View style={styles.bars}>
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <View
-                        key={i}
-                        style={[
-                          styles.bar,
-                          {
-                            backgroundColor:
-                              i < o.bars
-                                ? isSelected
-                                  ? theme.primary.main
-                                  : theme.foreground.gray + "80"
-                                : theme.background.accent,
-                            height: 4 + i * 2,
-                          },
-                        ]}
-                      />
-                    ))}
+                    <Ionicons
+                      name={o.icon}
+                      size={24}
+                      color={isSelected ? theme.primary.main : "#64748B"}
+                    />
                   </View>
-                </View>
 
-                <View
-                  style={[
-                    styles.check,
-                    {
-                      backgroundColor: isSelected
-                        ? theme.primary.main
-                        : "transparent",
-                      borderColor: isSelected
-                        ? theme.primary.main
-                        : theme.background.accent,
-                    },
-                  ]}
-                >
-                  {isSelected && (
-                    <Ionicons name="checkmark" size={14} color="#fff" />
-                  )}
-                </View>
-              </TouchableOpacity>
+                  <View style={{ flex: 1 }}>
+                    <Text
+                      style={[
+                        s.cardTitle,
+                        {
+                          color: isSelected ? theme.primary.main : "#111827",
+                        },
+                      ]}
+                    >
+                      {t(`onboarding.mealPlanning.options.${o.id}.label`)}
+                    </Text>
+                    <Text style={s.cardDesc}>
+                      {t(`onboarding.mealPlanning.options.${o.id}.description`)}
+                    </Text>
+
+                    <View style={s.bars}>
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <View
+                          key={i}
+                          style={[
+                            s.bar,
+                            {
+                              backgroundColor:
+                                i < o.bars
+                                  ? isSelected
+                                    ? theme.primary.main
+                                    : "#64748B80"
+                                  : BORDER,
+                              height: 4 + i * 2,
+                            },
+                          ]}
+                        />
+                      ))}
+                    </View>
+                  </View>
+
+                  <View
+                    style={[
+                      s.check,
+                      {
+                        backgroundColor: isSelected
+                          ? theme.primary.main
+                          : "transparent",
+                        borderColor: isSelected
+                          ? theme.primary.main
+                          : "#64748B",
+                      },
+                    ]}
+                  >
+                    {isSelected && (
+                      <Ionicons name="checkmark" size={14} color="#fff" />
+                    )}
+                  </View>
+                </TouchableOpacity>
+              </View>
             );
           })}
         </View>
-      </Animated.View>
+      </View>
 
       <ChipButton
         title={t("common.continue")}
@@ -191,73 +164,72 @@ export default function MealPlanningScreen() {
   );
 }
 
-function createStyles(theme: Theme) {
-  return StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.background.dark,
-      paddingHorizontal: 20,
-      paddingBottom: 16,
-    },
-    header: {
-      marginBottom: 20,
-    },
-    title: {
-      fontSize: 26,
-      fontFamily: FONTS.extraBold,
-      color: theme.foreground.white,
-      marginBottom: 6,
-      lineHeight: 32,
-    },
-    subtitle: {
-      fontSize: 14,
-      color: theme.foreground.gray,
-      lineHeight: 21,
-    },
-    list: {
-      gap: 10,
-    },
-    card: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 14,
-      borderWidth: 1.5,
-      borderRadius: 18,
-      padding: 14,
-    },
-    iconWrap: {
-      width: 52,
-      height: 52,
-      borderRadius: 15,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    cardTitle: {
-      fontSize: 15,
-      fontFamily: FONTS.bold,
-      marginBottom: 3,
-    },
-    cardDesc: {
-      fontSize: 12,
-      lineHeight: 17,
-      marginBottom: 7,
-    },
-    bars: {
-      flexDirection: "row",
-      alignItems: "flex-end",
-      gap: 3,
-    },
-    bar: {
-      width: 12,
-      borderRadius: 2,
-    },
-    check: {
-      width: 26,
-      height: 26,
-      borderRadius: 13,
-      borderWidth: 2,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-  });
-}
+const s = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+  },
+  header: {
+    marginBottom: 20,
+  },
+  title: {
+    fontSize: 26,
+    fontFamily: FONTS.extraBold,
+    color: "#111827",
+    marginBottom: 6,
+    lineHeight: 32,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: "#64748B",
+    lineHeight: 21,
+  },
+  list: {
+    gap: 10,
+  },
+  card: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 14,
+  },
+  iconWrap: {
+    width: 48,
+    height: 48,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cardTitle: {
+    fontSize: 15,
+    fontFamily: FONTS.bold,
+    marginBottom: 3,
+  },
+  cardDesc: {
+    fontSize: 12,
+    lineHeight: 17,
+    marginBottom: 7,
+    color: "#64748B",
+  },
+  bars: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    gap: 3,
+  },
+  bar: {
+    width: 12,
+    borderRadius: 2,
+  },
+  check: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    borderWidth: 1.5,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+});

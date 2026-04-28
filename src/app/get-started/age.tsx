@@ -5,16 +5,14 @@ import { useTranslation } from "react-i18next";
 import { StyleSheet, Text, View } from "react-native";
 import ChipButton from "../../components/ui/ChipButton";
 import RulerPicker from "../../components/ui/RulerPicker";
+import SignupProgress from "../../components/ui/SignupProgress";
 import { FONTS } from "../../constants/fonts";
-import { Theme } from "../../constants/themes";
-import { useTheme } from "../../contexts/ThemeContext";
 
 export default function AgeScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ flow?: string }>();
-  const { theme } = useTheme();
   const { t } = useTranslation();
-  const styles = createStyles(theme);
+  const styles = createStyles();
   const [value, setValue] = useState(25);
   const isSignupFlow = params.flow === "signup";
 
@@ -30,25 +28,7 @@ export default function AgeScreen() {
   return (
     <View style={styles.container}>
       <View style={{ flex: 1 }}>
-        <View style={styles.stepRow}>
-          <Text style={[styles.stepText, { color: theme.primary.main }]}>
-            {t("onboarding.stepOf", {
-              current: isSignupFlow ? 7 : 5,
-              total: 13,
-            })}
-          </Text>
-          <View style={styles.progressBar}>
-            <View
-              style={[
-                styles.progressFill,
-                {
-                  backgroundColor: theme.primary.main,
-                  width: `${((isSignupFlow ? 7 : 5) / 13) * 100}%`,
-                },
-              ]}
-            />
-          </View>
-        </View>
+        <SignupProgress current={isSignupFlow ? 7 : 5} total={13} />
 
         <Text style={styles.title}>{t("onboarding.age.title")}</Text>
         <Text style={styles.subtitle}>{t("onboarding.age.subtitle")}</Text>
@@ -76,42 +56,23 @@ export default function AgeScreen() {
   );
 }
 
-function createStyles(theme: Theme) {
+function createStyles() {
   return StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: theme.background.dark,
+      backgroundColor: "#FFFFFF",
       paddingHorizontal: 20,
       paddingBottom: 16,
     },
-    stepRow: {
-      marginBottom: 14,
-      marginTop: 4,
-    },
-    stepText: {
-      fontSize: 11,
-      fontFamily: FONTS.bold,
-      letterSpacing: 1.2,
-      marginBottom: 6,
-    },
-    progressBar: {
-      height: 4,
-      borderRadius: 2,
-      backgroundColor: theme.background.accent,
-    },
-    progressFill: {
-      height: "100%",
-      borderRadius: 2,
-    },
     title: {
-      fontSize: 24,
-      fontFamily: FONTS.bold,
-      color: theme.foreground.white,
+      fontSize: 26,
+      fontFamily: FONTS.extraBold,
+      color: "#111827",
       marginBottom: 6,
     },
     subtitle: {
-      fontSize: 13,
-      color: theme.foreground.gray,
+      fontSize: 14,
+      color: "#64748B",
       marginBottom: 18,
       lineHeight: 20,
     },

@@ -1,88 +1,22 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  Animated,
+  Easing,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import ChipButton from "../../components/ui/ChipButton";
-import { Theme } from "../../constants/themes";
+import SignupProgress from "../../components/ui/SignupProgress";
+import { FONTS } from "../../constants/fonts";
 import { useTheme } from "../../contexts/ThemeContext";
 
-import { FONTS } from "../../constants/fonts";
-
-function createStyles(theme: Theme) {
-  return StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.background.dark,
-      paddingHorizontal: 20,
-      paddingBottom: 16,
-    },
-    content: {
-      flex: 1,
-    },
-    title: {
-      fontSize: 24,
-      fontFamily: FONTS.bold,
-      color: theme.foreground.white,
-      marginVertical: 6,
-    },
-    subtitle: {
-      fontSize: 14,
-      color: theme.foreground.gray,
-      marginBottom: 28,
-    },
-    stepRow: {
-      marginBottom: 14,
-      marginTop: 4,
-    },
-    stepText: {
-      fontSize: 11,
-      fontFamily: FONTS.bold,
-      letterSpacing: 1.2,
-      marginBottom: 6,
-    },
-    progressBar: {
-      height: 4,
-      borderRadius: 2,
-      backgroundColor: theme.background.accent,
-    },
-    progressFill: {
-      height: "100%",
-      borderRadius: 2,
-    },
-    optionsContainer: {
-      gap: 14,
-    },
-    genderCard: {
-      borderRadius: 16,
-      borderWidth: 2,
-      borderColor: theme.background.accent,
-      backgroundColor: theme.background.darker,
-      height: 200,
-      overflow: "hidden",
-    },
-    genderCardSelected: {
-      borderColor: theme.primary.main,
-    },
-    genderImage: {
-      width: "100%",
-      height: "100%",
-      position: "absolute",
-    },
-    genderText: {
-      fontSize: 17,
-      fontFamily: FONTS.bold,
-      color: "#ffffff",
-      position: "absolute",
-      bottom: 12,
-      left: 16,
-      zIndex: 1,
-    },
-    genderTextSelected: {
-      color: "#ffffff",
-    },
-  });
-}
+const BG = "#FFFFFF";
 
 export default function GenderSelection() {
   const router = useRouter();
@@ -91,6 +25,30 @@ export default function GenderSelection() {
   const { t } = useTranslation();
   const [selectedGender, setSelectedGender] = useState<string>("");
   const isSignupFlow = params.flow === "signup";
+
+  const fade = useRef(new Animated.Value(0)).current;
+  const slide = useRef(new Animated.Value(24)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fade, {
+        toValue: 1,
+        duration: 420,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(slide, {
+        toValue: 0,
+        duration: 420,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
+  const handleSelectGender = (gender: "male" | "female") => {
+    setSelectedGender(gender);
+  };
 
   const handleContinue = async () => {
     if (!selectedGender) return;
@@ -103,84 +61,84 @@ export default function GenderSelection() {
     }
   };
 
-  const styles = createStyles(theme);
-
   return (
     <View style={styles.container}>
-      <View style={styles.content}>
-        <View style={styles.stepRow}>
-          <Text style={[styles.stepText, { color: theme.primary.main }]}>
-            {t("onboarding.stepOf", {
-              current: isSignupFlow ? 6 : 1,
-              total: 13,
-            })}
-          </Text>
-          <View style={styles.progressBar}>
-            <View
-              style={[
-                styles.progressFill,
-                {
-                  backgroundColor: theme.primary.main,
-                  width: `${((isSignupFlow ? 6 : 1) / 13) * 100}%`,
-                },
-              ]}
-            />
-          </View>
-        </View>
+      <Animated.View
+        style={{
+          flex: 1,
+          opacity: fade,
+          transform: [{ translateY: slide }],
+        }}
+      >
+        <SignupProgress current={isSignupFlow ? 6 : 1} total={13} />
 
         <Text style={styles.title}>{t("onboarding.gender.title")}</Text>
-        <Text style={styles.subtitle}>
-          {t("onboarding.gender.subtitle")}
-        </Text>
+        <Text style={styles.subtitle}>{t("onboarding.gender.subtitle")}</Text>
 
         <View style={styles.optionsContainer}>
-          <TouchableOpacity
-            style={[
-              styles.genderCard,
-              selectedGender === "male" && styles.genderCardSelected,
-            ]}
-            onPress={() => setSelectedGender("male")}
-            activeOpacity={0.8}
-          >
-            <Text
+          <View>
+            <TouchableOpacity
               style={[
-                styles.genderText,
-                selectedGender === "male" && styles.genderTextSelected,
+                styles.genderCard,
+                selectedGender === "male" && {
+                  borderColor: theme.primary.main,
+                  borderWidth: 1.5,
+                },
               ]}
+              onPress={() => handleSelectGender("male")}
+              activeOpacity={0.72}
             >
-              {t("onboarding.gender.male")}
-            </Text>
-            <Image
-              source={require("../../../assets/images/frameboy2.png")}
-              style={styles.genderImage}
-              resizeMode="cover"
-            />
-          </TouchableOpacity>
+              <Image
+                source={require("../../../assets/images/frameboy2.png")}
+                style={styles.genderImage}
+                resizeMode="cover"
+              />
+              {selectedGender === "male" && (
+                <View
+                  style={[
+                    styles.selectedOverlay,
+                    { backgroundColor: theme.primary.main + "14" },
+                  ]}
+                />
+              )}
+              <Text style={styles.genderText}>
+                {t("onboarding.gender.male")}
+              </Text>
+            </TouchableOpacity>
+          </View>
 
-          <TouchableOpacity
-            style={[
-              styles.genderCard,
-              selectedGender === "female" && styles.genderCardSelected,
-            ]}
-            onPress={() => setSelectedGender("female")}
-            activeOpacity={0.8}
-          >
-            <Text
+          <View>
+            <TouchableOpacity
               style={[
-                styles.genderText,
-                selectedGender === "female" && styles.genderTextSelected,
+                styles.genderCard,
+                selectedGender === "female" && {
+                  borderColor: theme.primary.main,
+                  borderWidth: 1.5,
+                },
               ]}
+              onPress={() => handleSelectGender("female")}
+              activeOpacity={0.72}
             >
-              {t("onboarding.gender.female")}
-            </Text>
-            <Image
-              source={require("../../../assets/images/framegirl2.png")}
-              style={[styles.genderImage, { top: 0 }]}
-              resizeMode="cover"
-            />
-          </TouchableOpacity>
+              <Image
+                source={require("../../../assets/images/framegirl2.png")}
+                style={[styles.genderImage, { top: 0 }]}
+                resizeMode="cover"
+              />
+              {selectedGender === "female" && (
+                <View
+                  style={[
+                    styles.selectedOverlay,
+                    { backgroundColor: theme.primary.main + "14" },
+                  ]}
+                />
+              )}
+              <Text style={styles.genderText}>
+                {t("onboarding.gender.female")}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
+      </Animated.View>
 
       <ChipButton
         title={t("common.continue")}
@@ -193,3 +151,53 @@ export default function GenderSelection() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: BG,
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+  },
+  title: {
+    fontSize: 26,
+    fontFamily: FONTS.bold,
+    color: "#111827",
+    marginVertical: 6,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: "#64748B",
+    marginBottom: 28,
+  },
+  optionsContainer: {
+    gap: 12,
+  },
+  genderCard: {
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#DDE3EA",
+    backgroundColor: "#F6F8FA",
+    height: 196,
+    overflow: "hidden",
+  },
+  genderImage: {
+    width: "100%",
+    height: "100%",
+    position: "absolute",
+  },
+  selectedOverlay: {
+    position: "absolute",
+    width: "100%",
+    height: "100%",
+  },
+  genderText: {
+    fontSize: 17,
+    fontFamily: FONTS.bold,
+    color: "#ffffff",
+    position: "absolute",
+    bottom: 16,
+    left: 16,
+    zIndex: 1,
+  },
+});

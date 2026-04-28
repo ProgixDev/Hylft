@@ -5,17 +5,14 @@ import { useTranslation } from "react-i18next";
 import { StyleSheet, Text, View } from "react-native";
 import RulerPicker from "../../components/ui/RulerPicker";
 import { FONTS } from "../../constants/fonts";
-import { Theme } from "../../constants/themes";
 import ChipButton from "../../components/ui/ChipButton";
-import { useTheme } from "../../contexts/ThemeContext";
+import SignupProgress from "../../components/ui/SignupProgress";
 
 export default function WeightScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ flow?: string }>();
   const isSignupFlow = params.flow === "signup";
-  const { theme } = useTheme();
   const { t } = useTranslation();
-  const styles = createStyles(theme);
   const [value, setValue] = useState(75);
 
   const handleContinue = async () => {
@@ -28,32 +25,14 @@ export default function WeightScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={s.container}>
       <View style={{ flex: 1 }}>
-        <View style={styles.stepRow}>
-          <Text style={[styles.stepText, { color: theme.primary.main }]}>
-            {t("onboarding.stepOf", {
-              current: isSignupFlow ? 9 : 7,
-              total: 13,
-            })}
-          </Text>
-          <View style={styles.progressBar}>
-            <View
-              style={[
-                styles.progressFill,
-                {
-                  backgroundColor: theme.primary.main,
-                  width: `${((isSignupFlow ? 9 : 7) / 13) * 100}%`,
-                },
-              ]}
-            />
-          </View>
-        </View>
+        <SignupProgress current={isSignupFlow ? 9 : 7} total={13} />
 
-        <Text style={styles.title}>{t("onboarding.weight.title")}</Text>
-        <Text style={styles.subtitle}>{t("onboarding.weight.subtitle")}</Text>
+        <Text style={s.title}>{t("onboarding.weight.title")}</Text>
+        <Text style={s.subtitle}>{t("onboarding.weight.subtitle")}</Text>
 
-        <View style={styles.pickerContainer}>
+        <View style={s.pickerContainer}>
           <RulerPicker
             min={30}
             max={200}
@@ -76,49 +55,28 @@ export default function WeightScreen() {
   );
 }
 
-function createStyles(theme: Theme) {
-  return StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.background.dark,
-      paddingHorizontal: 20,
-      paddingBottom: 16,
-    },
-    stepRow: {
-      marginBottom: 14,
-      marginTop: 4,
-    },
-    stepText: {
-      fontSize: 11,
-      fontFamily: FONTS.bold,
-      letterSpacing: 1.2,
-      marginBottom: 6,
-    },
-    progressBar: {
-      height: 4,
-      borderRadius: 2,
-      backgroundColor: theme.background.accent,
-    },
-    progressFill: {
-      height: "100%",
-      borderRadius: 2,
-    },
-    title: {
-      fontSize: 24,
-      fontFamily: FONTS.bold,
-      color: theme.foreground.white,
-      marginBottom: 6,
-    },
-    subtitle: {
-      fontSize: 13,
-      color: theme.foreground.gray,
-      marginBottom: 18,
-      lineHeight: 20,
-    },
-    pickerContainer: {
-      flex: 1,
-      justifyContent: "center",
-      alignItems: "center",
-    },
-  });
-}
+const s = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+  },
+  title: {
+    fontSize: 26,
+    fontFamily: FONTS.extraBold,
+    color: "#111827",
+    marginBottom: 6,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: "#64748B",
+    marginBottom: 18,
+    lineHeight: 20,
+  },
+  pickerContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+});

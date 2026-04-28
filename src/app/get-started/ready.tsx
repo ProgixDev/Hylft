@@ -125,12 +125,12 @@ export default function Ready() {
 
   const r1 = makeRing(ring1);
   const r2 = makeRing(ring2);
-  const isLight = theme.background.dark === "#FFFFFF" || theme.background.dark === "#FFF8F3";
+  const isLight = true;
 
   return (
-    <View style={[s.root, { backgroundColor: theme.background.dark }]}>
+    <View style={[s.root, { backgroundColor: "#FFFFFF" }]}>
       <LinearGradient
-        colors={[theme.primary.main + "35", theme.background.dark + "00"]}
+        colors={[theme.primary.main + "35", "#FFFFFF00"]}
         style={StyleSheet.absoluteFill}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 0.65 }}
@@ -208,7 +208,7 @@ export default function Ready() {
           </Text>
         </View>
 
-        <Text style={[s.headline, { color: theme.foreground.white }]}>
+        <Text style={[s.headline, { color: "#111827" }]}>
           {t("onboarding.ready.title")}
         </Text>
         <Text style={[s.message, { color: theme.foreground.gray }]}>

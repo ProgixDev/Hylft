@@ -1,4 +1,3 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import SplashScreen from "../components/ui/SplashScreen";
@@ -17,21 +16,10 @@ export default function Index() {
 
     (async () => {
       try {
-        const savedLanguage = await AsyncStorage.getItem("@hylift_language");
-        if (!savedLanguage) {
-          setDestination("/get-started/language");
-          return;
-        }
-
-        if (!user) {
-          setDestination("/OnBoarding");
-          return;
-        }
-
-        setDestination("/(tabs)/home");
+        setDestination(user ? "/(tabs)/home" : "/get-started/language");
       } catch (error) {
         console.error("Error checking auth status:", error);
-        setDestination("/OnBoarding");
+        setDestination("/get-started/language");
       }
     })();
   }, [isLoading, user]);

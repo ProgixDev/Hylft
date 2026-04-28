@@ -9,11 +9,10 @@ import {
   View,
 } from "react-native";
 import { useTranslation } from "react-i18next";
-import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
-
 import { FONTS } from "../../constants/fonts";
 import ChipButton from "../../components/ui/ChipButton";
+import SignupProgress from "../../components/ui/SignupProgress";
 
 export default function EmailPreferences() {
   const router = useRouter();
@@ -21,92 +20,68 @@ export default function EmailPreferences() {
   const isSignupFlow = params.flow === "signup";
   const { theme } = useTheme();
   const { t } = useTranslation();
-  const styles = createStyles(theme);
 
   const handleAccept = () => {
-    // TODO: Save email preference
     router.navigate(isSignupFlow ? "/get-started/account" : "/get-started/ready");
   };
 
   const handleDecline = () => {
-    // TODO: Save email preference
     router.navigate(isSignupFlow ? "/get-started/account" : "/get-started/ready");
   };
 
   return (
-    <View style={styles.container}>
+    <View style={s.container}>
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={s.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.stepRow}>
-          <Text style={[styles.stepText, { color: theme.primary.main }]}>
-            {t("onboarding.stepOf", { current: 12, total: 13 })}
+        <SignupProgress current={12} total={13} />
+
+        <View style={s.content}>
+          <View
+            style={[s.iconCircle, { backgroundColor: theme.primary.main + "18" }]}
+          >
+            <MaterialIcons name="email" size={52} color={theme.primary.main} />
+          </View>
+
+          <Text style={s.title}>
+            {t("onboarding.emailPreferences.title")}
           </Text>
-          <View style={styles.progressBar}>
-            <View
-              style={[
-                styles.progressFill,
-                {
-                  backgroundColor: theme.primary.main,
-                  width: `${(12 / 13) * 100}%`,
-                },
-              ]}
-            />
-          </View>
-        </View>
-
-        <View style={styles.content}>
-          <View style={styles.iconContainer}>
-            <MaterialIcons name="email" size={80} color={theme.primary.main} />
-          </View>
-
-          <Text style={styles.title}>{t("onboarding.emailPreferences.title")}</Text>
-          <Text style={styles.promiseText}>
+          <Text style={s.promiseText}>
             {t("onboarding.emailPreferences.promise")}
           </Text>
 
-          <View style={styles.listContainer}>
-            <View style={styles.listItem}>
-              <MaterialIcons
-                name="lightbulb-outline"
-                size={24}
-                color={theme.primary.main}
-              />
-              <Text style={styles.listItemText}>
-                {t("onboarding.emailPreferences.tips")}
-              </Text>
-            </View>
-            <View style={styles.listItem}>
-              <MaterialIcons
-                name="new-releases"
-                size={24}
-                color={theme.primary.main}
-              />
-              <Text style={styles.listItemText}>{t("onboarding.emailPreferences.newFeatures")}</Text>
-            </View>
-            <View style={styles.listItem}>
-              <MaterialIcons
-                name="local-offer"
-                size={24}
-                color={theme.primary.main}
-              />
-              <Text style={styles.listItemText}>{t("onboarding.emailPreferences.promotions")}</Text>
-            </View>
-            <View style={styles.listItem}>
-              <MaterialIcons
-                name="logout"
-                size={24}
-                color={theme.primary.main}
-              />
-              <Text style={styles.listItemText}>{t("onboarding.emailPreferences.optOut")}</Text>
-            </View>
+          <View style={s.listContainer}>
+            {[
+              { icon: "lightbulb-outline" as const, key: "tips" },
+              { icon: "new-releases" as const, key: "newFeatures" },
+              { icon: "local-offer" as const, key: "promotions" },
+              { icon: "logout" as const, key: "optOut" },
+            ].map((item) => (
+              <View key={item.key} style={s.listItem}>
+                <View
+                  style={[
+                    s.listIconWrap,
+                    { backgroundColor: theme.primary.main + "18" },
+                  ]}
+                >
+                  <MaterialIcons
+                    name={item.icon}
+                    size={20}
+                    color={theme.primary.main}
+                  />
+                </View>
+                <Text style={s.listItemText}>
+                  {t(`onboarding.emailPreferences.${item.key}`)}
+                </Text>
+              </View>
+            ))}
           </View>
         </View>
       </ScrollView>
 
-      <View style={styles.buttonsContainer}>
+      <View style={s.buttonsContainer}>
         <ChipButton
           title={t("onboarding.emailPreferences.accept")}
           onPress={handleAccept}
@@ -114,97 +89,97 @@ export default function EmailPreferences() {
           size="lg"
           fullWidth
         />
-
         <TouchableOpacity
-          style={styles.declineButton}
+          style={s.declineButton}
           onPress={handleDecline}
           activeOpacity={0.7}
         >
-          <Text style={styles.declineButtonText}>{t("onboarding.emailPreferences.decline")}</Text>
+          <Text style={s.declineButtonText}>
+            {t("onboarding.emailPreferences.decline")}
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
   );
 }
 
-const createStyles = (theme: Theme) =>
-  StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.background.dark,
-      paddingHorizontal: 20,
-      paddingBottom: 16,
-    },
-    scrollContent: {
-      paddingBottom: 16,
-    },
-    stepRow: {
-      marginBottom: 14,
-      marginTop: 4,
-    },
-    stepText: {
-      fontSize: 11,
-      fontFamily: FONTS.bold,
-      letterSpacing: 1.2,
-      marginBottom: 6,
-    },
-    progressBar: {
-      height: 4,
-      borderRadius: 2,
-      backgroundColor: theme.background.accent,
-    },
-    progressFill: {
-      height: "100%",
-      borderRadius: 2,
-    },
-    content: {
-      flex: 1,
-      alignItems: "center",
-    },
-    iconContainer: {
-      marginBottom: 20,
-      marginTop: 12,
-    },
-    title: {
-      fontSize: 24,
-      fontFamily: FONTS.bold,
-      color: theme.foreground.white,
-      textAlign: "center",
-      marginBottom: 8,
-    },
-    promiseText: {
-      fontSize: 14,
-      color: theme.foreground.gray,
-      textAlign: "center",
-      marginBottom: 24,
-      fontStyle: "italic",
-    },
-    listContainer: {
-      width: "100%",
-      gap: 16,
-    },
-    listItem: {
-      flexDirection: "row",
-      alignItems: "flex-start",
-      gap: 10,
-    },
-    listItemText: {
-      fontSize: 14,
-      color: theme.foreground.white,
-      flex: 1,
-      lineHeight: 21,
-    },
-    buttonsContainer: {
-      gap: 8,
-    },
-    declineButton: {
-      paddingVertical: 12,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    declineButtonText: {
-      color: theme.foreground.white,
-      fontSize: 14,
-      fontFamily: FONTS.semiBold,
-    },
-  });
+const s = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+  },
+  scrollContent: {
+    paddingBottom: 16,
+  },
+  content: {
+    flex: 1,
+    alignItems: "center",
+    paddingTop: 12,
+  },
+  iconCircle: {
+    width: 96,
+    height: 96,
+    borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 24,
+  },
+  title: {
+    fontSize: 26,
+    fontFamily: FONTS.extraBold,
+    color: "#111827",
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  promiseText: {
+    fontSize: 14,
+    color: "#64748B",
+    textAlign: "center",
+    marginBottom: 28,
+    fontStyle: "italic",
+    lineHeight: 21,
+  },
+  listContainer: {
+    width: "100%",
+    gap: 10,
+  },
+  listItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#DDE3EA",
+    backgroundColor: "#F6F8FA",
+  },
+  listIconWrap: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  listItemText: {
+    fontSize: 14,
+    color: "#111827",
+    flex: 1,
+    lineHeight: 21,
+    fontFamily: FONTS.medium,
+  },
+  buttonsContainer: {
+    gap: 8,
+  },
+  declineButton: {
+    paddingVertical: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  declineButtonText: {
+    color: "#64748B",
+    fontSize: 14,
+    fontFamily: FONTS.semiBold,
+  },
+});
