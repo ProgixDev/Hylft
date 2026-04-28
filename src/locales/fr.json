@@ -62,10 +62,6 @@
     "integratedPlatformTitle": "La Première Plateforme\nFitness Tout-en-Un",
     "integratedPlatformEmphasis": "Calories. Entraînements. Communauté.",
     "integratedPlatformSubtitle": "Comptez vos calories, créez et sauvegardez vos entraînements, et avancez avec une grande communauté fitness dans une seule expérience intégrée.",
-    "page3Title": "Commencez Votre",
-    "page3TitleBold": "Parcours Fitness",
-    "page3Subtitle": "\"Entraînements personnalisés rien que pour vous\"",
-    "page3Button": "Suivant",
     "stepOf": "ÉTAPE {{current}} SUR {{total}}",
     "age": {
       "title": "Quel âge avez-vous ?",

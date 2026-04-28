@@ -189,17 +189,6 @@ function createStyles(theme: Theme) {
     },
     threeDShell: {
       borderRadius: DEFAULT_BORDER_RADIUS,
-      ...Platform.select({
-        ios: {
-          shadowColor: "#071527",
-          shadowOffset: { width: 0, height: 10 },
-          shadowOpacity: 0.16,
-          shadowRadius: 14,
-        },
-        android: {
-          elevation: 5,
-        },
-      }),
     },
     threeDShellPressed: {
       transform: [{ scale: 0.99 }],
@@ -212,17 +201,6 @@ function createStyles(theme: Theme) {
       backgroundColor: theme.primary.main,
       borderWidth: 1,
       borderColor: "rgba(255,255,255,0.22)",
-      ...Platform.select({
-        ios: {
-          shadowColor: theme.primary.main,
-          shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: 0.28,
-          shadowRadius: 16,
-        },
-        android: {
-          elevation: 6,
-        },
-      }),
     },
     secondary: {
       backgroundColor: "transparent",

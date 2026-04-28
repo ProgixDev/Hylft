@@ -43,8 +43,8 @@ type OnboardingScreenData = {
 };
 
 type Props = {
-  screenIndex: 0 | 1 | 2;
-  nextRoute?: "/onboarding/second" | "/onboarding/third";
+  screenIndex: 0 | 1;
+  nextRoute?: "/onboarding/second";
 };
 
 const SCREEN_DURATION_MS = 2500;
@@ -159,51 +159,6 @@ function buildScreens(
         { name: "medal", color: "#D4A44C", orbit: 166, angle: 3.4, size: 38 },
       ],
     },
-    {
-      id: 3,
-      title: `${t("onboarding.page3Title")}\n${t("onboarding.page3TitleBold")}`,
-      emphasis: isFrench ? "Hylift s'adapte a vous" : "Hylift adapts to you",
-      subtitle: t("onboarding.page1Subtitle").replaceAll('"', ""),
-      centerIcon: "chart-line",
-      icons: [
-        {
-          name: "chart-line",
-          color: "#1E7A5D",
-          orbit: 128,
-          angle: -1.25,
-          size: 40,
-        },
-        { name: "fire", color: "#F26A35", orbit: 158, angle: -0.25, size: 38 },
-        {
-          name: "scale-bathroom",
-          color: "#4C6FFF",
-          orbit: 138,
-          angle: 0.9,
-          size: 36,
-        },
-        {
-          name: "silverware-fork-knife",
-          color: "#E0A92E",
-          orbit: 166,
-          angle: 1.95,
-          size: 36,
-        },
-        {
-          name: "heart-pulse",
-          color: "#E94762",
-          orbit: 124,
-          angle: 2.85,
-          size: 38,
-        },
-        {
-          name: "medal-outline",
-          color: "#101B2B",
-          orbit: 152,
-          angle: 3.75,
-          size: 38,
-        },
-      ],
-    },
   ];
 }
 
@@ -294,12 +249,12 @@ export default function OrbitOnboardingScreen({
     ? SECOND_SCREEN_DURATION_MS
     : SCREEN_DURATION_MS;
   const orbitSize = isFirstScreen
-    ? Math.min(width * 1.52, height * 0.72, 620)
-    : Math.min(width * 0.96, height * 0.58, 420);
+    ? Math.min(width * 1.15, height * 0.58, 480)
+    : Math.min(width * 0.86, height * 0.52, 380);
   const orbitScale = isFirstScreen
-    ? Math.max(1, orbitSize / 390)
-    : Math.max(0.78, Math.min(1, orbitSize / 390));
-  const orbitRingScales = isFirstScreen ? [1, 0.76, 0.52] : [0.96, 0.76, 0.56];
+    ? Math.max(0.92, orbitSize / 390)
+    : Math.max(0.72, Math.min(0.92, orbitSize / 390));
+  const orbitRingScales = isFirstScreen ? [0.96, 0.74, 0.52] : [0.92, 0.72, 0.54];
 
   useEffect(() => {
     orbitProgress.value = withRepeat(

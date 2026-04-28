@@ -157,7 +157,6 @@ function AppContent() {
           name="onboarding/second"
           options={{ animation: "none" }}
         />
-        <Stack.Screen name="onboarding/third" options={{ animation: "none" }} />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="exercise-picker/index" />
         <Stack.Screen name="create-routine/index" />
