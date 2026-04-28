@@ -143,6 +143,7 @@ export default function FitnessGoal() {
       </ScrollView>
 
       <ChipButton
+        threeD
         title={t("common.continue")}
         onPress={handleContinue}
         variant="primary"

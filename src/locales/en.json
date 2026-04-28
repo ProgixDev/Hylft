@@ -297,10 +297,6 @@
         }
       }
     },
-    "mealCongrats": {
-      "headline": "We have a solid system for you",
-      "message": "Just a few more questions so we can dial in your plan perfectly."
-    },
     "activityLevel": {
       "title": "What's your activity level?",
       "subtitle": "Pick the one that best describes your typical week.",
@@ -345,6 +341,32 @@
       "subtitle": "Let's start your fitness journey together",
       "memberCount": "1,000,000+",
       "memberCaption": "people train with HyliftAI"
+    },
+    "results": {
+      "congratsTitle": "Congratulations!",
+      "congratsSubtitle": "Your health journey begins with Hylift",
+      "bmiIndex": "BMI INDEX",
+      "bmiStatus": {
+        "underweight": "Underweight",
+        "healthy": "You're healthy",
+        "normal": "Normal",
+        "overweight": "Overweight",
+        "obese": "Obese"
+      },
+      "fitnessLevel": "Fitness level",
+      "activityLevel": "Activity level",
+      "targetAreas": "Target areas",
+      "nutritionPlan": "Nutrition plan",
+      "calorieGoal": "YOUR CALORIE GOAL",
+      "protein": "Protein",
+      "carbs": "Carbs",
+      "fat": "Fat",
+      "waterGoal": "YOUR WATER GOAL",
+      "cups": "cups",
+      "perDay": "per day",
+      "workoutsCount": "{{count}} WORKOUTS",
+      "weeklyGoal": "Weekly goal",
+      "getMyPlan": "GET MY PLAN"
     },
     "account": {
       "title": "One last step",

@@ -46,6 +46,7 @@ export default function AgeScreen() {
       </View>
 
       <ChipButton
+        threeD
         title={t("common.next")}
         onPress={handleContinue}
         variant="primary"

@@ -153,6 +153,7 @@ export default function FocusAreas() {
       </ScrollView>
 
       <ChipButton
+        threeD
         title={t("common.continue")}
         onPress={handleContinue}
         variant="primary"

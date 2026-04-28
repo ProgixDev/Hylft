@@ -18,11 +18,12 @@ import {
     View,
 } from "react-native";
 import ChipButton from "../../components/ui/ChipButton";
-import SignupProgress from "../../components/ui/SignupProgress";
+import { SignupProgress } from "../../components/ui/SignupProgress";
 import { FONTS } from "../../constants/fonts";
 import { Theme } from "../../constants/themes";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
+import { supabase } from "../../services/supabase";
 
 export default function AccountScreen() {
   const router = useRouter();
@@ -84,12 +85,40 @@ export default function AccountScreen() {
     if (!canSubmit) return;
     setLoading(true);
     try {
-      const createdUser = await signUp(email.trim(), password, username);
+      const createdUser = await signUp(email, password, username);
+      if (!createdUser?.id) {
+        throw new Error(
+          withFallback(
+            "onboarding.account.signUpFailed",
+            "We could not create your account. Please try again.",
+            "Nous n'avons pas pu creer votre compte. Veuillez reessayer.",
+          ),
+        );
+      }
       await setOnboardingCompleted();
       try {
-        await setGetStartedCompleted(createdUser?.id);
+        await setGetStartedCompleted(createdUser.id);
       } catch {
         // Keep navigation moving even if profile completion sync lags behind auth.
+      }
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) {
+        Alert.alert(
+          withFallback(
+            "onboarding.account.verifyEmailTitle",
+            "Check your email",
+            "Verifiez votre email",
+          ),
+          withFallback(
+            "onboarding.account.verifyEmailMessage",
+            "Your account was created. Verify your email, then sign in to continue.",
+            "Votre compte a ete cree. Verifiez votre email, puis connectez-vous pour continuer.",
+          ),
+        );
+        router.replace("/auth/signin");
+        return;
       }
       router.replace("/(tabs)/home");
     } catch (err: unknown) {
@@ -251,6 +280,7 @@ export default function AccountScreen() {
       </Animated.View>
 
       <ChipButton
+        threeD
         title={
           loading
             ? withFallback(

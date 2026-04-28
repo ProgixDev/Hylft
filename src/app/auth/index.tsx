@@ -1,4 +1,5 @@
 import { AntDesign, MaterialIcons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import * as Linking from "expo-linking";
 import { useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
@@ -9,17 +10,16 @@ import {
   Dimensions,
   Image,
   ImageSourcePropType,
+  Platform,
+  Pressable,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import ChipButton from "../../components/ui/ChipButton";
 import { FONTS } from "../../constants/fonts";
-import { Theme } from "../../constants/themes";
 import { useAuth } from "../../contexts/AuthContext";
-import { useTheme } from "../../contexts/ThemeContext";
 import { supabase } from "../../services/supabase";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -27,23 +27,131 @@ const CAROUSEL_HEIGHT = SCREEN_HEIGHT * 0.62;
 const PANEL_OVERLAP = 30;
 const CAROUSEL_CORNER_RADIUS = 40;
 
-type IconName = React.ComponentProps<typeof MaterialCommunityIcons>["name"];
-
-type CarouselSlide =
-  | { type: "image"; source: ImageSourcePropType }
-  | { type: "icon"; name: IconName };
-
-const CAROUSEL_SLIDES: CarouselSlide[] = [
+const CAROUSEL_SLIDES: { type: "image"; source: ImageSourcePropType }[] = [
   { type: "image", source: require("../../../assets/images/poster1.png") },
   { type: "image", source: require("../../../assets/images/poster2.png") },
   { type: "image", source: require("../../../assets/images/poster3.png") },
 ];
 
-function createStyles(theme: Theme) {
+const AUTH_GRADIENT = ["#06101F", "#0E2B57", "#364152"] as const;
+const GOOGLE_BLUE = "#1A73E8";
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+type Auth3DButtonProps = {
+  title: string;
+  onPress: () => void;
+  icon: React.ReactNode;
+  iconPosition?: "left" | "right";
+  faceColor: string;
+  depthColor: string;
+  textColor: string;
+};
+
+function Auth3DButton({
+  title,
+  onPress,
+  icon,
+  iconPosition = "left",
+  faceColor,
+  depthColor,
+  textColor,
+}: Auth3DButtonProps) {
+  const scale = useRef(new Animated.Value(1)).current;
+  const pressDepth = useRef(new Animated.Value(0)).current;
+
+  const handlePressIn = () => {
+    Animated.parallel([
+      Animated.spring(scale, {
+        toValue: 0.99,
+        speed: 40,
+        bounciness: 0,
+        useNativeDriver: true,
+      }),
+      Animated.spring(pressDepth, {
+        toValue: 8,
+        speed: 40,
+        bounciness: 0,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.parallel([
+      Animated.spring(scale, {
+        toValue: 1,
+        speed: 28,
+        bounciness: 6,
+        useNativeDriver: true,
+      }),
+      Animated.spring(pressDepth, {
+        toValue: 0,
+        speed: 26,
+        bounciness: 6,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  return (
+    <AnimatedPressable
+      onPress={onPress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      hitSlop={6}
+      android_ripple={{ color: "rgba(255,255,255,0.14)" }}
+      style={[authButtonStyles.buttonShell, { transform: [{ scale }] }]}
+    >
+      <View
+        style={[authButtonStyles.buttonBase, { backgroundColor: depthColor }]}
+      >
+        <Animated.View
+          style={[
+            authButtonStyles.buttonFace,
+            {
+              backgroundColor: faceColor,
+              transform: [{ translateY: pressDepth }],
+            },
+          ]}
+        >
+          {iconPosition === "left" && (
+            <View style={authButtonStyles.iconLeft}>{icon}</View>
+          )}
+          <Text
+            style={[authButtonStyles.buttonText, { color: textColor }]}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.86}
+          >
+            {title}
+          </Text>
+          {iconPosition === "right" && (
+            <View style={authButtonStyles.iconRight}>{icon}</View>
+          )}
+        </Animated.View>
+      </View>
+    </AnimatedPressable>
+  );
+}
+
+function createStyles() {
   return StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: theme.primary.main,
+    },
+    colorVeil: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: "rgba(125,175,255,0.08)",
+    },
+    diagonalBeam: {
+      position: "absolute",
+      left: -SCREEN_WIDTH * 0.2,
+      right: -SCREEN_WIDTH * 0.2,
+      bottom: SCREEN_HEIGHT * 0.23,
+      height: 76,
+      backgroundColor: "rgba(86,148,255,0.18)",
+      transform: [{ rotate: "-8deg" }],
     },
     carouselSection: {
       position: "relative",
@@ -80,14 +188,15 @@ function createStyles(theme: Theme) {
       marginBottom: 16,
     },
     title: {
-      fontSize: 22,
-      fontFamily: FONTS.bold,
+      fontSize: 24,
+      lineHeight: 31,
+      fontFamily: FONTS.extraBold,
       color: "#FFFFFF",
       textAlign: "center",
-      marginBottom: 20,
+      marginBottom: 22,
     },
     buttonGap: {
-      marginBottom: 10,
+      marginBottom: 13,
     },
     signInContainer: {
       flexDirection: "row",
@@ -96,26 +205,77 @@ function createStyles(theme: Theme) {
       marginTop: 12,
     },
     signInText: {
-      color: "rgba(255,255,255,0.8)",
+      color: "rgba(255,255,255,0.78)",
       fontSize: 13,
     },
     signInLink: {
-      color: "#FFFFFF",
+      color: "#9EC5FF",
       fontSize: 13,
       fontFamily: FONTS.semiBold,
     },
   });
 }
 
+const authButtonStyles = StyleSheet.create({
+  buttonShell: {
+    width: "100%",
+    borderRadius: 20,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#06100D",
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.22,
+        shadowRadius: 16,
+      },
+      android: {
+        elevation: 5,
+      },
+    }),
+  },
+  buttonBase: {
+    borderRadius: 20,
+    paddingBottom: 9,
+    overflow: "hidden",
+  },
+  buttonFace: {
+    minHeight: 58,
+    borderRadius: 20,
+    paddingHorizontal: 18,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.4)",
+  },
+  iconLeft: {
+    width: 30,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 10,
+  },
+  iconRight: {
+    width: 30,
+    alignItems: "center",
+    justifyContent: "center",
+    marginLeft: 10,
+  },
+  buttonText: {
+    flexShrink: 1,
+    fontSize: 16,
+    lineHeight: 20,
+    fontFamily: FONTS.extraBold,
+    textAlign: "center",
+  },
+});
+
 export default function AuthLanding() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { theme } = useTheme();
   const insets = useSafeAreaInsets();
   const [currentIndex, setCurrentIndex] = useState(0);
   const translateAnim = useRef(new Animated.Value(0)).current;
 
-  const styles = createStyles(theme);
+  const styles = createStyles();
   const nextIndex = (currentIndex + 1) % CAROUSEL_SLIDES.length;
 
   useEffect(() => {
@@ -191,7 +351,9 @@ export default function AuthLanding() {
   const handleSignIn = () => router.navigate("/auth/signin");
 
   return (
-    <View style={styles.container}>
+    <LinearGradient colors={AUTH_GRADIENT} style={styles.container}>
+      <View style={styles.colorVeil} pointerEvents="none" />
+      <View style={styles.diagonalBeam} pointerEvents="none" />
       {/* Carousel — white card, rounded bottom, floats above panel */}
       <View style={styles.carouselSection}>
         <Animated.View
@@ -236,32 +398,29 @@ export default function AuthLanding() {
         <Text style={styles.title}>{t("auth.signUpToGetStarted")}</Text>
 
         <View style={styles.buttonGap}>
-          <ChipButton
+          <Auth3DButton
             title={t("auth.continueWithGoogle")}
             onPress={handleGoogleSignUp}
-            variant="white"
-            size="lg"
-            fullWidth
             icon={
-              <AntDesign name="google" size={20} color={theme.primary.main} />
+              <AntDesign name="google" size={20} color={GOOGLE_BLUE} />
             }
+            faceColor="#F5F8FC"
+            depthColor="#9AA8BA"
+            textColor="#111827"
           />
         </View>
 
         <View style={styles.buttonGap}>
-          <ChipButton
+          <Auth3DButton
             title={t("auth.continueWithEmail")}
             onPress={handleEmailSignUp}
-            variant="white"
-            size="lg"
-            fullWidth
             icon={
-              <MaterialIcons
-                name="email"
-                size={20}
-                color={theme.primary.main}
-              />
+              <MaterialIcons name="keyboard-arrow-right" size={28} color="#FFFFFF" />
             }
+            iconPosition="right"
+            faceColor="#2563EB"
+            depthColor="#143B8F"
+            textColor="#FFFFFF"
           />
         </View>
 
@@ -272,6 +431,6 @@ export default function AuthLanding() {
           </TouchableOpacity>
         </View>
       </View>
-    </View>
+    </LinearGradient>
   );
 }

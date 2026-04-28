@@ -184,6 +184,10 @@ function AppContent() {
         <Stack.Screen name="get-started/focus-areas" />
         <Stack.Screen name="get-started/health-connect" />
         <Stack.Screen name="get-started/ready" />
+        <Stack.Screen
+          name="get-started/results"
+          options={{ animation: "slide_from_right" }}
+        />
         <Stack.Screen name="get-started/email-preferences" />
         <Stack.Screen
           name="get-started/username"
@@ -208,10 +212,6 @@ function AppContent() {
         <Stack.Screen
           name="get-started/meal-planning"
           options={{ animation: "slide_from_right" }}
-        />
-        <Stack.Screen
-          name="get-started/meal-congrats"
-          options={{ animation: "fade" }}
         />
         <Stack.Screen
           name="get-started/activity-level"

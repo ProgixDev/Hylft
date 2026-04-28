@@ -261,6 +261,7 @@ export default function WeeklyGoalScreen() {
       </Animated.View>
 
       <ChipButton
+        threeD
         title="Continue"
         onPress={handleContinue}
         variant="primary"

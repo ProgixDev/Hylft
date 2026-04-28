@@ -153,6 +153,7 @@ export function CelebrationScreen({
       {/* ── CTA ── */}
       <Animated.View style={[s.btnArea, { opacity: btnOpacity }]}>
         <ChipButton
+          threeD
           title={buttonLabel}
           onPress={() => router.push(next as any)}
           variant="primary"

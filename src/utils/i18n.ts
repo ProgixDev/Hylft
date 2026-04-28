@@ -9,6 +9,11 @@ import fr from "../locales/fr.json";
 
 const LANGUAGE_STORAGE_KEY = "@hylift_language";
 
+const refreshResourceBundles = () => {
+  i18n.addResourceBundle("en", "translation", en, true, true);
+  i18n.addResourceBundle("fr", "translation", fr, true, true);
+};
+
 // Get device language
 const getDeviceLanguage = (): string => {
   const locale = Localization.getLocales()[0];
@@ -64,6 +69,7 @@ export const initI18n = async (): Promise<string> => {
         },
       });
   } else {
+    refreshResourceBundles();
     // If already initialized, just change the language
     await i18n.changeLanguage(language);
   }
@@ -74,6 +80,7 @@ export const initI18n = async (): Promise<string> => {
 // Change language
 export const changeLanguage = async (language: string) => {
   await saveLanguage(language);
+  refreshResourceBundles();
   await i18n.changeLanguage(language);
 };
 

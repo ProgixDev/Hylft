@@ -124,6 +124,7 @@ export default function UnitsSelection() {
       </ScrollView>
 
       <ChipButton
+        threeD
         title={t("common.continue")}
         onPress={handleContinue}
         variant="primary"

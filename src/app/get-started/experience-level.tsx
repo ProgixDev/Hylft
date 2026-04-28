@@ -149,6 +149,7 @@ export default function ExperienceLevel() {
       </View>
 
       <ChipButton
+        threeD
         title={t("common.continue")}
         onPress={handleContinue}
         variant="primary"

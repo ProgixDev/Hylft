@@ -241,11 +241,7 @@ export default function Ready() {
       useNativeDriver: false,
     }).start(({ finished }) => {
       if (finished) {
-        if (!user) {
-          router.replace("/get-started/account");
-        } else {
-          router.replace("/(tabs)/home");
-        }
+        router.replace("/get-started/results");
       }
     });
 

@@ -201,7 +201,7 @@ export default function MealPlanningScreen() {
     try {
       await AsyncStorage.setItem("@hylift_meal_planning", id);
     } finally {
-      router.push("/get-started/meal-congrats");
+      router.push("/get-started/gender?flow=signup");
     }
   };
 

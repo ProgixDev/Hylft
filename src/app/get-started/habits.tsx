@@ -302,6 +302,7 @@ export default function HabitsScreen() {
       </Animated.View>
 
       <ChipButton
+        threeD
         title={t("common.continue")}
         onPress={handleContinue}
         variant="primary"

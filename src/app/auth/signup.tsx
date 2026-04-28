@@ -19,6 +19,7 @@ import { useAuth } from "../../contexts/AuthContext";
 
 import { FONTS } from "../../constants/fonts";
 import ChipButton from "../../components/ui/ChipButton";
+import { supabase } from "../../services/supabase";
 
 function createStyles(theme: Theme) {
   return StyleSheet.create({
@@ -146,11 +147,25 @@ export default function SignUp() {
     setIsLoading(true);
     try {
       const createdUser = await signUp(email, password, username);
+      if (!createdUser?.id) {
+        throw new Error("We could not create your account. Please try again.");
+      }
       await setOnboardingCompleted();
       try {
-        await setGetStartedCompleted(createdUser?.id);
+        await setGetStartedCompleted(createdUser.id);
       } catch {
         // Ignore profile sync timing issues and keep the auth flow moving.
+      }
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) {
+        Alert.alert(
+          "Check your email",
+          "Your account was created. Verify your email, then sign in to continue.",
+        );
+        router.replace("/auth/signin");
+        return;
       }
       router.replace("/(tabs)/home");
     } catch (error: unknown) {

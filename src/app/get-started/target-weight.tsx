@@ -132,6 +132,7 @@ export default function TargetWeightScreen() {
       </View>
 
       <ChipButton
+        threeD
         title={t("common.next")}
         onPress={handleContinue}
         variant="primary"

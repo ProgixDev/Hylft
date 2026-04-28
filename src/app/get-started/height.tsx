@@ -184,6 +184,7 @@ export default function HeightScreen() {
       </View>
 
       <ChipButton
+        threeD
         title={t("common.next")}
         onPress={handleContinue}
         variant="primary"

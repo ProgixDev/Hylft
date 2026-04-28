@@ -91,20 +91,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = async (email: string, password: string, username: string) => {
     const { data, error } = await supabase.auth.signUp({
-      email,
+      email: email.trim().toLowerCase(),
       password,
-      options: { data: { username } },
+      options: { data: { username: username.trim() } },
     });
     if (error) throw error;
+    if (data.session) setSession(data.session);
     return data.user ?? null;
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email.trim().toLowerCase(),
       password,
     });
     if (error) throw error;
+    if (data.session) setSession(data.session);
   };
 
   const signInWithGoogle = async (): Promise<void> => {
@@ -194,23 +196,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         weightKg,
         targetWeightKg,
         gender,
+        primaryGoal,
         fitnessGoals,
         experienceLevel,
         workoutFrequency,
         focusAreas,
         unitSystem,
+        username,
       ] = await Promise.all([
         AsyncStorage.getItem("@hylift_age"),
         AsyncStorage.getItem("@hylift_height"),
         AsyncStorage.getItem("@hylift_weight"),
         AsyncStorage.getItem("@hylift_target_weight"),
         AsyncStorage.getItem("@hylift_gender"),
+        AsyncStorage.getItem("@hylift_goal"),
         AsyncStorage.getItem("@hylift_fitness_goals"),
         AsyncStorage.getItem("@hylift_experience_level"),
         AsyncStorage.getItem("@hylift_workout_frequency"),
         AsyncStorage.getItem("@hylift_focus_areas"),
         AsyncStorage.getItem("@hylift_unit_system"),
+        AsyncStorage.getItem("@hylift_username"),
       ]);
+
+      const parseStringArray = (value: string | null) => {
+        if (!value) return null;
+        try {
+          const parsed = JSON.parse(value);
+          return Array.isArray(parsed)
+            ? parsed.filter((item): item is string => typeof item === "string")
+            : null;
+        } catch {
+          return null;
+        }
+      };
 
       let dateOfBirth: string | null = null;
       if (age) {
@@ -219,27 +237,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         dateOfBirth = now.toISOString().split("T")[0];
       }
 
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const storedUsername = username?.trim();
+      const metadataUsername =
+        typeof session?.user?.user_metadata?.username === "string"
+          ? session.user.user_metadata.username.trim()
+          : "";
+      const profileUsername =
+        storedUsername || metadataUsername || `user_${id.substring(0, 8)}`;
+      const parsedFitnessGoals = parseStringArray(fitnessGoals);
+      const parsedFocusAreas = parseStringArray(focusAreas);
+      const profileFitnessGoal =
+        primaryGoal || parsedFitnessGoals?.[0] || null;
 
-      await supabase.from("user_profiles").upsert({
+      const { error } = await supabase.from("user_profiles").upsert({
         id: id,
-        username: user?.user_metadata?.username || `user_${id.substring(0, 8)}`,
-        unit_system: unitSystem || null,
+        username: profileUsername,
+        unit_system: unitSystem || "metric",
         height_cm: heightCm ? parseFloat(heightCm) : null,
         weight_kg: weightKg ? parseFloat(weightKg) : null,
         target_weight_kg: targetWeightKg ? parseFloat(targetWeightKg) : null,
         date_of_birth: dateOfBirth,
         gender: gender || null,
-        fitness_goal: fitnessGoals || null,
+        fitness_goal: profileFitnessGoal,
         experience_level: experienceLevel || null,
         workout_frequency: workoutFrequency
           ? parseInt(workoutFrequency, 10)
           : null,
-        focus_areas: focusAreas ? JSON.parse(focusAreas) : null,
+        focus_areas: parsedFocusAreas,
         onboarding_completed: true,
       });
+      if (error) throw error;
     } catch (error) {
       console.error(
         "[Auth] Failed to mark onboarding complete or save profile",

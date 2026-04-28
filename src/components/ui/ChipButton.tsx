@@ -24,6 +24,8 @@ interface ChipButtonProps {
   icon?: React.ReactNode;
   iconPosition?: "left" | "right";
   loading?: boolean;
+  threeD?: boolean;
+  depthColor?: string;
   borderRadius?: number;
   style?: StyleProp<ViewStyle>;
   textStyle?: StyleProp<TextStyle>;
@@ -47,6 +49,8 @@ export default function ChipButton({
   icon,
   iconPosition = "left",
   loading = false,
+  threeD = false,
+  depthColor,
   borderRadius,
   style,
   textStyle,
@@ -55,6 +59,89 @@ export default function ChipButton({
   const styles = createStyles(theme);
   const config = SIZE_CONFIG[size];
   const isDisabled = disabled || loading;
+  const radius = borderRadius ?? DEFAULT_BORDER_RADIUS;
+  const isThreeD = threeD && variant === "primary";
+  const primaryDepthColor = depthColor ?? getPrimaryDepthColor(theme.primary.main);
+
+  const renderContent = () =>
+    loading ? (
+      <ActivityIndicator
+        size="small"
+        color={
+          variant === "secondary"
+            ? theme.primary.main
+            : variant === "google"
+              ? GOOGLE_BLUE
+            : variant === "white"
+              ? theme.background.dark
+              : theme.background.dark
+        }
+      />
+    ) : (
+      <View style={styles.content}>
+        {icon && iconPosition === "left" && <View style={styles.iconLeft}>{icon}</View>}
+        <Text
+          style={[
+            styles.text,
+            { fontSize: variant === "chip" ? 13 : config.fontSize },
+            variant === "primary" && styles.primaryText,
+            variant === "secondary" && styles.secondaryText,
+            variant === "chip" && styles.chipText,
+            variant === "white" && styles.whiteText,
+            variant === "google" && styles.googleText,
+            textStyle,
+          ]}
+        >
+          {title}
+        </Text>
+        {icon && iconPosition === "right" && <View style={styles.iconRight}>{icon}</View>}
+      </View>
+    );
+
+  if (isThreeD) {
+    return (
+      <Pressable
+        style={({ pressed }) => [
+          styles.threeDShell,
+          fullWidth && styles.fullWidth,
+          isDisabled && styles.disabled,
+          pressed && !isDisabled && styles.threeDShellPressed,
+          style,
+        ]}
+        onPress={onPress}
+        disabled={isDisabled}
+        android_ripple={{ color: "rgba(255,255,255,0.14)" }}
+      >
+        {({ pressed }) => (
+          <View
+            style={[
+              styles.threeDBase,
+              {
+                borderRadius: radius,
+                backgroundColor: primaryDepthColor,
+              },
+            ]}
+          >
+            <View
+              style={[
+                styles.base,
+                styles.primary,
+                {
+                  height: config.height,
+                  minHeight: 44,
+                  paddingHorizontal: config.paddingHorizontal,
+                  borderRadius: radius,
+                  transform: [{ translateY: pressed && !isDisabled ? 8 : 0 }],
+                },
+              ]}
+            >
+              {renderContent()}
+            </View>
+          </View>
+        )}
+      </Pressable>
+    );
+  }
 
   return (
     <Pressable
@@ -64,7 +151,7 @@ export default function ChipButton({
           height: config.height,
           minHeight: 44,
           paddingHorizontal: config.paddingHorizontal,
-          borderRadius: borderRadius ?? DEFAULT_BORDER_RADIUS,
+          borderRadius: radius,
         },
         variant === "primary" && styles.primary,
         variant === "secondary" && styles.secondary,
@@ -79,44 +166,18 @@ export default function ChipButton({
       onPress={onPress}
       disabled={isDisabled}
     >
-      {loading ? (
-        <ActivityIndicator
-          size="small"
-          color={
-            variant === "secondary"
-              ? theme.primary.main
-              : variant === "google"
-                ? GOOGLE_BLUE
-              : variant === "white"
-                ? theme.background.dark
-                : theme.background.dark
-          }
-        />
-      ) : (
-        <View style={styles.content}>
-          {icon && iconPosition === "left" && <View style={styles.iconLeft}>{icon}</View>}
-          <Text
-            style={[
-              styles.text,
-              { fontSize: variant === "chip" ? 13 : config.fontSize },
-              variant === "primary" && styles.primaryText,
-              variant === "secondary" && styles.secondaryText,
-              variant === "chip" && styles.chipText,
-              variant === "white" && styles.whiteText,
-              variant === "google" && styles.googleText,
-              textStyle,
-            ]}
-          >
-            {title}
-          </Text>
-          {icon && iconPosition === "right" && <View style={styles.iconRight}>{icon}</View>}
-        </View>
-      )}
+      {renderContent()}
     </Pressable>
   );
 }
 
 const GOOGLE_BLUE = "#1A73E8";
+
+function getPrimaryDepthColor(primary: string) {
+  if (primary.toUpperCase() === "#D4A44C") return "#8A6424";
+  if (primary.toUpperCase() === "#C48A6A") return "#8A5B43";
+  return "#071527";
+}
 
 function createStyles(theme: Theme) {
   return StyleSheet.create({
@@ -124,6 +185,27 @@ function createStyles(theme: Theme) {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
+      overflow: "hidden",
+    },
+    threeDShell: {
+      borderRadius: DEFAULT_BORDER_RADIUS,
+      ...Platform.select({
+        ios: {
+          shadowColor: "#071527",
+          shadowOffset: { width: 0, height: 10 },
+          shadowOpacity: 0.16,
+          shadowRadius: 14,
+        },
+        android: {
+          elevation: 5,
+        },
+      }),
+    },
+    threeDShellPressed: {
+      transform: [{ scale: 0.99 }],
+    },
+    threeDBase: {
+      paddingBottom: 9,
       overflow: "hidden",
     },
     primary: {

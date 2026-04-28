@@ -203,6 +203,7 @@ export default function LanguageSelect() {
       </View>
 
       <ChipButton
+        threeD
         title={t("languageSelect.continue")}
         onPress={handleContinue}
         variant="primary"
