@@ -23,6 +23,9 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { supabase } from "../../services/supabase";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
+const CAROUSEL_HEIGHT = SCREEN_HEIGHT * 0.62;
+const PANEL_OVERLAP = 30;
+const CAROUSEL_CORNER_RADIUS = 40;
 
 type IconName = React.ComponentProps<typeof MaterialCommunityIcons>["name"];
 
@@ -43,13 +46,15 @@ function createStyles(theme: Theme) {
       backgroundColor: theme.primary.main,
     },
     carouselSection: {
-      height: SCREEN_HEIGHT * 0.62,
+      position: "relative",
+      height: CAROUSEL_HEIGHT,
       backgroundColor: "#FFFFFF",
-      borderBottomLeftRadius: 40,
-      marginBottom: -30,
-      zIndex: 2,
+      borderBottomLeftRadius: CAROUSEL_CORNER_RADIUS,
+      marginBottom: -PANEL_OVERLAP,
+      zIndex: 1,
       elevation: 8,
-      alignItems: "center",
+      overflow: "hidden",
+      alignItems: "flex-start",
       justifyContent: "center",
       shadowColor: "#000",
       shadowOffset: { width: 0, height: 6 },
@@ -57,13 +62,14 @@ function createStyles(theme: Theme) {
       shadowRadius: 10,
     },
     posterImage: {
-      width: "100%",
+      width: SCREEN_WIDTH,
       height: "100%",
     },
     bottomPanel: {
+      position: "relative",
       flex: 1,
-      zIndex: 3,
-      elevation: 12,
+      zIndex: 20,
+      elevation: 20,
       paddingHorizontal: 28,
       paddingTop: 46,
     },
@@ -110,23 +116,17 @@ export default function AuthLanding() {
   const translateAnim = useRef(new Animated.Value(0)).current;
 
   const styles = createStyles(theme);
+  const nextIndex = (currentIndex + 1) % CAROUSEL_SLIDES.length;
 
   useEffect(() => {
     const interval = setInterval(() => {
-      // slide current content left off-screen
       Animated.timing(translateAnim, {
         toValue: -SCREEN_WIDTH,
         duration: 400,
         useNativeDriver: true,
       }).start(() => {
-        // advance index, jump next slide off-screen to the right, then slide into place
         setCurrentIndex((prev) => (prev + 1) % CAROUSEL_SLIDES.length);
-        translateAnim.setValue(SCREEN_WIDTH);
-        Animated.timing(translateAnim, {
-          toValue: 0,
-          duration: 400,
-          useNativeDriver: true,
-        }).start();
+        translateAnim.setValue(0);
       });
     }, 3000);
 
@@ -193,13 +193,12 @@ export default function AuthLanding() {
   return (
     <View style={styles.container}>
       {/* Carousel — white card, rounded bottom, floats above panel */}
-      <View style={[styles.carouselSection, { paddingTop: insets.top }]}>
+      <View style={styles.carouselSection}>
         <Animated.View
           style={{
             transform: [{ translateX: translateAnim }],
-            alignItems: "center",
-            justifyContent: "center",
-            width: "100%",
+            flexDirection: "row",
+            width: SCREEN_WIDTH * 2,
             height: "100%",
           }}
         >
@@ -208,10 +207,15 @@ export default function AuthLanding() {
             style={styles.posterImage}
             resizeMode="cover"
           />
+          <Image
+            source={CAROUSEL_SLIDES[nextIndex].source}
+            style={styles.posterImage}
+            resizeMode="cover"
+          />
         </Animated.View>
       </View>
 
-      {/* Bottom panel — sits behind carousel */}
+      {/* Bottom panel — content sits above carousel overlap */}
       <View style={[styles.bottomPanel, { paddingBottom: insets.bottom + 12 }]}>
         {/* Dots synced with icon index */}
         <View style={styles.dotsRow}>

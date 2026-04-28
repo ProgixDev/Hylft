@@ -4,8 +4,11 @@ import {
   Platform,
   Pressable,
   StyleSheet,
+  StyleProp,
   Text,
+  TextStyle,
   View,
+  ViewStyle,
 } from "react-native";
 import { FONTS } from "../../constants/fonts";
 import { Theme } from "../../constants/themes";
@@ -22,6 +25,8 @@ interface ChipButtonProps {
   iconPosition?: "left" | "right";
   loading?: boolean;
   borderRadius?: number;
+  style?: StyleProp<ViewStyle>;
+  textStyle?: StyleProp<TextStyle>;
 }
 
 const SIZE_CONFIG = {
@@ -29,6 +34,8 @@ const SIZE_CONFIG = {
   md: { height: 44, paddingHorizontal: 24, fontSize: 15 },
   lg: { height: 56, paddingHorizontal: 32, fontSize: 16 },
 } as const;
+
+const DEFAULT_BORDER_RADIUS = 10;
 
 export default function ChipButton({
   title,
@@ -41,6 +48,8 @@ export default function ChipButton({
   iconPosition = "left",
   loading = false,
   borderRadius,
+  style,
+  textStyle,
 }: ChipButtonProps) {
   const { theme } = useTheme();
   const styles = createStyles(theme);
@@ -55,7 +64,7 @@ export default function ChipButton({
           height: config.height,
           minHeight: 44,
           paddingHorizontal: config.paddingHorizontal,
-          borderRadius: borderRadius ?? config.height / 2,
+          borderRadius: borderRadius ?? DEFAULT_BORDER_RADIUS,
         },
         variant === "primary" && styles.primary,
         variant === "secondary" && styles.secondary,
@@ -65,6 +74,7 @@ export default function ChipButton({
         fullWidth && styles.fullWidth,
         isDisabled && styles.disabled,
         pressed && !isDisabled && styles.pressed,
+        style,
       ]}
       onPress={onPress}
       disabled={isDisabled}
@@ -94,6 +104,7 @@ export default function ChipButton({
               variant === "chip" && styles.chipText,
               variant === "white" && styles.whiteText,
               variant === "google" && styles.googleText,
+              textStyle,
             ]}
           >
             {title}
