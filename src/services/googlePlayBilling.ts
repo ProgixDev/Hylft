@@ -14,7 +14,10 @@ export type GooglePlaySubscriptionProduct = {
   }>;
 };
 
-export type GooglePlayBillingAvailability = "available" | "not-android" | "expo-go";
+export type GooglePlayBillingAvailability =
+  | "available"
+  | "not-android"
+  | "expo-go";
 
 const PRO_ENTITLEMENT_KEY = "@hylift_google_play_pro";
 
@@ -58,7 +61,8 @@ function getConfiguredProductIds() {
 }
 
 export async function loadGooglePlaySubscriptions() {
-  if (!isGooglePlayBillingAvailable()) return [] as GooglePlaySubscriptionProduct[];
+  if (!isGooglePlayBillingAvailable())
+    return [] as GooglePlaySubscriptionProduct[];
 
   const productIds = getConfiguredProductIds();
   if (productIds.length === 0) return [] as GooglePlaySubscriptionProduct[];
@@ -72,7 +76,9 @@ export async function loadGooglePlaySubscriptions() {
   await initConnection();
   await flushFailedPurchasesCachedAsPendingAndroid();
 
-  return (await getSubscriptions({ skus: productIds })) as GooglePlaySubscriptionProduct[];
+  return (await getSubscriptions({
+    skus: productIds,
+  })) as GooglePlaySubscriptionProduct[];
 }
 
 export async function requestGooglePlaySubscription(plan: ProPlan) {
@@ -89,9 +95,12 @@ export async function requestGooglePlaySubscription(plan: ProPlan) {
 
   const { getSubscriptions, requestSubscription } = await getIap();
 
-  const nextSubscriptions = (await getSubscriptions({ skus: [productId] })) as GooglePlaySubscriptionProduct[];
+  const nextSubscriptions = (await getSubscriptions({
+    skus: [productId],
+  })) as GooglePlaySubscriptionProduct[];
   const nextSubscription = nextSubscriptions[0];
-  const nextOfferToken = nextSubscription?.subscriptionOfferDetails?.[0]?.offerToken;
+  const nextOfferToken =
+    nextSubscription?.subscriptionOfferDetails?.[0]?.offerToken;
 
   return requestSubscription(
     nextOfferToken
@@ -109,7 +118,8 @@ export async function requestGooglePlaySubscription(plan: ProPlan) {
 }
 
 export async function restoreGooglePlaySubscriptions() {
-  if (!isGooglePlayBillingAvailable()) return [] as GooglePlaySubscriptionProduct[];
+  if (!isGooglePlayBillingAvailable())
+    return [] as GooglePlaySubscriptionProduct[];
 
   const productIds = getConfiguredProductIds();
   if (productIds.length === 0) return [] as GooglePlaySubscriptionProduct[];

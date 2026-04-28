@@ -47,7 +47,8 @@ type Props = {
   nextRoute?: "/onboarding/second" | "/onboarding/third";
 };
 
-const SCREEN_DURATION_MS = 4200;
+const SCREEN_DURATION_MS = 2500;
+const SECOND_SCREEN_DURATION_MS = 1500;
 const ORBIT_DURATION_MS = 14000;
 const PAGE_FADE_IN_MS = 850;
 const PAGE_FADE_OUT_MS = 650;
@@ -115,12 +116,10 @@ function buildScreens(
     },
     {
       id: 2,
-      title: isFrench
-        ? "Votre parcours\ncommence ici"
-        : "Your journey\nstarts here",
-      emphasis: t("onboarding.page2Subtitle").replaceAll('"', ""),
-      subtitle: t("onboarding.page3Subtitle").replaceAll('"', ""),
-      centerIcon: "dumbbell",
+      title: t("onboarding.integratedPlatformTitle"),
+      emphasis: t("onboarding.integratedPlatformEmphasis"),
+      subtitle: t("onboarding.integratedPlatformSubtitle"),
+      centerIcon: "medal-outline",
       icons: [
         {
           name: "dumbbell",
@@ -290,6 +289,10 @@ export default function OrbitOnboardingScreen({
   );
   const screen = screens[screenIndex];
   const isFirstScreen = screenIndex === 0;
+  const isSimpleSecondScreen = screenIndex === 1;
+  const screenDuration = isSimpleSecondScreen
+    ? SECOND_SCREEN_DURATION_MS
+    : SCREEN_DURATION_MS;
   const orbitSize = isFirstScreen
     ? Math.min(width * 1.52, height * 0.72, 620)
     : Math.min(width * 0.96, height * 0.58, 420);
@@ -340,10 +343,10 @@ export default function OrbitOnboardingScreen({
           }
         },
       );
-    }, SCREEN_DURATION_MS);
+    }, screenDuration);
 
     return () => clearTimeout(pageTimeout);
-  }, [completeScreen, pageOpacity]);
+  }, [completeScreen, pageOpacity, screenDuration]);
 
   const pageAnimatedStyle = useAnimatedStyle(() => ({
     opacity: pageOpacity.value,
@@ -357,81 +360,97 @@ export default function OrbitOnboardingScreen({
         pageAnimatedStyle,
       ]}
     >
-      <View
-        style={[
-          styles.planetStage,
-          {
-            width: orbitSize,
-            height: orbitSize,
-          },
-        ]}
-      >
-        <View
-          style={[
-            styles.orbitRing,
-            isFirstScreen && styles.firstScreenOrbitRing,
-            { width: orbitSize * orbitRingScales[0], height: orbitSize * orbitRingScales[0] },
-          ]}
-        />
-        <View
-          style={[
-            styles.orbitRing,
-            isFirstScreen && styles.firstScreenOrbitRing,
-            { width: orbitSize * orbitRingScales[1], height: orbitSize * orbitRingScales[1] },
-          ]}
-        />
-        <View
-          style={[
-            styles.orbitRing,
-            isFirstScreen && styles.firstScreenOrbitRing,
-            { width: orbitSize * orbitRingScales[2], height: orbitSize * orbitRingScales[2] },
-          ]}
-        />
-
-        {screen.icons.map((icon, index) => (
-          <OrbitIcon
-            key={`${screen.id}-${icon.name}-${index}`}
-            icon={icon}
-            progress={orbitProgress}
-            direction={isFirstScreen ? 1 : index % 2 === 0 ? 1 : -1}
-            orbitScale={orbitScale}
+      {isSimpleSecondScreen ? (
+        <View style={styles.simpleScreenContent}>
+          <Image
+            source={require("../../../assets/1st.png")}
+            style={styles.firstMedalAsset}
+            contentFit="contain"
           />
-        ))}
 
-        <View style={styles.centerCopy}>
-          <View style={themedStyles.centerBadge}>
-            <MaterialCommunityIcons
-              name={screen.centerIcon}
-              size={24}
-              color={theme.primary.main}
-            />
-          </View>
-          <Text
-            style={[
-              themedStyles.title,
-              isFirstScreen && themedStyles.firstScreenText,
-            ]}
-          >
-            {screen.title}
-          </Text>
-          <Text
-            style={[
-              themedStyles.emphasis,
-              isFirstScreen && themedStyles.firstScreenText,
-            ]}
-          >
-            {screen.emphasis}
-          </Text>
-          <Text
-            style={[
-              themedStyles.subtitle,
-              isFirstScreen && themedStyles.firstScreenSubtitle,
-            ]}
-          >
-            {screen.subtitle}
-          </Text>
+          <Text style={themedStyles.title}>{screen.title}</Text>
+          <Text style={themedStyles.emphasis}>{screen.emphasis}</Text>
+          <Text style={themedStyles.subtitle}>{screen.subtitle}</Text>
         </View>
-      </View>
+      ) : (
+        <View
+          style={[
+            styles.planetStage,
+            {
+              width: orbitSize,
+              height: orbitSize,
+            },
+          ]}
+        >
+          <View
+            style={[
+              styles.orbitRing,
+              isFirstScreen && styles.firstScreenOrbitRing,
+              {
+                width: orbitSize * orbitRingScales[0],
+                height: orbitSize * orbitRingScales[0],
+              },
+            ]}
+          />
+          <View
+            style={[
+              styles.orbitRing,
+              isFirstScreen && styles.firstScreenOrbitRing,
+              {
+                width: orbitSize * orbitRingScales[1],
+                height: orbitSize * orbitRingScales[1],
+              },
+            ]}
+          />
+          <View
+            style={[
+              styles.orbitRing,
+              isFirstScreen && styles.firstScreenOrbitRing,
+              {
+                width: orbitSize * orbitRingScales[2],
+                height: orbitSize * orbitRingScales[2],
+              },
+            ]}
+          />
+
+          {screen.icons.map((icon, index) => (
+            <OrbitIcon
+              key={`${screen.id}-${icon.name}-${index}`}
+              icon={icon}
+              progress={orbitProgress}
+              direction={isFirstScreen ? 1 : index % 2 === 0 ? 1 : -1}
+              orbitScale={orbitScale}
+            />
+          ))}
+
+          <View style={styles.centerCopy}>
+            <Text
+              style={[
+                themedStyles.title,
+                isFirstScreen && themedStyles.firstScreenText,
+              ]}
+            >
+              {screen.title}
+            </Text>
+            <Text
+              style={[
+                themedStyles.emphasis,
+                isFirstScreen && themedStyles.firstScreenText,
+              ]}
+            >
+              {screen.emphasis}
+            </Text>
+            <Text
+              style={[
+                themedStyles.subtitle,
+                isFirstScreen && themedStyles.firstScreenSubtitle,
+              ]}
+            >
+              {screen.subtitle}
+            </Text>
+          </View>
+        </View>
+      )}
     </Animated.View>
   );
 }
@@ -447,22 +466,6 @@ const createStyles = (theme: Theme) =>
     },
     firstScreenContainer: {
       backgroundColor: "#FFFFFF",
-    },
-    centerBadge: {
-      width: 54,
-      height: 54,
-      borderRadius: 27,
-      alignItems: "center",
-      justifyContent: "center",
-      marginBottom: 18,
-      backgroundColor: "#FFFFFF",
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: "rgba(10, 22, 40, 0.12)",
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 10 },
-      shadowOpacity: 0.08,
-      shadowRadius: 18,
-      elevation: 4,
     },
     title: {
       color: "#10141F",
@@ -497,6 +500,16 @@ const createStyles = (theme: Theme) =>
   });
 
 const styles = StyleSheet.create({
+  simpleScreenContent: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 34,
+  },
+  firstMedalAsset: {
+    width: 180,
+    height: 180,
+    marginBottom: 26,
+  },
   planetStage: {
     alignItems: "center",
     justifyContent: "center",

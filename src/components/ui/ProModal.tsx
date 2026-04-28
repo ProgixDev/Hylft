@@ -3,34 +3,34 @@ import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  Animated,
-  ActivityIndicator,
-  Alert,
-  Image,
-  Modal,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  useWindowDimensions,
-  View,
+    ActivityIndicator,
+    Alert,
+    Animated,
+    Image,
+    Modal,
+    Platform,
+    Pressable,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    useWindowDimensions,
+    View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../../contexts/AuthContext";
 import {
-  GOOGLE_PLAY_PRODUCT_IDS,
-  closeGooglePlayBilling,
-  finalizeGooglePlayPurchase,
-  getGooglePlayBillingUnavailableMessage,
-  isGooglePlayBillingAvailable,
-  loadGooglePlaySubscriptions,
-  markProEntitled,
-  requestGooglePlaySubscription,
-  restoreGooglePlaySubscriptions,
-  subscribeToGooglePlayPurchaseEvents,
-  type GooglePlaySubscriptionProduct,
-  type ProPlan,
+    closeGooglePlayBilling,
+    finalizeGooglePlayPurchase,
+    getGooglePlayBillingUnavailableMessage,
+    GOOGLE_PLAY_PRODUCT_IDS,
+    isGooglePlayBillingAvailable,
+    loadGooglePlaySubscriptions,
+    markProEntitled,
+    requestGooglePlaySubscription,
+    restoreGooglePlaySubscriptions,
+    subscribeToGooglePlayPurchaseEvents,
+    type GooglePlaySubscriptionProduct,
+    type ProPlan,
 } from "../../services/googlePlayBilling";
 
 interface ProModalProps {
@@ -65,7 +65,9 @@ export default function ProModal({ visible, onClose }: ProModalProps) {
 
   useEffect(() => {
     const calculateTimeLeft = () => {
-      const startDate = user?.created_at ? new Date(user.created_at) : new Date();
+      const startDate = user?.created_at
+        ? new Date(user.created_at)
+        : new Date();
       const expirationDate = new Date(
         startDate.getTime() + 7 * 24 * 60 * 60 * 1000,
       );
@@ -118,7 +120,9 @@ export default function ProModal({ visible, onClose }: ProModalProps) {
         const subscriptions = await loadGooglePlaySubscriptions();
         if (!active) return;
 
-        const nextProducts: Partial<Record<ProPlan, GooglePlaySubscriptionProduct>> = {};
+        const nextProducts: Partial<
+          Record<ProPlan, GooglePlaySubscriptionProduct>
+        > = {};
         for (const product of subscriptions) {
           if (product.productId === GOOGLE_PLAY_PRODUCT_IDS.monthly) {
             nextProducts.monthly = product;
@@ -236,10 +240,7 @@ export default function ProModal({ visible, onClose }: ProModalProps) {
     if (!user?.id) return;
 
     if (!isGooglePlayBillingAvailable()) {
-      Alert.alert(
-        "Google Play",
-        getGooglePlayBillingUnavailableMessage(),
-      );
+      Alert.alert("Google Play", getGooglePlayBillingUnavailableMessage());
       return;
     }
 
@@ -284,10 +285,7 @@ export default function ProModal({ visible, onClose }: ProModalProps) {
     if (!user?.id) return;
 
     if (!isGooglePlayBillingAvailable()) {
-      Alert.alert(
-        "Google Play",
-        getGooglePlayBillingUnavailableMessage(),
-      );
+      Alert.alert("Google Play", getGooglePlayBillingUnavailableMessage());
       return;
     }
 
@@ -341,7 +339,10 @@ export default function ProModal({ visible, onClose }: ProModalProps) {
           <TouchableOpacity onPress={onClose} style={styles.iconButton}>
             <Ionicons name="close" size={28} color="#FFFFFF" />
           </TouchableOpacity>
-          <TouchableOpacity onPress={handleRestorePress} style={styles.restoreBtn}>
+          <TouchableOpacity
+            onPress={handleRestorePress}
+            style={styles.restoreBtn}
+          >
             <Text style={styles.restoreText}>
               {t("proModal.restore", "Restore")}
             </Text>
@@ -386,7 +387,10 @@ export default function ProModal({ visible, onClose }: ProModalProps) {
                   isVeryCompactHeight && styles.subtitleVeryCompact,
                 ]}
               >
-                {t("proModal.subtitle", "Unlock the ultimate fitness experience")}
+                {t(
+                  "proModal.subtitle",
+                  "Unlock the ultimate fitness experience",
+                )}
               </Text>
               <Text
                 style={[
@@ -440,7 +444,11 @@ export default function ProModal({ visible, onClose }: ProModalProps) {
                       isVeryCompactHeight && styles.featureRowVeryCompact,
                     ]}
                   >
-                    <Ionicons name="checkmark-sharp" size={20} color="#F5CE7A" />
+                    <Ionicons
+                      name="checkmark-sharp"
+                      size={20}
+                      color="#F5CE7A"
+                    />
                     <Text
                       style={[
                         styles.featureText,
@@ -473,7 +481,9 @@ export default function ProModal({ visible, onClose }: ProModalProps) {
                       <Ionicons name="checkmark" size={12} color="#000" />
                     </View>
                   )}
-                  <Text style={styles.planTitle}>{t("proModal.monthly", "Monthly")}</Text>
+                  <Text style={styles.planTitle}>
+                    {t("proModal.monthly", "Monthly")}
+                  </Text>
                   <Text style={styles.planPrice}>
                     {getPlanPrice("monthly", "$9.99")}
                   </Text>
@@ -497,7 +507,9 @@ export default function ProModal({ visible, onClose }: ProModalProps) {
                     </View>
                   )}
                   <View style={styles.yearlyHeader}>
-                    <Text style={styles.planTitle}>{t("proModal.yearly", "Yearly")}</Text>
+                    <Text style={styles.planTitle}>
+                      {t("proModal.yearly", "Yearly")}
+                    </Text>
                     <Ionicons
                       name="flame"
                       size={14}
@@ -543,13 +555,15 @@ export default function ProModal({ visible, onClose }: ProModalProps) {
                 )}
               </Pressable>
 
-              <Pressable onPress={handleRestorePress} style={styles.restoreHintBtn}>
+              <Pressable
+                onPress={handleRestorePress}
+                style={styles.restoreHintBtn}
+              >
                 <Text style={styles.restoreHintText}>
                   {t("proModal.restore", "Restore")}
                 </Text>
               </Pressable>
             </View>
-
           </View>
         </Animated.View>
       </View>

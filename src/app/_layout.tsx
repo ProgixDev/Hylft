@@ -121,13 +121,16 @@ function AppContent() {
         screenOptions={{
           headerShown: false,
           contentStyle: {
-            backgroundColor: isGetStartedRoute ? "#FFFFFF" : theme.background.dark,
+            backgroundColor: isGetStartedRoute
+              ? "#FFFFFF"
+              : theme.background.dark,
             paddingTop: insets.top,
             paddingBottom: insets.bottom,
             paddingLeft: insets.left,
             paddingRight: insets.right,
           },
-          statusBarStyle: isGetStartedRoute || themeType !== "dark" ? "dark" : "light",
+          statusBarStyle:
+            isGetStartedRoute || themeType !== "dark" ? "dark" : "light",
           statusBarTranslucent: true,
           navigationBarColor: "transparent",
         }}
@@ -135,7 +138,10 @@ function AppContent() {
         <Stack.Screen name="index" />
         <Stack.Screen name="OnBoarding" options={{ animation: "none" }} />
         <Stack.Screen name="onboarding/index" options={{ animation: "none" }} />
-        <Stack.Screen name="onboarding/second" options={{ animation: "none" }} />
+        <Stack.Screen
+          name="onboarding/second"
+          options={{ animation: "none" }}
+        />
         <Stack.Screen name="onboarding/third" options={{ animation: "none" }} />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="exercise-picker/index" />

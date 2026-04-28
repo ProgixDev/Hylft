@@ -1,4 +1,4 @@
-import { AntDesign, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
+import { AntDesign, MaterialIcons } from "@expo/vector-icons";
 import * as Linking from "expo-linking";
 import { supabase } from "../../services/supabase";
 import { useRouter } from "expo-router";
@@ -7,6 +7,8 @@ import {
   Alert,
   Animated,
   Dimensions,
+  Image,
+  ImageSourcePropType,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -20,11 +22,19 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { FONTS } from "../../constants/fonts";
 
-const { height: SCREEN_HEIGHT } = Dimensions.get("window");
+const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
 type IconName = React.ComponentProps<typeof MaterialCommunityIcons>["name"];
 
-const ICONS: IconName[] = ["dumbbell", "run-fast", "heart-pulse"];
+type CarouselSlide =
+  | { type: "image"; source: ImageSourcePropType }
+  | { type: "icon"; name: IconName };
+
+const CAROUSEL_SLIDES: CarouselSlide[] = [
+  { type: "image", source: require("../../../assets/images/poster1.png") },
+  { type: "image", source: require("../../../assets/images/poster2.png") },
+  { type: "image", source: require("../../../assets/images/poster3.png") },
+];
 
 function createStyles(theme: Theme) {
   return StyleSheet.create({
@@ -46,17 +56,14 @@ function createStyles(theme: Theme) {
       shadowOpacity: 0.18,
       shadowRadius: 10,
     },
-    iconCircle: {
-      width: 130,
-      height: 130,
-      borderRadius: 65,
-      backgroundColor: "rgba(10, 22, 40, 0.07)",
-      alignItems: "center",
-      justifyContent: "center",
+    posterImage: {
+      width: "100%",
+      height: "100%",
     },
     bottomPanel: {
       flex: 1,
-      zIndex: 1,
+      zIndex: 3,
+      elevation: 12,
       paddingHorizontal: 28,
       paddingTop: 46,
     },
@@ -100,32 +107,31 @@ export default function AuthLanding() {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
   const [currentIndex, setCurrentIndex] = useState(0);
-  const fadeAnim = useRef(new Animated.Value(1)).current;
-  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const translateAnim = useRef(new Animated.Value(0)).current;
 
   const styles = createStyles(theme);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      Animated.parallel([
-        Animated.timing(fadeAnim, { toValue: 0, duration: 350, useNativeDriver: true }),
-        Animated.timing(scaleAnim, { toValue: 0.65, duration: 350, useNativeDriver: true }),
-      ]).start(() => {
-        setCurrentIndex((prev) => (prev + 1) % ICONS.length);
-        Animated.parallel([
-          Animated.timing(fadeAnim, { toValue: 1, duration: 350, useNativeDriver: true }),
-          Animated.spring(scaleAnim, {
-            toValue: 1,
-            useNativeDriver: true,
-            damping: 12,
-            stiffness: 160,
-          }),
-        ]).start();
+      // slide current content left off-screen
+      Animated.timing(translateAnim, {
+        toValue: -SCREEN_WIDTH,
+        duration: 400,
+        useNativeDriver: true,
+      }).start(() => {
+        // advance index, jump next slide off-screen to the right, then slide into place
+        setCurrentIndex((prev) => (prev + 1) % CAROUSEL_SLIDES.length);
+        translateAnim.setValue(SCREEN_WIDTH);
+        Animated.timing(translateAnim, {
+          toValue: 0,
+          duration: 400,
+          useNativeDriver: true,
+        }).start();
       });
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [fadeAnim, scaleAnim]);
+  }, [translateAnim]);
 
   const { user, signInWithGoogle, setOnboardingCompleted, hasCompletedGetStarted } = useAuth();
   const hasNavigated = useRef(false);
@@ -177,19 +183,18 @@ export default function AuthLanding() {
       <View style={[styles.carouselSection, { paddingTop: insets.top }]}>
         <Animated.View
           style={{
-            opacity: fadeAnim,
-            transform: [{ scale: scaleAnim }],
+            transform: [{ translateX: translateAnim }],
             alignItems: "center",
             justifyContent: "center",
+            width: "100%",
+            height: "100%",
           }}
         >
-          <View style={styles.iconCircle}>
-            <MaterialCommunityIcons
-              name={ICONS[currentIndex]}
-              size={68}
-              color={theme.primary.main}
-            />
-          </View>
+          <Image
+            source={CAROUSEL_SLIDES[currentIndex].source}
+            style={styles.posterImage}
+            resizeMode="cover"
+          />
         </Animated.View>
       </View>
 
@@ -197,7 +202,7 @@ export default function AuthLanding() {
       <View style={[styles.bottomPanel, { paddingBottom: insets.bottom + 12 }]}>
         {/* Dots synced with icon index */}
         <View style={styles.dotsRow}>
-          {ICONS.map((_, i) => (
+          {CAROUSEL_SLIDES.map((_, i) => (
             <View
               key={i}
               style={{
