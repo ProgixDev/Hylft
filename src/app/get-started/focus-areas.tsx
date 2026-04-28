@@ -52,7 +52,7 @@ export default function FocusAreas() {
   const handleContinue = async () => {
     if (selected.length === 0) return;
     await AsyncStorage.setItem("@hylift_focus_areas", JSON.stringify(selected));
-    router.navigate("/get-started/health-connect");
+    router.navigate("/get-started/ready");
   };
 
   return (

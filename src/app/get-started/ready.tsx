@@ -1,8 +1,7 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Image } from "expo-image";
-import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import React, { useEffect, useRef } from "react";
+import { StatusBar } from "expo-status-bar";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Animated,
@@ -11,288 +10,604 @@ import {
   StyleSheet,
   Text,
   View,
+  type StyleProp,
+  type ViewStyle,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import Svg, { Circle, G } from "react-native-svg";
 import { FONTS } from "../../constants/fonts";
 import { useAuth } from "../../contexts/AuthContext";
-import { useTheme } from "../../contexts/ThemeContext";
 import { supabase } from "../../services/supabase";
 
-const gifSource = require("../../../assets/celebration.gif");
+const EXERCISES = [
+  require("../../../exercisedb/data/media_lowquality/01qpYSe.gif"),
+  require("../../../exercisedb/data/media_lowquality/03lzqwk.gif"),
+  require("../../../exercisedb/data/media_lowquality/05Cf2v8.gif"),
+  require("../../../exercisedb/data/media_lowquality/0br45wL.gif"),
+  require("../../../exercisedb/data/media_lowquality/0CXGHya.gif"),
+  require("../../../exercisedb/data/media_lowquality/0dCyly0.gif"),
+  require("../../../exercisedb/data/media_lowquality/0IgNjSM.gif"),
+  require("../../../exercisedb/data/media_lowquality/0jp9Rlz.gif"),
+  require("../../../exercisedb/data/media_lowquality/0JtKWum.gif"),
+  require("../../../exercisedb/data/media_lowquality/0L2KwtI.gif"),
+  require("../../../exercisedb/data/media_lowquality/0lQnxMZ.gif"),
+  require("../../../exercisedb/data/media_lowquality/0mB6wHO.gif"),
+];
 
-const { width: SW } = Dimensions.get("window");
-const CIRCLE = 200;
-const RING = CIRCLE + 60;
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const PLAN_DURATION = 10000;
+const RING_SIZE = 132;
+const CENTER = RING_SIZE / 2;
+
+const R_INNER = 36;
+const C_INNER = 2 * Math.PI * R_INNER;
+const R_MIDDLE = 47;
+const C_MIDDLE = 2 * Math.PI * R_MIDDLE;
+const R_OUTER = 58;
+const C_OUTER = 2 * Math.PI * R_OUTER;
+
+const LOGO = require("../../../assets/images/Logo.png");
+
+const AVATAR_SIZE = 44;
+const AVATAR_GAP = 12;
+const AVATAR_STEP = AVATAR_SIZE + AVATAR_GAP;
+
+const EXERCISE_SIZE = 44;
+const EXERCISE_GAP = 12;
+const EXERCISE_STEP = EXERCISE_SIZE + EXERCISE_GAP;
+const EXERCISE_LOOP_DISTANCE = EXERCISES.length * EXERCISE_STEP;
+
+const EXERCISES_1 = EXERCISES;
+const EXERCISES_2 = [...EXERCISES].reverse();
+const EXERCISES_3 = EXERCISES.slice(4).concat(EXERCISES.slice(0, 4));
+const EXERCISES_4 = EXERCISES.slice(7).concat(EXERCISES.slice(0, 7));
+
+const AvatarMarquee = React.memo(function AvatarMarquee({
+  sources,
+  reverse = false,
+  duration,
+  style,
+}: {
+  sources: string[];
+  reverse?: boolean;
+  duration: number;
+  style?: StyleProp<ViewStyle>;
+}) {
+  const loopDistance = sources.length * AVATAR_STEP;
+
+  const translateX = useRef(
+    new Animated.Value(reverse ? -loopDistance : 0),
+  ).current;
+  const row = useMemo(() => [...sources, ...sources], [sources]);
+
+  useEffect(() => {
+    if (sources.length === 0) return;
+    translateX.setValue(reverse ? -loopDistance : 0);
+    const animation = Animated.loop(
+      Animated.timing(translateX, {
+        toValue: reverse ? 0 : -loopDistance,
+        duration,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      }),
+    );
+
+    animation.start();
+    return () => animation.stop();
+  }, [duration, reverse, translateX, loopDistance, sources.length]);
+
+  if (sources.length === 0) return null;
+
+  return (
+    <View style={[styles.marqueeWindow, style]}>
+      <Animated.View
+        style={[
+          styles.avatarTrack,
+          { width: loopDistance * 2, transform: [{ translateX }] },
+        ]}
+      >
+        {row.map((source, index) => (
+          <View key={`${source}-${index}`} style={styles.avatarShell}>
+            <Image
+              source={{ uri: source }}
+              style={styles.avatar}
+              contentFit="cover"
+            />
+          </View>
+        ))}
+      </Animated.View>
+    </View>
+  );
+});
+
+const ExerciseMarquee = React.memo(function ExerciseMarquee({
+  sources,
+  reverse = false,
+  duration,
+  style,
+}: {
+  sources: number[];
+  reverse?: boolean;
+  duration: number;
+  style?: StyleProp<ViewStyle>;
+}) {
+  const translateX = useRef(
+    new Animated.Value(reverse ? -EXERCISE_LOOP_DISTANCE : 0),
+  ).current;
+  const row = useMemo(() => [...sources, ...sources], [sources]);
+
+  useEffect(() => {
+    translateX.setValue(reverse ? -EXERCISE_LOOP_DISTANCE : 0);
+    const animation = Animated.loop(
+      Animated.timing(translateX, {
+        toValue: reverse ? 0 : -EXERCISE_LOOP_DISTANCE,
+        duration,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      }),
+    );
+
+    animation.start();
+    return () => animation.stop();
+  }, [duration, reverse, translateX]);
+
+  return (
+    <View style={[styles.marqueeWindow, style]}>
+      <Animated.View
+        style={[styles.exerciseTrack, { transform: [{ translateX }] }]}
+      >
+        {row.map((source, index) => (
+          <View key={`${source}-${index}`} style={styles.exerciseShell}>
+            <Image
+              source={source}
+              style={styles.exerciseImage}
+              contentFit="contain"
+            />
+          </View>
+        ))}
+      </Animated.View>
+    </View>
+  );
+});
+
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+
+function PercentText({ progress }: { progress: Animated.Value }) {
+  const [percent, setPercent] = useState(0);
+
+  useEffect(() => {
+    const listener = progress.addListener(({ value }) => {
+      setPercent(Math.round(value));
+    });
+    return () => progress.removeListener(listener);
+  }, [progress]);
+
+  return <Text style={styles.percent}>{percent}%</Text>;
+}
 
 export default function Ready() {
   const router = useRouter();
-  const { theme } = useTheme();
-  const { user, setGetStartedCompleted } = useAuth();
+  const { user } = useAuth();
   const { t } = useTranslation();
+  const progress = useRef(new Animated.Value(0)).current;
+  const pulse = useRef(new Animated.Value(0)).current;
 
-  const scale = useRef(new Animated.Value(0.5)).current;
-  const opacity = useRef(new Animated.Value(0)).current;
-  const ring1 = useRef(new Animated.Value(0)).current;
-  const ring2 = useRef(new Animated.Value(0)).current;
-  const textY = useRef(new Animated.Value(36)).current;
-  const textOpacity = useRef(new Animated.Value(0)).current;
+  // For remote avatars
+  const [avatars, setAvatars] = useState<string[]>([]);
 
   useEffect(() => {
-    Animated.sequence([
-      Animated.parallel([
-        Animated.spring(scale, { toValue: 1, friction: 5, tension: 70, useNativeDriver: true }),
-        Animated.timing(opacity, { toValue: 1, duration: 500, useNativeDriver: true }),
-      ]),
-      Animated.parallel([
-        Animated.timing(textY, { toValue: 0, duration: 420, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-        Animated.timing(textOpacity, { toValue: 1, duration: 420, useNativeDriver: true }),
-      ]),
-    ]).start();
-
-    const startRing = (anim: Animated.Value, delay: number) => {
-      Animated.loop(
-        Animated.sequence([
-          Animated.delay(delay),
-          Animated.timing(anim, { toValue: 1, duration: 2200, easing: Easing.out(Easing.ease), useNativeDriver: true }),
-          Animated.timing(anim, { toValue: 0, duration: 0, useNativeDriver: true }),
-        ]),
-      ).start();
-    };
-
-    startRing(ring1, 0);
-    startRing(ring2, 1100);
+    const fileNames = [
+      "1.jpg",
+      "2.jpg",
+      "3.jpg",
+      "4.jpg",
+      "5.jpg",
+      "6.jpg",
+      "7.jpg",
+      "8.avif",
+      "9.avif",
+    ];
+    const urls = fileNames.map(
+      (name) =>
+        supabase.storage.from("mock_profiles_onboarding").getPublicUrl(name)
+          .data.publicUrl,
+    );
+    setAvatars(urls);
   }, []);
 
+  const avatars1 = useMemo(
+    () => (avatars.length > 0 ? avatars : []),
+    [avatars],
+  );
+  const avatars2 = useMemo(
+    () => (avatars.length > 0 ? [...avatars].reverse() : []),
+    [avatars],
+  );
+  const avatars3 = useMemo(
+    () =>
+      avatars.length > 0 ? avatars.slice(4).concat(avatars.slice(0, 4)) : [],
+    [avatars],
+  );
+  const avatars4 = useMemo(
+    () =>
+      avatars.length > 0 ? avatars.slice(7).concat(avatars.slice(0, 7)) : [],
+    [avatars],
+  );
+
   useEffect(() => {
-    const saveProfile = async () => {
-      setGetStartedCompleted();
-
-      if (user) {
-        const [
-          age, heightCm, weightKg, targetWeightKg, gender,
-          fitnessGoals, experienceLevel, workoutFrequency, focusAreas, unitSystem,
-        ] = await Promise.all([
-          AsyncStorage.getItem("@hylift_age"),
-          AsyncStorage.getItem("@hylift_height"),
-          AsyncStorage.getItem("@hylift_weight"),
-          AsyncStorage.getItem("@hylift_target_weight"),
-          AsyncStorage.getItem("@hylift_gender"),
-          AsyncStorage.getItem("@hylift_fitness_goals"),
-          AsyncStorage.getItem("@hylift_experience_level"),
-          AsyncStorage.getItem("@hylift_workout_frequency"),
-          AsyncStorage.getItem("@hylift_focus_areas"),
-          AsyncStorage.getItem("@hylift_unit_system"),
-        ]);
-
-        let dateOfBirth: string | null = null;
-        if (age) {
-          const now = new Date();
-          now.setFullYear(now.getFullYear() - parseInt(age, 10));
-          dateOfBirth = now.toISOString().split("T")[0];
+    Animated.timing(progress, {
+      toValue: 100,
+      duration: PLAN_DURATION,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false,
+    }).start(({ finished }) => {
+      if (finished) {
+        if (!user) {
+          router.replace("/get-started/account");
+        } else {
+          router.replace("/(tabs)/home");
         }
-
-        await supabase.from("user_profiles").upsert({
-          id: user.id,
-          username: user.user_metadata?.username || "user_" + user.id.substring(0, 8),
-          unit_system: unitSystem || null,
-          height_cm: heightCm ? parseFloat(heightCm) : null,
-          weight_kg: weightKg ? parseFloat(weightKg) : null,
-          target_weight_kg: targetWeightKg ? parseFloat(targetWeightKg) : null,
-          date_of_birth: dateOfBirth,
-          gender: gender || null,
-          fitness_goal: fitnessGoals || null,
-          experience_level: experienceLevel || null,
-          workout_frequency: workoutFrequency ? parseInt(workoutFrequency, 10) : null,
-          focus_areas: focusAreas ? JSON.parse(focusAreas) : null,
-          onboarding_completed: true,
-        });
       }
-    };
+    });
 
-    saveProfile();
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, {
+          toValue: 1,
+          duration: 1400,
+          easing: Easing.inOut(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulse, {
+          toValue: 0,
+          duration: 1400,
+          easing: Easing.inOut(Easing.cubic),
+          useNativeDriver: true,
+        }),
+      ]),
+    ).start();
+  }, [progress, pulse, router, user]);
 
-    const timer = setTimeout(() => {
-      router.navigate("/(tabs)/home");
-    }, 2800);
-
-    return () => clearTimeout(timer);
-  }, [router]);
-
-  const makeRing = (anim: Animated.Value) => ({
-    scale: anim.interpolate({ inputRange: [0, 1], outputRange: [1, 2] }),
-    opacity: anim.interpolate({ inputRange: [0, 0.15, 1], outputRange: [0, 0.55, 0] }),
+  const topWidth = progress.interpolate({
+    inputRange: [0, 100],
+    outputRange: ["0%", "100%"],
   });
 
-  const r1 = makeRing(ring1);
-  const r2 = makeRing(ring2);
-  const isLight = true;
+  const dashInner = progress.interpolate({
+    inputRange: [0, 100],
+    outputRange: [C_INNER, 0],
+  });
+  const dashMiddle = progress.interpolate({
+    inputRange: [0, 100],
+    outputRange: [C_MIDDLE, 0],
+  });
+  const dashOuter = progress.interpolate({
+    inputRange: [0, 100],
+    outputRange: [C_OUTER, 0],
+  });
+
+  const ringScale = pulse.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 1.04],
+  });
+
+  const state1Opacity = progress.interpolate({
+    inputRange: [0, 42, 50],
+    outputRange: [1, 1, 0],
+  });
+
+  const state2Opacity = progress.interpolate({
+    inputRange: [50, 58, 100],
+    outputRange: [0, 1, 1],
+  });
 
   return (
-    <View style={[s.root, { backgroundColor: "#FFFFFF" }]}>
-      <LinearGradient
-        colors={[theme.primary.main + "35", "#FFFFFF00"]}
-        style={StyleSheet.absoluteFill}
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 0.65 }}
-      />
-      <View
-        style={[
-          s.ambient,
-          { backgroundColor: theme.primary.main + (isLight ? "20" : "28") },
-        ]}
-      />
+    <View style={styles.root}>
+      <StatusBar style="light" translucent backgroundColor="transparent" />
 
-      <View style={s.visualZone}>
-        {[r1, r2].map((r, i) => (
-          <Animated.View
-            key={i}
-            style={[
-              s.ring,
-              {
-                borderColor: theme.primary.main,
-                opacity: r.opacity,
-                transform: [{ scale: r.scale }],
-              },
-            ]}
-          />
-        ))}
-
-        <View
-          style={[
-            s.innerGlow,
-            { backgroundColor: theme.primary.main + (isLight ? "15" : "20") },
-          ]}
-        />
-
-        <Animated.View
-          style={[
-            s.circle,
-            {
-              backgroundColor: theme.primary.main + (isLight ? "18" : "22"),
-              borderColor: theme.primary.main + "55",
-              opacity,
-              transform: [{ scale }],
-            },
-          ]}
-        >
-          {gifSource ? (
-            <Image source={gifSource} style={s.gif} contentFit="contain" />
-          ) : (
-            <View style={[s.iconBadge, { backgroundColor: theme.primary.main }]}>
-              <Ionicons name="rocket" size={76} color="#fff" />
-            </View>
-          )}
-        </Animated.View>
+      <View style={styles.logoContainer}>
+        <Image source={LOGO} style={styles.logo} contentFit="contain" />
       </View>
 
-      <Animated.View
-        style={[
-          s.textZone,
-          {
-            opacity: textOpacity,
-            transform: [{ translateY: textY }],
-          },
-        ]}
-      >
-        <View
+      <View style={styles.content}>
+        <Animated.View
           style={[
-            s.pill,
+            styles.ringWrap,
             {
-              backgroundColor: theme.primary.main + "18",
-              borderColor: theme.primary.main + "50",
+              transform: [{ scale: ringScale }],
             },
           ]}
         >
-          <Text style={[s.pillText, { color: theme.primary.main }]}>
-            All Set
-          </Text>
+          <Svg width={RING_SIZE} height={RING_SIZE}>
+            <Circle
+              cx={CENTER}
+              cy={CENTER}
+              r={R_OUTER}
+              stroke="#1A245B"
+              strokeWidth={6}
+              fill="none"
+            />
+            <Circle
+              cx={CENTER}
+              cy={CENTER}
+              r={R_MIDDLE}
+              stroke="#1C2456"
+              strokeWidth={6}
+              fill="none"
+            />
+            <Circle
+              cx={CENTER}
+              cy={CENTER}
+              r={R_INNER}
+              stroke="#141A3E"
+              strokeWidth={6}
+              fill="none"
+            />
+
+            <G rotation="-90" originX={CENTER} originY={CENTER}>
+              <AnimatedCircle
+                cx={CENTER}
+                cy={CENTER}
+                r={R_INNER}
+                stroke="#FF4B57"
+                strokeWidth={6}
+                strokeLinecap="round"
+                strokeDasharray={C_INNER}
+                strokeDashoffset={dashInner}
+                fill="none"
+              />
+              <AnimatedCircle
+                cx={CENTER}
+                cy={CENTER}
+                r={R_MIDDLE}
+                stroke="#FFDD50"
+                strokeWidth={6}
+                strokeLinecap="round"
+                strokeDasharray={C_MIDDLE}
+                strokeDashoffset={dashMiddle}
+                fill="none"
+              />
+              <AnimatedCircle
+                cx={CENTER}
+                cy={CENTER}
+                r={R_OUTER}
+                stroke="#259CFF"
+                strokeWidth={6}
+                strokeLinecap="round"
+                strokeDasharray={C_OUTER}
+                strokeDashoffset={dashOuter}
+                fill="none"
+              />
+            </G>
+          </Svg>
+          <PercentText progress={progress} />
+        </Animated.View>
+
+        <Text style={styles.title}>{t("onboarding.ready.title")}</Text>
+      </View>
+
+      <View style={styles.community}>
+        <View style={styles.statsContainer}>
+          <Animated.View
+            style={[styles.statOverlay, { opacity: state1Opacity }]}
+          >
+            <Text style={styles.count}>
+              {t("onboarding.ready.memberCount", "200,000+")}
+            </Text>
+            <Text style={styles.caption}>
+              {t("onboarding.ready.memberCaption", "Members crushing it")}
+            </Text>
+          </Animated.View>
+          <Animated.View
+            style={[styles.statOverlay, { opacity: state2Opacity }]}
+            pointerEvents="none"
+          >
+            <Text style={[styles.count, { color: "#259CFF" }]}>
+              {t("onboarding.ready.exerciseCount", "1,300+")}
+            </Text>
+            <Text style={styles.caption}>
+              {t(
+                "onboarding.ready.exerciseCaption",
+                "Exercises on our platform",
+              )}
+            </Text>
+          </Animated.View>
         </View>
 
-        <Text style={[s.headline, { color: "#111827" }]}>
-          {t("onboarding.ready.title")}
-        </Text>
-        <Text style={[s.message, { color: theme.foreground.gray }]}>
-          {t("onboarding.ready.subtitle")}
-        </Text>
-      </Animated.View>
+        <View style={styles.gridContainer}>
+          <Animated.View
+            style={[styles.avatarGrid, { opacity: state1Opacity }]}
+          >
+            <AvatarMarquee sources={avatars1} duration={20000} />
+            <AvatarMarquee
+              sources={avatars2}
+              reverse
+              duration={23000}
+              style={styles.rowOffset}
+            />
+            <AvatarMarquee sources={avatars3} duration={26000} />
+            <AvatarMarquee
+              sources={avatars4}
+              reverse
+              duration={18000}
+              style={styles.rowOffset}
+            />
+          </Animated.View>
+
+          <Animated.View
+            style={[
+              styles.avatarGrid,
+              styles.exerciseOverlay,
+              { opacity: state2Opacity },
+            ]}
+            pointerEvents="none"
+          >
+            <ExerciseMarquee sources={EXERCISES_1} duration={22000} />
+            <ExerciseMarquee
+              sources={EXERCISES_2}
+              reverse
+              duration={24000}
+              style={styles.rowOffset}
+            />
+            <ExerciseMarquee sources={EXERCISES_3} duration={25000} />
+            <ExerciseMarquee
+              sources={EXERCISES_4}
+              reverse
+              duration={28000}
+              style={styles.fadeRow}
+            />
+          </Animated.View>
+        </View>
+      </View>
     </View>
   );
 }
 
-const s = StyleSheet.create({
-  root: { flex: 1, overflow: "hidden" },
-  ambient: {
-    position: "absolute",
-    width: SW * 1.5,
-    height: SW * 1.5,
-    borderRadius: SW * 0.75,
-    top: -SW * 0.6,
-    alignSelf: "center",
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: "#101011",
+    overflow: "hidden",
+    paddingHorizontal: 20,
   },
-  visualZone: {
+  topProgressTrack: {
+    height: 5,
+    borderRadius: 999,
+    backgroundColor: "#26282D",
+    marginTop: 10,
+    overflow: "hidden",
+  },
+  topProgressFill: {
+    height: "100%",
+    borderRadius: 999,
+    backgroundColor: "#259CFF",
+  },
+  logoContainer: {
+    paddingTop: 60,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  logo: {
+    width: 120,
+    height: 40,
+  },
+  content: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
+    paddingBottom: 46,
   },
-  ring: {
-    position: "absolute",
-    width: RING,
-    height: RING,
-    borderRadius: RING / 2,
-    borderWidth: 1.5,
-  },
-  innerGlow: {
-    position: "absolute",
-    width: CIRCLE + 28,
-    height: CIRCLE + 28,
-    borderRadius: (CIRCLE + 28) / 2,
-  },
-  circle: {
-    width: CIRCLE,
-    height: CIRCLE,
-    borderRadius: CIRCLE / 2,
-    borderWidth: 1.5,
+  ringWrap: {
+    width: RING_SIZE,
+    height: RING_SIZE,
     alignItems: "center",
     justifyContent: "center",
-    overflow: "hidden",
+    marginBottom: 22,
   },
-  gif: { width: CIRCLE - 16, height: CIRCLE - 16 },
-  iconBadge: {
-    width: CIRCLE - 16,
-    height: CIRCLE - 16,
-    borderRadius: (CIRCLE - 16) / 2,
-    alignItems: "center",
-    justifyContent: "center",
+  percent: {
+    position: "absolute",
+    color: "#FFFFFF",
+    fontSize: 20,
+    lineHeight: 24,
+    fontFamily: FONTS.extraBold,
   },
-  textZone: {
-    alignItems: "center",
-    paddingHorizontal: 28,
-    paddingBottom: 60,
-  },
-  pill: {
-    borderWidth: 1,
-    borderRadius: 100,
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    marginBottom: 20,
-  },
-  pillText: {
-    fontSize: 11,
-    fontFamily: FONTS.bold,
-    letterSpacing: 2.5,
-    textTransform: "uppercase",
-  },
-  headline: {
-    fontSize: 32,
+  title: {
+    color: "#FFFFFF",
+    fontSize: 23,
+    lineHeight: 28,
     fontFamily: FONTS.extraBold,
     textAlign: "center",
-    marginBottom: 12,
-    lineHeight: 40,
+    maxWidth: 260,
   },
-  message: {
-    fontSize: 15,
-    fontFamily: FONTS.regular,
+  community: {
+    minHeight: 260,
+    alignItems: "center",
+    justifyContent: "flex-end",
+    paddingBottom: 10,
+  },
+  statsContainer: {
+    width: "100%",
+    height: 80,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 8,
+  },
+  statOverlay: {
+    position: "absolute",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  count: {
+    color: "#259CFF",
+    fontSize: 45,
+    lineHeight: 52,
+    fontFamily: FONTS.extraBold,
     textAlign: "center",
-    lineHeight: 24,
+  },
+  caption: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    lineHeight: 21,
+    fontFamily: FONTS.bold,
+    textAlign: "center",
+    marginBottom: 0,
+  },
+  avatarGrid: {
+    width: SCREEN_WIDTH + AVATAR_STEP * 2,
+    marginHorizontal: -AVATAR_STEP,
+  },
+  gridContainer: {
+    width: SCREEN_WIDTH + AVATAR_STEP * 2,
+    height: 250,
+  },
+  exerciseOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+  },
+  marqueeWindow: {
+    height: AVATAR_SIZE + 8,
+    overflow: "hidden",
+    marginBottom: 6,
+  },
+  rowOffset: {
+    marginLeft: -26,
+  },
+  fadeRow: {
+    opacity: 0.55,
+  },
+  avatarTrack: {
+    flexDirection: "row",
+  },
+  avatarShell: {
+    width: AVATAR_SIZE,
+    height: AVATAR_SIZE,
+    borderRadius: AVATAR_SIZE / 2,
+    overflow: "hidden",
+    marginRight: AVATAR_GAP,
+    backgroundColor: "#1F2228",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.12)",
+  },
+  avatar: {
+    width: "100%",
+    height: "100%",
+  },
+  exerciseTrack: {
+    flexDirection: "row",
+    width: EXERCISE_LOOP_DISTANCE * 2,
+  },
+  exerciseShell: {
+    width: EXERCISE_SIZE,
+    height: EXERCISE_SIZE,
+    borderRadius: 8,
+    overflow: "hidden",
+    marginRight: EXERCISE_GAP,
+    backgroundColor: "#161D3A",
+  },
+  exerciseImage: {
+    width: "100%",
+    height: "100%",
+    opacity: 0.85,
   },
 });

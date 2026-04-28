@@ -151,37 +151,25 @@
       }
     },
     "workoutFrequency": {
-      "title": "How often do you train?",
-      "subtitle": "We'll build your weekly schedule around this",
-      "options": {
-        "1": {
-          "label": "1 day / week",
-          "description": "Minimal commitment — great for maintaining a basic routine"
-        },
-        "2": {
-          "label": "2 days / week",
-          "description": "Light schedule — perfect for beginners or busy weeks"
-        },
-        "3": {
-          "label": "3 days / week",
-          "description": "Classic 3-day split — great balance of training and recovery"
-        },
-        "4": {
-          "label": "4 days / week",
-          "description": "Upper / Lower or Push / Pull — solid for intermediate lifters"
-        },
-        "5": {
-          "label": "5 days / week",
-          "description": "PPL or Bro split — serious volume for serious gains"
-        },
-        "6": {
-          "label": "6 days / week",
-          "description": "PPL × 2 — maximum frequency for advanced athletes"
-        },
-        "7": {
-          "label": "7 days / week",
-          "description": "No rest — for the most dedicated only"
-        }
+      "title": "What days do you train on?",
+      "subtitle": "Select every day you usually work out",
+      "days": {
+        "monday": "Monday",
+        "tuesday": "Tuesday",
+        "wednesday": "Wednesday",
+        "thursday": "Thursday",
+        "friday": "Friday",
+        "saturday": "Saturday",
+        "sunday": "Sunday"
+      },
+      "shortDays": {
+        "mon": "Mon",
+        "tue": "Tue",
+        "wed": "Wed",
+        "thu": "Thu",
+        "fri": "Fri",
+        "sat": "Sat",
+        "sun": "Sun"
       }
     },
     "focusAreas": {
@@ -353,8 +341,10 @@
       "permissionDeniedMessage": "You can enable health tracking later in Settings."
     },
     "ready": {
-      "title": "You're Ready!",
-      "subtitle": "Let's start your fitness journey together"
+      "title": "AI is creating a personal plan for you",
+      "subtitle": "Let's start your fitness journey together",
+      "memberCount": "1,000,000+",
+      "memberCaption": "people train with HyliftAI"
     },
     "account": {
       "title": "One last step",

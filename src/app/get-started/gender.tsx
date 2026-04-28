@@ -11,7 +11,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import ChipButton from "../../components/ui/ChipButton";
 import SignupProgress from "../../components/ui/SignupProgress";
 import { FONTS } from "../../constants/fonts";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -24,6 +23,7 @@ export default function GenderSelection() {
   const { theme, setTheme } = useTheme();
   const { t } = useTranslation();
   const [selectedGender, setSelectedGender] = useState<string>("");
+  const [isNavigating, setIsNavigating] = useState(false);
   const isSignupFlow = params.flow === "signup";
 
   const fade = useRef(new Animated.Value(0)).current;
@@ -44,20 +44,21 @@ export default function GenderSelection() {
         useNativeDriver: true,
       }),
     ]).start();
-  }, []);
+  }, [fade, slide]);
 
-  const handleSelectGender = (gender: "male" | "female") => {
+  const handleSelectGender = async (gender: "male" | "female") => {
+    if (isNavigating) return;
     setSelectedGender(gender);
-  };
-
-  const handleContinue = async () => {
-    if (!selectedGender) return;
-    setTheme(selectedGender as "male" | "female");
-    await AsyncStorage.setItem("@hylift_gender", selectedGender);
-    if (isSignupFlow) {
-      router.push("/get-started/age?flow=signup");
-    } else {
-      router.navigate("/get-started/units");
+    setIsNavigating(true);
+    setTheme(gender);
+    try {
+      await AsyncStorage.setItem("@hylift_gender", gender);
+    } finally {
+      if (isSignupFlow) {
+        router.push("/get-started/age?flow=signup");
+      } else {
+        router.navigate("/get-started/units");
+      }
     }
   };
 
@@ -85,7 +86,7 @@ export default function GenderSelection() {
                   borderWidth: 1.5,
                 },
               ]}
-              onPress={() => handleSelectGender("male")}
+              onPress={() => void handleSelectGender("male")}
               activeOpacity={0.72}
             >
               <Image
@@ -116,7 +117,7 @@ export default function GenderSelection() {
                   borderWidth: 1.5,
                 },
               ]}
-              onPress={() => handleSelectGender("female")}
+              onPress={() => void handleSelectGender("female")}
               activeOpacity={0.72}
             >
               <Image
@@ -139,15 +140,6 @@ export default function GenderSelection() {
           </View>
         </View>
       </Animated.View>
-
-      <ChipButton
-        title={t("common.continue")}
-        onPress={handleContinue}
-        variant="primary"
-        size="lg"
-        fullWidth
-        disabled={!selectedGender}
-      />
     </View>
   );
 }

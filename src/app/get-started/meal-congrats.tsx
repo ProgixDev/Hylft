@@ -26,7 +26,7 @@ export default function MealCongrats() {
           : message
       }
       buttonLabel={t("common.next")}
-      next="/get-started/activity-level"
+      next="/get-started/gender?flow=signup"
     />
   );
 }

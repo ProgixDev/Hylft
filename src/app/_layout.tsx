@@ -40,7 +40,10 @@ function AppContent() {
   const [showProModal, setShowProModal] = React.useState(false);
   const previousUser = React.useRef(user);
   const [isProEntitled, setIsProEntitled] = React.useState(false);
-  const isGetStartedRoute = segments[0] === "get-started";
+  const routeSegments = segments as string[];
+  const isGetStartedRoute = routeSegments[0] === "get-started";
+  const isPlanBuildingRoute =
+    isGetStartedRoute && routeSegments[1] === "ready";
 
   useEffect(() => {
     if (isLoading || user) return;
@@ -107,7 +110,13 @@ function AppContent() {
   return (
     <>
       <StatusBar
-        style={isGetStartedRoute || themeType !== "dark" ? "dark" : "light"}
+        style={
+          isPlanBuildingRoute
+            ? "light"
+            : isGetStartedRoute || themeType !== "dark"
+              ? "dark"
+              : "light"
+        }
         translucent
         backgroundColor="transparent"
       />
@@ -122,7 +131,9 @@ function AppContent() {
           headerShown: false,
           contentStyle: {
             backgroundColor: isGetStartedRoute
-              ? "#FFFFFF"
+              ? isPlanBuildingRoute
+                ? "#101011"
+                : "#FFFFFF"
               : theme.background.dark,
             paddingTop: insets.top,
             paddingBottom: insets.bottom,
@@ -130,7 +141,11 @@ function AppContent() {
             paddingRight: insets.right,
           },
           statusBarStyle:
-            isGetStartedRoute || themeType !== "dark" ? "dark" : "light",
+            isPlanBuildingRoute
+              ? "light"
+              : isGetStartedRoute || themeType !== "dark"
+                ? "dark"
+                : "light",
           statusBarTranslucent: true,
           navigationBarColor: "transparent",
         }}

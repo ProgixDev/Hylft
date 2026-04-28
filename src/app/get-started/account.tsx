@@ -4,18 +4,18 @@ import { useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  Alert,
-  Animated,
-  Easing,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    Animated,
+    Easing,
+    KeyboardAvoidingView,
+    Platform,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import ChipButton from "../../components/ui/ChipButton";
 import SignupProgress from "../../components/ui/SignupProgress";
@@ -64,9 +64,18 @@ export default function AccountScreen() {
 
   const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const canSubmit =
-    isEmailValid && password.length >= 6 && agreed && !loading && username.length >= 2;
+    isEmailValid &&
+    password.length >= 6 &&
+    agreed &&
+    !loading &&
+    username.length >= 2;
 
-  const withFallback = (key: string, enText: string, frText: string, options?: Record<string, unknown>) => {
+  const withFallback = (
+    key: string,
+    enText: string,
+    frText: string,
+    options?: Record<string, unknown>,
+  ) => {
     const value = t(key, options);
     return value === key ? (isFr ? frText : enText) : value;
   };
@@ -90,11 +99,15 @@ export default function AccountScreen() {
           : withFallback(
               "onboarding.account.signUpFailed",
               "Sign up failed",
-              "Échec de l'inscription"
+              "Échec de l'inscription",
             );
       Alert.alert(
-        withFallback("onboarding.account.signUpError", "Sign up error", "Erreur d'inscription"),
-        message
+        withFallback(
+          "onboarding.account.signUpError",
+          "Sign up error",
+          "Erreur d'inscription",
+        ),
+        message,
       );
     } finally {
       setLoading(false);
@@ -126,15 +139,19 @@ export default function AccountScreen() {
                   "onboarding.account.titleWithName",
                   `One last step, ${username}`,
                   `Une dernière étape, ${username}`,
-                  { name: username }
+                  { name: username },
                 )
-              : withFallback("onboarding.account.title", "One last step", "Une dernière étape")}
+              : withFallback(
+                  "onboarding.account.title",
+                  "One last step",
+                  "Une dernière étape",
+                )}
           </Text>
           <Text style={styles.subtitle}>
             {withFallback(
               "onboarding.account.subtitle",
               "Create your account to save your plan and track progress.",
-              "Créez votre compte pour enregistrer votre plan et suivre vos progrès."
+              "Créez votre compte pour enregistrer votre plan et suivre vos progrès.",
             )}
           </Text>
 
@@ -145,7 +162,7 @@ export default function AccountScreen() {
               placeholder={withFallback(
                 "onboarding.account.emailPlaceholder",
                 "you@example.com",
-                "vous@exemple.com"
+                "vous@exemple.com",
               )}
               placeholderTextColor={theme.foreground.gray}
               value={email}
@@ -164,7 +181,7 @@ export default function AccountScreen() {
                 placeholder={withFallback(
                   "onboarding.account.passwordPlaceholder",
                   "At least 6 characters",
-                  "Au moins 6 caractères"
+                  "Au moins 6 caractères",
                 )}
                 placeholderTextColor={theme.foreground.gray}
                 value={password}
@@ -205,12 +222,26 @@ export default function AccountScreen() {
               {agreed && <Ionicons name="checkmark" size={14} color="#fff" />}
             </View>
             <Text style={[styles.agreeText, { color: theme.foreground.gray }]}>
-              {withFallback("onboarding.account.agreePrefix", "I agree to the", "J'accepte les")}{" "}
-              <Text style={{ color: theme.primary.main, fontFamily: FONTS.semiBold }}>
+              {withFallback(
+                "onboarding.account.agreePrefix",
+                "I agree to the",
+                "J'accepte les",
+              )}{" "}
+              <Text
+                style={{
+                  color: theme.primary.main,
+                  fontFamily: FONTS.semiBold,
+                }}
+              >
                 {t("settings.termsOfService")}
               </Text>{" "}
               {withFallback("onboarding.account.agreeAnd", "and", "et la")}{" "}
-              <Text style={{ color: theme.primary.main, fontFamily: FONTS.semiBold }}>
+              <Text
+                style={{
+                  color: theme.primary.main,
+                  fontFamily: FONTS.semiBold,
+                }}
+              >
                 {t("settings.privacyPolicy")}
               </Text>
               .
@@ -225,12 +256,12 @@ export default function AccountScreen() {
             ? withFallback(
                 "onboarding.account.creatingAccount",
                 "Creating account...",
-                "Création du compte..."
+                "Création du compte...",
               )
             : withFallback(
                 "onboarding.account.createAccount",
                 "Create account",
-                "Créer un compte"
+                "Créer un compte",
               )
         }
         onPress={handleSubmit}

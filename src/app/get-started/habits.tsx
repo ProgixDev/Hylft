@@ -6,39 +6,234 @@ import { useTranslation } from "react-i18next";
 import {
   Animated,
   Easing,
+  Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
 import ChipButton from "../../components/ui/ChipButton";
 import SignupProgress from "../../components/ui/SignupProgress";
 import { FONTS } from "../../constants/fonts";
-import { useTheme } from "../../contexts/ThemeContext";
 
-const BG = "#FFFFFF";
-const SURFACE = "#F6F8FA";
-const BORDER = "#DDE3EA";
+const BG = "#FBFCFA";
 
 const HABITS: {
   id: string;
   icon: keyof typeof Ionicons.glyphMap;
+  accent: string;
+  depth: string;
+  tint: string;
 }[] = [
-  { id: "eat_balanced", icon: "nutrition-outline" },
-  { id: "drink_water", icon: "water-outline" },
-  { id: "sleep_well", icon: "moon-outline" },
-  { id: "move_daily", icon: "walk-outline" },
-  { id: "strength", icon: "barbell-outline" },
-  { id: "reduce_stress", icon: "leaf-outline" },
-  { id: "cut_sugar", icon: "ice-cream-outline" },
-  { id: "track_progress", icon: "stats-chart-outline" },
-  { id: "mindful_eating", icon: "happy-outline" },
+  {
+    id: "eat_balanced",
+    icon: "nutrition-outline",
+    accent: "#22C17A",
+    depth: "#168E5A",
+    tint: "#EAF8F1",
+  },
+  {
+    id: "drink_water",
+    icon: "water-outline",
+    accent: "#38BDF8",
+    depth: "#0284C7",
+    tint: "#E8F7FF",
+  },
+  {
+    id: "sleep_well",
+    icon: "moon-outline",
+    accent: "#8B5CF6",
+    depth: "#6D28D9",
+    tint: "#F3EEFF",
+  },
+  {
+    id: "move_daily",
+    icon: "walk-outline",
+    accent: "#F97316",
+    depth: "#C2410C",
+    tint: "#FFF1E6",
+  },
+  {
+    id: "strength",
+    icon: "barbell-outline",
+    accent: "#14B8A6",
+    depth: "#0F766E",
+    tint: "#E8FAF7",
+  },
+  {
+    id: "reduce_stress",
+    icon: "leaf-outline",
+    accent: "#84CC16",
+    depth: "#4D7C0F",
+    tint: "#F3FCE7",
+  },
+  {
+    id: "cut_sugar",
+    icon: "ice-cream-outline",
+    accent: "#EC4899",
+    depth: "#BE185D",
+    tint: "#FCE7F3",
+  },
+  {
+    id: "track_progress",
+    icon: "stats-chart-outline",
+    accent: "#3B82F6",
+    depth: "#1D5FC4",
+    tint: "#EDF4FF",
+  },
+  {
+    id: "mindful_eating",
+    icon: "happy-outline",
+    accent: "#F59E0B",
+    depth: "#C87504",
+    tint: "#FFF4DF",
+  },
 ];
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+function HabitTile({
+  habit,
+  index,
+  selected,
+  onPress,
+  label,
+}: {
+  habit: (typeof HABITS)[number];
+  index: number;
+  selected: boolean;
+  onPress: () => void;
+  label: string;
+}) {
+  const entrance = useRef(new Animated.Value(0)).current;
+  const scale = useRef(new Animated.Value(1)).current;
+  const pressDepth = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.spring(entrance, {
+      toValue: 1,
+      delay: 90 + index * 35,
+      tension: 58,
+      friction: 9,
+      useNativeDriver: true,
+    }).start();
+  }, [entrance, index]);
+
+  const pressIn = () => {
+    Animated.parallel([
+      Animated.spring(scale, {
+        toValue: 0.99,
+        speed: 40,
+        bounciness: 0,
+        useNativeDriver: true,
+      }),
+      Animated.spring(pressDepth, {
+        toValue: 5,
+        speed: 40,
+        bounciness: 0,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  const pressOut = () => {
+    Animated.parallel([
+      Animated.spring(scale, {
+        toValue: 1,
+        speed: 28,
+        bounciness: 6,
+        useNativeDriver: true,
+      }),
+      Animated.spring(pressDepth, {
+        toValue: 0,
+        speed: 26,
+        bounciness: 6,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  return (
+    <AnimatedPressable
+      onPress={onPress}
+      onPressIn={pressIn}
+      onPressOut={pressOut}
+      hitSlop={4}
+      android_ripple={{ color: "rgba(255,255,255,0.18)" }}
+      style={[
+        styles.tileShell,
+        {
+          opacity: entrance,
+          transform: [
+            {
+              translateY: entrance.interpolate({
+                inputRange: [0, 1],
+                outputRange: [16, 0],
+              }),
+            },
+            { scale },
+          ],
+        },
+      ]}
+    >
+      <View style={[styles.tileBase, { backgroundColor: habit.depth }]}>
+        <Animated.View
+          style={[
+            styles.tileFace,
+            {
+              backgroundColor: selected ? habit.accent : "#FFFFFF",
+              borderColor: selected ? habit.accent : "#E8EDF0",
+              transform: [{ translateY: pressDepth }],
+            },
+          ]}
+        >
+          <View
+            style={[
+              styles.tileIcon,
+              {
+                backgroundColor: selected
+                  ? "rgba(255,255,255,0.22)"
+                  : habit.tint,
+              },
+            ]}
+          >
+            <Ionicons
+              name={habit.icon}
+              size={24}
+              color={selected ? "#FFFFFF" : habit.accent}
+            />
+          </View>
+          <Text
+            style={[
+              styles.tileLabel,
+              { color: selected ? "#FFFFFF" : "#111827" },
+            ]}
+            numberOfLines={2}
+          >
+            {label}
+          </Text>
+          <View
+            style={[
+              styles.tileCheck,
+              {
+                backgroundColor: selected ? "#FFFFFF" : habit.tint,
+                borderColor: selected ? "#FFFFFF" : habit.accent + "55",
+              },
+            ]}
+          >
+            {selected && (
+              <Ionicons name="checkmark" size={12} color={habit.accent} />
+            )}
+          </View>
+        </Animated.View>
+      </View>
+    </AnimatedPressable>
+  );
+}
 
 export default function HabitsScreen() {
   const router = useRouter();
-  const { theme } = useTheme();
   const { t } = useTranslation();
   const [selected, setSelected] = useState<string[]>([]);
 
@@ -60,7 +255,7 @@ export default function HabitsScreen() {
         useNativeDriver: true,
       }),
     ]).start();
-  }, []);
+  }, [fade, slide]);
 
   const toggle = (id: string) => {
     setSelected((prev) =>
@@ -71,7 +266,7 @@ export default function HabitsScreen() {
   const handleContinue = async () => {
     if (selected.length === 0) return;
     await AsyncStorage.setItem("@hylift_habits", JSON.stringify(selected));
-    router.push("/get-started/habits-congrats");
+    router.push("/get-started/meal-planning");
   };
 
   return (
@@ -90,62 +285,17 @@ export default function HabitsScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.grid}
         >
-          {HABITS.map((h) => {
+          {HABITS.map((h, index) => {
             const isSelected = selected.includes(h.id);
             return (
-              <View key={h.id}>
-                <TouchableOpacity
-                  activeOpacity={0.72}
-                  onPress={() => toggle(h.id)}
-                  style={[
-                    styles.tile,
-                    {
-                      borderColor: isSelected ? theme.primary.main : BORDER,
-                      backgroundColor: isSelected
-                        ? theme.primary.main + "10"
-                        : SURFACE,
-                    },
-                  ]}
-                >
-                  <View
-                    style={[
-                      styles.tileIcon,
-                      {
-                        backgroundColor: isSelected
-                          ? theme.primary.main + "18"
-                          : "#FFFFFF",
-                      },
-                    ]}
-                  >
-                    <Ionicons
-                      name={h.icon}
-                      size={24}
-                      color={isSelected ? theme.primary.main : "#64748B"}
-                    />
-                  </View>
-                  <Text
-                    style={[
-                      styles.tileLabel,
-                      {
-                        color: isSelected ? theme.primary.main : "#111827",
-                      },
-                    ]}
-                    numberOfLines={2}
-                  >
-                    {t(`onboarding.habits.options.${h.id}`)}
-                  </Text>
-                  {isSelected && (
-                    <View
-                      style={[
-                        styles.tileCheck,
-                        { backgroundColor: theme.primary.main },
-                      ]}
-                    >
-                      <Ionicons name="checkmark" size={10} color="#fff" />
-                    </View>
-                  )}
-                </TouchableOpacity>
-              </View>
+              <HabitTile
+                key={h.id}
+                habit={h}
+                index={index}
+                selected={isSelected}
+                onPress={() => toggle(h.id)}
+                label={t(`onboarding.habits.options.${h.id}`)}
+              />
             );
           })}
         </ScrollView>
@@ -189,39 +339,56 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 12,
-    paddingBottom: 8,
+    paddingBottom: 16,
   },
-  tile: {
-    width: "30%",
-    minHeight: 100,
+  tileShell: {
+    width: "48%",
+    borderRadius: 18,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#102018",
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.1,
+        shadowRadius: 14,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  tileBase: {
+    borderRadius: 18,
+    paddingBottom: 7,
+    overflow: "hidden",
+  },
+  tileFace: {
+    minHeight: 118,
     borderWidth: 1,
-    borderRadius: 12,
+    borderRadius: 18,
     padding: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    position: "relative",
+    justifyContent: "space-between",
   },
   tileIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 10,
+    width: 42,
+    height: 42,
+    borderRadius: 13,
     alignItems: "center",
     justifyContent: "center",
   },
   tileLabel: {
-    fontSize: 12,
-    fontFamily: FONTS.semiBold,
-    textAlign: "center",
-    lineHeight: 16,
+    fontSize: 15,
+    fontFamily: FONTS.bold,
+    lineHeight: 19,
+    paddingRight: 18,
   },
   tileCheck: {
     position: "absolute",
-    top: 8,
-    right: 8,
-    width: 18,
-    height: 18,
-    borderRadius: 9,
+    top: 10,
+    right: 10,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
   },

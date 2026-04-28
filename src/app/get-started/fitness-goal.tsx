@@ -115,11 +115,6 @@ export default function FitnessGoal() {
                       >
                         {t(`onboarding.fitnessGoal.goals.${goal.id}.label`)}
                       </Text>
-                      <Text style={styles.goalDesc}>
-                        {t(
-                          `onboarding.fitnessGoal.goals.${goal.id}.description`
-                        )}
-                      </Text>
                     </View>
                     {isSelected && (
                       <View
@@ -215,14 +210,8 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   goalLabel: {
-    fontSize: 15,
+    fontSize: 16,
     fontFamily: FONTS.bold,
-    marginBottom: 3,
-  },
-  goalDesc: {
-    fontSize: 12,
-    lineHeight: 17,
-    color: "#64748B",
   },
   selectedCount: {
     textAlign: "center",

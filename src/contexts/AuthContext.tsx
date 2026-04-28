@@ -187,12 +187,64 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     await AsyncStorage.setItem(getStartedCompletedKey(id), "true");
 
-    const { error } = await supabase
-      .from("user_profiles")
-      .update({ onboarding_completed: true })
-      .eq("id", id);
-    if (error) {
-      console.error("[Auth] Failed to mark onboarding complete", error);
+    try {
+      const [
+        age,
+        heightCm,
+        weightKg,
+        targetWeightKg,
+        gender,
+        fitnessGoals,
+        experienceLevel,
+        workoutFrequency,
+        focusAreas,
+        unitSystem,
+      ] = await Promise.all([
+        AsyncStorage.getItem("@hylift_age"),
+        AsyncStorage.getItem("@hylift_height"),
+        AsyncStorage.getItem("@hylift_weight"),
+        AsyncStorage.getItem("@hylift_target_weight"),
+        AsyncStorage.getItem("@hylift_gender"),
+        AsyncStorage.getItem("@hylift_fitness_goals"),
+        AsyncStorage.getItem("@hylift_experience_level"),
+        AsyncStorage.getItem("@hylift_workout_frequency"),
+        AsyncStorage.getItem("@hylift_focus_areas"),
+        AsyncStorage.getItem("@hylift_unit_system"),
+      ]);
+
+      let dateOfBirth: string | null = null;
+      if (age) {
+        const now = new Date();
+        now.setFullYear(now.getFullYear() - parseInt(age, 10));
+        dateOfBirth = now.toISOString().split("T")[0];
+      }
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      await supabase.from("user_profiles").upsert({
+        id: id,
+        username: user?.user_metadata?.username || `user_${id.substring(0, 8)}`,
+        unit_system: unitSystem || null,
+        height_cm: heightCm ? parseFloat(heightCm) : null,
+        weight_kg: weightKg ? parseFloat(weightKg) : null,
+        target_weight_kg: targetWeightKg ? parseFloat(targetWeightKg) : null,
+        date_of_birth: dateOfBirth,
+        gender: gender || null,
+        fitness_goal: fitnessGoals || null,
+        experience_level: experienceLevel || null,
+        workout_frequency: workoutFrequency
+          ? parseInt(workoutFrequency, 10)
+          : null,
+        focus_areas: focusAreas ? JSON.parse(focusAreas) : null,
+        onboarding_completed: true,
+      });
+    } catch (error) {
+      console.error(
+        "[Auth] Failed to mark onboarding complete or save profile",
+        error,
+      );
       throw error;
     }
   };

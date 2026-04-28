@@ -3,12 +3,12 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Animated,
-  Easing,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    Animated,
+    Easing,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import ChipButton from "../../components/ui/ChipButton";
 import SignupProgress from "../../components/ui/SignupProgress";
@@ -26,32 +26,80 @@ type GoalOption = {
 };
 
 const LOSS_OPTIONS: GoalOption[] = [
-  { id: "lose_0_25", label: "0.25 kg / week", sub: "Easy and sustainable", kgPerWeek: -0.25, pace: "slow" },
-  { id: "lose_0_5",  label: "0.5 kg / week",  sub: "Recommended balance",  kgPerWeek: -0.5,  pace: "steady" },
-  { id: "lose_0_75", label: "0.75 kg / week", sub: "Ambitious pace",       kgPerWeek: -0.75, pace: "fast" },
-  { id: "lose_1_0",  label: "1 kg / week",    sub: "Aggressive cut",       kgPerWeek: -1.0,  pace: "fast" },
+  {
+    id: "lose_0_25",
+    label: "0.25 kg / week",
+    sub: "Easy and sustainable",
+    kgPerWeek: -0.25,
+    pace: "slow",
+  },
+  {
+    id: "lose_0_5",
+    label: "0.5 kg / week",
+    sub: "Recommended balance",
+    kgPerWeek: -0.5,
+    pace: "steady",
+  },
+  {
+    id: "lose_0_75",
+    label: "0.75 kg / week",
+    sub: "Ambitious pace",
+    kgPerWeek: -0.75,
+    pace: "fast",
+  },
+  {
+    id: "lose_1_0",
+    label: "1 kg / week",
+    sub: "Aggressive cut",
+    kgPerWeek: -1.0,
+    pace: "fast",
+  },
 ];
 
 const GAIN_OPTIONS: GoalOption[] = [
-  { id: "gain_0_2",  label: "0.2 kg / week",  sub: "Lean, slow bulk",   kgPerWeek: 0.2,  pace: "slow" },
-  { id: "gain_0_35", label: "0.35 kg / week", sub: "Recommended",       kgPerWeek: 0.35, pace: "steady" },
-  { id: "gain_0_5",  label: "0.5 kg / week",  sub: "Aggressive bulk",   kgPerWeek: 0.5,  pace: "fast" },
+  {
+    id: "gain_0_2",
+    label: "0.2 kg / week",
+    sub: "Lean, slow bulk",
+    kgPerWeek: 0.2,
+    pace: "slow",
+  },
+  {
+    id: "gain_0_35",
+    label: "0.35 kg / week",
+    sub: "Recommended",
+    kgPerWeek: 0.35,
+    pace: "steady",
+  },
+  {
+    id: "gain_0_5",
+    label: "0.5 kg / week",
+    sub: "Aggressive bulk",
+    kgPerWeek: 0.5,
+    pace: "fast",
+  },
 ];
 
 const MAINTAIN_OPTIONS: GoalOption[] = [
-  { id: "maintain", label: "Maintain weight", sub: "Keep your current weight", kgPerWeek: 0, pace: "steady" },
+  {
+    id: "maintain",
+    label: "Maintain weight",
+    sub: "Keep your current weight",
+    kgPerWeek: 0,
+    pace: "steady",
+  },
 ];
 
 const PACE_COLORS = {
-  slow:   "#22C55E",
+  slow: "#22C55E",
   steady: "#3B82F6",
-  fast:   "#F59E0B",
+  fast: "#F59E0B",
 };
 
 const PACE_LABELS = {
-  slow:   "Gentle",
+  slow: "Gentle",
   steady: "Balanced",
-  fast:   "Aggressive",
+  fast: "Aggressive",
 };
 
 export default function WeeklyGoalScreen() {
@@ -62,7 +110,9 @@ export default function WeeklyGoalScreen() {
   const slide = useRef(new Animated.Value(28)).current;
 
   useEffect(() => {
-    AsyncStorage.getItem("@hylift_goal").then((v) => setGoal(v || "lose_weight"));
+    AsyncStorage.getItem("@hylift_goal").then((v) =>
+      setGoal(v || "lose_weight"),
+    );
     Animated.parallel([
       Animated.timing(fade, {
         toValue: 1,
@@ -101,9 +151,12 @@ export default function WeeklyGoalScreen() {
     const picked = options.find((o) => o.id === selected);
     if (picked) {
       await AsyncStorage.setItem("@hylift_weekly_goal", picked.id);
-      await AsyncStorage.setItem("@hylift_weekly_goal_kg", picked.kgPerWeek.toString());
+      await AsyncStorage.setItem(
+        "@hylift_weekly_goal_kg",
+        picked.kgPerWeek.toString(),
+      );
     }
-    router.push("/get-started/account");
+    router.push("/get-started/ready");
   };
 
   return (

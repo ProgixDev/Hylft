@@ -151,37 +151,25 @@
       }
     },
     "workoutFrequency": {
-      "title": "À quelle fréquence vous entraînez-vous ?",
-      "subtitle": "Nous construirons votre programme hebdomadaire en fonction de cela",
-      "options": {
-        "1": {
-          "label": "1 jour / semaine",
-          "description": "Engagement minimal — idéal pour maintenir une routine de base"
-        },
-        "2": {
-          "label": "2 jours / semaine",
-          "description": "Programme léger — parfait pour les débutants ou les semaines chargées"
-        },
-        "3": {
-          "label": "3 jours / semaine",
-          "description": "Split 3 jours classique — bon équilibre entre entraînement et récupération"
-        },
-        "4": {
-          "label": "4 jours / semaine",
-          "description": "Haut / Bas ou Push / Pull — solide pour les pratiquants intermédiaires"
-        },
-        "5": {
-          "label": "5 jours / semaine",
-          "description": "PPL ou Bro split — volume sérieux pour des gains sérieux"
-        },
-        "6": {
-          "label": "6 jours / semaine",
-          "description": "PPL × 2 — fréquence maximale pour les athlètes avancés"
-        },
-        "7": {
-          "label": "7 jours / semaine",
-          "description": "Aucun repos — pour les plus déterminés uniquement"
-        }
+      "title": "Quels jours vous entraînez-vous ?",
+      "subtitle": "Sélectionnez tous les jours où vous vous entraînez habituellement",
+      "days": {
+        "monday": "Lundi",
+        "tuesday": "Mardi",
+        "wednesday": "Mercredi",
+        "thursday": "Jeudi",
+        "friday": "Vendredi",
+        "saturday": "Samedi",
+        "sunday": "Dimanche"
+      },
+      "shortDays": {
+        "mon": "Lun",
+        "tue": "Mar",
+        "wed": "Mer",
+        "thu": "Jeu",
+        "fri": "Ven",
+        "sat": "Sam",
+        "sun": "Dim"
       }
     },
     "focusAreas": {
@@ -353,8 +341,10 @@
       "permissionDeniedMessage": "Vous pouvez activer le suivi de santé plus tard dans les Paramètres."
     },
     "ready": {
-      "title": "Vous êtes prêt !",
-      "subtitle": "Commençons votre parcours fitness ensemble"
+      "title": "L'IA crée un plan personnel pour vous",
+      "subtitle": "Commençons votre parcours fitness ensemble",
+      "memberCount": "1 000 000+",
+      "memberCaption": "personnes s'entraînent avec HyliftAI"
     },
     "account": {
       "title": "Une dernière étape",
