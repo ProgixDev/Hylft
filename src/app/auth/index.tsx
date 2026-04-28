@@ -1,8 +1,8 @@
 import { AntDesign, MaterialIcons } from "@expo/vector-icons";
 import * as Linking from "expo-linking";
-import { supabase } from "../../services/supabase";
 import { useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Alert,
   Animated,
@@ -16,11 +16,11 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ChipButton from "../../components/ui/ChipButton";
-import { useTranslation } from "react-i18next";
+import { FONTS } from "../../constants/fonts";
 import { Theme } from "../../constants/themes";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
-import { FONTS } from "../../constants/fonts";
+import { supabase } from "../../services/supabase";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -133,7 +133,12 @@ export default function AuthLanding() {
     return () => clearInterval(interval);
   }, [translateAnim]);
 
-  const { user, signInWithGoogle, setOnboardingCompleted, hasCompletedGetStarted } = useAuth();
+  const {
+    user,
+    signInWithGoogle,
+    setOnboardingCompleted,
+    hasCompletedGetStarted,
+  } = useAuth();
   const hasNavigated = useRef(false);
 
   // Android/Expo Go: Chrome Custom Tabs redirects to exp://... which it can't load
@@ -146,11 +151,18 @@ export default function AuthLanding() {
       const accessToken = params.get("access_token");
       const refreshToken = params.get("refresh_token");
       if (!accessToken || !refreshToken) return;
-      supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+      supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken,
+      });
     };
 
-    Linking.getInitialURL().then((url) => { if (url) processUrl(url); });
-    const subscription = Linking.addEventListener("url", ({ url }) => processUrl(url));
+    Linking.getInitialURL().then((url) => {
+      if (url) processUrl(url);
+    });
+    const subscription = Linking.addEventListener("url", ({ url }) =>
+      processUrl(url),
+    );
     return () => subscription.remove();
   }, []);
 
@@ -170,7 +182,8 @@ export default function AuthLanding() {
     try {
       await signInWithGoogle();
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Google sign in failed";
+      const message =
+        error instanceof Error ? error.message : "Google sign in failed";
       Alert.alert("Error", message);
     }
   };
@@ -225,7 +238,9 @@ export default function AuthLanding() {
             variant="white"
             size="lg"
             fullWidth
-            icon={<AntDesign name="google" size={20} color={theme.primary.main} />}
+            icon={
+              <AntDesign name="google" size={20} color={theme.primary.main} />
+            }
           />
         </View>
 
@@ -236,7 +251,13 @@ export default function AuthLanding() {
             variant="white"
             size="lg"
             fullWidth
-            icon={<MaterialIcons name="email" size={20} color={theme.primary.main} />}
+            icon={
+              <MaterialIcons
+                name="email"
+                size={20}
+                color={theme.primary.main}
+              />
+            }
           />
         </View>
 
