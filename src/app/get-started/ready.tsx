@@ -19,18 +19,18 @@ import { useAuth } from "../../contexts/AuthContext";
 import { supabase } from "../../services/supabase";
 
 const EXERCISES = [
-  require("../../../exercisedb/data/media_lowquality/01qpYSe.gif"),
-  require("../../../exercisedb/data/media_lowquality/03lzqwk.gif"),
-  require("../../../exercisedb/data/media_lowquality/05Cf2v8.gif"),
-  require("../../../exercisedb/data/media_lowquality/0br45wL.gif"),
-  require("../../../exercisedb/data/media_lowquality/0CXGHya.gif"),
-  require("../../../exercisedb/data/media_lowquality/0dCyly0.gif"),
-  require("../../../exercisedb/data/media_lowquality/0IgNjSM.gif"),
-  require("../../../exercisedb/data/media_lowquality/0jp9Rlz.gif"),
-  require("../../../exercisedb/data/media_lowquality/0JtKWum.gif"),
-  require("../../../exercisedb/data/media_lowquality/0L2KwtI.gif"),
-  require("../../../exercisedb/data/media_lowquality/0lQnxMZ.gif"),
-  require("../../../exercisedb/data/media_lowquality/0mB6wHO.gif"),
+  require("../../../assets/exercise-previews/01qpYSe.gif"),
+  require("../../../assets/exercise-previews/03lzqwk.gif"),
+  require("../../../assets/exercise-previews/05Cf2v8.gif"),
+  require("../../../assets/exercise-previews/0br45wL.gif"),
+  require("../../../assets/exercise-previews/0CXGHya.gif"),
+  require("../../../assets/exercise-previews/0dCyly0.gif"),
+  require("../../../assets/exercise-previews/0IgNjSM.gif"),
+  require("../../../assets/exercise-previews/0jp9Rlz.gif"),
+  require("../../../assets/exercise-previews/0JtKWum.gif"),
+  require("../../../assets/exercise-previews/0L2KwtI.gif"),
+  require("../../../assets/exercise-previews/0lQnxMZ.gif"),
+  require("../../../assets/exercise-previews/0mB6wHO.gif"),
 ];
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
