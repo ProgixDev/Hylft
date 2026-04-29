@@ -3,16 +3,16 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
-    "start": "bun expo start",
-    "dev": "bun expo start",
-    "android": "bun expo start --android",
-    "ios": "bun expo start --ios",
-    "web": "bun expo start --web",
+    "start": "expo start",
+    "dev": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
     "lint": "eslint .",
-    "build": "bun expo export --platform android",
-    "server": "cd server && bun run start:dev",
-    "server:build": "cd server && bun run build",
-    "admin": "cd admin && bun run dev"
+    "build": "expo export --platform android",
+    "server": "cd server && npm run start:dev",
+    "server:build": "cd server && npm run build",
+    "admin": "cd admin && npm run dev"
   },
   "dependencies": {
     "@expo-google-fonts/poppins": "^0.4.1",
