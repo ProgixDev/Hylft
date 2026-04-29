@@ -155,9 +155,14 @@ export default function WorkoutFrequency() {
 
   const handleContinue = async () => {
     if (selected.length === 0) return;
+    const selectedDayIndices = WEEKDAYS.map((day, index) =>
+      selected.includes(day.id) ? index : -1,
+    ).filter((index) => index >= 0);
     await AsyncStorage.multiSet([
       ["@hylift_workout_days", JSON.stringify(selected)],
       ["@hylift_workout_frequency", selected.length.toString()],
+      ["@hylift_home_weekly_objective", selected.length.toString()],
+      ["@hylift_home_weekly_objective_days", JSON.stringify(selectedDayIndices)],
     ]);
     if (isSignupFlow) {
       router.navigate("/get-started/ready");

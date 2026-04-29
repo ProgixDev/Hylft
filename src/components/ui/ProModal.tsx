@@ -485,7 +485,7 @@ export default function ProModal({ visible, onClose }: ProModalProps) {
                     {t("proModal.monthly", "Monthly")}
                   </Text>
                   <Text style={styles.planPrice}>
-                    {getPlanPrice("monthly", "$9.99")}
+                    {getPlanPrice("monthly", "4,99 €")}
                   </Text>
                   <Text style={styles.planBilling}>
                     {t("proModal.billedMonthly", "Billed Monthly")}
@@ -518,11 +518,11 @@ export default function ProModal({ visible, onClose }: ProModalProps) {
                     />
                   </View>
                   <Text style={styles.planPrice}>
-                    {getPlanPrice("yearly", "$79.99")}
+                    {getPlanPrice("yearly", "49 €")}
                   </Text>
                   <View style={styles.saveBadge}>
                     <Text style={styles.saveText}>
-                      {t("proModal.saveAmount", "Save $39.89")}
+                      {t("proModal.saveAmount", "Save 10,88 €")}
                     </Text>
                   </View>
                   <Text style={styles.planBilling}>

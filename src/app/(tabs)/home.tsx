@@ -3,12 +3,14 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+    Animated,
     Dimensions,
     Image,
     ImageBackground,
+    Modal,
     Pressable,
     ScrollView,
     StyleSheet,
@@ -33,14 +35,162 @@ import { ApiRoutine, mapRoutine } from "../../utils/routineMapper";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CHALLENGE_CARD_WIDTH = SCREEN_WIDTH * 0.78;
 
-const DAY_LABELS = ["L", "M", "M", "J", "V", "S", "D"];
 const DAY_LABELS_SHORT = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
+const WEEKDAY_OPTIONS = [
+  { id: "monday", shortKey: "mon", index: 0 },
+  { id: "tuesday", shortKey: "tue", index: 1 },
+  { id: "wednesday", shortKey: "wed", index: 2 },
+  { id: "thursday", shortKey: "thu", index: 3 },
+  { id: "friday", shortKey: "fri", index: 4 },
+  { id: "saturday", shortKey: "sat", index: 5 },
+  { id: "sunday", shortKey: "sun", index: 6 },
+] as const;
+type WorkoutDayId = (typeof WEEKDAY_OPTIONS)[number]["id"];
 const OBJECTIVE_KEY = "@hylift_home_weekly_objective";
 const OBJECTIVE_DAYS_KEY = "@hylift_home_weekly_objective_days";
+const WORKOUT_DAYS_KEY = "@hylift_workout_days";
+const WORKOUT_REMINDER_KEY = "@hylift_workout_reminder";
+const WORKOUT_REMINDER_TIME_KEY = "@hylift_workout_reminder_time";
 const DISPLAY_NAME_KEY = "@hylift_display_name";
 
-type DayStatus = "completed" | "missed" | "pending" | "off";
 type HomeRoutineGroup = Record<string, Record<string, ApiRoutine>>;
+type ScheduleAssignment = {
+  day_of_week: number;
+  is_rest_day: boolean;
+  routine_id?: string | null;
+};
+
+const VALID_WORKOUT_DAY_IDS = new Set<string>(
+  WEEKDAY_OPTIONS.map((day) => day.id),
+);
+
+function parseWorkoutDayIds(value: string | null): WorkoutDayId[] {
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(
+      (day): day is WorkoutDayId =>
+        typeof day === "string" && VALID_WORKOUT_DAY_IDS.has(day),
+    );
+  } catch {
+    return [];
+  }
+}
+
+function parseDayIndices(value: string | null): number[] {
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter((day) => Number.isInteger(day) && day >= 0 && day <= 6)
+      .slice(0, 7);
+  } catch {
+    return [];
+  }
+}
+
+function indicesToWorkoutDayIds(indices: number[]): WorkoutDayId[] {
+  return WEEKDAY_OPTIONS.filter((day) => indices.includes(day.index)).map(
+    (day) => day.id,
+  );
+}
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+const CHIP_CYAN  = { face: "#0E7490", depth: "#075985", text: "#F0FDFF", border: "#67E8F9" };
+const CHIP_GREEN = { face: "#16A34A", depth: "#14532D", text: "#F0FDF4", border: "#86EFAC" };
+const CHIP_GRAY  = { face: "#1F2A37", depth: "#111827", text: "#6B7280", border: "#374151" };
+
+function DayChip3D({
+  shortLabel,
+  dayOfMonth,
+  isToday,
+  isWorkoutDay,
+  hasPlan,
+}: {
+  shortLabel: string;
+  dayOfMonth: number;
+  isToday: boolean;
+  isWorkoutDay: boolean;
+  hasPlan: boolean;
+}) {
+  const scale = useRef(new Animated.Value(1)).current;
+  const depth = useRef(new Animated.Value(0)).current;
+
+  const pressIn = () =>
+    Animated.parallel([
+      Animated.spring(scale, { toValue: 0.96, speed: 40, bounciness: 0, useNativeDriver: true }),
+      Animated.spring(depth, { toValue: 4,  speed: 40, bounciness: 0, useNativeDriver: true }),
+    ]).start();
+
+  const pressOut = () =>
+    Animated.parallel([
+      Animated.spring(scale, { toValue: 1, speed: 28, bounciness: 6, useNativeDriver: true }),
+      Animated.spring(depth, { toValue: 0, speed: 26, bounciness: 6, useNativeDriver: true }),
+    ]).start();
+
+  const palette = !hasPlan ? CHIP_GRAY : isWorkoutDay ? CHIP_CYAN : CHIP_GREEN;
+
+  return (
+    <AnimatedPressable
+      onPressIn={pressIn}
+      onPressOut={pressOut}
+      style={[
+        chipStyles.shell,
+        isToday && { borderColor: palette.border, borderWidth: 2 },
+        { transform: [{ scale }] },
+      ]}
+    >
+      <View style={[chipStyles.depthLayer, { backgroundColor: palette.depth }]}>
+        <Animated.View
+          style={[
+            chipStyles.face,
+            { backgroundColor: palette.face, transform: [{ translateY: depth }] },
+          ]}
+        >
+          <Text style={[chipStyles.label, { color: palette.text }]}>{shortLabel}</Text>
+          <Text style={[chipStyles.date, { color: palette.text }]}>{dayOfMonth}</Text>
+          {isToday && <View style={[chipStyles.todayDot, { backgroundColor: palette.border }]} />}
+        </Animated.View>
+      </View>
+    </AnimatedPressable>
+  );
+}
+
+const chipStyles = StyleSheet.create({
+  shell: {
+    flex: 1,
+    borderRadius: 13,
+  },
+  depthLayer: {
+    borderRadius: 13,
+    paddingBottom: 4,
+    overflow: "hidden",
+  },
+  face: {
+    borderRadius: 13,
+    paddingVertical: 14,
+    alignItems: "center",
+    gap: 4,
+  },
+  label: {
+    fontFamily: FONTS.bold,
+    fontSize: 11,
+    textTransform: "capitalize",
+  },
+  date: {
+    fontFamily: FONTS.extraBold,
+    fontSize: 15,
+  },
+  todayDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    marginTop: 1,
+  },
+});
 
 // Difficulty bolts component
 function DifficultyBolts({ level, theme }: { level: number; theme: Theme }) {
@@ -68,11 +218,18 @@ export default function Home() {
   const { startGuidedRoutine } = useActiveWorkout();
   const genderedImages = useGenderedImages();
   const [selectedBodyFocus, setSelectedBodyFocus] = useState(0);
-  const [weeklyObjective, setWeeklyObjective] = useState(3);
-  const [weeklyObjectiveDays, setWeeklyObjectiveDays] = useState<number[]>([]);
+  const [workoutDayIds, setWorkoutDayIds] = useState<WorkoutDayId[]>([]);
+  const [scheduleAssignments, setScheduleAssignments] = useState<
+    ScheduleAssignment[]
+  >([]);
+  const [userRoutines, setUserRoutines] = useState<ApiRoutine[]>([]);
+  const [workoutRemindersEnabled, setWorkoutRemindersEnabled] =
+    useState(false);
+  const [workoutReminderTime, setWorkoutReminderTime] = useState("17:30");
   const [displayName, setDisplayName] = useState("");
   const [isProModalVisible, setIsProModalVisible] = useState(false);
   const [adminRoutines, setAdminRoutines] = useState<HomeRoutineGroup>({});
+  const [isRestDayModalVisible, setIsRestDayModalVisible] = useState(false);
 
   const now = new Date();
   const todayDayIndex = (now.getDay() + 6) % 7; // Convert Sun=0 to Mon=0 based
@@ -81,44 +238,86 @@ export default function Home() {
     useCallback(() => {
       let isMounted = true;
 
-      const loadObjective = async () => {
+      const loadWeeklySetup = async () => {
         try {
-          const [savedObjective, savedDays, savedName] = await Promise.all([
+          const [
+            savedWorkoutDays,
+            savedObjective,
+            savedObjectiveDays,
+            savedName,
+            savedReminder,
+            savedReminderTime,
+          ] = await Promise.all([
+            AsyncStorage.getItem(WORKOUT_DAYS_KEY),
             AsyncStorage.getItem(OBJECTIVE_KEY),
             AsyncStorage.getItem(OBJECTIVE_DAYS_KEY),
             AsyncStorage.getItem(DISPLAY_NAME_KEY),
+            AsyncStorage.getItem(WORKOUT_REMINDER_KEY),
+            AsyncStorage.getItem(WORKOUT_REMINDER_TIME_KEY),
           ]);
           if (isMounted && savedName) setDisplayName(savedName);
-
-          const parsed = Number(savedObjective);
-          if (
-            isMounted &&
-            Number.isFinite(parsed) &&
-            parsed >= 1 &&
-            parsed <= 7
-          ) {
-            setWeeklyObjective(parsed);
+          if (isMounted && savedReminder !== null) {
+            setWorkoutRemindersEnabled(savedReminder === "true");
+          }
+          if (isMounted && savedReminderTime) {
+            setWorkoutReminderTime(savedReminderTime);
           }
 
-          if (isMounted && savedDays) {
-            const parsedDays = JSON.parse(savedDays);
-            if (Array.isArray(parsedDays)) {
-              const validDays = parsedDays
-                .filter((d) => Number.isInteger(d) && d >= 0 && d <= 6)
-                .slice(0, 7);
-              setWeeklyObjectiveDays(validDays);
+          let nextWorkoutDayIds = parseWorkoutDayIds(savedWorkoutDays);
+          if (nextWorkoutDayIds.length === 0) {
+            nextWorkoutDayIds = indicesToWorkoutDayIds(
+              parseDayIndices(savedObjectiveDays),
+            );
+          }
+          if (nextWorkoutDayIds.length === 0) {
+            const parsedObjective = Number(savedObjective);
+            if (
+              Number.isFinite(parsedObjective) &&
+              parsedObjective >= 1 &&
+              parsedObjective <= 7
+            ) {
+              const fallbackDays = Array.from(
+                { length: parsedObjective },
+                (_, offset) => (todayDayIndex + offset) % 7,
+              );
+              nextWorkoutDayIds = indicesToWorkoutDayIds(fallbackDays);
             }
           }
+
+          if (isMounted) setWorkoutDayIds(nextWorkoutDayIds);
         } catch {
-          // Keep default objective when storage is unavailable.
+          // Keep the current setup when storage is unavailable.
+        }
+
+        try {
+          const [scheduleRes, routinesRes] = await Promise.all([
+            api.getSchedule(),
+            api.getRoutines(),
+          ]);
+          if (!isMounted) return;
+
+          const scheduleItems = Array.isArray(scheduleRes?.items)
+            ? scheduleRes.items
+            : [];
+          setScheduleAssignments(
+            scheduleItems.filter(
+              (item: ScheduleAssignment) =>
+                Number.isInteger(item.day_of_week) &&
+                item.day_of_week >= 0 &&
+                item.day_of_week <= 6,
+            ),
+          );
+          setUserRoutines(Array.isArray(routinesRes) ? routinesRes : []);
+        } catch (error) {
+          console.warn("[Home] load weekly setup failed:", error);
         }
       };
 
-      loadObjective();
+      loadWeeklySetup();
       return () => {
         isMounted = false;
       };
-    }, []),
+    }, [todayDayIndex]),
   );
 
   useEffect(() => {
@@ -155,45 +354,104 @@ export default function Home() {
     monday.setHours(0, 0, 0, 0);
     monday.setDate(now.getDate() - todayDayIndex);
 
-    return DAY_LABELS_SHORT.map((label, index) => {
+    return WEEKDAY_OPTIONS.map((weekday, index) => {
       const date = new Date(monday);
       date.setDate(monday.getDate() + index);
       return {
-        label,
+        id: weekday.id,
+        index: weekday.index,
+        shortLabel: t(
+          `onboarding.workoutFrequency.shortDays.${weekday.shortKey}`,
+          DAY_LABELS_SHORT[index],
+        ),
+        longLabel: t(`onboarding.workoutFrequency.days.${weekday.id}`),
         dayOfMonth: date.getDate(),
         isToday: index === todayDayIndex,
       };
     });
-  }, [now, todayDayIndex]);
+  }, [now, t, todayDayIndex]);
 
-  const scheduledIndices = useMemo(() => {
-    const target = Math.min(Math.max(weeklyObjective, 1), 7);
+  const workoutDaySet = useMemo(() => new Set(workoutDayIds), [workoutDayIds]);
 
-    const savedDays = weeklyObjectiveDays
-      .filter((d) => Number.isInteger(d) && d >= 0 && d <= 6)
-      .slice(0, 7);
+  const selectedWorkoutDays = useMemo(
+    () => weekDays.filter((day) => workoutDaySet.has(day.id)),
+    [weekDays, workoutDaySet],
+  );
 
-    if (savedDays.length === target) {
-      return new Set<number>(savedDays);
-    }
-
-    const days = new Set<number>();
-
-    for (let i = 0; i < target; i += 1) {
-      days.add((todayDayIndex + i) % 7);
-    }
-
-    return days;
-  }, [todayDayIndex, weeklyObjective, weeklyObjectiveDays]);
-
-  const weekDayStatuses = useMemo<DayStatus[]>(() => {
-    return DAY_LABELS_SHORT.map((_, index) => {
-      if (!scheduledIndices.has(index)) return "off";
-      if (index < todayDayIndex) return "missed";
-      if (index === todayDayIndex) return "completed";
-      return "pending";
+  const assignmentByDay = useMemo(() => {
+    const map = new Map<number, ScheduleAssignment>();
+    scheduleAssignments.forEach((assignment) => {
+      if (!assignment.is_rest_day && assignment.routine_id) {
+        map.set(assignment.day_of_week, assignment);
+      }
     });
-  }, [scheduledIndices, todayDayIndex]);
+    return map;
+  }, [scheduleAssignments]);
+
+  const routineById = useMemo(() => {
+    const map = new Map<string, ApiRoutine>();
+    userRoutines.forEach((routine) => map.set(routine.id, routine));
+    return map;
+  }, [userRoutines]);
+
+  const centeredDays = useMemo(() => {
+    return Array.from({ length: 7 }, (_, i) => {
+      const offset = i - 3;
+      const date = new Date(now);
+      date.setHours(0, 0, 0, 0);
+      date.setDate(now.getDate() + offset);
+      const dayIndex = (date.getDay() + 6) % 7;
+      const weekday = WEEKDAY_OPTIONS[dayIndex];
+      return {
+        key: `${date.toISOString().slice(0, 10)}`,
+        shortLabel: t(
+          `onboarding.workoutFrequency.shortDays.${weekday.shortKey}`,
+          DAY_LABELS_SHORT[dayIndex],
+        ),
+        dayOfMonth: date.getDate(),
+        isToday: offset === 0,
+        isWorkoutDay: workoutDaySet.has(weekday.id),
+      };
+    });
+  }, [now, workoutDaySet, t]);
+
+  const featuredWorkoutDay = useMemo(() => {
+    if (selectedWorkoutDays.length === 0) return undefined;
+    const todayWorkoutDay = selectedWorkoutDays.find(
+      (day) => day.index === todayDayIndex,
+    );
+    if (todayWorkoutDay) return todayWorkoutDay;
+
+    return (
+      selectedWorkoutDays.find((day) => day.index > todayDayIndex) ??
+      selectedWorkoutDays[0]
+    );
+  }, [selectedWorkoutDays, todayDayIndex]);
+
+  const featuredRoutine = useMemo(() => {
+    if (!featuredWorkoutDay) return undefined;
+    const routineId = assignmentByDay.get(featuredWorkoutDay.index)?.routine_id;
+    return routineId ? routineById.get(routineId) : undefined;
+  }, [assignmentByDay, featuredWorkoutDay, routineById]);
+
+  const todayWorkoutDay = useMemo(
+    () => selectedWorkoutDays.find((d) => d.index === todayDayIndex),
+    [selectedWorkoutDays, todayDayIndex],
+  );
+  const isTodayWorkoutDay = !!todayWorkoutDay;
+  const todayRoutine = useMemo(() => {
+    if (!todayWorkoutDay) return undefined;
+    const routineId = assignmentByDay.get(todayWorkoutDay.index)?.routine_id;
+    return routineId ? routineById.get(routineId) : undefined;
+  }, [assignmentByDay, todayWorkoutDay, routineById]);
+
+  const nextWorkoutDay = useMemo(() => {
+    if (selectedWorkoutDays.length === 0) return undefined;
+    return (
+      selectedWorkoutDays.find((d) => d.index > todayDayIndex) ??
+      selectedWorkoutDays[0]
+    );
+  }, [selectedWorkoutDays, todayDayIndex]);
 
   const styles = createStyles(theme);
 
@@ -242,6 +500,20 @@ export default function Home() {
       router.push("/workout-player" as any);
     },
     [router, startGuidedRoutine],
+  );
+
+  const handleSetupWorkoutDay = useCallback(
+    (day: NonNullable<typeof featuredWorkoutDay>) => {
+      router.push({
+        pathname: "/create-routine",
+        params: {
+          fromWeekSetup: "1",
+          dayOfWeek: String(day.index),
+          dayLabel: day.longLabel,
+        },
+      } as any);
+    },
+    [router],
   );
 
   const challenges = [
@@ -531,139 +803,244 @@ export default function Home() {
           })}
         </View>
 
-        {/* ── Séances de la semaine ─────────────────────────────── */}
+        {/* Weekly workout sessions */}
         <AnimatedSection delay={560} scale>
           <View style={styles.weekSessionsCard}>
             <View style={styles.weekSessionsHeader}>
-              <Text style={styles.weekSessionsTitle}>
-                {t("home.weekSessions", "SÉANCES DE LA SEMAINE")}
-              </Text>
-              <Text style={styles.weekObjectiveText}>
-                {t("home.objectiveOption", "{{count}} x semaine", {
-                  count: weeklyObjective,
-                })}
-              </Text>
+              <View style={styles.weekSessionsTitleBlock}>
+                <Text style={styles.weekSessionsTitle}>
+                  {t("home.weekSessions", "SEANCES DE LA SEMAINE")}
+                </Text>
+                <Text style={styles.weekObjectiveText}>
+                  {selectedWorkoutDays.length > 0
+                    ? t(
+                        "home.objectiveOption",
+                        "{{count}} x semaine",
+                        { count: selectedWorkoutDays.length },
+                      )
+                    : t("home.noWorkoutDaysTitle", "Choose workout days")}
+                </Text>
+              </View>
               <Pressable
                 style={({ pressed }) => [
-                  styles.objectiveBtn,
+                  styles.weekSettingsBtn,
                   pressed && { opacity: 0.85 },
                 ]}
                 onPress={() => router.push("/objective")}
+                accessibilityRole="button"
+                accessibilityLabel={t(
+                  "home.configureWeek",
+                  "Configure workout week",
+                )}
               >
-                <Text style={styles.objectiveBtnText}>
-                  {t("home.objective", "OBJECTIVE")}
-                </Text>
+                <Ionicons
+                  name="settings-outline"
+                  size={19}
+                  color={theme.primary.main}
+                />
               </Pressable>
             </View>
 
-            {/* Day chips row */}
+            {/* Day chips row — today always centred */}
             <View style={styles.weekChipsRow}>
-              {weekDays.map((day, index) => {
-                const status = weekDayStatuses[index];
-                const isCompleted = status === "completed";
-                const isMissed = status === "missed";
-                const isOff = status === "off";
-                return (
-                  <View
-                    key={index}
-                    style={[
-                      styles.weekChip,
-                      isCompleted && styles.weekChipCompleted,
-                      isMissed && styles.weekChipMissed,
-                      isOff && styles.weekChipOff,
-                      !isCompleted && !isMissed && styles.weekChipPending,
-                      day.isToday && styles.weekChipToday,
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.weekChipLabel,
-                        (isCompleted || isMissed || day.isToday) &&
-                          styles.weekChipLabelActive,
-                      ]}
-                    >
-                      {day.label}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.weekChipDate,
-                        (isCompleted || isMissed || day.isToday) &&
-                          styles.weekChipLabelActive,
-                      ]}
-                    >
-                      {day.dayOfMonth}
-                    </Text>
-                    {isCompleted && (
-                      <Ionicons name="checkmark" size={18} color="#fff" />
-                    )}
-                    {isMissed && (
-                      <Ionicons name="close" size={18} color="#fff" />
-                    )}
-                    {!isCompleted && !isMissed && !isOff && (
-                      <Text style={styles.weekChipDash}>—</Text>
-                    )}
-                    {isOff && <Text style={styles.weekChipOffMark}>•</Text>}
-                  </View>
-                );
-              })}
+              {centeredDays.map((day) => (
+                <DayChip3D
+                  key={day.key}
+                  shortLabel={day.shortLabel}
+                  dayOfMonth={day.dayOfMonth}
+                  isToday={day.isToday}
+                  isWorkoutDay={day.isWorkoutDay}
+                  hasPlan={selectedWorkoutDays.length > 0}
+                />
+              ))}
             </View>
 
-            {/* Today's session card */}
-            <Pressable
-              style={({ pressed }) => [
-                styles.nextWorkoutCard,
-                pressed && { opacity: 0.95, transform: [{ scale: 0.98 }] },
-              ]}
-              onPress={() => router.navigate("/workout" as any)}
-            >
-              <Image
-                source={genderedImages.nextWorkout}
-                style={styles.nextWorkoutImage}
-                resizeMode="cover"
-              />
-              <LinearGradient
-                colors={["rgba(0,0,0,0.1)", "rgba(0,0,0,0.75)"]}
-                style={styles.nextWorkoutGradient}
-              />
-              <View style={styles.nextWorkoutContent}>
-                <View style={styles.nextWorkoutInfo}>
-                  <Text style={styles.nextWorkoutName}>
-                    LEGS DAY: CUISSES & MOLLETS
-                  </Text>
-                  <View style={styles.sessionDetails}>
-                    <View style={styles.sessionTag}>
-                      <Ionicons
-                        name="barbell-outline"
-                        size={12}
-                        color="rgba(255,255,255,0.8)"
-                      />
-                      <Text style={styles.sessionTagText}>
-                        Squats, Soulevé de terre, Presse
-                      </Text>
-                    </View>
-                    <View style={styles.sessionTag}>
-                      <Ionicons
-                        name="time-outline"
-                        size={12}
-                        color="rgba(255,255,255,0.8)"
-                      />
-                      <Text style={styles.sessionTagText}>17:30 · 50 min</Text>
-                    </View>
+            {/* Legend */}
+            <View style={styles.chipLegendRow}>
+              <View style={styles.chipLegendItem}>
+                <View style={[styles.chipLegendDot, { backgroundColor: CHIP_CYAN.face }]} />
+                <Text style={styles.chipLegendText}>
+                  {t("home.workoutDay", "Séance")}
+                </Text>
+              </View>
+              <View style={styles.chipLegendItem}>
+                <View style={[styles.chipLegendDot, { backgroundColor: CHIP_GREEN.face }]} />
+                <Text style={styles.chipLegendText}>
+                  {t("home.restDay", "Repos")}
+                </Text>
+              </View>
+            </View>
+
+            {selectedWorkoutDays.length === 0 ? (
+              /* ── No days configured ── */
+              <Pressable
+                style={({ pressed }) => [
+                  styles.nextWorkoutCard,
+                  pressed && { opacity: 0.95, transform: [{ scale: 0.98 }] },
+                ]}
+                onPress={() => router.push("/objective")}
+              >
+                <Image
+                  source={genderedImages.nextWorkout}
+                  style={styles.nextWorkoutImage}
+                  resizeMode="cover"
+                />
+                <LinearGradient
+                  colors={["rgba(0,0,0,0.12)", "rgba(0,0,0,0.78)"]}
+                  style={styles.nextWorkoutGradient}
+                />
+                <View style={styles.nextWorkoutContent}>
+                  <View style={styles.nextWorkoutInfo}>
+                    <Text style={styles.nextWorkoutName}>
+                      {t("home.noWorkoutDaysTitle", "Choose workout days")}
+                    </Text>
+                    <Text style={styles.nextWorkoutMeta}>
+                      {t(
+                        "home.noWorkoutDaysMessage",
+                        "Pick the days you train so your week can be planned.",
+                      )}
+                    </Text>
+                  </View>
+                  <View style={styles.nextWorkoutBtn}>
+                    <Text style={styles.nextWorkoutBtnText}>
+                      {t("home.chooseDays", "Choose")}
+                    </Text>
                   </View>
                 </View>
-                <Pressable
-                  style={({ pressed }) => [
-                    styles.nextWorkoutBtn,
-                    pressed && { opacity: 0.9 },
-                  ]}
-                  onPress={() => router.navigate("/workout" as any)}
-                >
-                  <Text style={styles.nextWorkoutBtnText}>
-                    {t("home.start", "DÉMARRER")}
-                  </Text>
-                </Pressable>
-              </View>
-            </Pressable>
+              </Pressable>
+            ) : isTodayWorkoutDay ? (
+              /* ── Today is a workout day ── */
+              <Pressable
+                style={({ pressed }) => [
+                  styles.nextWorkoutCard,
+                  pressed && { opacity: 0.95, transform: [{ scale: 0.98 }] },
+                ]}
+                onPress={() =>
+                  todayRoutine
+                    ? handleStartRoutine(todayRoutine)
+                    : handleSetupWorkoutDay(todayWorkoutDay!)
+                }
+              >
+                <Image
+                  source={genderedImages.nextWorkout}
+                  style={styles.nextWorkoutImage}
+                  resizeMode="cover"
+                />
+                <LinearGradient
+                  colors={["rgba(0,0,0,0.12)", "rgba(0,0,0,0.78)"]}
+                  style={styles.nextWorkoutGradient}
+                />
+                <View style={styles.nextWorkoutContent}>
+                  <View style={styles.nextWorkoutInfo}>
+                    <Text style={styles.nextWorkoutName} numberOfLines={2}>
+                      {todayRoutine?.name ??
+                        t("home.setupDayRoutine", "{{day}} workout", {
+                          day: todayWorkoutDay!.longLabel,
+                        })}
+                    </Text>
+                    <View style={styles.sessionDetails}>
+                      <View style={styles.sessionTag}>
+                        <Ionicons
+                          name="barbell-outline"
+                          size={12}
+                          color="rgba(255,255,255,0.82)"
+                        />
+                        <Text style={styles.sessionTagText} numberOfLines={1}>
+                          {todayRoutine
+                            ? `${todayRoutine.exercises?.length ?? 0} ${t("home.exercises")}`
+                            : t("home.addExercisesToRoutine", "Add exercises, save, and keep the day ready.")}
+                        </Text>
+                      </View>
+                      <View style={styles.sessionTag}>
+                        <Ionicons
+                          name="time-outline"
+                          size={12}
+                          color="rgba(255,255,255,0.82)"
+                        />
+                        <Text style={styles.sessionTagText} numberOfLines={1}>
+                          {todayRoutine
+                            ? `${todayWorkoutDay!.longLabel} · ${todayRoutine.estimated_duration ?? 0} min`
+                            : t("home.needsRoutine", "Needs routine")}
+                        </Text>
+                      </View>
+                      <View style={styles.sessionTag}>
+                        <Ionicons
+                          name="alarm-outline"
+                          size={12}
+                          color="rgba(255,255,255,0.82)"
+                        />
+                        <Text style={styles.sessionTagText} numberOfLines={1}>
+                          {workoutRemindersEnabled
+                            ? t("home.reminderAt", "Reminder {{time}}", { time: workoutReminderTime })
+                            : t("home.remindersOff", "Reminders off")}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                  <View style={styles.nextWorkoutBtn}>
+                    <Text style={styles.nextWorkoutBtnText}>
+                      {todayRoutine
+                        ? t("home.start", "Démarrer")
+                        : t("home.setupRoutine", "Configurer")}
+                    </Text>
+                  </View>
+                </View>
+              </Pressable>
+            ) : (
+              /* ── Today is a rest day ── */
+              <Pressable
+                style={({ pressed }) => [
+                  styles.nextWorkoutCard,
+                  styles.restDayCard,
+                  pressed && { opacity: 0.95, transform: [{ scale: 0.98 }] },
+                ]}
+                onPress={() => setIsRestDayModalVisible(true)}
+              >
+                <LinearGradient
+                  colors={["#0F2027", "#1A3A4A", "#0D1F2D"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={StyleSheet.absoluteFill}
+                />
+                {/* decorative orbs */}
+                <View style={styles.restOrb1} />
+                <View style={styles.restOrb2} />
+
+                <View style={styles.restDayContent}>
+                  {/* top row: moon + text */}
+                  <View style={styles.restDayLeft}>
+                    <View style={styles.restMoonWrap}>
+                      <Text style={styles.restMoonEmoji}>🌙</Text>
+                    </View>
+                    <View style={{ gap: 4, maxWidth: "65%" }}>
+                      <Text style={styles.restDayTitle}>
+                        {t("home.restDay", "Jour de repos")}
+                      </Text>
+                      <Text style={styles.restDaySubtitle}>
+                        {t("home.restDayMessage", "Récupération & bien-être")}
+                      </Text>
+                      {nextWorkoutDay && (
+                        <View style={styles.nextWorkoutTag}>
+                          <Ionicons name="calendar-outline" size={11} color="#67E8F9" />
+                          <Text style={styles.nextWorkoutTagText}>
+                            {t("home.nextWorkout", "Prochain : {{day}}", {
+                              day: nextWorkoutDay.longLabel,
+                            })}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                  </View>
+                  {/* Voir button pinned bottom-right */}
+                  <View style={styles.restDayBtn}>
+                    <Text style={styles.restDayBtnText}>
+                      {t("home.seeMore", "Voir")}
+                    </Text>
+                  </View>
+                </View>
+              </Pressable>
+            )}
+
           </View>
         </AnimatedSection>
 
@@ -928,6 +1305,63 @@ export default function Home() {
           </ScrollView>
         </AnimatedSection>
       </ScrollView>
+
+      {/* ── Rest Day Modal ──────────────────────────────────────── */}
+      <Modal
+        visible={isRestDayModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsRestDayModalVisible(false)}
+      >
+        <Pressable
+          style={styles.modalOverlay}
+          onPress={() => setIsRestDayModalVisible(false)}
+        >
+          <Pressable style={styles.restModal} onPress={() => {}}>
+            <LinearGradient
+              colors={["#0F2027", "#1B3A4B"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={StyleSheet.absoluteFill}
+            />
+            <View style={styles.restModalOrb} />
+
+            <Text style={styles.restModalEmoji}>🌙</Text>
+            <Text style={styles.restModalTitle}>
+              {t("home.restDayModalTitle", "Aujourd'hui, c'est repos !")}
+            </Text>
+            <Text style={styles.restModalBody}>
+              {t(
+                "home.restDayModalBody",
+                "La récupération est aussi importante que l'entraînement. Profitez de cette journée pour vous hydrater, vous étirer et recharger vos batteries.",
+              )}
+            </Text>
+
+            {nextWorkoutDay && (
+              <View style={styles.restModalNextCard}>
+                <Ionicons name="calendar-outline" size={16} color="#67E8F9" />
+                <Text style={styles.restModalNextText}>
+                  {t("home.nextWorkoutOn", "Prochaine séance : {{day}}", {
+                    day: nextWorkoutDay.longLabel,
+                  })}
+                </Text>
+              </View>
+            )}
+
+            <Pressable
+              style={({ pressed }) => [
+                styles.restModalBtn,
+                pressed && { opacity: 0.88, transform: [{ scale: 0.97 }] },
+              ]}
+              onPress={() => setIsRestDayModalVisible(false)}
+            >
+              <Text style={styles.restModalBtnText}>
+                {t("home.gotIt", "Compris !")}
+              </Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </AnimatedScreen>
   );
 }
@@ -1194,13 +1628,17 @@ function createStyles(theme: Theme) {
       marginBottom: 16,
       gap: 10,
     },
+    weekSessionsTitleBlock: {
+      flex: 1,
+      gap: 4,
+    },
     weekSessionsTitle: {
       fontFamily: FONTS.extraBold,
       fontSize: 16,
       color: theme.foreground.white,
       letterSpacing: 0.5,
       textTransform: "uppercase",
-      flex: 1,
+      lineHeight: 20,
     },
     weekObjectiveText: {
       fontFamily: FONTS.semiBold,
@@ -1208,79 +1646,44 @@ function createStyles(theme: Theme) {
       color: theme.foreground.gray,
       textTransform: "uppercase",
     },
-    objectiveBtn: {
+    weekSettingsBtn: {
+      width: 38,
+      height: 38,
       borderWidth: 1,
       borderColor: theme.primary.main,
       backgroundColor: theme.primary.main + "12",
       borderRadius: 14,
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-    },
-    objectiveBtnText: {
-      fontFamily: FONTS.bold,
-      fontSize: 11,
-      color: theme.primary.main,
-      letterSpacing: 0.5,
-      textTransform: "uppercase",
+      alignItems: "center",
+      justifyContent: "center",
     },
     weekChipsRow: {
       flexDirection: "row",
-      justifyContent: "space-between",
-      gap: 6,
-      marginBottom: 18,
+      gap: 5,
+      marginBottom: 10,
     },
-    weekChip: {
-      flex: 1,
+    chipLegendRow: {
+      flexDirection: "row",
+      gap: 16,
+      marginBottom: 16,
+    },
+    chipLegendItem: {
+      flexDirection: "row",
       alignItems: "center",
-      justifyContent: "center",
-      paddingVertical: 8,
-      borderRadius: 12,
-      gap: 4,
+      gap: 6,
     },
-    weekChipCompleted: {
-      backgroundColor: "#22C55E",
+    chipLegendDot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
     },
-    weekChipMissed: {
-      backgroundColor: "#EF4444",
-    },
-    weekChipPending: {
-      backgroundColor: theme.background.accent,
-    },
-    weekChipOff: {
-      backgroundColor: theme.background.accent + "66",
-    },
-    weekChipToday: {
-      borderWidth: 1,
-      borderColor: theme.primary.main,
-    },
-    weekChipLabel: {
-      fontFamily: FONTS.bold,
+    chipLegendText: {
+      fontFamily: FONTS.medium,
       fontSize: 11,
       color: theme.foreground.gray,
-      textTransform: "capitalize",
     },
-    weekChipDate: {
-      fontFamily: FONTS.semiBold,
-      fontSize: 10,
-      color: theme.foreground.gray,
-    },
-    weekChipLabelActive: {
-      color: "#fff",
-    },
-    weekChipDash: {
-      fontFamily: FONTS.bold,
-      fontSize: 14,
-      color: theme.foreground.gray,
-    },
-    weekChipOffMark: {
-      fontFamily: FONTS.bold,
-      fontSize: 14,
-      color: theme.foreground.gray,
-    },
-
     // ── Next Workout Card ─────────────────────
     nextWorkoutCard: {
-      height: 160,
+      height: 174,
       borderRadius: 16,
       overflow: "hidden",
       borderWidth: 2,
@@ -1677,6 +2080,168 @@ function createStyles(theme: Theme) {
       fontFamily: FONTS.bold,
       fontSize: 14,
       color: "#fff",
+    },
+
+    // ── Rest Day Card ─────────────────────────
+    restDayCard: {
+      borderColor: "rgba(103,232,249,0.25)",
+    },
+    restOrb1: {
+      position: "absolute",
+      width: 180,
+      height: 180,
+      borderRadius: 90,
+      backgroundColor: "rgba(14,116,144,0.18)",
+      top: -60,
+      right: -40,
+    },
+    restOrb2: {
+      position: "absolute",
+      width: 120,
+      height: 120,
+      borderRadius: 60,
+      backgroundColor: "rgba(103,232,249,0.08)",
+      bottom: -40,
+      left: -20,
+    },
+    restDayContent: {
+      flex: 1,
+      flexDirection: "column",
+      justifyContent: "space-between",
+      padding: 16,
+    },
+    restDayLeft: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 14,
+    },
+    restMoonWrap: {
+      width: 52,
+      height: 52,
+      borderRadius: 26,
+      backgroundColor: "rgba(103,232,249,0.12)",
+      alignItems: "center",
+      justifyContent: "center",
+      borderWidth: 1,
+      borderColor: "rgba(103,232,249,0.25)",
+    },
+    restMoonEmoji: {
+      fontSize: 26,
+    },
+    restDayTitle: {
+      fontFamily: FONTS.extraBold,
+      fontSize: 17,
+      color: "#F0FDFF",
+    },
+    restDaySubtitle: {
+      fontFamily: FONTS.medium,
+      fontSize: 12,
+      color: "#FFFFFF",
+    },
+    nextWorkoutTag: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      marginTop: 2,
+    },
+    nextWorkoutTagText: {
+      fontFamily: FONTS.semiBold,
+      fontSize: 11,
+      color: "#67E8F9",
+    },
+    restDayBtn: {
+      position: "absolute",
+      bottom: 16,
+      right: 16,
+      backgroundColor: "rgba(103,232,249,0.15)",
+      borderRadius: 20,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      borderWidth: 1,
+      borderColor: "rgba(103,232,249,0.35)",
+    },
+    restDayBtnText: {
+      fontFamily: FONTS.bold,
+      fontSize: 13,
+      color: "#67E8F9",
+    },
+
+    // ── Rest Day Modal ────────────────────────
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.65)",
+      justifyContent: "center",
+      alignItems: "center",
+      padding: 24,
+    },
+    restModal: {
+      width: "100%",
+      borderRadius: 28,
+      overflow: "hidden",
+      padding: 28,
+      alignItems: "center",
+      gap: 12,
+      borderWidth: 1,
+      borderColor: "rgba(103,232,249,0.2)",
+    },
+    restModalOrb: {
+      position: "absolute",
+      width: 220,
+      height: 220,
+      borderRadius: 110,
+      backgroundColor: "rgba(14,116,144,0.22)",
+      top: -80,
+      right: -60,
+    },
+    restModalEmoji: {
+      fontSize: 52,
+      marginBottom: 4,
+    },
+    restModalTitle: {
+      fontFamily: FONTS.extraBold,
+      fontSize: 22,
+      color: "#F0FDFF",
+      textAlign: "center",
+    },
+    restModalBody: {
+      fontFamily: FONTS.regular,
+      fontSize: 14,
+      color: "rgba(186,244,255,0.8)",
+      textAlign: "center",
+      lineHeight: 21,
+      marginTop: 4,
+    },
+    restModalNextCard: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      backgroundColor: "rgba(103,232,249,0.10)",
+      borderRadius: 14,
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+      borderWidth: 1,
+      borderColor: "rgba(103,232,249,0.25)",
+      marginTop: 4,
+      alignSelf: "stretch",
+    },
+    restModalNextText: {
+      fontFamily: FONTS.semiBold,
+      fontSize: 13,
+      color: "#67E8F9",
+    },
+    restModalBtn: {
+      marginTop: 8,
+      backgroundColor: "#0E7490",
+      borderRadius: 22,
+      paddingHorizontal: 36,
+      paddingVertical: 14,
+      borderWidth: 1,
+      borderColor: "rgba(103,232,249,0.4)",
+    },
+    restModalBtnText: {
+      fontFamily: FONTS.extraBold,
+      fontSize: 15,
+      color: "#F0FDFF",
     },
   });
 }
