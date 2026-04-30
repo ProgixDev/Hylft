@@ -1,4 +1,4 @@
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
@@ -135,9 +135,9 @@ export default function Workout() {
       )}
       {/* Header */}
       <AnimatedSection delay={0}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>{t("workout.title")}</Text>
-      </View>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>{t("workout.title")}</Text>
+        </View>
       </AnimatedSection>
 
       <ScrollView
@@ -147,44 +147,51 @@ export default function Workout() {
       >
         {/* ── Quick Start Hero ──────────────────────────────── */}
         <AnimatedSection delay={80} scale>
-        <Pressable
-          style={({ pressed }) => [
-            styles.quickStartCard,
-            pressed && { opacity: 0.95, transform: [{ scale: 0.99 }] },
-          ]}
-          onPress={handleStartEmptyWorkout}
-        >
-          <Image
-            source={routineImages[0]}
-            style={styles.quickStartImage}
-            resizeMode="cover"
-          />
-          <LinearGradient
-            colors={["rgba(0,0,0,0.2)", theme.primary.main + "DD"]}
-            style={styles.quickStartGradient}
-          />
-          <View style={styles.quickStartContent}>
-            <View style={styles.quickStartBadge}>
-              <Ionicons name="flash" size={14} color="#FFD700" />
-              <Text style={styles.quickStartBadgeText}>QUICK START</Text>
+          <Pressable
+            style={({ pressed }) => [
+              styles.quickStartCard,
+              pressed && { opacity: 0.95, transform: [{ scale: 0.99 }] },
+            ]}
+            onPress={handleStartEmptyWorkout}
+          >
+            <Image
+              source={routineImages[0]}
+              style={styles.quickStartImage}
+              resizeMode="cover"
+            />
+            <LinearGradient
+              colors={["rgba(0,0,0,0.2)", theme.primary.main + "DD"]}
+              style={styles.quickStartGradient}
+            />
+            <View style={styles.quickStartContent}>
+              <View style={styles.quickStartBadge}>
+                <Ionicons name="flash" size={14} color="#FFD700" />
+                <Text style={styles.quickStartBadgeText}>QUICK START</Text>
+              </View>
+              <Text style={styles.quickStartTitle}>
+                {t("workout.startEmptyWorkout")}
+              </Text>
+              <Text style={styles.quickStartSub}>
+                {t("workout.addExerciseToStart")}
+              </Text>
+              <View style={styles.quickStartBtn}>
+                <Ionicons name="play" size={16} color={theme.primary.main} />
+                <Text style={styles.quickStartBtnText}>GO</Text>
+              </View>
             </View>
-            <Text style={styles.quickStartTitle}>
-              {t("workout.startEmptyWorkout")}
-            </Text>
-            <Text style={styles.quickStartSub}>
-              {t("workout.addExerciseToStart")}
-            </Text>
-            <View style={styles.quickStartBtn}>
-              <Ionicons name="play" size={16} color={theme.primary.main} />
-              <Text style={styles.quickStartBtnText}>GO</Text>
-            </View>
-          </View>
-        </Pressable>
+          </Pressable>
         </AnimatedSection>
 
         {/* ── Action Buttons ────────────────────────────────────── */}
         <AnimatedSection delay={120} scale>
-          <View style={{ flexDirection: "column", marginHorizontal: 20, marginBottom: 24, gap: 14 }}>
+          <View
+            style={{
+              flexDirection: "column",
+              marginHorizontal: 20,
+              marginBottom: 24,
+              gap: 14,
+            }}
+          >
             <Pressable
               onPress={handleCreateRoutine}
               style={({ pressed }) => [
@@ -197,18 +204,26 @@ export default function Workout() {
                   justifyContent: "center",
                   borderColor: theme.primary.main,
                   flexDirection: "row",
-                  gap: 8
+                  gap: 8,
                 },
                 pressed
                   ? { borderBottomWidth: 0, marginTop: 4 }
-                  : { borderBottomWidth: 4, marginTop: 0 }
+                  : { borderBottomWidth: 4, marginTop: 0 },
               ]}
             >
               <Ionicons name="add-circle" size={22} color="#FFFFFF" />
-              <Text 
-                numberOfLines={1} 
-                adjustsFontSizeToFit 
-                style={{ flexShrink: 1, fontFamily: FONTS.bold, color: "#FFFFFF", fontSize: 16, textAlign: "center", textTransform: "uppercase", letterSpacing: 0.5 }}
+              <Text
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                style={{
+                  flexShrink: 1,
+                  fontFamily: FONTS.bold,
+                  color: "#FFFFFF",
+                  fontSize: 16,
+                  textAlign: "center",
+                  textTransform: "uppercase",
+                  letterSpacing: 0.5,
+                }}
               >
                 {t("workout.createRoutine", "Créer un programme")}
               </Text>
@@ -225,18 +240,26 @@ export default function Workout() {
                   justifyContent: "center",
                   borderColor: "#4B5563", // Darker Gray for 3D effect
                   flexDirection: "row",
-                  gap: 8
+                  gap: 8,
                 },
                 pressed
                   ? { borderBottomWidth: 0, marginTop: 4 }
-                  : { borderBottomWidth: 4, marginTop: 0 }
+                  : { borderBottomWidth: 4, marginTop: 0 },
               ]}
             >
               <Ionicons name="compass" size={22} color="#FFFFFF" />
-              <Text 
-                numberOfLines={1} 
-                adjustsFontSizeToFit 
-                style={{ flexShrink: 1, fontFamily: FONTS.bold, color: "#FFFFFF", fontSize: 16, textAlign: "center", textTransform: "uppercase", letterSpacing: 0.5 }}
+              <Text
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                style={{
+                  flexShrink: 1,
+                  fontFamily: FONTS.bold,
+                  color: "#FFFFFF",
+                  fontSize: 16,
+                  textAlign: "center",
+                  textTransform: "uppercase",
+                  letterSpacing: 0.5,
+                }}
               >
                 {t("workout.exploreRoutines", "Découvrir")}
               </Text>
@@ -246,133 +269,138 @@ export default function Workout() {
 
         {/* ── My Routines ────────────────────────────────────── */}
         <AnimatedSection delay={180}>
-        <View style={styles.sectionHeaderRow}>
-          <Text style={styles.sectionTitle}>{t("workout.myRoutines")}</Text>
-          {routines.length > 0 && (
-            <Pressable
-              onPress={() => router.push("/routines" as any)}
-              style={({ pressed }) => pressed && { opacity: 0.7 }}
-            >
-              <Text style={styles.moreLink}>
-                {t("workout.viewAll")} {">"}
-              </Text>
-            </Pressable>
-          )}
-        </View>
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.sectionTitle}>{t("workout.myRoutines")}</Text>
+            {routines.length > 0 && (
+              <Pressable
+                onPress={() => router.push("/routines" as any)}
+                style={({ pressed }) => pressed && { opacity: 0.7 }}
+              >
+                <Text style={styles.moreLink}>
+                  {t("workout.viewAll")} {">"}
+                </Text>
+              </Pressable>
+            )}
+          </View>
         </AnimatedSection>
 
         <AnimatedSection delay={240} direction="left" offset={40}>
-        {routines.length === 0 ? (
-          <Pressable
-            onPress={handleCreateRoutine}
-            style={({ pressed }) => [
-              styles.routinesEmpty,
-              pressed && { opacity: 0.9, transform: [{ scale: 0.99 }] },
-            ]}
-          >
-            <Ionicons
-              name="bookmark-outline"
-              size={28}
-              color={theme.primary.main}
-            />
-            <Text style={styles.routinesEmptyTitle}>
-              {t("workout.noRoutinesYet")}
-            </Text>
-            <View style={styles.routinesEmptyBtn}>
-              <Ionicons name="add" size={14} color={theme.background.dark} />
-              <Text style={styles.routinesEmptyBtnText}>
-                {t("workout.createFirstRoutine")}
-              </Text>
-            </View>
-          </Pressable>
-        ) : (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.routinesScroll}
-          >
-            {routines.slice(0, 6).map((routine) => (
-              <RoutineCard
-                key={routine.id}
-                routine={routine}
-                onPress={() => router.push(`/routines/${routine.id}` as any)}
-                onStart={() => handleStartRoutine(routine)}
+          {routines.length === 0 ? (
+            <Pressable
+              onPress={handleCreateRoutine}
+              style={({ pressed }) => [
+                styles.routinesEmpty,
+                pressed && { opacity: 0.9, transform: [{ scale: 0.99 }] },
+              ]}
+            >
+              <Ionicons
+                name="bookmark-outline"
+                size={28}
+                color={theme.primary.main}
               />
-            ))}
-          </ScrollView>
-        )}
+              <Text style={styles.routinesEmptyTitle}>
+                {t("workout.noRoutinesYet")}
+              </Text>
+              <View style={styles.routinesEmptyBtn}>
+                <Ionicons name="add" size={14} color={theme.background.dark} />
+                <Text style={styles.routinesEmptyBtnText}>
+                  {t("workout.createFirstRoutine")}
+                </Text>
+              </View>
+            </Pressable>
+          ) : (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.routinesScroll}
+            >
+              {routines.slice(0, 6).map((routine) => (
+                <RoutineCard
+                  key={routine.id}
+                  routine={routine}
+                  onPress={() => router.push(`/routines/${routine.id}` as any)}
+                  onStart={() => handleStartRoutine(routine)}
+                />
+              ))}
+            </ScrollView>
+          )}
         </AnimatedSection>
 
         {/* ── Recent Workouts ───────────────────────────────── */}
         {workouts.length > 0 && (
           <>
             <AnimatedSection delay={320}>
-            <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionTitle}>
-                {t("workout.recentWorkouts")}
-              </Text>
-              <Pressable
-                onPress={() => router.push("/workouts" as any)}
-                style={({ pressed }) => pressed && { opacity: 0.7 }}
-              >
-                <Text style={styles.moreLink}>
-                  {t("home.more")} {">"}
+              <View style={styles.sectionHeaderRow}>
+                <Text style={styles.sectionTitle}>
+                  {t("workout.recentWorkouts")}
                 </Text>
-              </Pressable>
-            </View>
+                <Pressable
+                  onPress={() => router.push("/workouts" as any)}
+                  style={({ pressed }) => pressed && { opacity: 0.7 }}
+                >
+                  <Text style={styles.moreLink}>
+                    {t("home.more")} {">"}
+                  </Text>
+                </Pressable>
+              </View>
             </AnimatedSection>
 
             <AnimatedSection delay={380} direction="left" offset={40}>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.recentScroll}
-            >
-              {workouts.slice(0, 5).map((workout, index) => (
-                <Pressable
-                  key={workout.id}
-                  style={({ pressed }) => [
-                    styles.recentCard,
-                    pressed && { opacity: 0.95, transform: [{ scale: 0.98 }] },
-                  ]}
-                  onPress={() => router.push(`/workouts/${workout.id}` as any)}
-                >
-                  <Image
-                    source={routineImages[(index + 1) % routineImages.length]}
-                    style={styles.recentCardImage}
-                    resizeMode="cover"
-                  />
-                  <LinearGradient
-                    colors={["transparent", "rgba(0,0,0,0.75)"]}
-                    style={styles.recentCardGradient}
-                  />
-                  <View style={styles.recentCardContent}>
-                    <Text style={styles.recentCardName} numberOfLines={1}>
-                      {workout.name}
-                    </Text>
-                    <View style={styles.recentCardMeta}>
-                      <Ionicons
-                        name="time-outline"
-                        size={11}
-                        color="rgba(255,255,255,0.7)"
-                      />
-                      <Text style={styles.recentCardMetaText}>
-                        {workout.duration} min
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.recentScroll}
+              >
+                {workouts.slice(0, 5).map((workout, index) => (
+                  <Pressable
+                    key={workout.id}
+                    style={({ pressed }) => [
+                      styles.recentCard,
+                      pressed && {
+                        opacity: 0.95,
+                        transform: [{ scale: 0.98 }],
+                      },
+                    ]}
+                    onPress={() =>
+                      router.push(`/workouts/${workout.id}` as any)
+                    }
+                  >
+                    <Image
+                      source={routineImages[(index + 1) % routineImages.length]}
+                      style={styles.recentCardImage}
+                      resizeMode="cover"
+                    />
+                    <LinearGradient
+                      colors={["transparent", "rgba(0,0,0,0.75)"]}
+                      style={styles.recentCardGradient}
+                    />
+                    <View style={styles.recentCardContent}>
+                      <Text style={styles.recentCardName} numberOfLines={1}>
+                        {workout.name}
                       </Text>
-                      <Text style={styles.recentCardMetaText}>·</Text>
-                      <Ionicons
-                        name="barbell-outline"
-                        size={11}
-                        color="rgba(255,255,255,0.7)"
-                      />
-                      <Text style={styles.recentCardMetaText}>
-                        {workout.exercises.length}
-                      </Text>
+                      <View style={styles.recentCardMeta}>
+                        <Ionicons
+                          name="time-outline"
+                          size={11}
+                          color="rgba(255,255,255,0.7)"
+                        />
+                        <Text style={styles.recentCardMetaText}>
+                          {workout.duration} min
+                        </Text>
+                        <Text style={styles.recentCardMetaText}>·</Text>
+                        <Ionicons
+                          name="barbell-outline"
+                          size={11}
+                          color="rgba(255,255,255,0.7)"
+                        />
+                        <Text style={styles.recentCardMetaText}>
+                          {workout.exercises.length}
+                        </Text>
+                      </View>
                     </View>
-                  </View>
-                </Pressable>
-              ))}
-            </ScrollView>
+                  </Pressable>
+                ))}
+              </ScrollView>
             </AnimatedSection>
           </>
         )}
