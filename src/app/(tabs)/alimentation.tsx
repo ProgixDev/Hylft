@@ -161,9 +161,6 @@ export default function Alimentation() {
     goals.calorieGoal - caloriesEaten + caloriesBurned,
     0,
   );
-  const calPct =
-    goals.calorieGoal > 0 ? Math.min(caloriesEaten / goals.calorieGoal, 1) : 0;
-
   const getMealsForType = (type: MealType) =>
     todayMeals.filter((m) => m.mealType === type);
   const getMealTypeCalories = (type: MealType) =>
@@ -282,73 +279,65 @@ export default function Alimentation() {
         </View>
 
         <View style={styles.summaryCard}>
-          <View style={styles.summaryRow}>
-            <View style={styles.summaryCol}>
-              <Text style={styles.summaryNum}>{Math.round(caloriesEaten)}</Text>
-              <Text style={styles.summaryLabel}>
-                {isFr ? "Consommées" : "Eaten"}
+          <View style={styles.totalRow}>
+            <View>
+              <Text style={styles.totalLabel}>
+                {isFr ? "Total consomme" : "Total eaten"}
+              </Text>
+              <Text style={styles.totalValue}>
+                {Math.round(caloriesEaten)}
+                <Text style={styles.totalUnit}> kcal</Text>
               </Text>
             </View>
-
-            <Ring
-              pct={calPct}
-              size={90}
-              strokeWidth={8}
-              color={theme.primary.main}
-              bgColor={`${theme.foreground.gray}20`}
-            >
-              <Text style={styles.ringNum}>
+            <View style={styles.totalMeta}>
+              <Text style={styles.totalMetaValue}>
                 {Math.round(caloriesRemaining)}
               </Text>
-              <Text style={styles.ringLabel}>
-                {isFr ? "Restantes" : "Left"}
-              </Text>
-            </Ring>
-
-            <View style={styles.summaryCol}>
-              <Text style={styles.summaryNum}>
-                {Math.round(caloriesBurned)}
-              </Text>
-              <Text style={styles.summaryLabel}>
-                {isFr ? "Brûlées" : "Burned"}
+              <Text style={styles.totalMetaLabel}>
+                {isFr ? "restantes" : "left"}
               </Text>
             </View>
           </View>
 
-          <View style={styles.macroRow}>
+          <View style={styles.macroRingRow}>
             {[
               {
                 label: isFr ? "Glucides" : "Carbs",
+                short: isFr ? "Gluc" : "Carb",
                 current: todaySummary.totalCarbs,
                 goal: goals.carbsGoal,
+                color: "#F5A623",
               },
               {
-                label: isFr ? "Protéines" : "Protein",
+                label: isFr ? "Proteines" : "Protein",
+                short: "Prot",
                 current: todaySummary.totalProtein,
                 goal: goals.proteinGoal,
+                color: "#4A90D9",
               },
               {
                 label: isFr ? "Lipides" : "Fat",
+                short: isFr ? "Lip" : "Fat",
                 current: todaySummary.totalFat,
                 goal: goals.fatGoal,
+                color: "#ED6665",
               },
             ].map((m) => (
-              <View key={m.label} style={styles.macroItem}>
-                <Text style={styles.macroLabel}>{m.label}</Text>
-                <View style={styles.macroBar}>
-                  <View
-                    style={[
-                      styles.macroBarFill,
-                      {
-                        width: `${m.goal > 0 ? Math.min(m.current / m.goal, 1) * 100 : 0}%`,
-                        backgroundColor: theme.primary.main,
-                      },
-                    ]}
-                  />
-                </View>
-                <Text style={styles.macroVal}>
-                  {Math.round(m.current)} / {m.goal} g
-                </Text>
+              <View key={m.label} style={styles.macroRingItem}>
+                <Ring
+                  pct={m.goal > 0 ? m.current / m.goal : 0}
+                  size={68}
+                  strokeWidth={7}
+                  color={m.color}
+                  bgColor={`${theme.foreground.gray}22`}
+                >
+                  <Text style={styles.macroRingValue}>
+                    {Math.round(m.current)}
+                  </Text>
+                  <Text style={styles.macroRingUnit}>g</Text>
+                </Ring>
+                <Text style={styles.macroRingLabel}>{m.short}</Text>
+                <Text style={styles.macroRingGoal}>/ {m.goal}g</Text>
               </View>
             ))}
           </View>
@@ -647,56 +636,76 @@ function createStyles(theme: Theme) {
       borderRadius: 18,
       backgroundColor: theme.background.darker,
     },
-    summaryRow: {
+    totalRow: {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
     },
-    summaryCol: { alignItems: "center", width: 80 },
-    summaryNum: {
-      fontFamily: FONTS.extraBold,
-      fontSize: 20,
-      color: theme.foreground.white,
+    totalLabel: {
+      fontFamily: FONTS.semiBold,
+      fontSize: 12,
+      color: theme.foreground.gray,
     },
-    summaryLabel: {
+    totalValue: {
+      fontFamily: FONTS.extraBold,
+      fontSize: 28,
+      color: theme.foreground.white,
+      marginTop: 2,
+    },
+    totalUnit: {
+      fontSize: 13,
+      color: theme.foreground.gray,
+    },
+    totalMeta: {
+      minWidth: 82,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderRadius: 14,
+      backgroundColor: theme.background.dark,
+      alignItems: "center",
+    },
+    totalMetaValue: {
+      fontFamily: FONTS.extraBold,
+      fontSize: 18,
+      color: theme.primary.main,
+    },
+    totalMetaLabel: {
       fontFamily: FONTS.regular,
       fontSize: 11,
       color: theme.foreground.gray,
-      marginTop: 2,
     },
-    ringNum: {
+
+    macroRingRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      marginTop: 14,
+    },
+    macroRingItem: {
+      width: (SCREEN_WIDTH - 76) / 3,
+      alignItems: "center",
+    },
+    macroRingValue: {
       fontFamily: FONTS.extraBold,
-      fontSize: 18,
+      fontSize: 15,
       color: theme.foreground.white,
     },
-    ringLabel: {
-      fontFamily: FONTS.regular,
-      fontSize: 10,
+    macroRingUnit: {
+      fontFamily: FONTS.bold,
+      fontSize: 9,
       color: theme.foreground.gray,
       marginTop: -2,
     },
-
-    macroRow: { marginTop: 16, gap: 10 },
-    macroItem: { flexDirection: "row", alignItems: "center", gap: 8 },
-    macroLabel: {
-      fontFamily: FONTS.medium,
+    macroRingLabel: {
+      fontFamily: FONTS.bold,
       fontSize: 12,
-      color: theme.foreground.gray,
-      width: 70,
+      color: theme.foreground.white,
+      marginTop: 6,
     },
-    macroBar: {
-      flex: 1,
-      height: 6,
-      borderRadius: 3,
-      backgroundColor: `${theme.foreground.gray}20`,
-    },
-    macroBarFill: { height: "100%", borderRadius: 3 },
-    macroVal: {
-      fontFamily: FONTS.medium,
-      fontSize: 11,
+    macroRingGoal: {
+      fontFamily: FONTS.regular,
+      fontSize: 10,
       color: theme.foreground.gray,
-      width: 75,
-      textAlign: "right",
+      marginTop: 1,
     },
 
     mealRow: {

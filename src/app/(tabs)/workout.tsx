@@ -182,6 +182,68 @@ export default function Workout() {
         </Pressable>
         </AnimatedSection>
 
+        {/* ── Action Buttons ────────────────────────────────────── */}
+        <AnimatedSection delay={120} scale>
+          <View style={{ flexDirection: "column", marginHorizontal: 20, marginBottom: 24, gap: 14 }}>
+            <Pressable
+              onPress={handleCreateRoutine}
+              style={({ pressed }) => [
+                {
+                  backgroundColor: theme.primary.light,
+                  borderRadius: 16,
+                  paddingVertical: 16,
+                  paddingHorizontal: 8,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderColor: theme.primary.main,
+                  flexDirection: "row",
+                  gap: 8
+                },
+                pressed
+                  ? { borderBottomWidth: 0, marginTop: 4 }
+                  : { borderBottomWidth: 4, marginTop: 0 }
+              ]}
+            >
+              <Ionicons name="add-circle" size={22} color="#FFFFFF" />
+              <Text 
+                numberOfLines={1} 
+                adjustsFontSizeToFit 
+                style={{ flexShrink: 1, fontFamily: FONTS.bold, color: "#FFFFFF", fontSize: 16, textAlign: "center", textTransform: "uppercase", letterSpacing: 0.5 }}
+              >
+                {t("workout.createRoutine", "Créer un programme")}
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={() => router.push("/explore-routines" as any)}
+              style={({ pressed }) => [
+                {
+                  backgroundColor: "#6B7280", // Gray
+                  borderRadius: 16,
+                  paddingVertical: 16,
+                  paddingHorizontal: 8,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderColor: "#4B5563", // Darker Gray for 3D effect
+                  flexDirection: "row",
+                  gap: 8
+                },
+                pressed
+                  ? { borderBottomWidth: 0, marginTop: 4 }
+                  : { borderBottomWidth: 4, marginTop: 0 }
+              ]}
+            >
+              <Ionicons name="compass" size={22} color="#FFFFFF" />
+              <Text 
+                numberOfLines={1} 
+                adjustsFontSizeToFit 
+                style={{ flexShrink: 1, fontFamily: FONTS.bold, color: "#FFFFFF", fontSize: 16, textAlign: "center", textTransform: "uppercase", letterSpacing: 0.5 }}
+              >
+                {t("workout.exploreRoutines", "Découvrir")}
+              </Text>
+            </Pressable>
+          </View>
+        </AnimatedSection>
+
         {/* ── My Routines ────────────────────────────────────── */}
         <AnimatedSection delay={180}>
         <View style={styles.sectionHeaderRow}>
@@ -316,7 +378,7 @@ export default function Workout() {
         )}
 
         {/* ── Create Routine CTA ─────────────────────────────── */}
-        <AnimatedSection delay={460}>
+        {/* <AnimatedSection delay={460}>
         <View style={styles.sectionHeaderRow}>
           <Text style={styles.sectionTitle}>{t("home.customWorkout")}</Text>
         </View>
@@ -366,10 +428,10 @@ export default function Workout() {
             />
           </LinearGradient>
         </Pressable>
-        </AnimatedSection>
+        </AnimatedSection> */}
 
         {/* ── Explore Banner ────────────────────────────────── */}
-        <AnimatedSection delay={620} scale>
+        {/* <AnimatedSection delay={620} scale>
         <Pressable
           style={({ pressed }) => [
             styles.exploreCard,
@@ -396,7 +458,7 @@ export default function Workout() {
             </Text>
           </View>
         </Pressable>
-        </AnimatedSection>
+        </AnimatedSection> */}
       </ScrollView>
     </AnimatedScreen>
   );
