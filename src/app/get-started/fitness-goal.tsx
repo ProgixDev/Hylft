@@ -65,7 +65,6 @@ export default function FitnessGoal() {
         <SignupProgress current={3} total={13} />
 
         <Text style={styles.title}>{t("onboarding.fitnessGoal.title")}</Text>
-        <Text style={styles.subtitle}>{t("onboarding.fitnessGoal.subtitle")}</Text>
 
         <View style={styles.grid}>
           {GOAL_ICONS.map((goal) => {
@@ -169,13 +168,7 @@ const styles = StyleSheet.create({
     fontSize: 26,
     fontFamily: FONTS.extraBold,
     color: "#111827",
-    marginBottom: 6,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: "#64748B",
     marginBottom: 20,
-    lineHeight: 20,
   },
   grid: {
     flexDirection: "column",

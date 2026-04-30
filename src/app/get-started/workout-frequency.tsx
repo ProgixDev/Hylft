@@ -183,9 +183,6 @@ export default function WorkoutFrequency() {
         <Text style={styles.title}>
           {t("onboarding.workoutFrequency.title")}
         </Text>
-        <Text style={styles.subtitle}>
-          {t("onboarding.workoutFrequency.subtitle")}
-        </Text>
 
         <View style={styles.list}>
           {WEEKDAYS.map((day) => {
@@ -234,13 +231,7 @@ const styles = StyleSheet.create({
     fontSize: 26,
     fontFamily: FONTS.extraBold,
     color: "#111827",
-    marginBottom: 6,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: "#64748B",
     marginBottom: 20,
-    lineHeight: 20,
   },
   list: {
     flexDirection: "row",

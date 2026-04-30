@@ -34,7 +34,9 @@ const EXERCISES = [
 ];
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const PLAN_DURATION = 10000;
+const PLAN_DURATION = 12000;
+const EXERCISE_REVEAL_START = 68;
+const EXERCISE_REVEAL_END = 76;
 const RING_SIZE = 132;
 const CENTER = RING_SIZE / 2;
 
@@ -59,7 +61,6 @@ const EXERCISE_LOOP_DISTANCE = EXERCISES.length * EXERCISE_STEP;
 const EXERCISES_1 = EXERCISES;
 const EXERCISES_2 = [...EXERCISES].reverse();
 const EXERCISES_3 = EXERCISES.slice(4).concat(EXERCISES.slice(0, 4));
-const EXERCISES_4 = EXERCISES.slice(7).concat(EXERCISES.slice(0, 7));
 
 const AvatarMarquee = React.memo(function AvatarMarquee({
   sources,
@@ -263,11 +264,6 @@ export default function Ready() {
     ).start();
   }, [progress, pulse, router, user]);
 
-  const topWidth = progress.interpolate({
-    inputRange: [0, 100],
-    outputRange: ["0%", "100%"],
-  });
-
   const dashInner = progress.interpolate({
     inputRange: [0, 100],
     outputRange: [C_INNER, 0],
@@ -287,12 +283,12 @@ export default function Ready() {
   });
 
   const state1Opacity = progress.interpolate({
-    inputRange: [0, 42, 50],
+    inputRange: [0, EXERCISE_REVEAL_START, EXERCISE_REVEAL_END],
     outputRange: [1, 1, 0],
   });
 
   const state2Opacity = progress.interpolate({
-    inputRange: [50, 58, 100],
+    inputRange: [EXERCISE_REVEAL_START, EXERCISE_REVEAL_END, 100],
     outputRange: [0, 1, 1],
   });
 
@@ -403,7 +399,7 @@ export default function Ready() {
             <Text style={styles.caption}>
               {t(
                 "onboarding.ready.exerciseCaption",
-                "Exercises on our platform",
+                "More than 1300 exercises on our platform",
               )}
             </Text>
           </Animated.View>
@@ -413,18 +409,18 @@ export default function Ready() {
           <Animated.View
             style={[styles.avatarGrid, { opacity: state1Opacity }]}
           >
-            <AvatarMarquee sources={avatars1} duration={20000} />
+            <AvatarMarquee sources={avatars1} duration={26000} />
             <AvatarMarquee
               sources={avatars2}
               reverse
-              duration={23000}
+              duration={30000}
               style={styles.rowOffset}
             />
-            <AvatarMarquee sources={avatars3} duration={26000} />
+            <AvatarMarquee sources={avatars3} duration={34000} />
             <AvatarMarquee
               sources={avatars4}
               reverse
-              duration={18000}
+              duration={24000}
               style={styles.rowOffset}
             />
           </Animated.View>
@@ -445,12 +441,6 @@ export default function Ready() {
               style={styles.rowOffset}
             />
             <ExerciseMarquee sources={EXERCISES_3} duration={25000} />
-            <ExerciseMarquee
-              sources={EXERCISES_4}
-              reverse
-              duration={28000}
-              style={styles.fadeRow}
-            />
           </Animated.View>
         </View>
       </View>

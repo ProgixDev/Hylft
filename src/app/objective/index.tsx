@@ -16,6 +16,7 @@ import ChipButton from "../../components/ui/ChipButton";
 import { FONTS } from "../../constants/fonts";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
+import { TutorialTarget } from "../../contexts/TutorialTargetContext";
 import { api } from "../../services/api";
 import { ApiRoutine } from "../../utils/routineMapper";
 
@@ -56,7 +57,12 @@ function RoutineOptionCard({
   isSelected,
   onPress,
 }: {
-  routine: { id: string; name: string; exercises?: unknown[]; estimated_duration?: number };
+  routine: {
+    id: string;
+    name: string;
+    exercises?: unknown[] | null;
+    estimated_duration?: number | null;
+  };
   isSelected: boolean;
   onPress: () => void;
 }) {
@@ -699,14 +705,16 @@ export default function ObjectiveScreen() {
         )}
       </ScrollView>
 
-      <ChipButton
-        title={footerTitle}
-        onPress={step === "days" ? handleNext : handleConfirm}
-        variant="primary"
-        size="lg"
-        fullWidth
-        disabled={footerDisabled}
-      />
+      <TutorialTarget id="objective.footerAction">
+        <ChipButton
+          title={footerTitle}
+          onPress={step === "days" ? handleNext : handleConfirm}
+          variant="primary"
+          size="lg"
+          fullWidth
+          disabled={footerDisabled}
+        />
+      </TutorialTarget>
     </View>
   );
 }

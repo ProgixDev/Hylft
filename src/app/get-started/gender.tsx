@@ -74,7 +74,6 @@ export default function GenderSelection() {
         <SignupProgress current={isSignupFlow ? 6 : 1} total={13} />
 
         <Text style={styles.title}>{t("onboarding.gender.title")}</Text>
-        <Text style={styles.subtitle}>{t("onboarding.gender.subtitle")}</Text>
 
         <View style={styles.optionsContainer}>
           <View>
@@ -155,11 +154,7 @@ const styles = StyleSheet.create({
     fontSize: 26,
     fontFamily: FONTS.bold,
     color: "#111827",
-    marginVertical: 6,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: "#64748B",
+    marginTop: 6,
     marginBottom: 28,
   },
   optionsContainer: {

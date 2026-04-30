@@ -31,7 +31,6 @@ export default function AgeScreen() {
         <SignupProgress current={isSignupFlow ? 7 : 5} total={13} />
 
         <Text style={styles.title}>{t("onboarding.age.title")}</Text>
-        <Text style={styles.subtitle}>{t("onboarding.age.subtitle")}</Text>
 
         <View style={styles.pickerContainer}>
           <RulerPicker
@@ -69,13 +68,7 @@ function createStyles() {
       fontSize: 26,
       fontFamily: FONTS.extraBold,
       color: "#111827",
-      marginBottom: 6,
-    },
-    subtitle: {
-      fontSize: 14,
-      color: "#64748B",
       marginBottom: 18,
-      lineHeight: 20,
     },
     pickerContainer: {
       flex: 1,

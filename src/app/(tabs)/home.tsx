@@ -3,19 +3,25 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useTranslation } from "react-i18next";
 import {
-    Animated,
-    Dimensions,
-    Image,
-    ImageBackground,
-    Modal,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
+  Animated,
+  Dimensions,
+  Image,
+  ImageBackground,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
 import AnimatedScreen from "../../components/ui/AnimatedScreen";
 import AnimatedSection from "../../components/ui/AnimatedSection";
@@ -27,6 +33,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useHealth } from "../../contexts/HealthContext";
 import { useNutrition } from "../../contexts/NutritionContext";
 import { useTheme } from "../../contexts/ThemeContext";
+import { TutorialTarget } from "../../contexts/TutorialTargetContext";
 import { useGenderedImages } from "../../hooks/useGenderedImages";
 import { api } from "../../services/api";
 import { hasProEntitlement } from "../../services/googlePlayBilling";
@@ -99,9 +106,24 @@ function indicesToWorkoutDayIds(indices: number[]): WorkoutDayId[] {
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-const CHIP_CYAN  = { face: "#0E7490", depth: "#075985", text: "#F0FDFF", border: "#67E8F9" };
-const CHIP_GREEN = { face: "#16A34A", depth: "#14532D", text: "#F0FDF4", border: "#86EFAC" };
-const CHIP_GRAY  = { face: "#1F2A37", depth: "#111827", text: "#6B7280", border: "#374151" };
+const CHIP_CYAN = {
+  face: "#0E7490",
+  depth: "#075985",
+  text: "#F0FDFF",
+  border: "#67E8F9",
+};
+const CHIP_GREEN = {
+  face: "#16A34A",
+  depth: "#14532D",
+  text: "#F0FDF4",
+  border: "#86EFAC",
+};
+const CHIP_GRAY = {
+  face: "#1F2A37",
+  depth: "#111827",
+  text: "#6B7280",
+  border: "#374151",
+};
 
 function DayChip3D({
   shortLabel,
@@ -121,14 +143,34 @@ function DayChip3D({
 
   const pressIn = () =>
     Animated.parallel([
-      Animated.spring(scale, { toValue: 0.96, speed: 40, bounciness: 0, useNativeDriver: true }),
-      Animated.spring(depth, { toValue: 4,  speed: 40, bounciness: 0, useNativeDriver: true }),
+      Animated.spring(scale, {
+        toValue: 0.96,
+        speed: 40,
+        bounciness: 0,
+        useNativeDriver: true,
+      }),
+      Animated.spring(depth, {
+        toValue: 4,
+        speed: 40,
+        bounciness: 0,
+        useNativeDriver: true,
+      }),
     ]).start();
 
   const pressOut = () =>
     Animated.parallel([
-      Animated.spring(scale, { toValue: 1, speed: 28, bounciness: 6, useNativeDriver: true }),
-      Animated.spring(depth, { toValue: 0, speed: 26, bounciness: 6, useNativeDriver: true }),
+      Animated.spring(scale, {
+        toValue: 1,
+        speed: 28,
+        bounciness: 6,
+        useNativeDriver: true,
+      }),
+      Animated.spring(depth, {
+        toValue: 0,
+        speed: 26,
+        bounciness: 6,
+        useNativeDriver: true,
+      }),
     ]).start();
 
   const palette = !hasPlan ? CHIP_GRAY : isWorkoutDay ? CHIP_CYAN : CHIP_GREEN;
@@ -147,12 +189,23 @@ function DayChip3D({
         <Animated.View
           style={[
             chipStyles.face,
-            { backgroundColor: palette.face, transform: [{ translateY: depth }] },
+            {
+              backgroundColor: palette.face,
+              transform: [{ translateY: depth }],
+            },
           ]}
         >
-          <Text style={[chipStyles.label, { color: palette.text }]}>{shortLabel}</Text>
-          <Text style={[chipStyles.date, { color: palette.text }]}>{dayOfMonth}</Text>
-          {isToday && <View style={[chipStyles.todayDot, { backgroundColor: palette.border }]} />}
+          <Text style={[chipStyles.label, { color: palette.text }]}>
+            {shortLabel}
+          </Text>
+          <Text style={[chipStyles.date, { color: palette.text }]}>
+            {dayOfMonth}
+          </Text>
+          {isToday && (
+            <View
+              style={[chipStyles.todayDot, { backgroundColor: palette.border }]}
+            />
+          )}
         </Animated.View>
       </View>
     </AnimatedPressable>
@@ -223,8 +276,7 @@ export default function Home() {
     ScheduleAssignment[]
   >([]);
   const [userRoutines, setUserRoutines] = useState<ApiRoutine[]>([]);
-  const [workoutRemindersEnabled, setWorkoutRemindersEnabled] =
-    useState(false);
+  const [workoutRemindersEnabled, setWorkoutRemindersEnabled] = useState(false);
   const [workoutReminderTime, setWorkoutReminderTime] = useState("17:30");
   const [displayName, setDisplayName] = useState("");
   const [isProModalVisible, setIsProModalVisible] = useState(false);
@@ -697,6 +749,265 @@ export default function Home() {
           </Text>
         </AnimatedSection>
 
+        {/* Weekly workout sessions */}
+        <AnimatedSection delay={560} scale>
+          <View style={styles.weekSessionsCard}>
+            <View style={styles.weekSessionsHeader}>
+              <View style={styles.weekSessionsTitleBlock}>
+                <Text style={styles.weekSessionsTitle}>
+                  {t("home.weekSessions", "SEANCES DE LA SEMAINE")}
+                </Text>
+                <Text style={styles.weekObjectiveText}>
+                  {selectedWorkoutDays.length > 0
+                    ? t("home.objectiveOption", "{{count}} x semaine", {
+                        count: selectedWorkoutDays.length,
+                      })
+                    : t("home.noWorkoutDaysTitle", "Choose workout days")}
+                </Text>
+              </View>
+              <TutorialTarget id="home.weekConfigureButton">
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.weekSettingsBtn,
+                    pressed && { opacity: 0.85 },
+                  ]}
+                  onPress={() => router.push("/objective")}
+                  accessibilityRole="button"
+                  accessibilityLabel={t(
+                    "home.configureWeek",
+                    "Configure workout week",
+                  )}
+                >
+                  <Ionicons
+                    name="settings-outline"
+                    size={19}
+                    color={theme.primary.main}
+                  />
+                </Pressable>
+              </TutorialTarget>
+            </View>
+
+            {/* Day chips row — today always centred */}
+            <View style={styles.weekChipsRow}>
+              {centeredDays.map((day) => (
+                <DayChip3D
+                  key={day.key}
+                  shortLabel={day.shortLabel}
+                  dayOfMonth={day.dayOfMonth}
+                  isToday={day.isToday}
+                  isWorkoutDay={day.isWorkoutDay}
+                  hasPlan={selectedWorkoutDays.length > 0}
+                />
+              ))}
+            </View>
+
+            {/* Legend */}
+            <View style={styles.chipLegendRow}>
+              <View style={styles.chipLegendItem}>
+                <View
+                  style={[
+                    styles.chipLegendDot,
+                    { backgroundColor: CHIP_CYAN.face },
+                  ]}
+                />
+                <Text style={styles.chipLegendText}>
+                  {t("home.workoutDay", "Séance")}
+                </Text>
+              </View>
+              <View style={styles.chipLegendItem}>
+                <View
+                  style={[
+                    styles.chipLegendDot,
+                    { backgroundColor: CHIP_GREEN.face },
+                  ]}
+                />
+                <Text style={styles.chipLegendText}>
+                  {t("home.restDay", "Repos")}
+                </Text>
+              </View>
+            </View>
+
+            {selectedWorkoutDays.length === 0 ? (
+              /* ── No days configured ── */
+              <Pressable
+                style={({ pressed }) => [
+                  styles.nextWorkoutCard,
+                  pressed && { opacity: 0.95, transform: [{ scale: 0.98 }] },
+                ]}
+                onPress={() => router.push("/objective")}
+              >
+                <Image
+                  source={genderedImages.nextWorkout}
+                  style={styles.nextWorkoutImage}
+                  resizeMode="cover"
+                />
+                <LinearGradient
+                  colors={["rgba(0,0,0,0.12)", "rgba(0,0,0,0.78)"]}
+                  style={styles.nextWorkoutGradient}
+                />
+                <View style={styles.nextWorkoutContent}>
+                  <View style={styles.nextWorkoutInfo}>
+                    <Text style={styles.nextWorkoutName}>
+                      {t("home.noWorkoutDaysTitle", "Choose workout days")}
+                    </Text>
+                    <Text style={styles.nextWorkoutMeta}>
+                      {t(
+                        "home.noWorkoutDaysMessage",
+                        "Pick the days you train so your week can be planned.",
+                      )}
+                    </Text>
+                  </View>
+                  <View style={styles.nextWorkoutBtn}>
+                    <Text style={styles.nextWorkoutBtnText}>
+                      {t("home.chooseDays", "Choose")}
+                    </Text>
+                  </View>
+                </View>
+              </Pressable>
+            ) : isTodayWorkoutDay ? (
+              /* ── Today is a workout day ── */
+              <Pressable
+                style={({ pressed }) => [
+                  styles.nextWorkoutCard,
+                  pressed && { opacity: 0.95, transform: [{ scale: 0.98 }] },
+                ]}
+                onPress={() =>
+                  todayRoutine
+                    ? handleStartRoutine(todayRoutine)
+                    : handleSetupWorkoutDay(todayWorkoutDay!)
+                }
+              >
+                <Image
+                  source={genderedImages.nextWorkout}
+                  style={styles.nextWorkoutImage}
+                  resizeMode="cover"
+                />
+                <LinearGradient
+                  colors={["rgba(0,0,0,0.12)", "rgba(0,0,0,0.78)"]}
+                  style={styles.nextWorkoutGradient}
+                />
+                <View style={styles.nextWorkoutContent}>
+                  <View style={styles.nextWorkoutInfo}>
+                    <Text style={styles.nextWorkoutName} numberOfLines={2}>
+                      {todayRoutine?.name ??
+                        t("home.setupDayRoutine", "{{day}} workout", {
+                          day: todayWorkoutDay!.longLabel,
+                        })}
+                    </Text>
+                    <View style={styles.sessionDetails}>
+                      <View style={styles.sessionTag}>
+                        <Ionicons
+                          name="barbell-outline"
+                          size={12}
+                          color="rgba(255,255,255,0.82)"
+                        />
+                        <Text style={styles.sessionTagText} numberOfLines={1}>
+                          {todayRoutine
+                            ? `${todayRoutine.exercises?.length ?? 0} ${t("home.exercises")}`
+                            : t(
+                                "home.addExercisesToRoutine",
+                                "Add exercises, save, and keep the day ready.",
+                              )}
+                        </Text>
+                      </View>
+                      <View style={styles.sessionTag}>
+                        <Ionicons
+                          name="time-outline"
+                          size={12}
+                          color="rgba(255,255,255,0.82)"
+                        />
+                        <Text style={styles.sessionTagText} numberOfLines={1}>
+                          {todayRoutine
+                            ? `${todayWorkoutDay!.longLabel} · ${todayRoutine.estimated_duration ?? 0} min`
+                            : t("home.needsRoutine", "Needs routine")}
+                        </Text>
+                      </View>
+                      <View style={styles.sessionTag}>
+                        <Ionicons
+                          name="alarm-outline"
+                          size={12}
+                          color="rgba(255,255,255,0.82)"
+                        />
+                        <Text style={styles.sessionTagText} numberOfLines={1}>
+                          {workoutRemindersEnabled
+                            ? t("home.reminderAt", "Reminder {{time}}", {
+                                time: workoutReminderTime,
+                              })
+                            : t("home.remindersOff", "Reminders off")}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                  <View style={styles.nextWorkoutBtn}>
+                    <Text style={styles.nextWorkoutBtnText}>
+                      {todayRoutine
+                        ? t("home.start", "Démarrer")
+                        : t("home.setupRoutine", "Configurer")}
+                    </Text>
+                  </View>
+                </View>
+              </Pressable>
+            ) : (
+              /* ── Today is a rest day ── */
+              <Pressable
+                style={({ pressed }) => [
+                  styles.nextWorkoutCard,
+                  styles.restDayCard,
+                  pressed && { opacity: 0.95, transform: [{ scale: 0.98 }] },
+                ]}
+                onPress={() => setIsRestDayModalVisible(true)}
+              >
+                <LinearGradient
+                  colors={["#0F2027", "#1A3A4A", "#0D1F2D"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={StyleSheet.absoluteFill}
+                />
+                {/* decorative orbs */}
+                <View style={styles.restOrb1} />
+                <View style={styles.restOrb2} />
+
+                <View style={styles.restDayContent}>
+                  {/* top row: moon + text */}
+                  <View style={styles.restDayLeft}>
+                    <View style={styles.restMoonWrap}>
+                      <Text style={styles.restMoonEmoji}>🌙</Text>
+                    </View>
+                    <View style={{ gap: 4, maxWidth: "65%" }}>
+                      <Text style={styles.restDayTitle}>
+                        {t("home.restDay", "Jour de repos")}
+                      </Text>
+                      <Text style={styles.restDaySubtitle}>
+                        {t("home.restDayMessage", "Récupération & bien-être")}
+                      </Text>
+                      {nextWorkoutDay && (
+                        <View style={styles.nextWorkoutTag}>
+                          <Ionicons
+                            name="calendar-outline"
+                            size={11}
+                            color="#67E8F9"
+                          />
+                          <Text style={styles.nextWorkoutTagText}>
+                            {t("home.nextWorkout", "Prochain : {{day}}", {
+                              day: nextWorkoutDay.longLabel,
+                            })}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                  </View>
+                  {/* Voir button pinned bottom-right */}
+                  <View style={styles.restDayBtn}>
+                    <Text style={styles.restDayBtnText}>
+                      {t("home.seeMore", "Voir")}
+                    </Text>
+                  </View>
+                </View>
+              </Pressable>
+            )}
+          </View>
+        </AnimatedSection>
+
         {/* ── Calorie Summary (Donut + Stats) ─────────────────────── */}
         {/* ── Résumé Santé (Bento Grid) ───────────────────────── */}
         <AnimatedSection delay={160}>
@@ -802,248 +1113,6 @@ export default function Home() {
             );
           })}
         </View>
-
-        {/* Weekly workout sessions */}
-        <AnimatedSection delay={560} scale>
-          <View style={styles.weekSessionsCard}>
-            <View style={styles.weekSessionsHeader}>
-              <View style={styles.weekSessionsTitleBlock}>
-                <Text style={styles.weekSessionsTitle}>
-                  {t("home.weekSessions", "SEANCES DE LA SEMAINE")}
-                </Text>
-                <Text style={styles.weekObjectiveText}>
-                  {selectedWorkoutDays.length > 0
-                    ? t(
-                        "home.objectiveOption",
-                        "{{count}} x semaine",
-                        { count: selectedWorkoutDays.length },
-                      )
-                    : t("home.noWorkoutDaysTitle", "Choose workout days")}
-                </Text>
-              </View>
-              <Pressable
-                style={({ pressed }) => [
-                  styles.weekSettingsBtn,
-                  pressed && { opacity: 0.85 },
-                ]}
-                onPress={() => router.push("/objective")}
-                accessibilityRole="button"
-                accessibilityLabel={t(
-                  "home.configureWeek",
-                  "Configure workout week",
-                )}
-              >
-                <Ionicons
-                  name="settings-outline"
-                  size={19}
-                  color={theme.primary.main}
-                />
-              </Pressable>
-            </View>
-
-            {/* Day chips row — today always centred */}
-            <View style={styles.weekChipsRow}>
-              {centeredDays.map((day) => (
-                <DayChip3D
-                  key={day.key}
-                  shortLabel={day.shortLabel}
-                  dayOfMonth={day.dayOfMonth}
-                  isToday={day.isToday}
-                  isWorkoutDay={day.isWorkoutDay}
-                  hasPlan={selectedWorkoutDays.length > 0}
-                />
-              ))}
-            </View>
-
-            {/* Legend */}
-            <View style={styles.chipLegendRow}>
-              <View style={styles.chipLegendItem}>
-                <View style={[styles.chipLegendDot, { backgroundColor: CHIP_CYAN.face }]} />
-                <Text style={styles.chipLegendText}>
-                  {t("home.workoutDay", "Séance")}
-                </Text>
-              </View>
-              <View style={styles.chipLegendItem}>
-                <View style={[styles.chipLegendDot, { backgroundColor: CHIP_GREEN.face }]} />
-                <Text style={styles.chipLegendText}>
-                  {t("home.restDay", "Repos")}
-                </Text>
-              </View>
-            </View>
-
-            {selectedWorkoutDays.length === 0 ? (
-              /* ── No days configured ── */
-              <Pressable
-                style={({ pressed }) => [
-                  styles.nextWorkoutCard,
-                  pressed && { opacity: 0.95, transform: [{ scale: 0.98 }] },
-                ]}
-                onPress={() => router.push("/objective")}
-              >
-                <Image
-                  source={genderedImages.nextWorkout}
-                  style={styles.nextWorkoutImage}
-                  resizeMode="cover"
-                />
-                <LinearGradient
-                  colors={["rgba(0,0,0,0.12)", "rgba(0,0,0,0.78)"]}
-                  style={styles.nextWorkoutGradient}
-                />
-                <View style={styles.nextWorkoutContent}>
-                  <View style={styles.nextWorkoutInfo}>
-                    <Text style={styles.nextWorkoutName}>
-                      {t("home.noWorkoutDaysTitle", "Choose workout days")}
-                    </Text>
-                    <Text style={styles.nextWorkoutMeta}>
-                      {t(
-                        "home.noWorkoutDaysMessage",
-                        "Pick the days you train so your week can be planned.",
-                      )}
-                    </Text>
-                  </View>
-                  <View style={styles.nextWorkoutBtn}>
-                    <Text style={styles.nextWorkoutBtnText}>
-                      {t("home.chooseDays", "Choose")}
-                    </Text>
-                  </View>
-                </View>
-              </Pressable>
-            ) : isTodayWorkoutDay ? (
-              /* ── Today is a workout day ── */
-              <Pressable
-                style={({ pressed }) => [
-                  styles.nextWorkoutCard,
-                  pressed && { opacity: 0.95, transform: [{ scale: 0.98 }] },
-                ]}
-                onPress={() =>
-                  todayRoutine
-                    ? handleStartRoutine(todayRoutine)
-                    : handleSetupWorkoutDay(todayWorkoutDay!)
-                }
-              >
-                <Image
-                  source={genderedImages.nextWorkout}
-                  style={styles.nextWorkoutImage}
-                  resizeMode="cover"
-                />
-                <LinearGradient
-                  colors={["rgba(0,0,0,0.12)", "rgba(0,0,0,0.78)"]}
-                  style={styles.nextWorkoutGradient}
-                />
-                <View style={styles.nextWorkoutContent}>
-                  <View style={styles.nextWorkoutInfo}>
-                    <Text style={styles.nextWorkoutName} numberOfLines={2}>
-                      {todayRoutine?.name ??
-                        t("home.setupDayRoutine", "{{day}} workout", {
-                          day: todayWorkoutDay!.longLabel,
-                        })}
-                    </Text>
-                    <View style={styles.sessionDetails}>
-                      <View style={styles.sessionTag}>
-                        <Ionicons
-                          name="barbell-outline"
-                          size={12}
-                          color="rgba(255,255,255,0.82)"
-                        />
-                        <Text style={styles.sessionTagText} numberOfLines={1}>
-                          {todayRoutine
-                            ? `${todayRoutine.exercises?.length ?? 0} ${t("home.exercises")}`
-                            : t("home.addExercisesToRoutine", "Add exercises, save, and keep the day ready.")}
-                        </Text>
-                      </View>
-                      <View style={styles.sessionTag}>
-                        <Ionicons
-                          name="time-outline"
-                          size={12}
-                          color="rgba(255,255,255,0.82)"
-                        />
-                        <Text style={styles.sessionTagText} numberOfLines={1}>
-                          {todayRoutine
-                            ? `${todayWorkoutDay!.longLabel} · ${todayRoutine.estimated_duration ?? 0} min`
-                            : t("home.needsRoutine", "Needs routine")}
-                        </Text>
-                      </View>
-                      <View style={styles.sessionTag}>
-                        <Ionicons
-                          name="alarm-outline"
-                          size={12}
-                          color="rgba(255,255,255,0.82)"
-                        />
-                        <Text style={styles.sessionTagText} numberOfLines={1}>
-                          {workoutRemindersEnabled
-                            ? t("home.reminderAt", "Reminder {{time}}", { time: workoutReminderTime })
-                            : t("home.remindersOff", "Reminders off")}
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                  <View style={styles.nextWorkoutBtn}>
-                    <Text style={styles.nextWorkoutBtnText}>
-                      {todayRoutine
-                        ? t("home.start", "Démarrer")
-                        : t("home.setupRoutine", "Configurer")}
-                    </Text>
-                  </View>
-                </View>
-              </Pressable>
-            ) : (
-              /* ── Today is a rest day ── */
-              <Pressable
-                style={({ pressed }) => [
-                  styles.nextWorkoutCard,
-                  styles.restDayCard,
-                  pressed && { opacity: 0.95, transform: [{ scale: 0.98 }] },
-                ]}
-                onPress={() => setIsRestDayModalVisible(true)}
-              >
-                <LinearGradient
-                  colors={["#0F2027", "#1A3A4A", "#0D1F2D"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={StyleSheet.absoluteFill}
-                />
-                {/* decorative orbs */}
-                <View style={styles.restOrb1} />
-                <View style={styles.restOrb2} />
-
-                <View style={styles.restDayContent}>
-                  {/* top row: moon + text */}
-                  <View style={styles.restDayLeft}>
-                    <View style={styles.restMoonWrap}>
-                      <Text style={styles.restMoonEmoji}>🌙</Text>
-                    </View>
-                    <View style={{ gap: 4, maxWidth: "65%" }}>
-                      <Text style={styles.restDayTitle}>
-                        {t("home.restDay", "Jour de repos")}
-                      </Text>
-                      <Text style={styles.restDaySubtitle}>
-                        {t("home.restDayMessage", "Récupération & bien-être")}
-                      </Text>
-                      {nextWorkoutDay && (
-                        <View style={styles.nextWorkoutTag}>
-                          <Ionicons name="calendar-outline" size={11} color="#67E8F9" />
-                          <Text style={styles.nextWorkoutTagText}>
-                            {t("home.nextWorkout", "Prochain : {{day}}", {
-                              day: nextWorkoutDay.longLabel,
-                            })}
-                          </Text>
-                        </View>
-                      )}
-                    </View>
-                  </View>
-                  {/* Voir button pinned bottom-right */}
-                  <View style={styles.restDayBtn}>
-                    <Text style={styles.restDayBtnText}>
-                      {t("home.seeMore", "Voir")}
-                    </Text>
-                  </View>
-                </View>
-              </Pressable>
-            )}
-
-          </View>
-        </AnimatedSection>
-
         {/* ── Challenge Section ───────────────────────────────────── */}
         <AnimatedSection delay={640}>
           <Text style={styles.sectionTitle}>{t("home.challenge")}</Text>
@@ -1616,7 +1685,6 @@ function createStyles(theme: Theme) {
     // ── Week Sessions ─────────────────────────
     weekSessionsCard: {
       marginHorizontal: 20,
-      backgroundColor: theme.background.darker,
       borderRadius: 20,
       padding: 18,
       marginBottom: 24,

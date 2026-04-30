@@ -24,6 +24,7 @@ function createStyles(theme: Theme) {
     container: {
       flex: 1,
       backgroundColor: theme.background.dark,
+      justifyContent: "center",
     },
     logoContainer: {
       alignItems: "center",
@@ -34,9 +35,7 @@ function createStyles(theme: Theme) {
       height: 34,
     },
     contentContainer: {
-      flex: 1,
       paddingHorizontal: 28,
-      paddingTop: 12,
     },
     title: {
       fontSize: 26,
@@ -52,7 +51,7 @@ function createStyles(theme: Theme) {
       marginBottom: 28,
     },
     formContainer: {
-      flex: 1,
+      flexGrow: 0,
     },
     inputContainer: {
       marginBottom: 14,

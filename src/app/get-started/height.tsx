@@ -124,7 +124,6 @@ export default function HeightScreen() {
         <SignupProgress current={isSignupFlow ? 8 : 6} total={13} />
 
         <Text style={s.title}>{t("onboarding.height.title")}</Text>
-        <Text style={s.subtitle}>{t("onboarding.height.subtitle")}</Text>
 
         <View style={s.mainArea}>
           <View style={s.leftSection}>
@@ -206,13 +205,7 @@ const s = StyleSheet.create({
     fontSize: 26,
     fontFamily: FONTS.extraBold,
     color: "#111827",
-    marginBottom: 6,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: "#64748B",
     marginBottom: 18,
-    lineHeight: 20,
   },
   mainArea: {
     flex: 1,

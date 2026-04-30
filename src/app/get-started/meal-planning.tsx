@@ -212,9 +212,6 @@ export default function MealPlanningScreen() {
 
         <View style={s.header}>
           <Text style={s.title}>{t("onboarding.mealPlanning.title")}</Text>
-          <Text style={s.subtitle}>
-            {t("onboarding.mealPlanning.subtitle")}
-          </Text>
         </View>
 
         <View style={s.list}>
@@ -244,19 +241,13 @@ const s = StyleSheet.create({
     paddingBottom: 16,
   },
   header: {
-    marginBottom: 20,
+    marginBottom: 36,
   },
   title: {
     fontSize: 26,
     fontFamily: FONTS.extraBold,
     color: "#111827",
-    marginBottom: 6,
     lineHeight: 32,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: "#64748B",
-    lineHeight: 21,
   },
   list: {
     gap: 14,

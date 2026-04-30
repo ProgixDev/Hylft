@@ -13,6 +13,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { FONTS } from "../../constants/fonts";
 import { useTheme } from "../../contexts/ThemeContext";
+import { TutorialTarget } from "../../contexts/TutorialTargetContext";
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -104,22 +105,27 @@ export function CustomTabBar({
         };
 
         return (
-          <TabButton
+          <TutorialTarget
             key={route.key}
-            routeName={route.name}
-            isFocused={isFocused}
-            tabIndex={index}
-            activeIndex={state.index}
-            iconName={
-              isFocused && iconConfig
-                ? iconConfig.focused
-                : iconConfig
-                  ? iconConfig.default
-                  : "help-outline"
-            }
-            onPress={onPress}
-            onLongPress={onLongPress}
-          />
+            id={`tab.${route.name.toLowerCase()}`}
+            style={styles.tabTarget}
+          >
+            <TabButton
+              routeName={route.name}
+              isFocused={isFocused}
+              tabIndex={index}
+              activeIndex={state.index}
+              iconName={
+                isFocused && iconConfig
+                  ? iconConfig.focused
+                  : iconConfig
+                    ? iconConfig.default
+                    : "help-outline"
+              }
+              onPress={onPress}
+              onLongPress={onLongPress}
+            />
+          </TutorialTarget>
         );
       })}
     </View>
@@ -246,6 +252,10 @@ const createStyles = (theme: any) =>
       flex: 1,
       alignItems: "center",
       justifyContent: "center",
+      height: "100%",
+    },
+    tabTarget: {
+      flex: 1,
       height: "100%",
     },
     content: {

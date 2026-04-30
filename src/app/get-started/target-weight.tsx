@@ -58,7 +58,6 @@ export default function TargetWeightScreen() {
         <SignupProgress current={8} total={13} />
 
         <Text style={s.title}>{t("onboarding.targetWeight.title")}</Text>
-        <Text style={s.subtitle}>{t("onboarding.targetWeight.subtitle")}</Text>
 
         <View style={s.journeyCard}>
           <Image
@@ -157,13 +156,7 @@ const s = StyleSheet.create({
     fontSize: 26,
     fontFamily: FONTS.extraBold,
     color: "#111827",
-    marginBottom: 6,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: "#64748B",
     marginBottom: 18,
-    lineHeight: 20,
   },
   journeyCard: {
     borderRadius: 12,

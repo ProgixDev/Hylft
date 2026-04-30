@@ -30,7 +30,6 @@ export default function WeightScreen() {
         <SignupProgress current={isSignupFlow ? 9 : 7} total={13} />
 
         <Text style={s.title}>{t("onboarding.weight.title")}</Text>
-        <Text style={s.subtitle}>{t("onboarding.weight.subtitle")}</Text>
 
         <View style={s.pickerContainer}>
           <RulerPicker
@@ -67,13 +66,7 @@ const s = StyleSheet.create({
     fontSize: 26,
     fontFamily: FONTS.extraBold,
     color: "#111827",
-    marginBottom: 6,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: "#64748B",
     marginBottom: 18,
-    lineHeight: 20,
   },
   pickerContainer: {
     flex: 1,

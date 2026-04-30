@@ -168,9 +168,7 @@ export default function WeeklyGoalScreen() {
 
         <View style={s.header}>
           <Text style={s.title}>{headline}</Text>
-          <Text style={s.subtitle}>
-            Small steady wins compound — you can always adjust later.
-          </Text>
+
         </View>
 
         <View style={s.list}>
@@ -287,13 +285,7 @@ const s = StyleSheet.create({
     fontSize: 26,
     fontFamily: FONTS.extraBold,
     color: "#111827",
-    marginBottom: 6,
     lineHeight: 32,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: "#64748B",
-    lineHeight: 21,
   },
   list: {
     gap: 12,

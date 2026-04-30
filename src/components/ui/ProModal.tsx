@@ -46,7 +46,8 @@ export default function ProModal({ visible, onClose }: ProModalProps) {
   const [selectedPlan, setSelectedPlan] = useState<"monthly" | "yearly">(
     "yearly",
   );
-  const [timeLeft, setTimeLeft] = useState<{
+  const [trialStatus, setTrialStatus] = useState<{
+    isExpired: boolean;
     days: number;
     hours: number;
     minutes: number;
@@ -64,7 +65,7 @@ export default function ProModal({ visible, onClose }: ProModalProps) {
   const isVeryCompactHeight = height < 700;
 
   useEffect(() => {
-    const calculateTimeLeft = () => {
+    const calculateTrialStatus = () => {
       const startDate = user?.created_at
         ? new Date(user.created_at)
         : new Date();
@@ -78,21 +79,22 @@ export default function ProModal({ visible, onClose }: ProModalProps) {
         const days = Math.floor(difference / (1000 * 60 * 60 * 24));
         const hours = Math.floor((difference / (1000 * 60 * 60)) % 24);
         const minutes = Math.floor((difference / 1000 / 60) % 60);
-        return { days, hours, minutes };
+        return { isExpired: false, days, hours, minutes };
       }
 
-      return { days: 0, hours: 0, minutes: 0 };
+      return { isExpired: true, days: 0, hours: 0, minutes: 0 };
     };
 
     if (visible) {
-      setTimeLeft(calculateTimeLeft());
+      setTrialStatus(calculateTrialStatus());
 
       const timer = setInterval(() => {
-        setTimeLeft(calculateTimeLeft());
+        setTrialStatus(calculateTrialStatus());
       }, 60000);
 
       return () => clearInterval(timer);
     }
+    setTrialStatus(null);
   }, [visible, user?.created_at]);
 
   useEffect(() => {
@@ -226,9 +228,11 @@ export default function ProModal({ visible, onClose }: ProModalProps) {
   }, [onClose, t, user?.id, visible]);
 
   const features = [
-    t("proModal.feature1", "Personalized AI workout plans"),
-    t("proModal.feature2", "Advanced nutrition tracking"),
-    t("proModal.feature3", "Unlimited exclusive routines"),
+    t("proModal.feature1", "AI plans adapted to your goal, level and schedule"),
+    t("proModal.feature2", "Macro, calories and meal tracking in real time"),
+    t("proModal.feature3", "Access +1,300 exercises on the platform"),
+    t("proModal.feature4", "Unlimited custom routines and workout history"),
+    t("proModal.feature5", "Progress insights to know what to train next"),
   ];
 
   const getPlanPrice = (plan: ProPlan, fallback: string) =>
@@ -392,24 +396,45 @@ export default function ProModal({ visible, onClose }: ProModalProps) {
                   "Unlock the ultimate fitness experience",
                 )}
               </Text>
-              <Text
-                style={[
-                  styles.countdownText,
-                  isVeryCompactHeight && styles.countdownTextVeryCompact,
-                ]}
-              >
-                {timeLeft
-                  ? t(
-                      "proModal.countdownMsg",
-                      "{{days}} days, {{hours}} hours & {{minutes}} minutes till your free trial ends",
-                      {
-                        days: timeLeft.days,
-                        hours: timeLeft.hours,
-                        minutes: timeLeft.minutes,
-                      },
-                    )
-                  : t("proModal.loadingStatus", "Loading free trial status...")}
-              </Text>
+              <View style={styles.socialProofRow}>
+                {[0, 1, 2, 3, 4].map((item) => (
+                  <Ionicons key={item} name="star" size={13} color="#F5CE7A" />
+                ))}
+                <Text style={styles.socialProofText}>
+                  {t("proModal.socialProof", "+50,000 active members")}
+                </Text>
+              </View>
+
+              {trialStatus ? (
+                <Text
+                  style={[
+                    styles.countdownText,
+                    trialStatus.isExpired && styles.expiredTrialText,
+                    isVeryCompactHeight && styles.countdownTextVeryCompact,
+                  ]}
+                >
+                  {trialStatus.isExpired
+                    ? t("proModal.trialExpired", "Your free trial has ended")
+                    : t(
+                        "proModal.countdownMsg",
+                        "{{days}} days, {{hours}} hours & {{minutes}} minutes till your free trial ends",
+                        {
+                          days: trialStatus.days,
+                          hours: trialStatus.hours,
+                          minutes: trialStatus.minutes,
+                        },
+                      )}
+                </Text>
+              ) : (
+                <Text
+                  style={[
+                    styles.countdownText,
+                    isVeryCompactHeight && styles.countdownTextVeryCompact,
+                  ]}
+                >
+                  {t("proModal.loadingStatus", "Loading free trial status...")}
+                </Text>
+              )}
 
               <View
                 style={[
@@ -497,10 +522,17 @@ export default function ProModal({ visible, onClose }: ProModalProps) {
                     styles.planCard,
                     isCompactWidth && styles.planCardNarrow,
                     isVeryCompactHeight && styles.planCardCompact,
+                    styles.yearlyPlanCard,
                     selectedPlan === "yearly" && styles.planCardSelected,
                   ]}
                   onPress={() => handlePlanPress("yearly")}
                 >
+                  <View style={styles.popularBadge}>
+                    <Ionicons name="flame" size={12} color="#000000" />
+                    <Text style={styles.popularBadgeText}>
+                      {t("proModal.popular", "Most popular")}
+                    </Text>
+                  </View>
                   {selectedPlan === "yearly" && (
                     <View style={styles.checkmarkBadge}>
                       <Ionicons name="checkmark" size={12} color="#000" />
@@ -518,11 +550,11 @@ export default function ProModal({ visible, onClose }: ProModalProps) {
                     />
                   </View>
                   <Text style={styles.planPrice}>
-                    {getPlanPrice("yearly", "49 €")}
+                    {getPlanPrice("yearly", "40,12 €")}
                   </Text>
                   <View style={styles.saveBadge}>
                     <Text style={styles.saveText}>
-                      {t("proModal.saveAmount", "Save 10,88 €")}
+                      {t("proModal.saveAmount", "Save 33%")}
                     </Text>
                   </View>
                   <Text style={styles.planBilling}>
@@ -550,10 +582,17 @@ export default function ProModal({ visible, onClose }: ProModalProps) {
                   <ActivityIndicator color="#000000" />
                 ) : (
                   <Text style={styles.purchaseButtonText}>
-                    {t("proModal.purchaseBtn", "Purchase Subscription")}
+                    {t("proModal.purchaseBtn", "Unlock Hylft Pro")}
                   </Text>
                 )}
               </Pressable>
+
+              <View style={styles.guaranteeRow}>
+                <Ionicons name="shield-checkmark" size={15} color="#D7D7D7" />
+                <Text style={styles.guaranteeText}>
+                  {t("proModal.guarantee", "7-day money-back guarantee")}
+                </Text>
+              </View>
 
               <Pressable
                 onPress={handleRestorePress}
@@ -600,7 +639,7 @@ const styles = StyleSheet.create({
   },
   mainLayout: {
     flex: 1,
-    paddingTop: 16,
+    paddingTop: 8,
   },
   content: {
     flex: 1,
@@ -622,10 +661,10 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
   },
   title: {
-    fontSize: 34,
+    fontSize: 32,
     color: "#FFFFFF",
     fontFamily: "Zain_800ExtraBold",
-    marginBottom: 8,
+    marginBottom: 4,
   },
   titleCompact: {
     fontSize: 30,
@@ -637,74 +676,90 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#D0D0D0",
     fontFamily: "Zain_400Regular",
-    marginBottom: 8,
+    marginBottom: 6,
     textAlign: "center",
   },
   subtitleVeryCompact: {
     fontSize: 15,
     marginBottom: 6,
   },
+  socialProofRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 3,
+    marginBottom: 8,
+  },
+  socialProofText: {
+    color: "#EDEDED",
+    fontSize: 13,
+    fontFamily: "Zain_700Bold",
+    marginLeft: 5,
+  },
   countdownText: {
     fontSize: 14,
     color: "#F5CE7A",
     fontFamily: "Zain_700Bold",
-    marginBottom: 24,
+    marginBottom: 14,
     textAlign: "center",
+  },
+  expiredTrialText: {
+    color: "#FFFFFF",
   },
   countdownTextVeryCompact: {
     fontSize: 13,
-    marginBottom: 18,
+    marginBottom: 10,
   },
   iconContainer: {
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 36,
+    marginBottom: 16,
   },
   iconContainerCompact: {
-    marginBottom: 24,
+    marginBottom: 12,
   },
   iconContainerVeryCompact: {
-    marginBottom: 18,
+    marginBottom: 10,
   },
   premiumLogo: {
-    width: 120,
-    height: 120,
+    width: 64,
+    height: 64,
   },
   premiumLogoCompact: {
-    width: 92,
-    height: 92,
+    width: 56,
+    height: 56,
   },
   premiumLogoVeryCompact: {
-    width: 76,
-    height: 76,
+    width: 48,
+    height: 48,
   },
   features: {
     width: "100%",
-    marginBottom: 36,
+    marginBottom: 14,
   },
   featuresCompact: {
-    marginBottom: 24,
+    marginBottom: 12,
   },
   featuresVeryCompact: {
-    marginBottom: 18,
+    marginBottom: 10,
   },
   featureRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 7,
   },
   featureRowVeryCompact: {
-    marginBottom: 9,
+    marginBottom: 6,
   },
   featureText: {
     color: "#FFFFFF",
-    fontSize: 16,
+    fontSize: 15,
     fontFamily: "Zain_400Regular",
-    marginLeft: 12,
+    marginLeft: 10,
     flex: 1,
   },
   featureTextVeryCompact: {
-    fontSize: 15,
+    fontSize: 14,
   },
   plansContainer: {
     flexDirection: "row",
@@ -718,18 +773,21 @@ const styles = StyleSheet.create({
   },
   planCard: {
     flex: 1,
-    minHeight: 128,
+    minHeight: 122,
     justifyContent: "flex-start",
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: 14,
+    padding: 14,
     backgroundColor: "rgba(255, 255, 255, 0.03)",
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.1)",
     position: "relative",
   },
+  yearlyPlanCard: {
+    paddingTop: 18,
+  },
   planCardCompact: {
-    padding: 14,
-    minHeight: 116,
+    padding: 12,
+    minHeight: 112,
   },
   planCardNarrow: {
     paddingHorizontal: 12,
@@ -760,13 +818,30 @@ const styles = StyleSheet.create({
     color: "#D0D0D0",
     fontSize: 15,
     fontFamily: "Zain_400Regular",
-    marginBottom: 8,
+    marginBottom: 5,
   },
   planPrice: {
     color: "#FFFFFF",
-    fontSize: 26,
+    fontSize: 24,
     fontFamily: "Zain_700Bold",
-    marginBottom: 4,
+    marginBottom: 3,
+  },
+  popularBadge: {
+    position: "absolute",
+    top: -12,
+    left: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    backgroundColor: "#F5CE7A",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 999,
+  },
+  popularBadgeText: {
+    color: "#000000",
+    fontSize: 11,
+    fontFamily: "Zain_700Bold",
   },
   saveBadge: {
     backgroundColor: "rgba(245, 206, 122, 0.2)",
@@ -774,7 +849,7 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: 8,
     alignSelf: "flex-start",
-    marginBottom: 12,
+    marginBottom: 8,
   },
   saveText: {
     color: "#F5CE7A",
@@ -790,9 +865,9 @@ const styles = StyleSheet.create({
   },
   purchaseButton: {
     width: "100%",
-    marginTop: 18,
+    marginTop: 14,
     minHeight: 52,
-    borderRadius: 16,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#F5CE7A",
@@ -808,9 +883,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: "Zain_700Bold",
   },
+  guaranteeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 9,
+    gap: 6,
+  },
+  guaranteeText: {
+    color: "#D7D7D7",
+    fontSize: 13,
+    fontFamily: "Zain_400Regular",
+  },
   restoreHintBtn: {
-    marginTop: 10,
-    paddingVertical: 8,
+    marginTop: 4,
+    paddingVertical: 6,
     paddingHorizontal: 12,
   },
   restoreHintText: {

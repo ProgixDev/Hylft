@@ -65,7 +65,6 @@ export default function FocusAreas() {
         <SignupProgress current={10} total={13} />
 
         <Text style={s.title}>{t("onboarding.focusAreas.title")}</Text>
-        <Text style={s.subtitle}>{t("onboarding.focusAreas.subtitle")}</Text>
 
         <View style={s.grid}>
           {MUSCLE_GROUPS.map((muscle) => {
@@ -179,13 +178,7 @@ const s = StyleSheet.create({
     fontSize: 26,
     fontFamily: FONTS.extraBold,
     color: "#111827",
-    marginBottom: 6,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: "#64748B",
     marginBottom: 20,
-    lineHeight: 20,
   },
   grid: {
     gap: 8,

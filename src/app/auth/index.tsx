@@ -10,6 +10,7 @@ import {
   Dimensions,
   Image,
   ImageSourcePropType,
+  PanResponder,
   Platform,
   Pressable,
   StyleSheet,
@@ -27,10 +28,16 @@ const CAROUSEL_HEIGHT = SCREEN_HEIGHT * 0.62;
 const PANEL_OVERLAP = 30;
 const CAROUSEL_CORNER_RADIUS = 40;
 
-const CAROUSEL_SLIDES: { type: "image"; source: ImageSourcePropType }[] = [
+const EN_CAROUSEL_SLIDES: { type: "image"; source: ImageSourcePropType }[] = [
   { type: "image", source: require("../../../assets/images/poster1.png") },
   { type: "image", source: require("../../../assets/images/poster2.png") },
   { type: "image", source: require("../../../assets/images/poster3.png") },
+];
+
+const FR_CAROUSEL_SLIDES: { type: "image"; source: ImageSourcePropType }[] = [
+  { type: "image", source: require("../../../assets/images/poster1_fr.png") },
+  { type: "image", source: require("../../../assets/images/poster2_fr.png") },
+  { type: "image", source: require("../../../assets/images/poster3_fr.png") },
 ];
 
 const AUTH_GRADIENT = ["#06101F", "#0E2B57", "#364152"] as const;
@@ -269,29 +276,98 @@ const authButtonStyles = StyleSheet.create({
 });
 
 export default function AuthLanding() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [currentIndex, setCurrentIndex] = useState(0);
-  const translateAnim = useRef(new Animated.Value(0)).current;
+  const translateAnim = useRef(new Animated.Value(-SCREEN_WIDTH)).current;
+  const isCarouselAnimating = useRef(false);
+  const isCarouselDragging = useRef(false);
 
   const styles = createStyles();
-  const nextIndex = (currentIndex + 1) % CAROUSEL_SLIDES.length;
+  const carouselSlides = i18n.language?.startsWith("fr")
+    ? FR_CAROUSEL_SLIDES
+    : EN_CAROUSEL_SLIDES;
+  const prevIndex =
+    (currentIndex - 1 + carouselSlides.length) % carouselSlides.length;
+  const nextIndex = (currentIndex + 1) % carouselSlides.length;
+
+  const completeCarouselMove = React.useCallback(
+    (direction: "next" | "prev") => {
+      if (isCarouselAnimating.current || isCarouselDragging.current) return;
+      isCarouselAnimating.current = true;
+
+      Animated.timing(translateAnim, {
+        toValue: direction === "next" ? -SCREEN_WIDTH * 2 : 0,
+        duration: 260,
+        useNativeDriver: true,
+      }).start(() => {
+        setCurrentIndex((prev) =>
+          direction === "next"
+            ? (prev + 1) % carouselSlides.length
+            : (prev - 1 + carouselSlides.length) % carouselSlides.length,
+        );
+        translateAnim.setValue(-SCREEN_WIDTH);
+        isCarouselAnimating.current = false;
+      });
+    },
+    [carouselSlides.length, translateAnim],
+  );
+
+  const resetCarouselPosition = React.useCallback(() => {
+    Animated.spring(translateAnim, {
+      toValue: -SCREEN_WIDTH,
+      speed: 22,
+      bounciness: 0,
+      useNativeDriver: true,
+    }).start();
+  }, [translateAnim]);
+
+  const carouselPanResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_event, gestureState) =>
+        Math.abs(gestureState.dx) > 10 &&
+        Math.abs(gestureState.dx) > Math.abs(gestureState.dy),
+      onPanResponderGrant: () => {
+        isCarouselDragging.current = true;
+        translateAnim.stopAnimation();
+      },
+      onPanResponderMove: (_event, gestureState) => {
+        if (isCarouselAnimating.current) return;
+        const dragOffset = Math.max(
+          -SCREEN_WIDTH,
+          Math.min(SCREEN_WIDTH, gestureState.dx),
+        );
+        translateAnim.setValue(-SCREEN_WIDTH + dragOffset);
+      },
+      onPanResponderRelease: (_event, gestureState) => {
+        isCarouselDragging.current = false;
+        if (isCarouselAnimating.current) return;
+        const shouldSwipe =
+          Math.abs(gestureState.dx) > SCREEN_WIDTH * 0.18 ||
+          Math.abs(gestureState.vx) > 0.45;
+
+        if (!shouldSwipe) {
+          resetCarouselPosition();
+          return;
+        }
+
+        completeCarouselMove(gestureState.dx < 0 ? "next" : "prev");
+      },
+      onPanResponderTerminate: () => {
+        isCarouselDragging.current = false;
+        resetCarouselPosition();
+      },
+    }),
+  ).current;
 
   useEffect(() => {
     const interval = setInterval(() => {
-      Animated.timing(translateAnim, {
-        toValue: -SCREEN_WIDTH,
-        duration: 400,
-        useNativeDriver: true,
-      }).start(() => {
-        setCurrentIndex((prev) => (prev + 1) % CAROUSEL_SLIDES.length);
-        translateAnim.setValue(0);
-      });
+      completeCarouselMove("next");
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [translateAnim]);
+  }, [completeCarouselMove]);
 
   const {
     user,
@@ -355,22 +431,27 @@ export default function AuthLanding() {
       <View style={styles.colorVeil} pointerEvents="none" />
       <View style={styles.diagonalBeam} pointerEvents="none" />
       {/* Carousel — white card, rounded bottom, floats above panel */}
-      <View style={styles.carouselSection}>
+      <View style={styles.carouselSection} {...carouselPanResponder.panHandlers}>
         <Animated.View
           style={{
             transform: [{ translateX: translateAnim }],
             flexDirection: "row",
-            width: SCREEN_WIDTH * 2,
+            width: SCREEN_WIDTH * 3,
             height: "100%",
           }}
         >
           <Image
-            source={CAROUSEL_SLIDES[currentIndex].source}
+            source={carouselSlides[prevIndex].source}
             style={styles.posterImage}
             resizeMode="cover"
           />
           <Image
-            source={CAROUSEL_SLIDES[nextIndex].source}
+            source={carouselSlides[currentIndex].source}
+            style={styles.posterImage}
+            resizeMode="cover"
+          />
+          <Image
+            source={carouselSlides[nextIndex].source}
             style={styles.posterImage}
             resizeMode="cover"
           />
@@ -381,7 +462,7 @@ export default function AuthLanding() {
       <View style={[styles.bottomPanel, { paddingBottom: insets.bottom + 12 }]}>
         {/* Dots synced with icon index */}
         <View style={styles.dotsRow}>
-          {CAROUSEL_SLIDES.map((_, i) => (
+          {carouselSlides.map((_, i) => (
             <View
               key={i}
               style={{

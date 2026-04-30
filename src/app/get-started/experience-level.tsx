@@ -54,9 +54,6 @@ export default function ExperienceLevel() {
         <Text style={styles.title}>
           {t("onboarding.experienceLevel.title")}
         </Text>
-        <Text style={styles.subtitle}>
-          {t("onboarding.experienceLevel.subtitle")}
-        </Text>
 
         <View style={styles.list}>
           {LEVELS.map((level) => {
@@ -172,13 +169,7 @@ const styles = StyleSheet.create({
     fontSize: 26,
     fontFamily: FONTS.extraBold,
     color: "#111827",
-    marginBottom: 6,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: "#64748B",
     marginBottom: 20,
-    lineHeight: 20,
   },
   list: {
     gap: 10,

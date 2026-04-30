@@ -99,7 +99,6 @@ export default function UnitsSelection() {
         <SignupProgress current={2} total={13} />
 
         <Text style={s.title}>{t("onboarding.units.title")}</Text>
-        <Text style={s.subtitle}>{t("onboarding.units.subtitle")}</Text>
 
         <View style={s.optionsContainer}>
           {renderOptionGroup(
@@ -149,11 +148,7 @@ const s = StyleSheet.create({
     fontSize: 26,
     fontFamily: FONTS.extraBold,
     color: "#111827",
-    marginVertical: 6,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: "#64748B",
+    marginTop: 6,
     marginBottom: 20,
   },
   optionsContainer: {

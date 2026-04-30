@@ -18,17 +18,23 @@
     "restore": "Restore",
     "title": "Hylft Pro",
     "subtitle": "Unlock the ultimate fitness experience",
+    "socialProof": "+50,000 active members",
     "loadingStatus": "Loading free trial status...",
     "countdownMsg": "{{days}} days, {{hours}} hours & {{minutes}} minutes till your free trial ends",
-    "feature1": "Personalized AI workout plans",
-    "feature2": "Advanced nutrition tracking",
-    "feature3": "Unlimited exclusive routines",
+    "trialExpired": "Your free trial has ended",
+    "feature1": "AI plans adapted to your goal, level and schedule",
+    "feature2": "Macro, calories and meal tracking in real time",
+    "feature3": "Access +1,300 exercises on the platform",
+    "feature4": "Unlimited custom routines and workout history",
+    "feature5": "Progress insights to know what to train next",
     "monthly": "Monthly",
     "billedMonthly": "Billed Monthly",
     "yearly": "Yearly",
-    "saveAmount": "Save $39.89",
+    "popular": "Most popular",
+    "saveAmount": "Save 33%",
     "billedYearly": "Billed Yearly",
-    "purchaseBtn": "Purchase Subscription"
+    "purchaseBtn": "Unlock Hylft Pro",
+    "guarantee": "7-day money-back guarantee"
   },
   "auth": {
     "signUpToGetStarted": "Sign up to get started",
@@ -217,7 +223,9 @@
       "subtitle": "Pick a name you want to see on Hylift. You can change it later.",
       "label": "Preferred username",
       "placeholder": "e.g. alex_fitness",
-      "hint": "2 to 24 characters"
+      "checking": "Checking...",
+      "taken": "This username is already taken",
+      "checkFailed": "We couldn't check this username. Please try again."
     },
     "goalFlow": {
       "title": "What's your main goal?",
@@ -336,7 +344,9 @@
       "title": "AI is creating a personal plan for you",
       "subtitle": "Let's start your fitness journey together",
       "memberCount": "1,000,000+",
-      "memberCaption": "people train with HyliftAI"
+      "memberCaption": "people train with HyliftAI",
+      "exerciseCount": "1,300+",
+      "exerciseCaption": "More than 1300 exercises on our platform"
     },
     "results": {
       "congratsTitle": "Congratulations!",

@@ -231,9 +231,6 @@ export default function GoalScreen() {
 
         <View style={styles.header}>
           <Text style={styles.title}>{t("onboarding.goalFlow.title")}</Text>
-          <Text style={styles.subtitle}>
-            {t("onboarding.goalFlow.subtitle")}
-          </Text>
         </View>
 
         <View style={styles.list}>
@@ -267,13 +264,7 @@ const styles = StyleSheet.create({
     fontSize: 26,
     fontFamily: FONTS.extraBold,
     color: "#111827",
-    marginBottom: 6,
     lineHeight: 32,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: "#64748B",
-    lineHeight: 21,
   },
   list: {
     gap: 16,

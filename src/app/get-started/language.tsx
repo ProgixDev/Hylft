@@ -116,12 +116,6 @@ export default function LanguageSelect() {
       <View style={styles.content}>
         <Animated.View style={animatedCopyStyle}>
           <Text style={styles.title}>{t("languageSelect.title")}</Text>
-          <Text style={styles.titleAlt}>
-            {i18n.language?.startsWith("fr")
-              ? "Choose your language"
-              : "Choisissez votre langue"}
-          </Text>
-          <Text style={styles.subtitle}>{t("languageSelect.subtitle")}</Text>
         </Animated.View>
 
         <View style={styles.list}>
@@ -240,17 +234,6 @@ function createStyles(theme: Theme) {
       fontSize: 24,
       fontFamily: FONTS.bold,
       color: "#111827",
-      marginBottom: 4,
-    },
-    titleAlt: {
-      fontSize: 15,
-      fontFamily: FONTS.medium,
-      color: theme.foreground.gray,
-      marginBottom: 8,
-    },
-    subtitle: {
-      fontSize: 13,
-      color: theme.foreground.gray,
       marginBottom: 22,
     },
     list: {

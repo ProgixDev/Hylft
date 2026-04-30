@@ -5,6 +5,7 @@ import {
     Zain_800ExtraBold,
     useFonts,
 } from "@expo-google-fonts/zain";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
@@ -22,8 +23,15 @@ import { HealthProvider } from "../contexts/HealthContext";
 import { I18nProvider, useI18n } from "../contexts/I18nContext";
 import { NutritionProvider } from "../contexts/NutritionContext";
 import { ThemeProvider, useTheme } from "../contexts/ThemeContext";
+import { TutorialTargetProvider } from "../contexts/TutorialTargetContext";
 
 import ProModal from "../components/ui/ProModal";
+import AppTutorialOverlay from "../components/onboarding/AppTutorialOverlay";
+import {
+  APP_TUTORIAL_COMPLETED_KEY,
+  APP_TUTORIAL_PENDING_KEY,
+  userTutorialStorageKey,
+} from "../constants/tutorial";
 import { hasProEntitlement } from "../services/googlePlayBilling";
 
 SplashScreen.preventAutoHideAsync().catch(() => {
@@ -38,12 +46,15 @@ function AppContent() {
   const segments = useSegments();
   const insets = useSafeAreaInsets();
   const [showProModal, setShowProModal] = React.useState(false);
+  const [showTutorial, setShowTutorial] = React.useState(false);
   const previousUser = React.useRef(user);
   const [isProEntitled, setIsProEntitled] = React.useState(false);
   const routeSegments = segments as string[];
+  const isAuthRoute = routeSegments[0] === "auth";
   const isGetStartedRoute = routeSegments[0] === "get-started";
   const isPlanBuildingRoute =
     isGetStartedRoute && routeSegments[1] === "ready";
+  const shellBackgroundColor = isAuthRoute ? "#06101F" : theme.background.dark;
 
   useEffect(() => {
     if (isLoading || user) return;
@@ -81,7 +92,10 @@ function AppContent() {
       const wasLoggedOut = !previousUser.current;
       previousUser.current = user;
       if (wasLoggedOut && !entitled) {
-        setShowProModal(true);
+        const pendingTutorial = await AsyncStorage.getItem(
+          userTutorialStorageKey(APP_TUTORIAL_PENDING_KEY, user.id),
+        );
+        setShowProModal(pendingTutorial !== "true");
       }
     };
 
@@ -91,6 +105,58 @@ function AppContent() {
       active = false;
     };
   }, [user]);
+
+  React.useEffect(() => {
+    let active = true;
+
+    const loadTutorialState = async () => {
+      if (!user?.id) {
+        if (active) setShowTutorial(false);
+        return;
+      }
+
+      const pendingKey = userTutorialStorageKey(
+        APP_TUTORIAL_PENDING_KEY,
+        user.id,
+      );
+      const completedKey = userTutorialStorageKey(
+        APP_TUTORIAL_COMPLETED_KEY,
+        user.id,
+      );
+      const [pending, completed] = await Promise.all([
+        AsyncStorage.getItem(pendingKey),
+        AsyncStorage.getItem(completedKey),
+      ]);
+
+      if (active) {
+        setShowTutorial(pending === "true" && completed !== "true");
+      }
+    };
+
+    void loadTutorialState();
+
+    return () => {
+      active = false;
+    };
+  }, [user?.id]);
+
+  const completeTutorial = React.useCallback(async () => {
+    if (!user?.id) {
+      setShowTutorial(false);
+      return;
+    }
+
+    await Promise.all([
+      AsyncStorage.setItem(
+        userTutorialStorageKey(APP_TUTORIAL_COMPLETED_KEY, user.id),
+        "true",
+      ),
+      AsyncStorage.removeItem(
+        userTutorialStorageKey(APP_TUTORIAL_PENDING_KEY, user.id),
+      ),
+    ]);
+    setShowTutorial(false);
+  }, [user?.id]);
 
   if (isLoading) {
     return (
@@ -111,7 +177,7 @@ function AppContent() {
     <>
       <StatusBar
         style={
-          isPlanBuildingRoute
+          isAuthRoute || isPlanBuildingRoute
             ? "light"
             : isGetStartedRoute || themeType !== "dark"
               ? "dark"
@@ -130,24 +196,26 @@ function AppContent() {
         screenOptions={{
           headerShown: false,
           contentStyle: {
-            backgroundColor: isGetStartedRoute
+            backgroundColor: isAuthRoute
+              ? shellBackgroundColor
+              : isGetStartedRoute
               ? isPlanBuildingRoute
                 ? "#101011"
                 : "#FFFFFF"
-              : theme.background.dark,
-            paddingTop: insets.top,
-            paddingBottom: insets.bottom,
+              : shellBackgroundColor,
+            paddingTop: isAuthRoute ? 0 : insets.top,
+            paddingBottom: isAuthRoute ? 0 : insets.bottom,
             paddingLeft: insets.left,
             paddingRight: insets.right,
           },
           statusBarStyle:
-            isPlanBuildingRoute
+            isAuthRoute || isPlanBuildingRoute
               ? "light"
               : isGetStartedRoute || themeType !== "dark"
                 ? "dark"
                 : "light",
           statusBarTranslucent: true,
-          navigationBarColor: "transparent",
+          navigationBarColor: isAuthRoute ? "#364152" : "transparent",
         }}
       >
         <Stack.Screen name="index" />
@@ -232,6 +300,10 @@ function AppContent() {
           options={{ gestureEnabled: false, animation: "slide_from_bottom" }}
         />
       </Stack>
+      <AppTutorialOverlay
+        visible={showTutorial}
+        onFinish={completeTutorial}
+      />
     </>
   );
 }
@@ -273,9 +345,11 @@ export default function RootLayout() {
                   <ActiveWorkoutProvider>
                     <CreateRoutineProvider>
                       <SafeAreaProvider>
-                        <View style={{ flex: 1, backgroundColor: "#0B0D11" }}>
-                          <AppContent />
-                        </View>
+                        <TutorialTargetProvider>
+                          <View style={{ flex: 1, backgroundColor: "#0B0D11" }}>
+                            <AppContent />
+                          </View>
+                        </TutorialTargetProvider>
                       </SafeAreaProvider>
                     </CreateRoutineProvider>
                   </ActiveWorkoutProvider>

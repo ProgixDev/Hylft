@@ -21,6 +21,10 @@ import ChipButton from "../../components/ui/ChipButton";
 import { SignupProgress } from "../../components/ui/SignupProgress";
 import { FONTS } from "../../constants/fonts";
 import { Theme } from "../../constants/themes";
+import {
+  APP_TUTORIAL_PENDING_KEY,
+  userTutorialStorageKey,
+} from "../../constants/tutorial";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { supabase } from "../../services/supabase";
@@ -95,6 +99,10 @@ export default function AccountScreen() {
           ),
         );
       }
+      await AsyncStorage.setItem(
+        userTutorialStorageKey(APP_TUTORIAL_PENDING_KEY, createdUser.id),
+        "true",
+      );
       await setOnboardingCompleted();
       try {
         await setGetStartedCompleted(createdUser.id);
@@ -176,14 +184,6 @@ export default function AccountScreen() {
                   "Une dernière étape",
                 )}
           </Text>
-          <Text style={styles.subtitle}>
-            {withFallback(
-              "onboarding.account.subtitle",
-              "Create your account to save your plan and track progress.",
-              "Créez votre compte pour enregistrer votre plan et suivre vos progrès.",
-            )}
-          </Text>
-
           <View style={styles.field}>
             <Text style={styles.label}>{t("auth.email")}</Text>
             <TextInput
@@ -317,12 +317,6 @@ function createStyles(theme: Theme) {
       fontSize: 24,
       fontFamily: FONTS.bold,
       color: "#111827",
-      marginBottom: 6,
-    },
-    subtitle: {
-      fontSize: 13,
-      color: theme.foreground.gray,
-      lineHeight: 20,
       marginBottom: 20,
     },
     field: {

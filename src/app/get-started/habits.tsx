@@ -278,7 +278,6 @@ export default function HabitsScreen() {
 
         <View style={styles.header}>
           <Text style={styles.title}>{t("onboarding.habits.title")}</Text>
-          <Text style={styles.subtitle}>{t("onboarding.habits.subtitle")}</Text>
         </View>
 
         <ScrollView
@@ -328,13 +327,7 @@ const styles = StyleSheet.create({
     fontSize: 26,
     fontFamily: FONTS.extraBold,
     color: "#111827",
-    marginBottom: 6,
     lineHeight: 32,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: "#64748B",
-    lineHeight: 21,
   },
   grid: {
     flexDirection: "row",
