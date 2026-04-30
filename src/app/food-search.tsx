@@ -15,6 +15,7 @@ import { FONTS } from "../constants/fonts";
 import { Theme } from "../constants/themes";
 import { useNutrition } from "../contexts/NutritionContext";
 import { useTheme } from "../contexts/ThemeContext";
+import { TutorialTarget } from "../contexts/TutorialTargetContext";
 import { api } from "../services/api";
 import type { FoodItem, MealType } from "../services/nutritionApi";
 
@@ -159,26 +160,33 @@ export default function FoodSearchScreen() {
 
       {/* Search Bar */}
       <View style={styles.searchContainer}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder={isFr ? "Rechercher un aliment (poulet, riz, oeuf...)" : "Search food (chicken, rice, egg...)"}
-          placeholderTextColor={theme.foreground.gray}
-          value={query}
-          onChangeText={setQuery}
-          returnKeyType="search"
-          onSubmitEditing={handleSearch}
-        />
-        <Pressable
-          style={[styles.searchBtn, isSearching && styles.searchBtnDisabled]}
-          onPress={handleSearch}
-          disabled={isSearching}
+        <TutorialTarget
+          id="foodSearch.searchInput"
+          style={styles.searchInputTarget}
         >
-          {isSearching ? (
-            <ActivityIndicator color="#fff" size="small" />
-          ) : (
-            <Ionicons name="search" size={20} color="#fff" />
-          )}
-        </Pressable>
+          <TextInput
+            style={styles.searchInput}
+            placeholder={isFr ? "Rechercher un aliment (poulet, riz, oeuf...)" : "Search food (chicken, rice, egg...)"}
+            placeholderTextColor={theme.foreground.gray}
+            value={query}
+            onChangeText={setQuery}
+            returnKeyType="search"
+            onSubmitEditing={handleSearch}
+          />
+        </TutorialTarget>
+        <TutorialTarget id="foodSearch.searchButton">
+          <Pressable
+            style={[styles.searchBtn, isSearching && styles.searchBtnDisabled]}
+            onPress={handleSearch}
+            disabled={isSearching}
+          >
+            {isSearching ? (
+              <ActivityIndicator color="#fff" size="small" />
+            ) : (
+              <Ionicons name="search" size={20} color="#fff" />
+            )}
+          </Pressable>
+        </TutorialTarget>
       </View>
 
       {/* Results */}
@@ -293,8 +301,11 @@ function createStyles(theme: Theme) {
       paddingHorizontal: 16,
       paddingVertical: 12,
     },
-    searchInput: {
+    searchInputTarget: {
       flex: 1,
+    },
+    searchInput: {
+      width: "100%",
       borderRadius: 10,
       borderWidth: 1.5,
       borderColor: theme.background.accent,

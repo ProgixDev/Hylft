@@ -36,6 +36,51 @@
     "purchaseBtn": "Débloquer Hylft Pro",
     "guarantee": "Satisfait ou remboursé 7 jours"
   },
+  "appTutorial": {
+    "dragHint": "Glissez cette carte pour la déplacer",
+    "swipeFirst": "Glissez d'abord",
+    "steps": {
+      "home": {
+        "title": "Votre tableau de bord",
+        "body": "Consultez votre santé, votre semaine d'entraînement, vos calories et vos progrès en un coup d'œil."
+      },
+      "homeWeekConfig": {
+        "title": "Configurez votre semaine",
+        "body": "Dans Séances de la semaine, le bouton réglages ouvre la configuration des jours d'entraînement et des programmes par jour."
+      },
+      "objectiveDays": {
+        "label": "Jours d'entraînement",
+        "title": "Choisissez vos jours",
+        "body": "Choisissez le nombre de séances par semaine, sélectionnez les jours exacts, puis continuez sans quitter le tutoriel."
+      },
+      "objectiveRoutines": {
+        "label": "Programmes",
+        "title": "Ajoutez un programme par jour",
+        "body": "Après les jours, associez une routine existante à chaque séance ou créez un nouveau programme pour ce jour."
+      },
+      "workout": {
+        "title": "Entraînez-vous à votre façon",
+        "body": "Lancez une séance libre, suivez vos programmes ou créez un plan adapté à vos objectifs."
+      },
+      "alimentation": {
+        "title": "Ajoutez votre petit-déjeuner",
+        "body": "Utilisez le bouton plus du petit-déjeuner pour ouvrir la recherche et ajouter ce que vous avez mangé."
+      },
+      "foodSearch": {
+        "label": "Recherche",
+        "title": "Recherchez vos aliments",
+        "body": "Tapez le nom d'un aliment, lancez la recherche, puis appuyez sur plus pour l'ajouter au petit-déjeuner."
+      },
+      "feed": {
+        "title": "Partagez votre élan",
+        "body": "Publiez vos séances, suivez d'autres sportifs et gardez la communauté près de vous."
+      },
+      "profile": {
+        "title": "Pilotez vos progrès",
+        "body": "Mettez à jour votre profil, consultez votre activité et ajustez vos réglages avec le temps."
+      }
+    }
+  },
   "auth": {
     "signUpToGetStarted": "Inscrivez-vous pour commencer",
     "continueWithGoogle": "Continuer avec Google",
@@ -915,6 +960,13 @@
     "nextExercise": "Exercice suivant",
     "skipRest": "Passer le repos",
     "workoutComplete": "Séance terminée !",
+    "share": "Partager",
+    "exercises": "Exercices",
+    "calories": "Calories",
+    "howDoYouFeel": "Comment vous sentez-vous ?",
+    "feelHard": "Difficile",
+    "feelRight": "Parfait",
+    "feelEasy": "Facile",
     "volume": "Volume",
     "finish": "Terminer",
     "endWorkout": "Terminer la séance ?",

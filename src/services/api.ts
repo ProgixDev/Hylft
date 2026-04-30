@@ -24,13 +24,15 @@ async function authFetch(path: string, options: RequestInit = {}) {
   } = await supabase.auth.getSession();
   if (!session) throw new Error("Not authenticated");
 
+  const headers = new Headers(options.headers);
+  headers.set("Authorization", `Bearer ${session.access_token}`);
+  if (options.body) {
+    headers.set("Content-Type", "application/json");
+  }
+
   const res = await fetch(`${API_BASE}${path}`, {
     ...options,
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${session.access_token}`,
-      ...options.headers,
-    },
+    headers,
   });
 
   if (!res.ok) {

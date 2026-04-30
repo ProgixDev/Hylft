@@ -23,6 +23,7 @@ import {
   View,
 } from "react-native";
 import ConfirmationModal from "./ConfirmationModal";
+import WorkoutCompletionView from "./WorkoutCompletionView";
 import { Theme } from "../../constants/themes";
 import {
   ExerciseSet,
@@ -230,27 +231,6 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
       setSaveModalVisible(false);
       setSummaryVisible(true);
     }, [activeWorkout, tempWorkoutName]);
-
-    const handleGoToShareScreen = useCallback(() => {
-      if (!summary) return;
-      const { name, durationMins, totalKg, totalSets, totalExercises } =
-        summary;
-      // Close sheet first, then navigate
-      setSummaryVisible(false);
-      setSummary(null);
-      discardWorkout();
-      setIsExpanded(false);
-      router.navigate({
-        pathname: "/share-workout",
-        params: {
-          name,
-          kg: String(totalKg),
-          mins: String(durationMins),
-          sets: String(totalSets),
-          exercises: String(totalExercises),
-        },
-      } as any);
-    }, [summary, discardWorkout, setIsExpanded, router]);
 
     const handleCloseSummary = useCallback(() => {
       setSummaryVisible(false);
@@ -746,92 +726,18 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
 
         {/* ── Workout summary modal ─────────────────────────────────────── */}
         <Modal
-          transparent
           visible={summaryVisible}
-          animationType="fade"
+          animationType="slide"
           onRequestClose={handleCloseSummary}
         >
-          <Pressable style={styles.modalOverlay} onPress={handleCloseSummary}>
-            <Pressable style={styles.summaryContent} onPress={() => {}}>
-              {/* Trophy icon */}
-              <View style={styles.summaryIconWrap}>
-                <Text style={styles.summaryEmoji}>🏆</Text>
-              </View>
-
-              <Text style={styles.summaryTitle}>
-                {t("workout.workoutSummaryTitle")}
-              </Text>
-              <Text style={styles.summarySubtitle}>{summary?.name}</Text>
-              <Text style={styles.summaryHint}>
-                {t("workout.workoutSummarySubtitle")}
-              </Text>
-
-              {/* Stats row */}
-              <View style={styles.summaryStats}>
-                <View style={styles.summaryStatCard}>
-                  <Ionicons
-                    name="time-outline"
-                    size={22}
-                    color={theme.primary.main}
-                  />
-                  <Text style={styles.summaryStatValue}>
-                    {summary?.durationMins ?? 0}
-                  </Text>
-                  <Text style={styles.summaryStatLabel}>
-                    {t("workout.workoutDuration")} (min)
-                  </Text>
-                </View>
-                <View style={styles.summaryStatCard}>
-                  <Ionicons
-                    name="barbell-outline"
-                    size={22}
-                    color={theme.primary.main}
-                  />
-                  <Text style={styles.summaryStatValue}>
-                    {summary?.totalKg.toLocaleString() ?? 0}
-                  </Text>
-                  <Text style={styles.summaryStatLabel}>
-                    {t("workout.totalLifted")} (kg)
-                  </Text>
-                </View>
-                <View style={styles.summaryStatCard}>
-                  <Ionicons
-                    name="repeat-outline"
-                    size={22}
-                    color={theme.primary.main}
-                  />
-                  <Text style={styles.summaryStatValue}>
-                    {summary?.totalSets ?? 0}
-                  </Text>
-                  <Text style={styles.summaryStatLabel}>
-                    {t("workout.setsCompleted")}
-                  </Text>
-                </View>
-              </View>
-
-              {/* Action buttons */}
-              <TouchableOpacity
-                style={styles.shareBtn}
-                onPress={handleGoToShareScreen}
-              >
-                <Ionicons
-                  name="share-social-outline"
-                  size={20}
-                  color={theme.background.dark}
-                />
-                <Text style={styles.shareBtnText}>
-                  {t("workout.shareWorkout")}
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.closeBtn}
-                onPress={handleCloseSummary}
-              >
-                <Text style={styles.closeBtnText}>{t("workout.close")}</Text>
-              </TouchableOpacity>
-            </Pressable>
-          </Pressable>
+          <WorkoutCompletionView
+            theme={theme}
+            routineName={summary?.name ?? t("workout.activeWorkout")}
+            exercises={summary?.totalExercises ?? 0}
+            calories={Math.round((summary?.durationMins ?? 0) * 6)}
+            duration={formatDuration((summary?.durationMins ?? 0) * 60)}
+            onFinish={handleCloseSummary}
+          />
         </Modal>
       </>
     );

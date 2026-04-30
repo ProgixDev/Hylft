@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
@@ -7,7 +6,6 @@ import { useTranslation } from "react-i18next";
 import {
   BackHandler,
   Dimensions,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -16,6 +14,7 @@ import {
   View,
 } from "react-native";
 import ConfirmationModal from "../../components/ui/ConfirmationModal";
+import WorkoutCompletionView from "../../components/ui/WorkoutCompletionView";
 import { FONTS } from "../../constants/fonts";
 import { Theme } from "../../constants/themes";
 import { useActiveWorkout } from "../../contexts/ActiveWorkoutContext";
@@ -108,7 +107,7 @@ export default function WorkoutPlayerScreen() {
   return (
     <View style={[styles.root, isRest && styles.rootRest]}>
       {/* Top bar */}
-      {!isRest && (
+      {!isRest && guidedPlayer.phase !== "COMPLETE" && (
       <View style={styles.topBar}>
         <Pressable style={styles.iconButton} onPress={confirmExit}>
           <Ionicons name="close" size={22} color={theme.foreground.white} />
@@ -239,10 +238,6 @@ function ExercisePhase({ theme }: { theme: Theme }) {
       </Text>
 
       <View style={styles.gifWrap}>
-        <LinearGradient
-          colors={[theme.primary.main + "25", "transparent"]}
-          style={styles.gifGlow}
-        />
         {exercise.gifUrl ? (
           <Image
             source={{ uri: exercise.gifUrl }}
@@ -409,83 +404,29 @@ function CompletionPhase({
   onFinish,
 }: {
   theme: Theme;
-  onFinish: () => void;
+  onFinish: () => Promise<void>;
 }) {
-  const styles = createStyles(theme);
-  const { t } = useTranslation();
   const { guidedPlayer, activeWorkout } = useActiveWorkout();
+  const [finishing, setFinishing] = useState(false);
   if (!guidedPlayer) return null;
 
-  const totalVolume = guidedPlayer.loggedSets.reduce(
-    (s, x) => s + x.kg * x.reps,
-    0,
-  );
+  const durationSeconds = activeWorkout?.duration ?? 0;
+
+  const handleFinish = async () => {
+    if (finishing) return;
+    setFinishing(true);
+    await onFinish();
+  };
 
   return (
-    <View style={styles.phaseContainer}>
-      <View style={styles.trophy}>
-        <Ionicons name="trophy" size={56} color={theme.primary.main} />
-      </View>
-      <Text style={styles.completeTitle}>
-        {t("workoutPlayer.workoutComplete")}
-      </Text>
-      <Text style={styles.completeSubtitle}>{guidedPlayer.routineName}</Text>
-
-      <View style={styles.summaryRow}>
-        <SummaryStat
-          theme={theme}
-          value={formatDuration(activeWorkout?.duration ?? 0)}
-          label={t("routines.duration")}
-        />
-        <View style={styles.targetDivider} />
-        <SummaryStat
-          theme={theme}
-          value={String(guidedPlayer.loggedSets.length)}
-          label={t("createRoutine.sets")}
-        />
-        <View style={styles.targetDivider} />
-        <SummaryStat
-          theme={theme}
-          value={`${Math.round(totalVolume)}kg`}
-          label={t("workoutPlayer.volume")}
-        />
-      </View>
-
-      <Pressable
-        style={({ pressed }) => [
-          styles.primaryButton,
-          pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
-        ]}
-        onPress={onFinish}
-      >
-        <Ionicons
-          name="checkmark-done"
-          size={20}
-          color={theme.background.dark}
-        />
-        <Text style={styles.primaryButtonText}>
-          {t("workoutPlayer.finish")}
-        </Text>
-      </Pressable>
-    </View>
-  );
-}
-
-function SummaryStat({
-  theme,
-  value,
-  label,
-}: {
-  theme: Theme;
-  value: string;
-  label: string;
-}) {
-  const styles = createStyles(theme);
-  return (
-    <View style={styles.targetItem}>
-      <Text style={styles.targetValue}>{value}</Text>
-      <Text style={styles.targetLabel}>{label}</Text>
-    </View>
+    <WorkoutCompletionView
+      theme={theme}
+      routineName={guidedPlayer.routineName}
+      exercises={guidedPlayer.exercises.length}
+      calories={Math.round(durationSeconds * 0.1)}
+      duration={formatDuration(durationSeconds)}
+      onFinish={handleFinish}
+    />
   );
 }
 
@@ -646,15 +587,6 @@ const createStyles = (theme: Theme) =>
       alignItems: "center",
       justifyContent: "center",
       overflow: "hidden",
-      ...Platform.select({
-        ios: {
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: 0.2,
-          shadowRadius: 20,
-        },
-        android: { elevation: 6 },
-      }),
       marginBottom: 18,
     },
     gif: {
@@ -664,13 +596,6 @@ const createStyles = (theme: Theme) =>
     gifPlaceholder: {
       alignItems: "center",
       justifyContent: "center",
-    },
-    gifGlow: {
-      position: "absolute",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
     },
     setDotsRow: {
       flexDirection: "row",

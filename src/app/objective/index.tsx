@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -126,9 +126,11 @@ function RoutineOptionCard({
 function CreateRoutineButton({
   label,
   onPress,
+  tutorialTargetId,
 }: {
   label: string;
   onPress: () => void;
+  tutorialTargetId?: string;
 }) {
   const scale = useRef(new Animated.Value(1)).current;
   const pressDepth = useRef(new Animated.Value(0)).current;
@@ -147,7 +149,7 @@ function CreateRoutineButton({
     ]).start();
   };
 
-  return (
+  const button = (
     <AnimatedPressable
       onPress={onPress}
       onPressIn={pressIn}
@@ -167,9 +169,22 @@ function CreateRoutineButton({
       </View>
     </AnimatedPressable>
   );
+
+  if (tutorialTargetId) {
+    return (
+      <TutorialTarget id={tutorialTargetId} style={createBtnStyles.target}>
+        {button}
+      </TutorialTarget>
+    );
+  }
+
+  return button;
 }
 
 const createBtnStyles = StyleSheet.create({
+  target: {
+    alignSelf: "flex-start",
+  },
   shell: {
     borderRadius: 12,
     alignSelf: "flex-start",
@@ -288,6 +303,9 @@ export default function ObjectiveScreen() {
   const { theme } = useTheme();
   const { t } = useTranslation();
   const router = useRouter();
+  const { tutorialStep } = useLocalSearchParams<{
+    tutorialStep?: string | string[];
+  }>();
   const styles = createStyles(theme);
   const [selected, setSelected] = useState<number | null>(null);
   const [selectedDays, setSelectedDays] = useState<number[]>([]);
@@ -298,6 +316,21 @@ export default function ObjectiveScreen() {
   >({});
   const [isLoadingRoutines, setIsLoadingRoutines] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    const requestedStep = Array.isArray(tutorialStep)
+      ? tutorialStep[0]
+      : tutorialStep;
+
+    if (requestedStep === "routines") {
+      setStep("routines");
+      return;
+    }
+
+    if (requestedStep === "days") {
+      setStep("days");
+    }
+  }, [tutorialStep]);
 
   useEffect(() => {
     let isMounted = true;
@@ -658,12 +691,13 @@ export default function ObjectiveScreen() {
                   <CreateRoutineButton
                     label={t("createRoutine.title", "Create Routine")}
                     onPress={() => handleCreateRoutineForDay(selectedDays[0])}
+                    tutorialTargetId="objective.createRoutineButton"
                   />
                 )}
               </View>
             ) : (
               <View style={styles.assignmentList}>
-                {selectedDays.map((dayIndex) => (
+                {selectedDays.map((dayIndex, index) => (
                   <View key={dayIndex} style={styles.assignmentCard}>
                     <View style={styles.assignmentHeader}>
                       <View>
@@ -679,6 +713,9 @@ export default function ObjectiveScreen() {
                       <CreateRoutineButton
                         label={t("createRoutine.title", "Create Routine")}
                         onPress={() => handleCreateRoutineForDay(dayIndex)}
+                        tutorialTargetId={
+                          index === 0 ? "objective.createRoutineButton" : undefined
+                        }
                       />
                     </View>
 

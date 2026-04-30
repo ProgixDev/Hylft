@@ -36,6 +36,51 @@
     "purchaseBtn": "Unlock Hylft Pro",
     "guarantee": "7-day money-back guarantee"
   },
+  "appTutorial": {
+    "dragHint": "Swipe this card to move it",
+    "swipeFirst": "Swipe first",
+    "steps": {
+      "home": {
+        "title": "Your daily command center",
+        "body": "See today's health summary, workout week, calories and progress in one quick scan."
+      },
+      "homeWeekConfig": {
+        "title": "Configure your workout week",
+        "body": "In Sessions This Week, the settings button opens the planner for workout days and day-by-day routines."
+      },
+      "objectiveDays": {
+        "label": "Workout days",
+        "title": "Choose how often you train",
+        "body": "Pick the number of sessions per week, select the exact days, then continue while the tutorial stays on top."
+      },
+      "objectiveRoutines": {
+        "label": "Day programs",
+        "title": "Assign a program to each day",
+        "body": "After choosing days, assign an existing routine to each one or create a new routine for that day."
+      },
+      "workout": {
+        "title": "Train your way",
+        "body": "Start an empty workout, follow saved routines, or build a custom plan around your goals."
+      },
+      "alimentation": {
+        "title": "Add your breakfast",
+        "body": "Use the plus button on Breakfast to open food search and log what you ate."
+      },
+      "foodSearch": {
+        "label": "Food search",
+        "title": "Search and add foods",
+        "body": "Type a food name, launch the search, then tap plus on a result to add it to breakfast."
+      },
+      "feed": {
+        "title": "Share the momentum",
+        "body": "Post workout wins, follow others and keep the community close when motivation dips."
+      },
+      "profile": {
+        "title": "Own your progress",
+        "body": "Update your profile, review your activity and tune settings as your routine evolves."
+      }
+    }
+  },
   "auth": {
     "signUpToGetStarted": "Sign up to get started",
     "continueWithGoogle": "Continue with Google",
@@ -915,6 +960,13 @@
     "nextExercise": "Next exercise",
     "skipRest": "Skip rest",
     "workoutComplete": "Workout complete!",
+    "share": "Share",
+    "exercises": "Exercises",
+    "calories": "Calories",
+    "howDoYouFeel": "How do you feel",
+    "feelHard": "Hard",
+    "feelRight": "Just right",
+    "feelEasy": "Easy",
     "volume": "Volume",
     "finish": "Finish",
     "endWorkout": "End workout?",

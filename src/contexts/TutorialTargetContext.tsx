@@ -91,17 +91,19 @@ export function TutorialTarget({
   style?: StyleProp<ViewStyle>;
 }) {
   const context = useContext(TutorialTargetContext);
+  const setTarget = context?.setTarget;
+  const removeTarget = context?.removeTarget;
   const ref = useRef<View>(null);
 
   const measure = useCallback(() => {
-    if (!context) return;
+    if (!setTarget) return;
     requestAnimationFrame(() => {
       ref.current?.measureInWindow((x, y, width, height) => {
         if (width <= 0 || height <= 0) return;
-        context.setTarget(id, { x, y, width, height });
+        setTarget(id, { x, y, width, height });
       });
     });
-  }, [context, id]);
+  }, [id, setTarget]);
 
   const handleLayout = useCallback(
     (_event: LayoutChangeEvent) => {
@@ -112,13 +114,15 @@ export function TutorialTarget({
 
   React.useEffect(() => {
     measure();
-    const retry = setTimeout(measure, 350);
+    const retries = [120, 350, 700, 1100].map((delay) =>
+      setTimeout(measure, delay),
+    );
 
     return () => {
-      clearTimeout(retry);
-      context?.removeTarget(id);
+      retries.forEach(clearTimeout);
+      removeTarget?.(id);
     };
-  }, [context, id, measure]);
+  }, [id, measure, removeTarget]);
 
   return (
     <View

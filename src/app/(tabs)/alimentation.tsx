@@ -19,6 +19,7 @@ import { Theme } from "../../constants/themes";
 import { useHealth } from "../../contexts/HealthContext";
 import { useNutrition } from "../../contexts/NutritionContext";
 import { useTheme } from "../../contexts/ThemeContext";
+import { TutorialTarget } from "../../contexts/TutorialTargetContext";
 import type { MealType } from "../../services/nutritionApi";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -397,16 +398,25 @@ export default function Alimentation() {
                     </Text>
                   </View>
                 </View>
-                <Pressable
-                  style={styles.mealPlusBtn}
-                  onPress={() => openFoodSearch(item.type)}
+                <TutorialTarget
+                  id={
+                    item.type === "breakfast"
+                      ? "alimentation.breakfastAddButton"
+                      : `alimentation.${item.type}AddButton`
+                  }
+                  style={styles.mealPlusTarget}
                 >
-                  <Ionicons
-                    name="add-circle-outline"
-                    size={28}
-                    color={theme.primary.main}
-                  />
-                </Pressable>
+                  <Pressable
+                    style={styles.mealPlusBtn}
+                    onPress={() => openFoodSearch(item.type)}
+                  >
+                    <Ionicons
+                      name="add-circle-outline"
+                      size={28}
+                      color={theme.primary.main}
+                    />
+                  </Pressable>
+                </TutorialTarget>
               </Pressable>
 
               {meals.length > 0 &&
@@ -727,6 +737,9 @@ function createStyles(theme: Theme) {
       borderRadius: 6,
       paddingHorizontal: 6,
       paddingVertical: 3,
+    },
+    mealPlusTarget: {
+      alignSelf: "center",
     },
     mealPlusBtn: { padding: 4 },
 
