@@ -2,7 +2,7 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect, useRouter } from "expo-router";
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Dimensions,
@@ -94,6 +94,21 @@ type UserStats = {
   likes_count: number;
 };
 
+const DEFAULT_USER_STATS: UserStats = {
+  posts_count: 0,
+  followers_count: 0,
+  following_count: 0,
+  likes_count: 0,
+};
+
+let profileCache:
+  | {
+      userId: string;
+      profile: MyProfile | null;
+      stats: UserStats;
+    }
+  | null = null;
+
 export default function Profile() {
   const { i18n } = useTranslation();
   const { theme, themeType } = useTheme();
@@ -102,21 +117,21 @@ export default function Profile() {
   const styles = createStyles(theme);
   const isFr = i18n.language?.startsWith("fr");
   const { user } = useAuth();
+  const cachedForUser =
+    user?.id && profileCache?.userId === user.id ? profileCache : null;
+  const cachedProfile = cachedForUser?.profile ?? null;
+  const cachedStats = cachedForUser?.stats ?? DEFAULT_USER_STATS;
 
-  const [myProfile, setMyProfile] = useState<MyProfile | null>(null);
-  const [isProfileLoading, setIsProfileLoading] = useState(true);
-  const [userStats, setUserStats] = useState<UserStats>({
-    posts_count: 0,
-    followers_count: 0,
-    following_count: 0,
-    likes_count: 0,
-  });
+  const [myProfile, setMyProfile] = useState<MyProfile | null>(cachedProfile);
+  const [isProfileLoading, setIsProfileLoading] = useState(!cachedProfile);
+  const [userStats, setUserStats] = useState<UserStats>(cachedStats);
+  const hasLoadedProfileRef = useRef(!!cachedProfile);
   const [coverPickerOpen, setCoverPickerOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [avatarSheetOpen, setAvatarSheetOpen] = useState(false);
 
   const { todayCaloriesBurned, weeklyCaloriesBurned } = useHealth();
-  const { goals, todaySummary, weekSummaries } = useNutrition();
+  const { goals, todaySummary } = useNutrition();
 
   const [weight, setWeight] = useState(70);
   const [targetWeight, setTargetWeight] = useState(65);
@@ -130,18 +145,35 @@ export default function Profile() {
   const [summaryMode, setSummaryMode] = useState<"total" | "average">("total");
 
   const loadProfileAndStats = useCallback(async () => {
-    if (!user?.id) return;
-    setIsProfileLoading(true);
+    if (!user?.id) {
+      setMyProfile(null);
+      setUserStats(DEFAULT_USER_STATS);
+      setIsProfileLoading(false);
+      hasLoadedProfileRef.current = false;
+      return;
+    }
+
+    const cached =
+      profileCache?.userId === user.id ? profileCache : null;
+    if (cached) {
+      setMyProfile(cached.profile);
+      setUserStats(cached.stats);
+      hasLoadedProfileRef.current = true;
+    }
+
+    setIsProfileLoading(!hasLoadedProfileRef.current);
     try {
       const [prof, stats] = await Promise.all([
         api.getProfile() as Promise<MyProfile>,
         api.getUserStats(user.id) as Promise<UserStats>,
       ]);
+      profileCache = { userId: user.id, profile: prof, stats };
       setMyProfile(prof);
       setUserStats(stats);
     } catch {
       // swallow; header will still render with defaults.
     } finally {
+      hasLoadedProfileRef.current = true;
       setIsProfileLoading(false);
     }
   }, [user?.id]);
@@ -394,7 +426,7 @@ export default function Profile() {
               yAxisThickness={0} xAxisThickness={0}
               xAxisLabelTextStyle={{ color: theme.foreground.gray, fontSize: 11, fontFamily: FONTS.semiBold }}
               yAxisTextStyle={{ color: theme.foreground.gray, fontSize: 9 }}
-              yAxisSuffix="g"
+              yAxisLabelSuffix="g"
               hideRules barBorderRadius={6}
               isAnimated height={130} width={SCREEN_WIDTH - 80}
             />

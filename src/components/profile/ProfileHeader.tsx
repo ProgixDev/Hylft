@@ -66,17 +66,18 @@ export default function ProfileHeader(props: ProfileHeaderProps) {
 
   const primaryLabel =
     mode === "self"
-      ? "Modifier le profil"
+      ? t("profile.settings", "Settings")
       : isFollowing
-        ? "Abonné"
-        : "Suivre";
+        ? t("profile.following", "Following")
+        : t("profile.follow", "Follow");
   const primaryIcon: keyof typeof Ionicons.glyphMap | null =
     mode === "self"
-      ? "create-outline"
+      ? "settings-outline"
       : isFollowing
         ? "checkmark"
         : "add";
-  const secondaryLabel = "Partager";
+  const primaryPress = mode === "self" ? onSettingsPress : onPrimaryPress;
+  const secondaryLabel = t("profile.share", "Share");
   const secondaryIcon: keyof typeof Ionicons.glyphMap = "share-social-outline";
 
   const primaryFilled = !(mode === "public" && isFollowing);
@@ -112,14 +113,19 @@ export default function ProfileHeader(props: ProfileHeaderProps) {
           </View>
         )}
 
-        {onSettingsPress ? (
+        {mode === "self" && onCoverPress ? (
           <View style={styles.coverOverlay}>
             <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t(
+                "profile.changeCoverPhoto",
+                "Change cover photo",
+              )}
               hitSlop={10}
-              onPress={onSettingsPress}
+              onPress={onCoverPress}
               style={styles.cornerBtn}
             >
-              <Ionicons name="settings-outline" size={18} color="#fff" />
+              <Ionicons name="image-outline" size={18} color="#fff" />
             </Pressable>
           </View>
         ) : null}
@@ -207,7 +213,7 @@ export default function ProfileHeader(props: ProfileHeaderProps) {
 
         <View style={styles.actionsRow}>
           <Pressable
-            onPress={onPrimaryPress}
+            onPress={primaryPress}
             style={[
               styles.primaryBtn,
               !primaryFilled && styles.primaryBtnOutline,

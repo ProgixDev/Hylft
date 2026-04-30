@@ -734,7 +734,14 @@
     "noRoutinesYet": "Aucun programme pour le moment",
     "createFirstRoutine": "Créez votre premier programme pour commencer",
     "exercises": "exercices",
-    "done": "fait"
+    "done": "fait",
+    "settings": "Paramètres",
+    "follow": "Suivre",
+    "share": "Partager",
+    "changeCoverPhoto": "Changer la photo de couverture",
+    "coverPlaceholderTitle": "Ajouter une photo de couverture",
+    "coverPlaceholderTitlePublic": "Aucune photo de couverture",
+    "coverPlaceholderHint": "Touchez pour choisir une image de couverture pour votre profil"
   },
   "signup": {
     "createAccount": "Créer un compte",

@@ -734,7 +734,14 @@
     "noRoutinesYet": "No routines yet",
     "createFirstRoutine": "Create your first routine to get started",
     "exercises": "exercises",
-    "done": "done"
+    "done": "done",
+    "settings": "Settings",
+    "follow": "Follow",
+    "share": "Share",
+    "changeCoverPhoto": "Change cover photo",
+    "coverPlaceholderTitle": "Add a cover photo",
+    "coverPlaceholderTitlePublic": "No cover photo",
+    "coverPlaceholderHint": "Tap to choose a cover picture for your profile"
   },
   "signup": {
     "createAccount": "Create Account",

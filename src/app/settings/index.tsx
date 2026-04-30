@@ -72,8 +72,53 @@ function createStyles(theme: Theme) {
     sectionBody: {
       backgroundColor: theme.background.accent,
       marginHorizontal: 16,
-      borderRadius: 10,
-      overflow: "hidden",
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: `${theme.primary.main}22`,
+      borderBottomWidth: 3,
+      borderBottomColor: `${theme.primary.main}55`,
+      shadowColor: theme.primary.main,
+      shadowOffset: { width: 0, height: 10 },
+      shadowOpacity: 0.18,
+      shadowRadius: 18,
+      elevation: 8,
+      overflow: "visible",
+    },
+    accountCard: {
+      backgroundColor: theme.background.accent,
+      borderColor: theme.primary.main,
+      borderBottomColor: theme.primary.light,
+      shadowColor: theme.primary.main,
+    },
+    appearanceCard: {
+      backgroundColor: theme.background.accent,
+      borderColor: theme.primary.main,
+      borderBottomColor: theme.primary.light,
+      shadowColor: theme.primary.main,
+    },
+    preferencesCard: {
+      backgroundColor: theme.background.accent,
+      borderColor: theme.primary.main,
+      borderBottomColor: theme.primary.light,
+      shadowColor: theme.primary.main,
+    },
+    notificationsCard: {
+      backgroundColor: theme.background.accent,
+      borderColor: theme.primary.main,
+      borderBottomColor: theme.primary.light,
+      shadowColor: theme.primary.main,
+    },
+    connectedAppsCard: {
+      backgroundColor: theme.background.accent,
+      borderColor: theme.primary.main,
+      borderBottomColor: theme.primary.light,
+      shadowColor: theme.primary.main,
+    },
+    supportCard: {
+      backgroundColor: theme.background.accent,
+      borderColor: theme.primary.main,
+      borderBottomColor: theme.primary.light,
+      shadowColor: theme.primary.main,
     },
     // row
     row: {
@@ -89,23 +134,35 @@ function createStyles(theme: Theme) {
     rowIcon: {
       width: 28,
       height: 28,
-      borderRadius: 7,
+      borderRadius: 9,
       alignItems: "center",
       justifyContent: "center",
       marginRight: 10,
+      borderWidth: 1,
+      borderColor: "rgba(255,255,255,0.45)",
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 3 },
+      shadowOpacity: 0.16,
+      shadowRadius: 5,
+      elevation: 3,
     },
     rowContent: {
       flex: 1,
     },
     rowTitle: {
-      fontSize: 14,
-      fontFamily: FONTS.medium,
+      fontSize: 15,
+      fontFamily: "System",
+      fontWeight: "700",
       color: theme.foreground.white,
+      letterSpacing: 0.1,
     },
     rowSubtitle: {
-      fontSize: 11,
+      fontSize: 12,
+      fontFamily: "System",
+      fontWeight: "500",
       color: theme.foreground.gray,
-      marginTop: 1,
+      marginTop: 2,
+      lineHeight: 16,
     },
     rowRight: {
       flexDirection: "row",
@@ -114,27 +171,37 @@ function createStyles(theme: Theme) {
     },
     rowValue: {
       fontSize: 13,
+      fontFamily: "System",
+      fontWeight: "600",
       color: theme.foreground.gray,
     },
     // segmented control
     segmented: {
       flexDirection: "row",
       backgroundColor: theme.background.darker,
-      borderRadius: 7,
-      padding: 2,
+      borderRadius: 10,
+      padding: 3,
       gap: 2,
+      borderWidth: 1,
+      borderColor: theme.background.darker,
     },
     segBtn: {
       paddingHorizontal: 10,
       paddingVertical: 5,
-      borderRadius: 5,
+      borderRadius: 7,
     },
     segBtnActive: {
       backgroundColor: theme.primary.main,
+      shadowColor: theme.primary.main,
+      shadowOffset: { width: 0, height: 3 },
+      shadowOpacity: 0.22,
+      shadowRadius: 6,
+      elevation: 3,
     },
     segBtnText: {
       fontSize: 12,
-      fontFamily: FONTS.semiBold,
+      fontFamily: "System",
+      fontWeight: "700",
       color: theme.foreground.gray,
     },
     segBtnTextActive: {
@@ -144,8 +211,17 @@ function createStyles(theme: Theme) {
     dangerSection: {
       backgroundColor: theme.background.accent,
       marginHorizontal: 16,
-      borderRadius: 10,
-      overflow: "hidden",
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: "rgba(248,113,113,0.24)",
+      borderBottomWidth: 3,
+      borderBottomColor: "rgba(248,113,113,0.48)",
+      shadowColor: "#f87171",
+      shadowOffset: { width: 0, height: 10 },
+      shadowOpacity: 0.16,
+      shadowRadius: 18,
+      elevation: 8,
+      overflow: "visible",
     },
     dangerRow: {
       flexDirection: "row",
@@ -154,8 +230,9 @@ function createStyles(theme: Theme) {
       paddingVertical: 10,
     },
     dangerText: {
-      fontSize: 14,
-      fontFamily: FONTS.semiBold,
+      fontSize: 15,
+      fontFamily: "System",
+      fontWeight: "700",
       marginLeft: 10,
     },
     // version
@@ -203,7 +280,7 @@ function SettingsRow({
       {...(onPress ? { onPress, activeOpacity: 0.7 } : {})}
     >
       <View style={[styles.rowIcon, { backgroundColor: iconBg }]}>
-        <Ionicons name={icon} size={15} color={theme.foreground.white} />
+        <Ionicons name={icon} size={15} color="#FFFFFF" />
       </View>
       <View style={styles.rowContent}>
         <Text style={styles.rowTitle}>{title}</Text>
@@ -380,6 +457,7 @@ export default function Settings() {
 
   const switchThumb = theme.primary.main;
   const switchTrackOn = theme.primary.light + "88";
+  const sectionIconBg = theme.primary.main;
 
   // ─── JSX ──────────────────────────────────────────────────────────────────
 
@@ -405,10 +483,10 @@ export default function Settings() {
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionLabel}>{t("settings.account")}</Text>
         </View>
-        <View style={styles.sectionBody}>
+        <View style={[styles.sectionBody, styles.accountCard]}>
           <SettingsRow
             icon="person-outline"
-            iconBg="#dbeafe"
+            iconBg={sectionIconBg}
             title={t("settings.editProfile")}
             subtitle={t("settings.changeProfileSubtitle")}
             showBorder
@@ -419,7 +497,7 @@ export default function Settings() {
           />
           <SettingsRow
             icon="lock-closed-outline"
-            iconBg="#ede9fe"
+            iconBg={sectionIconBg}
             title={t("settings.changePassword")}
             subtitle={t("settings.changePasswordSubtitle")}
             showBorder
@@ -430,7 +508,7 @@ export default function Settings() {
           />
           <SettingsRow
             icon="eye-off-outline"
-            iconBg="#ccfbf1"
+            iconBg={sectionIconBg}
             title={t("settings.privateAccount")}
             subtitle={t("settings.privateAccountSubtitle")}
             showBorder={false}
@@ -451,10 +529,10 @@ export default function Settings() {
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionLabel}>{t("settings.appearance")}</Text>
         </View>
-        <View style={styles.sectionBody}>
+        <View style={[styles.sectionBody, styles.appearanceCard]}>
           <SettingsRow
             icon="color-palette-outline"
-            iconBg="#ecfccb"
+            iconBg={sectionIconBg}
             title={t("settings.theme")}
             subtitle={themeType === "male" ? t("settings.themeMale") : t("settings.themeFemale")}
             showBorder
@@ -473,7 +551,7 @@ export default function Settings() {
           />
           <SettingsRow
             icon="language-outline"
-            iconBg="#fef3c7"
+            iconBg={sectionIconBg}
             title={t("settings.language")}
             subtitle={t("settings.languageSubtitle")}
             showBorder={false}
@@ -496,10 +574,10 @@ export default function Settings() {
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionLabel}>{t("settings.preferences")}</Text>
         </View>
-        <View style={styles.sectionBody}>
+        <View style={[styles.sectionBody, styles.preferencesCard]}>
           <SettingsRow
             icon="scale-outline"
-            iconBg="#fef3c7"
+            iconBg={sectionIconBg}
             title={t("settings.weightUnit")}
             showBorder
             right={
@@ -517,7 +595,7 @@ export default function Settings() {
           />
           <SettingsRow
             icon="navigate-outline"
-            iconBg="#e0f2fe"
+            iconBg={sectionIconBg}
             title={t("settings.distanceUnit")}
             showBorder
             right={
@@ -535,7 +613,7 @@ export default function Settings() {
           />
           <SettingsRow
             icon="calendar-outline"
-            iconBg="#d1fae5"
+            iconBg={sectionIconBg}
             title={t("settings.firstDayOfWeek")}
             showBorder={false}
             right={
@@ -557,10 +635,10 @@ export default function Settings() {
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionLabel}>{t("settings.notifications")}</Text>
         </View>
-        <View style={styles.sectionBody}>
+        <View style={[styles.sectionBody, styles.notificationsCard]}>
           <SettingsRow
             icon="notifications-outline"
-            iconBg="#fce7f3"
+            iconBg={sectionIconBg}
             title={t("settings.pushNotifications")}
             subtitle={t("settings.pushNotificationsSubtitle")}
             showBorder
@@ -577,7 +655,7 @@ export default function Settings() {
           />
           <SettingsRow
             icon="alarm-outline"
-            iconBg="#ecfccb"
+            iconBg={sectionIconBg}
             title={t("settings.workoutReminders")}
             subtitle={t("settings.workoutRemindersSubtitle")}
             showBorder
@@ -594,7 +672,7 @@ export default function Settings() {
           />
           <SettingsRow
             icon="mail-outline"
-            iconBg="#e0f2fe"
+            iconBg={sectionIconBg}
             title={t("settings.emailNotifications")}
             subtitle={t("settings.emailNotificationsSubtitle")}
             showBorder={false}
@@ -615,10 +693,10 @@ export default function Settings() {
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionLabel}>{t("settings.connectedApps")}</Text>
         </View>
-        <View style={styles.sectionBody}>
+        <View style={[styles.sectionBody, styles.connectedAppsCard]}>
           <SettingsRow
             icon="heart-outline"
-            iconBg="#fee2e2"
+            iconBg={sectionIconBg}
             title={t("settings.healthConnect")}
             subtitle={t("settings.healthConnectSubtitle")}
             showBorder={false}
@@ -639,10 +717,10 @@ export default function Settings() {
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionLabel}>{t("settings.support")}</Text>
         </View>
-        <View style={styles.sectionBody}>
+        <View style={[styles.sectionBody, styles.supportCard]}>
           <SettingsRow
             icon="help-circle-outline"
-            iconBg="#dbeafe"
+            iconBg={sectionIconBg}
             title={t("settings.helpCenter")}
             showBorder
             showChevron
@@ -652,7 +730,7 @@ export default function Settings() {
           />
           <SettingsRow
             icon="star-outline"
-            iconBg="#fef9c3"
+            iconBg={sectionIconBg}
             title={t("settings.rateHylift")}
             subtitle={t("settings.rateHyliftSubtitle")}
             showBorder
@@ -663,7 +741,7 @@ export default function Settings() {
           />
           <SettingsRow
             icon="information-circle-outline"
-            iconBg="#e8e0f0"
+            iconBg={sectionIconBg}
             title={t("settings.aboutHylift")}
             subtitle={t("settings.version")}
             showBorder
@@ -674,7 +752,7 @@ export default function Settings() {
           />
           <SettingsRow
             icon="document-text-outline"
-            iconBg="#ccfbf1"
+            iconBg={sectionIconBg}
             title={t("settings.termsOfService")}
             showBorder
             showChevron
@@ -684,7 +762,7 @@ export default function Settings() {
           />
           <SettingsRow
             icon="shield-checkmark-outline"
-            iconBg="#f3e8ff"
+            iconBg={sectionIconBg}
             title={t("settings.privacyPolicy")}
             showBorder={false}
             showChevron
