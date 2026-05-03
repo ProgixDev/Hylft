@@ -27,7 +27,6 @@ import {
     loadGooglePlaySubscriptions,
     markProEntitled,
     requestGooglePlaySubscription,
-    restoreGooglePlaySubscriptions,
     subscribeToGooglePlayPurchaseEvents,
     type GooglePlaySubscriptionProduct,
     type ProPlan,
@@ -240,51 +239,6 @@ export default function ProModal({ visible, onClose }: ProModalProps) {
     billingProducts[plan]?.price ??
     fallback;
 
-  const handleRestorePress = async () => {
-    if (!user?.id) return;
-
-    if (!isGooglePlayBillingAvailable()) {
-      Alert.alert("Google Play", getGooglePlayBillingUnavailableMessage());
-      return;
-    }
-
-    try {
-      setIsBillingLoading(true);
-      const purchases = await restoreGooglePlaySubscriptions();
-      if (purchases.length === 0) {
-        Alert.alert(
-          t("common.done", "Done"),
-          t(
-            "proModal.noRestorablePurchases",
-            "We could not find an active Google Play subscription for this account.",
-          ),
-        );
-        return;
-      }
-
-      await markProEntitled(user.id);
-      Alert.alert(
-        t("common.done", "Done"),
-        t(
-          "proModal.restoreSuccess",
-          "Your Google Play subscription has been restored.",
-        ),
-      );
-      onClose();
-    } catch (error) {
-      console.error("[ProModal] Failed to restore purchases", error);
-      Alert.alert(
-        t("common.error", "Error"),
-        t(
-          "proModal.restoreFailed",
-          "We could not restore your purchase right now.",
-        ),
-      );
-    } finally {
-      setIsBillingLoading(false);
-    }
-  };
-
   const handlePurchasePress = async () => {
     if (!user?.id) return;
 
@@ -342,14 +296,6 @@ export default function ProModal({ visible, onClose }: ProModalProps) {
         >
           <TouchableOpacity onPress={onClose} style={styles.iconButton}>
             <Ionicons name="close" size={28} color="#FFFFFF" />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={handleRestorePress}
-            style={styles.restoreBtn}
-          >
-            <Text style={styles.restoreText}>
-              {t("proModal.restore", "Restore")}
-            </Text>
           </TouchableOpacity>
         </View>
 
@@ -593,15 +539,6 @@ export default function ProModal({ visible, onClose }: ProModalProps) {
                   {t("proModal.guarantee", "7-day money-back guarantee")}
                 </Text>
               </View>
-
-              <Pressable
-                onPress={handleRestorePress}
-                style={styles.restoreHintBtn}
-              >
-                <Text style={styles.restoreHintText}>
-                  {t("proModal.restore", "Restore")}
-                </Text>
-              </Pressable>
             </View>
           </View>
         </Animated.View>
@@ -627,15 +564,6 @@ const styles = StyleSheet.create({
   },
   iconButton: {
     padding: 4,
-  },
-  restoreBtn: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  restoreText: {
-    color: "#E5E5E5",
-    fontSize: 15,
-    fontFamily: "Zain_400Regular",
   },
   mainLayout: {
     flex: 1,
@@ -892,16 +820,6 @@ const styles = StyleSheet.create({
   },
   guaranteeText: {
     color: "#D7D7D7",
-    fontSize: 13,
-    fontFamily: "Zain_400Regular",
-  },
-  restoreHintBtn: {
-    marginTop: 4,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-  },
-  restoreHintText: {
-    color: "#A0A0A0",
     fontSize: 13,
     fontFamily: "Zain_400Regular",
   },
