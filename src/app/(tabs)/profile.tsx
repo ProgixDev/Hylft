@@ -29,6 +29,13 @@ import { useHealth } from "../../contexts/HealthContext";
 import { useNutrition } from "../../contexts/NutritionContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { api } from "../../services/api";
+import {
+  DEFAULT_USER_STATS,
+  getProfileCache,
+  setProfileCache,
+  type MyProfile,
+  type UserStats,
+} from "../../services/preloadCache";
 import { pickAndUploadAvatar } from "../../services/avatarUploader";
 import { WeightEntry, WeightHistory } from "../../services/weightHistory";
 import { Shimmer } from "../../components/ui/PostSkeleton";
@@ -78,36 +85,6 @@ function ProgressRing({ pct, size, color, strokeWidth = 6, children }: {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-type MyProfile = {
-  id: string;
-  username: string | null;
-  display_name: string | null;
-  avatar_url: string | null;
-  cover_url: string | null;
-  created_at: string | null;
-};
-
-type UserStats = {
-  posts_count: number;
-  followers_count: number;
-  following_count: number;
-  likes_count: number;
-};
-
-const DEFAULT_USER_STATS: UserStats = {
-  posts_count: 0,
-  followers_count: 0,
-  following_count: 0,
-  likes_count: 0,
-};
-
-let profileCache:
-  | {
-      userId: string;
-      profile: MyProfile | null;
-      stats: UserStats;
-    }
-  | null = null;
 
 export default function Profile() {
   const { i18n } = useTranslation();
@@ -117,8 +94,7 @@ export default function Profile() {
   const styles = createStyles(theme);
   const isFr = i18n.language?.startsWith("fr");
   const { user } = useAuth();
-  const cachedForUser =
-    user?.id && profileCache?.userId === user.id ? profileCache : null;
+  const cachedForUser = getProfileCache(user?.id);
   const cachedProfile = cachedForUser?.profile ?? null;
   const cachedStats = cachedForUser?.stats ?? DEFAULT_USER_STATS;
 
@@ -153,8 +129,7 @@ export default function Profile() {
       return;
     }
 
-    const cached =
-      profileCache?.userId === user.id ? profileCache : null;
+    const cached = getProfileCache(user.id);
     if (cached) {
       setMyProfile(cached.profile);
       setUserStats(cached.stats);
@@ -167,7 +142,7 @@ export default function Profile() {
         api.getProfile() as Promise<MyProfile>,
         api.getUserStats(user.id) as Promise<UserStats>,
       ]);
-      profileCache = { userId: user.id, profile: prof, stats };
+      setProfileCache({ userId: user.id, profile: prof, stats });
       setMyProfile(prof);
       setUserStats(stats);
     } catch {

@@ -33,6 +33,7 @@ import {
   userTutorialStorageKey,
 } from "../constants/tutorial";
 import { hasProEntitlement } from "../services/googlePlayBilling";
+import { clearPreloadCache, preloadAppData } from "../services/preloadCache";
 
 SplashScreen.preventAutoHideAsync().catch(() => {
   // Ignore errors if splash screen was already prevented.
@@ -55,6 +56,14 @@ function AppContent() {
   const isPlanBuildingRoute =
     isGetStartedRoute && routeSegments[1] === "ready";
   const shellBackgroundColor = isAuthRoute ? "#06101F" : theme.background.dark;
+
+  useEffect(() => {
+    if (user?.id) {
+      void preloadAppData(user.id);
+    } else {
+      clearPreloadCache();
+    }
+  }, [user?.id]);
 
   useEffect(() => {
     if (isLoading || user) return;

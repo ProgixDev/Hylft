@@ -72,8 +72,35 @@ export const api = {
   listWallpapers: () => authFetch("/wallpapers"),
 
   // ── Nutrition / Alimentation ────────────────────────────
-  searchFood: (q: string, lang: "fr" | "en" = "fr") =>
-    authFetch(`/nutrition/search?q=${encodeURIComponent(q)}&lang=${lang}`),
+  searchFood: (
+    q: string,
+    lang: "fr" | "en" = "fr",
+    page = 0,
+    pageSize = 20,
+  ) => {
+    const qs = new URLSearchParams({
+      q,
+      lang,
+      page: String(page),
+      pageSize: String(pageSize),
+    });
+    return authFetch(`/nutrition/search?${qs.toString()}`);
+  },
+  getFoodHistory: (limit = 20) =>
+    authFetch(`/nutrition/food-history?limit=${limit}`),
+  recordFoodSelection: (data: {
+    food_id: string;
+    food_name: string;
+    image_url?: string;
+    calories?: number;
+    protein?: number;
+    carbs?: number;
+    fat?: number;
+  }) =>
+    authFetch("/nutrition/food-history", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
   getMeals: (date: string) =>
     authFetch(`/nutrition/meals?date=${date}`),
   addMeal: (data: Record<string, unknown>) =>

@@ -33,7 +33,6 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useHealth } from "../../contexts/HealthContext";
 import { useNutrition } from "../../contexts/NutritionContext";
 import { useTheme } from "../../contexts/ThemeContext";
-import { TutorialTarget } from "../../contexts/TutorialTargetContext";
 import { useGenderedImages } from "../../hooks/useGenderedImages";
 import { api } from "../../services/api";
 import { hasProEntitlement } from "../../services/googlePlayBilling";
@@ -765,26 +764,6 @@ export default function Home() {
                     : t("home.noWorkoutDaysTitle", "Choose workout days")}
                 </Text>
               </View>
-              <TutorialTarget id="home.weekConfigureButton">
-                <Pressable
-                  style={({ pressed }) => [
-                    styles.weekSettingsBtn,
-                    pressed && { opacity: 0.85 },
-                  ]}
-                  onPress={() => router.push("/objective")}
-                  accessibilityRole="button"
-                  accessibilityLabel={t(
-                    "home.configureWeek",
-                    "Configure workout week",
-                  )}
-                >
-                  <Ionicons
-                    name="settings-outline"
-                    size={19}
-                    color={theme.primary.main}
-                  />
-                </Pressable>
-              </TutorialTarget>
             </View>
 
             {/* Day chips row — today always centred */}
@@ -859,24 +838,14 @@ export default function Home() {
                   </View>
                   <View style={styles.nextWorkoutBtn}>
                     <Text style={styles.nextWorkoutBtnText}>
-                      {t("home.chooseDays", "Choose")}
+                      {t("home.customizeWeek", "Customize weekly program")}
                     </Text>
                   </View>
                 </View>
               </Pressable>
             ) : isTodayWorkoutDay ? (
               /* ── Today is a workout day ── */
-              <Pressable
-                style={({ pressed }) => [
-                  styles.nextWorkoutCard,
-                  pressed && { opacity: 0.95, transform: [{ scale: 0.98 }] },
-                ]}
-                onPress={() =>
-                  todayRoutine
-                    ? handleStartRoutine(todayRoutine)
-                    : handleSetupWorkoutDay(todayWorkoutDay!)
-                }
-              >
+              <View style={styles.nextWorkoutCard}>
                 <Image
                   source={genderedImages.nextWorkout}
                   style={styles.nextWorkoutImage}
@@ -886,67 +855,58 @@ export default function Home() {
                   colors={["rgba(0,0,0,0.12)", "rgba(0,0,0,0.78)"]}
                   style={styles.nextWorkoutGradient}
                 />
-                <View style={styles.nextWorkoutContent}>
-                  <View style={styles.nextWorkoutInfo}>
-                    <Text style={styles.nextWorkoutName} numberOfLines={2}>
-                      {todayRoutine?.name ??
-                        t("home.setupDayRoutine", "{{day}} workout", {
-                          day: todayWorkoutDay!.longLabel,
-                        })}
-                    </Text>
-                    <View style={styles.sessionDetails}>
-                      <View style={styles.sessionTag}>
-                        <Ionicons
-                          name="barbell-outline"
-                          size={12}
-                          color="rgba(255,255,255,0.82)"
-                        />
-                        <Text style={styles.sessionTagText} numberOfLines={1}>
-                          {todayRoutine
-                            ? `${todayRoutine.exercises?.length ?? 0} ${t("home.exercises")}`
-                            : t(
-                                "home.addExercisesToRoutine",
-                                "Add exercises, save, and keep the day ready.",
-                              )}
-                        </Text>
-                      </View>
-                      <View style={styles.sessionTag}>
-                        <Ionicons
-                          name="time-outline"
-                          size={12}
-                          color="rgba(255,255,255,0.82)"
-                        />
-                        <Text style={styles.sessionTagText} numberOfLines={1}>
-                          {todayRoutine
-                            ? `${todayWorkoutDay!.longLabel} · ${todayRoutine.estimated_duration ?? 0} min`
-                            : t("home.needsRoutine", "Needs routine")}
-                        </Text>
-                      </View>
-                      <View style={styles.sessionTag}>
-                        <Ionicons
-                          name="alarm-outline"
-                          size={12}
-                          color="rgba(255,255,255,0.82)"
-                        />
-                        <Text style={styles.sessionTagText} numberOfLines={1}>
-                          {workoutRemindersEnabled
-                            ? t("home.reminderAt", "Reminder {{time}}", {
-                                time: workoutReminderTime,
-                              })
-                            : t("home.remindersOff", "Reminders off")}
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                  <View style={styles.nextWorkoutBtn}>
-                    <Text style={styles.nextWorkoutBtnText}>
-                      {todayRoutine
-                        ? t("home.start", "Démarrer")
-                        : t("home.setupRoutine", "Configurer")}
-                    </Text>
+                <View style={styles.nextWorkoutContentColumn}>
+                  <Text style={styles.nextWorkoutName} numberOfLines={2}>
+                    {todayRoutine?.name ??
+                      t("home.setupDayRoutine", "{{day}} workout", {
+                        day: todayWorkoutDay!.longLabel,
+                      })}
+                  </Text>
+                  <View style={styles.nextWorkoutActionsRow}>
+                    <Pressable
+                      style={({ pressed }) => [
+                        styles.customizeWeekBtn,
+                        pressed && { opacity: 0.85 },
+                      ]}
+                      onPress={() => router.push("/objective")}
+                      accessibilityRole="button"
+                      accessibilityLabel={t(
+                        "home.customizeWeek",
+                        "Customize weekly program",
+                      )}
+                    >
+                      <Ionicons
+                        name="options-outline"
+                        size={14}
+                        color="#fff"
+                      />
+                      <Text
+                        style={styles.customizeWeekBtnText}
+                        numberOfLines={1}
+                      >
+                        {t("home.customizeWeek", "Customize weekly program")}
+                      </Text>
+                    </Pressable>
+                    <Pressable
+                      style={({ pressed }) => [
+                        styles.startWorkoutBtn,
+                        pressed && { opacity: 0.9 },
+                      ]}
+                      onPress={() =>
+                        todayRoutine
+                          ? handleStartRoutine(todayRoutine)
+                          : handleSetupWorkoutDay(todayWorkoutDay!)
+                      }
+                    >
+                      <Text style={styles.nextWorkoutBtnText}>
+                        {todayRoutine
+                          ? t("home.start", "Démarrer")
+                          : t("home.setupRoutine", "Configurer")}
+                      </Text>
+                    </Pressable>
                   </View>
                 </View>
-              </Pressable>
+              </View>
             ) : (
               /* ── Today is a rest day ── */
               <Pressable
@@ -996,11 +956,34 @@ export default function Home() {
                       )}
                     </View>
                   </View>
-                  {/* Voir button pinned bottom-right */}
-                  <View style={styles.restDayBtn}>
-                    <Text style={styles.restDayBtnText}>
-                      {t("home.seeMore", "Voir")}
-                    </Text>
+                  {/* Action buttons pinned bottom-right */}
+                  <View style={styles.restDayActionsRow}>
+                    <Pressable
+                      style={({ pressed }) => [
+                        styles.restCustomizeBtn,
+                        pressed && { opacity: 0.85 },
+                      ]}
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        router.push("/objective");
+                      }}
+                      accessibilityRole="button"
+                      accessibilityLabel={t(
+                        "home.customizeWeek",
+                        "Customize weekly program",
+                      )}
+                    >
+                      <Ionicons
+                        name="options-outline"
+                        size={13}
+                        color="#67E8F9"
+                      />
+                    </Pressable>
+                    <View style={styles.restDayBtn}>
+                      <Text style={styles.restDayBtnText}>
+                        {t("home.seeMore", "Voir")}
+                      </Text>
+                    </View>
                   </View>
                 </View>
               </Pressable>
@@ -1714,16 +1697,6 @@ function createStyles(theme: Theme) {
       color: theme.foreground.gray,
       textTransform: "uppercase",
     },
-    weekSettingsBtn: {
-      width: 38,
-      height: 38,
-      borderWidth: 1,
-      borderColor: theme.primary.main,
-      backgroundColor: theme.primary.main + "12",
-      borderRadius: 14,
-      alignItems: "center",
-      justifyContent: "center",
-    },
     weekChipsRow: {
       flexDirection: "row",
       gap: 5,
@@ -1776,6 +1749,45 @@ function createStyles(theme: Theme) {
       justifyContent: "space-between",
       padding: 14,
     },
+    nextWorkoutContentColumn: {
+      flex: 1,
+      flexDirection: "column",
+      justifyContent: "flex-end",
+      padding: 14,
+      gap: 10,
+    },
+    nextWorkoutActionsRow: {
+      flexDirection: "row",
+      gap: 8,
+      alignItems: "center",
+    },
+    customizeWeekBtn: {
+      flex: 1,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 6,
+      backgroundColor: "rgba(255,255,255,0.12)",
+      borderWidth: 1,
+      borderColor: "rgba(255,255,255,0.4)",
+      borderRadius: 20,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+    },
+    customizeWeekBtnText: {
+      fontFamily: FONTS.bold,
+      fontSize: 12,
+      color: "#fff",
+      letterSpacing: 0.3,
+    },
+    startWorkoutBtn: {
+      backgroundColor: theme.primary.main,
+      borderRadius: 20,
+      paddingHorizontal: 20,
+      paddingVertical: 10,
+      alignItems: "center",
+      justifyContent: "center",
+    },
     nextWorkoutInfo: {
       flex: 1,
     },
@@ -1790,20 +1802,6 @@ function createStyles(theme: Theme) {
       fontSize: 12,
       color: "rgba(255,255,255,0.8)",
       fontStyle: "italic",
-    },
-    sessionDetails: {
-      gap: 4,
-      marginTop: 4,
-    },
-    sessionTag: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 5,
-    },
-    sessionTagText: {
-      fontFamily: FONTS.medium,
-      fontSize: 11,
-      color: "rgba(255,255,255,0.8)",
     },
     nextWorkoutBtn: {
       backgroundColor: theme.primary.main,
@@ -2218,15 +2216,30 @@ function createStyles(theme: Theme) {
       color: "#67E8F9",
     },
     restDayBtn: {
-      position: "absolute",
-      bottom: 16,
-      right: 16,
       backgroundColor: "rgba(103,232,249,0.15)",
       borderRadius: 20,
       paddingHorizontal: 16,
       paddingVertical: 10,
       borderWidth: 1,
       borderColor: "rgba(103,232,249,0.35)",
+    },
+    restDayActionsRow: {
+      position: "absolute",
+      bottom: 16,
+      right: 16,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+    },
+    restCustomizeBtn: {
+      width: 38,
+      height: 38,
+      borderRadius: 19,
+      backgroundColor: "rgba(103,232,249,0.15)",
+      borderWidth: 1,
+      borderColor: "rgba(103,232,249,0.35)",
+      alignItems: "center",
+      justifyContent: "center",
     },
     restDayBtnText: {
       fontFamily: FONTS.bold,

@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -379,69 +379,58 @@ export default function ObjectiveScreen() {
     };
   }, []);
 
-  useEffect(() => {
-    let isActive = true;
+  const loadRoutineSetup = useCallback(async () => {
+    setIsLoadingRoutines(true);
+    try {
+      const [routinesRes, scheduleRes] = await Promise.all([
+        api.getRoutines(),
+        api.getSchedule(),
+      ]);
 
-    const loadRoutineSetup = async () => {
-      setIsLoadingRoutines(true);
-      try {
-        const [routinesRes, scheduleRes] = await Promise.all([
-          api.getRoutines(),
-          api.getSchedule(),
-        ]);
-        if (!isActive) return;
+      setRoutines(Array.isArray(routinesRes) ? routinesRes : []);
 
-        setRoutines(Array.isArray(routinesRes) ? routinesRes : []);
-
-        const assignments = (
-          Array.isArray(scheduleRes?.items) ? scheduleRes.items : []
-        ) as ScheduleAssignment[];
-        setSelectedRoutineByDay(
-          assignments.reduce(
-            (acc: Record<number, string>, item) => {
-              if (
-                Number.isInteger(item.day_of_week) &&
-                item.day_of_week >= 0 &&
-                item.day_of_week <= 6 &&
-                !item.is_rest_day &&
-                item.routine_id
-              ) {
-                acc[item.day_of_week] = item.routine_id;
-              }
-              return acc;
-            },
-            {},
-          ),
-        );
-      } catch (error) {
-        console.warn("[Objective] load routines failed:", error);
-      } finally {
-        if (isActive) setIsLoadingRoutines(false);
-      }
-    };
-
-    loadRoutineSetup();
-    return () => {
-      isActive = false;
-    };
+      const assignments = (
+        Array.isArray(scheduleRes?.items) ? scheduleRes.items : []
+      ) as ScheduleAssignment[];
+      setSelectedRoutineByDay(
+        assignments.reduce(
+          (acc: Record<number, string>, item) => {
+            if (
+              Number.isInteger(item.day_of_week) &&
+              item.day_of_week >= 0 &&
+              item.day_of_week <= 6 &&
+              !item.is_rest_day &&
+              item.routine_id
+            ) {
+              acc[item.day_of_week] = item.routine_id;
+            }
+            return acc;
+          },
+          {},
+        ),
+      );
+    } catch (error) {
+      console.warn("[Objective] load routines failed:", error);
+    } finally {
+      setIsLoadingRoutines(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadRoutineSetup();
+  }, [loadRoutineSetup]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadRoutineSetup();
+    }, [loadRoutineSetup]),
+  );
 
   const canChooseRoutines = useMemo(
     () => !!selected && selectedDays.length === selected,
     [selected, selectedDays],
   );
-  const routineIds = useMemo(
-    () => new Set(routines.map((routine) => routine.id)),
-    [routines],
-  );
-  const canSavePlan = useMemo(
-    () =>
-      canChooseRoutines &&
-      selectedDays.every((dayIndex) =>
-        routineIds.has(selectedRoutineByDay[dayIndex]),
-      ),
-    [canChooseRoutines, routineIds, selectedDays, selectedRoutineByDay],
-  );
+  const canSavePlan = canChooseRoutines;
 
   const getDayLabel = useCallback(
     (dayIndex: number) =>
@@ -676,66 +665,39 @@ export default function ObjectiveScreen() {
                   {t("home.loadingRoutines", "Loading routines...")}
                 </Text>
               </View>
-            ) : routines.length === 0 ? (
-              <View style={styles.emptyRoutinesCard}>
-                <Text style={styles.emptyRoutinesTitle}>
-                  {t("workout.noRoutinesYet", "No routines yet")}
-                </Text>
-                <Text style={styles.emptyRoutinesText}>
-                  {t(
-                    "home.createRoutineBeforeAssigning",
-                    "Create a routine first, then come back to assign it to your days.",
-                  )}
-                </Text>
-                {selectedDays[0] !== undefined && (
-                  <CreateRoutineButton
-                    label={t("createRoutine.title", "Create Routine")}
-                    onPress={() => handleCreateRoutineForDay(selectedDays[0])}
-                    tutorialTargetId="objective.createRoutineButton"
-                  />
-                )}
-              </View>
             ) : (
               <View style={styles.assignmentList}>
-                {selectedDays.map((dayIndex, index) => (
-                  <View key={dayIndex} style={styles.assignmentCard}>
-                    <View style={styles.assignmentHeader}>
-                      <View>
+                {selectedDays.map((dayIndex) => {
+                  const hasRoutine = !!selectedRoutineByDay[dayIndex];
+                  return (
+                    <Pressable
+                      key={dayIndex}
+                      style={({ pressed }) => [
+                        styles.dayRow,
+                        hasRoutine && styles.dayRowReady,
+                        pressed && { opacity: 0.85 },
+                      ]}
+                      onPress={() => handleCreateRoutineForDay(dayIndex)}
+                    >
+                      <View style={{ flex: 1 }}>
                         <Text style={styles.assignmentDay}>
                           {getDayLabel(dayIndex)}
                         </Text>
-                        <Text style={styles.assignmentMeta}>
-                          {selectedRoutineByDay[dayIndex]
+                        <Text
+                          style={[
+                            styles.assignmentMeta,
+                            hasRoutine && { color: theme.primary.main },
+                          ]}
+                        >
+                          {hasRoutine
                             ? t("home.routineReady", "Ready")
                             : t("home.needsRoutine", "Needs routine")}
                         </Text>
                       </View>
-                      <CreateRoutineButton
-                        label={t("createRoutine.title", "Create Routine")}
-                        onPress={() => handleCreateRoutineForDay(dayIndex)}
-                        tutorialTargetId={
-                          index === 0 ? "objective.createRoutineButton" : undefined
-                        }
-                      />
-                    </View>
-
-                    <View style={styles.routineOptions}>
-                      {routines.map((routine) => (
-                        <RoutineOptionCard
-                          key={routine.id}
-                          routine={routine}
-                          isSelected={selectedRoutineByDay[dayIndex] === routine.id}
-                          onPress={() =>
-                            setSelectedRoutineByDay((prev) => ({
-                              ...prev,
-                              [dayIndex]: routine.id,
-                            }))
-                          }
-                        />
-                      ))}
-                    </View>
-                  </View>
-                ))}
+                      <Text style={styles.dayRowChevron}>{">"}</Text>
+                    </Pressable>
+                  );
+                })}
               </View>
             )}
           </>
@@ -915,6 +877,25 @@ function createStyles(theme: Theme) {
     },
     routineOptions: {
       gap: 8,
+    },
+    dayRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      padding: 16,
+      borderRadius: 16,
+      backgroundColor: theme.background.darker,
+      borderWidth: 1,
+      borderColor: theme.background.accent,
+      gap: 12,
+    },
+    dayRowReady: {
+      borderColor: theme.primary.main,
+      backgroundColor: theme.primary.main + "12",
+    },
+    dayRowChevron: {
+      fontFamily: FONTS.extraBold,
+      fontSize: 18,
+      color: theme.foreground.gray,
     },
   });
 }

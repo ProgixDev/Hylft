@@ -7,6 +7,7 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Animated,
   Modal,
   Platform,
   Pressable,
@@ -32,6 +33,24 @@ import { FONTS } from "../../constants/fonts";
 const WORKOUT_REMINDER_KEY = "@hylift_workout_reminder";
 const WORKOUT_REMINDER_TIME_KEY = "@hylift_workout_reminder_time";
 const DEFAULT_WORKOUT_REMINDER_TIME = "17:30";
+const WORKOUT_DAYS_KEY = "@hylift_workout_days";
+
+const DAY_IDS = [
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+  "sunday",
+] as const;
+const DAY_FALLBACK_LABELS = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
+
+type AvailableDay = {
+  index: number;
+  label: string;
+  existingRoutineId?: string | null;
+};
 
 const EDITOR_CARD_COLORS = {
   sets: {
@@ -155,6 +174,71 @@ export default function CreateRoutineScreen() {
     null,
   );
   const [isSavingRoutine, setIsSavingRoutine] = useState(false);
+  const [availableDays, setAvailableDays] = useState<AvailableDay[]>([]);
+  const [isLoadingDays, setIsLoadingDays] = useState(true);
+  const [assignedDayIndex, setAssignedDayIndex] = useState<number | null>(
+    isWeekSetup ? setupDayIndex : null,
+  );
+
+  useEffect(() => {
+    if (isWeekSetup) {
+      setIsLoadingDays(false);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const getLabel = (idx: number) =>
+        t(
+          `onboarding.workoutFrequency.days.${DAY_IDS[idx]}`,
+          DAY_FALLBACK_LABELS[idx],
+        );
+      let days: AvailableDay[] = [];
+      try {
+        const schedule = await api.getSchedule();
+        const items = (schedule?.items ?? []) as Array<{
+          day_of_week: number;
+          is_rest_day: boolean;
+          routine_id?: string | null;
+        }>;
+        const workoutItems = items.filter((i) => !i.is_rest_day);
+        if (workoutItems.length > 0) {
+          days = workoutItems
+            .map((i) => ({
+              index: i.day_of_week,
+              label: getLabel(i.day_of_week),
+              existingRoutineId: i.routine_id ?? null,
+            }))
+            .sort((a, b) => a.index - b.index);
+        }
+      } catch {
+        // fall through to AsyncStorage fallback
+      }
+      if (days.length === 0) {
+        try {
+          const raw = await AsyncStorage.getItem(WORKOUT_DAYS_KEY);
+          if (raw) {
+            const ids = JSON.parse(raw) as string[];
+            const indices = ids
+              .map((id) => DAY_IDS.indexOf(id as (typeof DAY_IDS)[number]))
+              .filter((i) => i >= 0);
+            days = indices
+              .sort((a, b) => a - b)
+              .map((i) => ({ index: i, label: getLabel(i) }));
+          }
+        } catch {
+          // ignore
+        }
+      }
+      if (!cancelled) {
+        setAvailableDays(days);
+        setIsLoadingDays(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const editingExercise = editingExerciseId
     ? draft.exercises.find((e) => e.id === editingExerciseId) ?? null
     : null;
@@ -172,14 +256,31 @@ export default function CreateRoutineScreen() {
   const handleSave = async () => {
     if (isSavingRoutine) return;
 
-    if (!draft.name.trim()) {
-      Alert.alert(t("createRoutine.missingName"), t("createRoutine.pleaseEnterRoutineName"));
-      return;
-    }
     if (draft.exercises.length === 0) {
       Alert.alert(t("createRoutine.noExercises"), t("createRoutine.addAtLeastOneExercise"));
       return;
     }
+    if (!isWeekSetup && assignedDayIndex == null) {
+      Alert.alert(
+        t("createRoutine.missingDay", "Jour manquant"),
+        t(
+          "createRoutine.pleaseAssignDay",
+          "Choisis un jour pour cette séance.",
+        ),
+      );
+      return;
+    }
+
+    const dayLabelForName =
+      assignedDayIndex != null
+        ? availableDays.find((d) => d.index === assignedDayIndex)?.label ??
+          setupDayLabel
+        : setupDayLabel;
+    const resolvedName =
+      draft.name.trim() ||
+      t("createRoutine.weekRoutineName", "{{day}} workout", {
+        day: dayLabelForName,
+      });
 
     const estimatedDuration = draft.exercises.reduce(
       (total, ex) =>
@@ -194,7 +295,7 @@ export default function CreateRoutineScreen() {
     setIsSavingRoutine(true);
     try {
       createdRoutine = (await api.createRoutine({
-        name: draft.name.trim(),
+        name: resolvedName,
         description: draft.description.trim(),
         difficulty: draft.difficulty,
         targetMuscles: draft.targetMuscles,
@@ -216,6 +317,23 @@ export default function CreateRoutineScreen() {
       saveError = error;
     }
 
+    let assignError: any = null;
+    if (
+      !saveError &&
+      !isWeekSetup &&
+      createdRoutine?.id &&
+      assignedDayIndex != null
+    ) {
+      try {
+        await api.upsertScheduleAssignment(assignedDayIndex, {
+          is_rest_day: false,
+          routine_id: createdRoutine.id,
+        });
+      } catch (error: any) {
+        assignError = error;
+      }
+    }
+
     setIsSavingRoutine(false);
 
     if (saveError) {
@@ -226,30 +344,41 @@ export default function CreateRoutineScreen() {
       return;
     }
 
+    if (assignError) {
+      Alert.alert(
+        t(
+          "createRoutine.assignDayFailed",
+          "La routine est créée, mais l'assignation au jour a échoué.",
+        ),
+        assignError?.message ||
+          t("createRoutine.tryAgain", "Please try again."),
+      );
+    }
+
     clearCreation();
     router.back();
   };
 
-  const handleDiscard = () => {
-    Alert.alert(t("createRoutine.discardRoutine"), t("createRoutine.allChangesLost"), [
-      { text: t("common.cancel"), style: "cancel" },
-      {
-        text: t("createRoutine.discard"),
-        style: "destructive",
-        onPress: () => {
-          clearCreation();
-          router.back();
-        },
-      },
-    ]);
+  const [isDiscardModalVisible, setIsDiscardModalVisible] = useState(false);
+  const handleDiscard = () => setIsDiscardModalVisible(true);
+  const confirmDiscard = () => {
+    setIsDiscardModalVisible(false);
+    clearCreation();
+    router.back();
   };
 
   return (
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={handleDiscard} style={styles.headerBtn}>
-          <Ionicons name="close" size={24} color={theme.foreground.white} />
+        <TouchableOpacity
+          onPress={handleDiscard}
+          style={styles.headerBtn}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel={t("common.close", "Close")}
+        >
+          <Ionicons name="close" size={20} color={theme.foreground.gray} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t("createRoutine.title")}</Text>
         <TouchableOpacity
@@ -268,64 +397,102 @@ export default function CreateRoutineScreen() {
         contentContainerStyle={{ paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Name */}
-        <View style={styles.section}>
-          <Text style={styles.label}>{t("createRoutine.routineName")}</Text>
-          <TextInput
-            style={styles.input}
-            placeholder={t("createRoutine.routineNamePlaceholder")}
-            placeholderTextColor={theme.foreground.gray}
-            value={draft.name}
-            onChangeText={(v) => updateDraft({ name: v })}
-            maxLength={60}
-          />
-        </View>
-
-        {/* Description */}
-        <View style={styles.section}>
-          <Text style={styles.label}>{t("createRoutine.description")}</Text>
-          <TextInput
-            style={[styles.input, styles.inputMultiline]}
-            placeholder={t("createRoutine.descriptionPlaceholder")}
-            placeholderTextColor={theme.foreground.gray}
-            value={draft.description}
-            onChangeText={(v) => updateDraft({ description: v })}
-            multiline
-            maxLength={200}
-          />
-        </View>
-
-        {/* Difficulty */}
-        <View style={styles.section}>
-          <Text style={styles.label}>{t("createRoutine.difficulty")}</Text>
-          <View style={styles.difficultyRow}>
-            {DIFFICULTIES.map((d) => (
-              <TouchableOpacity
-                key={d.value}
+        {/* Day assignment (replaces routine name — the day IS the session identity) */}
+        {isWeekSetup ? (
+          <View style={styles.section}>
+            <Text style={styles.label}>
+              {t("createRoutine.assignToDay", "Assigner à un jour")}
+            </Text>
+            <View style={[styles.dayPickerChip, styles.dayPickerChipSelected]}>
+              <Text
                 style={[
-                  styles.difficultyBtn,
-                  draft.difficulty === d.value && {
-                    backgroundColor: d.color + "25",
-                    borderColor: d.color,
-                  },
+                  styles.dayPickerChipText,
+                  styles.dayPickerChipTextSelected,
                 ]}
-                onPress={() => updateDraft({ difficulty: d.value })}
               >
-                <View
-                  style={[styles.difficultyDot, { backgroundColor: d.color }]}
-                />
-                <Text
-                  style={[
-                    styles.difficultyBtnText,
-                    draft.difficulty === d.value && { color: d.color },
-                  ]}
-                >
-                  {d.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
+                {setupDayLabel}
+              </Text>
+            </View>
           </View>
-        </View>
+        ) : (
+          <View style={styles.section}>
+            <Text style={styles.label}>
+              {t("createRoutine.assignToDay", "Assigner à un jour")}
+            </Text>
+            {isLoadingDays ? (
+              <ActivityIndicator color={theme.foreground.gray} />
+            ) : availableDays.length === 0 ? (
+              <View style={styles.dayPickerEmpty}>
+                <Text style={styles.dayPickerEmptyText}>
+                  {t(
+                    "createRoutine.noWorkoutDays",
+                    "Vous n'avez pas encore de jours d'entraînement.",
+                  )}
+                </Text>
+                <TouchableOpacity
+                  style={styles.dayPickerCta}
+                  onPress={() => router.push("/objective" as any)}
+                >
+                  <Text style={styles.dayPickerCtaText}>
+                    {t(
+                      "createRoutine.configureDaysFirst",
+                      "Configurer ma semaine",
+                    )}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <>
+                <View style={styles.dayPickerRow}>
+                  {availableDays.map((day) => {
+                    const isSelected = assignedDayIndex === day.index;
+                    return (
+                      <TouchableOpacity
+                        key={day.index}
+                        style={[
+                          styles.dayPickerChip,
+                          isSelected && styles.dayPickerChipSelected,
+                        ]}
+                        onPress={() => {
+                          setAssignedDayIndex(day.index);
+                          updateDraft({
+                            name: t(
+                              "createRoutine.weekRoutineName",
+                              "{{day}} workout",
+                              { day: day.label },
+                            ),
+                          });
+                        }}
+                      >
+                        <Text
+                          style={[
+                            styles.dayPickerChipText,
+                            isSelected && styles.dayPickerChipTextSelected,
+                          ]}
+                          numberOfLines={1}
+                        >
+                          {day.label}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+                {assignedDayIndex != null &&
+                  availableDays.find(
+                    (d) =>
+                      d.index === assignedDayIndex && !!d.existingRoutineId,
+                  ) && (
+                    <Text style={styles.dayPickerWarning}>
+                      {t(
+                        "createRoutine.dayAlreadyAssigned",
+                        "Remplacera la routine actuelle",
+                      )}
+                    </Text>
+                  )}
+              </>
+            )}
+          </View>
+        )}
 
         {/* Exercises */}
         <View style={styles.section}>
@@ -398,6 +565,50 @@ export default function CreateRoutineScreen() {
       />
 
       <Modal
+        visible={isDiscardModalVisible}
+        transparent
+        animationType="fade"
+        statusBarTranslucent
+        onRequestClose={() => setIsDiscardModalVisible(false)}
+      >
+        <Pressable
+          style={styles.discardModalBackdrop}
+          onPress={() => setIsDiscardModalVisible(false)}
+        >
+          <Pressable style={styles.discardModalDepth} onPress={() => {}}>
+            <View style={styles.discardModalCard}>
+              <View style={styles.discardIconWrap}>
+                <Ionicons name="warning" size={28} color="#FCA5A5" />
+              </View>
+              <Text style={styles.discardModalTitle}>
+                {t("createRoutine.discardRoutine", "Abandonner la séance ?")}
+              </Text>
+              <Text style={styles.discardModalText}>
+                {t(
+                  "createRoutine.allChangesLost",
+                  "Tous les changements seront perdus.",
+                )}
+              </Text>
+              <View style={styles.discardModalActions}>
+                <Discard3DButton
+                  label={t("common.cancel", "Annuler")}
+                  variant="cancel"
+                  onPress={() => setIsDiscardModalVisible(false)}
+                  styles={styles}
+                />
+                <Discard3DButton
+                  label={t("createRoutine.discard", "Abandonner")}
+                  variant="destructive"
+                  onPress={confirmDiscard}
+                  styles={styles}
+                />
+              </View>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      <Modal
         visible={isSavingRoutine}
         transparent
         animationType="fade"
@@ -424,6 +635,97 @@ export default function CreateRoutineScreen() {
         </View>
       </Modal>
     </View>
+  );
+}
+
+// ─── 3D button used in the discard modal ───────────────────────────────
+function Discard3DButton({
+  label,
+  variant,
+  onPress,
+  styles,
+}: {
+  label: string;
+  variant: "cancel" | "destructive";
+  onPress: () => void;
+  styles: ReturnType<typeof createStyles>;
+}) {
+  const depthAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const pressIn = () => {
+    Animated.parallel([
+      Animated.spring(depthAnim, {
+        toValue: 5,
+        speed: 40,
+        bounciness: 0,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 0.97,
+        speed: 40,
+        bounciness: 0,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+  const pressOut = () => {
+    Animated.parallel([
+      Animated.spring(depthAnim, {
+        toValue: 0,
+        speed: 28,
+        bounciness: 6,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        speed: 28,
+        bounciness: 6,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  const depthStyle =
+    variant === "destructive"
+      ? styles.discardBtnDepthDestructive
+      : styles.discardBtnDepthCancel;
+  const faceStyle =
+    variant === "destructive"
+      ? styles.discardBtnFaceDestructive
+      : styles.discardBtnFaceCancel;
+  const textStyle =
+    variant === "destructive"
+      ? styles.discardBtnTextDestructive
+      : styles.discardBtnTextCancel;
+
+  return (
+    <Animated.View
+      style={[
+        styles.discardBtnShell,
+        { transform: [{ scale: scaleAnim }] },
+      ]}
+    >
+      <View style={[styles.discardBtnDepth, depthStyle]}>
+        <Animated.View
+          style={[
+            styles.discardBtnFace,
+            faceStyle,
+            { transform: [{ translateY: depthAnim }] },
+          ]}
+        >
+          <Pressable
+            onPress={onPress}
+            onPressIn={pressIn}
+            onPressOut={pressOut}
+            style={styles.discardBtnPressable}
+            android_ripple={{ color: "rgba(255,255,255,0.14)" }}
+          >
+            <Text style={[styles.discardBtnText, textStyle]}>{label}</Text>
+          </Pressable>
+        </Animated.View>
+      </View>
+    </Animated.View>
   );
 }
 
@@ -1113,12 +1415,14 @@ const createStyles = (theme: Theme) => {
       paddingBottom: 12,
     },
     headerBtn: {
-      width: 38,
-      height: 38,
-      borderRadius: 12,
+      width: 40,
+      height: 40,
+      borderRadius: 20,
       alignItems: "center",
       justifyContent: "center",
       backgroundColor: theme.background.darker,
+      borderWidth: 1,
+      borderColor: theme.foreground.gray + "22",
     },
     headerTitle: {
       fontSize: 17,
@@ -1197,6 +1501,109 @@ const createStyles = (theme: Theme) => {
       textAlign: "center",
     },
 
+    // ── Discard modal (3D)
+    discardModalBackdrop: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 24,
+      backgroundColor: "rgba(3,7,18,0.78)",
+    },
+    discardModalDepth: {
+      width: "100%",
+      maxWidth: 340,
+      borderRadius: 24,
+      paddingBottom: 10,
+      backgroundColor: "#7F1D1D",
+      shadowColor: "#000",
+      shadowOpacity: 0.36,
+      shadowRadius: 22,
+      shadowOffset: { width: 0, height: 16 },
+      elevation: 14,
+    },
+    discardModalCard: {
+      alignItems: "center",
+      gap: 12,
+      paddingHorizontal: 22,
+      paddingVertical: 24,
+      borderRadius: 24,
+      backgroundColor: "#1F2937",
+      borderWidth: 1,
+      borderColor: "rgba(252,165,165,0.24)",
+    },
+    discardIconWrap: {
+      width: 56,
+      height: 56,
+      borderRadius: 20,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: "rgba(127,29,29,0.45)",
+      borderWidth: 1,
+      borderColor: "rgba(252,165,165,0.45)",
+      marginBottom: 2,
+    },
+    discardModalTitle: {
+      fontSize: 17,
+      fontFamily: FONTS.extraBold,
+      color: "#F9FAFB",
+      textAlign: "center",
+    },
+    discardModalText: {
+      fontSize: 13,
+      lineHeight: 19,
+      fontFamily: FONTS.medium,
+      color: "#D1D5DB",
+      textAlign: "center",
+      marginBottom: 6,
+    },
+    discardModalActions: {
+      flexDirection: "row",
+      gap: 10,
+      width: "100%",
+    },
+    discardBtnShell: {
+      flex: 1,
+    },
+    discardBtnDepth: {
+      borderRadius: 16,
+      paddingBottom: 5,
+    },
+    discardBtnDepthCancel: {
+      backgroundColor: "#0B1220",
+    },
+    discardBtnDepthDestructive: {
+      backgroundColor: "#7F1D1D",
+    },
+    discardBtnFace: {
+      borderRadius: 16,
+      borderWidth: 1,
+      overflow: "hidden",
+    },
+    discardBtnFaceCancel: {
+      backgroundColor: "#374151",
+      borderColor: "rgba(209,213,219,0.18)",
+    },
+    discardBtnFaceDestructive: {
+      backgroundColor: "#DC2626",
+      borderColor: "rgba(254,202,202,0.45)",
+    },
+    discardBtnPressable: {
+      paddingVertical: 13,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    discardBtnText: {
+      fontFamily: FONTS.extraBold,
+      fontSize: 14,
+      letterSpacing: 0.4,
+    },
+    discardBtnTextCancel: {
+      color: "#F9FAFB",
+    },
+    discardBtnTextDestructive: {
+      color: "#FFF1F2",
+    },
+
     content: { flex: 1 },
     section: {
       paddingHorizontal: 18,
@@ -1252,6 +1659,64 @@ const createStyles = (theme: Theme) => {
       fontSize: 13,
       fontFamily: FONTS.bold,
       color: theme.foreground.gray,
+    },
+
+    // ── Day picker
+    dayPickerRow: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 8,
+    },
+    dayPickerChip: {
+      paddingVertical: 10,
+      paddingHorizontal: 14,
+      borderRadius: 14,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: theme.foreground.gray + "20",
+      backgroundColor: theme.background.darker,
+    },
+    dayPickerChipSelected: {
+      borderColor: theme.primary.main,
+      backgroundColor: theme.primary.main + "25",
+    },
+    dayPickerChipText: {
+      fontSize: 13,
+      fontFamily: FONTS.bold,
+      color: theme.foreground.gray,
+    },
+    dayPickerChipTextSelected: {
+      color: theme.foreground.white,
+    },
+    dayPickerWarning: {
+      marginTop: 8,
+      fontSize: 12,
+      fontFamily: FONTS.medium,
+      color: "#F59E0B",
+    },
+    dayPickerEmpty: {
+      gap: 10,
+      padding: 14,
+      borderRadius: 14,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: theme.foreground.gray + "20",
+      backgroundColor: theme.background.darker,
+    },
+    dayPickerEmptyText: {
+      fontSize: 13,
+      fontFamily: FONTS.medium,
+      color: theme.foreground.gray,
+    },
+    dayPickerCta: {
+      alignSelf: "flex-start",
+      paddingVertical: 8,
+      paddingHorizontal: 14,
+      borderRadius: 12,
+      backgroundColor: theme.primary.main,
+    },
+    dayPickerCtaText: {
+      fontSize: 13,
+      fontFamily: FONTS.bold,
+      color: theme.background.dark,
     },
 
     // ── Exercises section header

@@ -4,48 +4,15 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { CreateMealDto } from './dto/create-meal.dto';
 import { UpdateGoalsDto } from './dto/update-goals.dto';
 import { UpsertDailyDto } from './dto/upsert-daily.dto';
+import { RecordFoodHistoryDto } from './dto/record-food-history.dto';
 import { searchFallbackFoods } from './food-catalog';
+import { FatSecretClient, FatSecretSearchResult } from './fatsecret.client';
 
-interface OFFProduct {
-  product_name?: string;
-  product_name_fr?: string;
-  product_name_en?: string;
-  code?: string;
-  nutriments?: {
-    'energy-kcal_100g'?: number;
-    proteins_100g?: number;
-    carbohydrates_100g?: number;
-    fat_100g?: number;
-  };
-}
-
-interface OFFResponse {
-  products: OFFProduct[];
-}
-
-const OFF_MAX_RESULTS = 20;
-const OFF_MAX_RETRIES = 1;
-const OFF_TIMEOUT_MS = 4000;
+const DEFAULT_PAGE_SIZE = 20;
+const MAX_PAGE_SIZE = 50;
 
 function genId(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-}
-
-function safeNum(v: unknown): number {
-  const n = Number(v);
-  return Number.isFinite(n) && n >= 0 ? n : 0;
-}
-
-function offName(p: OFFProduct, lang: 'fr' | 'en'): string {
-  if (lang === 'fr') return p.product_name_fr || p.product_name || p.product_name_en || '';
-  return p.product_name_en || p.product_name || p.product_name_fr || '';
-}
-
-function offIsValid(p: OFFProduct): boolean {
-  if (!p.product_name && !p.product_name_fr && !p.product_name_en) return false;
-  if (!p.nutriments) return false;
-  if (safeNum(p.nutriments['energy-kcal_100g']) === 0) return false;
-  return true;
 }
 
 @Injectable()
@@ -53,7 +20,10 @@ export class NutritionService {
   private readonly logger = new Logger(NutritionService.name);
   private supabase: SupabaseClient;
 
-  constructor(config: ConfigService) {
+  constructor(
+    config: ConfigService,
+    private readonly fatSecret: FatSecretClient,
+  ) {
     this.supabase = createClient(
       config.get<string>('SUPABASE_URL')!,
       config.get<string>('SUPABASE_SERVICE_ROLE_KEY')!,
@@ -272,77 +242,106 @@ export class NutritionService {
     return data;
   }
 
-  // ── Open Food Facts proxy ──────────────────────────────────────────────
+  // ── Food search (FatSecret proxy with fallback catalog) ────────────────
 
-  async searchFood(q: string, lang: 'fr' | 'en' = 'fr') {
+  async searchFood(
+    q: string,
+    lang: 'fr' | 'en' = 'fr',
+    page = 0,
+    pageSize = DEFAULT_PAGE_SIZE,
+  ): Promise<FatSecretSearchResult> {
     const trimmed = (q || '').trim();
-    if (!trimmed) return [];
+    if (!trimmed) return { items: [], hasMore: false, nextPage: null };
 
-    const remoteResults = await this.searchFoodViaOpenFoodFacts(trimmed, lang);
-    if (remoteResults.length > 0) return remoteResults;
+    const safePage = Math.max(0, Math.floor(page));
+    const safeSize = Math.min(MAX_PAGE_SIZE, Math.max(1, Math.floor(pageSize)));
 
-    return searchFallbackFoods(trimmed, lang);
-  }
-
-  private async searchFoodViaOpenFoodFacts(
-    trimmed: string,
-    lang: 'fr' | 'en',
-  ) {
-    for (let attempt = 1; attempt <= OFF_MAX_RETRIES + 1; attempt++) {
+    if (this.fatSecret.isConfigured()) {
       try {
-        const url =
-          `https://world.openfoodfacts.org/cgi/search.pl` +
-          `?search_terms=${encodeURIComponent(trimmed)}` +
-          `&search_simple=1&json=1&page_size=25&lc=${lang}` +
-          `&fields=code,product_name,product_name_fr,product_name_en,nutriments` +
-          `&app_name=HylftApp&app_version=1.0&app_platform=server`;
-
-        const controller = new AbortController();
-        const tid = setTimeout(() => controller.abort(), OFF_TIMEOUT_MS);
-        const res = await fetch(url, {
-          signal: controller.signal,
-          headers: {
-            Accept: 'application/json',
-            'User-Agent': 'HylftApp/1.0 (+https://hylft.app)',
-          },
+        const result = await this.fatSecret.searchFoods({
+          query: trimmed,
+          page: safePage,
+          pageSize: safeSize,
+          lang,
         });
-        clearTimeout(tid);
-
-        if ((res.status === 503 || res.status === 429) && attempt <= OFF_MAX_RETRIES) {
-          await new Promise((r) => setTimeout(r, 750 * attempt));
-          continue;
-        }
-        if (!res.ok) throw new Error(`OFF error: ${res.status}`);
-
-        const data = (await res.json()) as OFFResponse;
-        if (!Array.isArray(data.products)) return [];
-
-        const results = data.products
-          .filter(offIsValid)
-          .slice(0, OFF_MAX_RESULTS)
-          .map((p, i) => ({
-            id: p.code || `off-${i}-${Date.now()}`,
-            name: offName(p, lang) || 'Unknown',
-            calories: safeNum(p.nutriments?.['energy-kcal_100g']),
-            protein: safeNum(p.nutriments?.proteins_100g),
-            carbs: safeNum(p.nutriments?.carbohydrates_100g),
-            fat: safeNum(p.nutriments?.fat_100g),
-          }))
-          .filter((it) => it.name !== 'Unknown');
-
-        if (results.length > 0) return results;
+        if (result.items.length > 0) return result;
       } catch (error) {
-        if (attempt <= OFF_MAX_RETRIES) {
-          await new Promise((r) => setTimeout(r, 750 * attempt));
-          continue;
-        }
         this.logger.warn(
-          `OFF search failed for "${trimmed}" (${lang}), using fallback catalog`,
-          error instanceof Error ? error.message : String(error),
+          `FatSecret search failed for "${trimmed}" (${lang}), using fallback catalog: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
         );
-        return [];
       }
     }
-    return [];
+
+    // Last-resort fallback: hardcoded catalog (only on the first page).
+    if (safePage > 0) return { items: [], hasMore: false, nextPage: null };
+    const items = searchFallbackFoods(trimmed, lang).map((f) => ({
+      id: f.id,
+      name: f.name,
+      imageUrl: undefined,
+      calories: f.calories,
+      protein: f.protein,
+      carbs: f.carbs,
+      fat: f.fat,
+    }));
+    return { items, hasMore: false, nextPage: null };
+  }
+
+  // ── Food selection history ─────────────────────────────────────────────
+
+  async getFoodHistory(userId: string, limit = 20) {
+    const safeLimit = Math.min(50, Math.max(1, Math.floor(limit)));
+    const { data, error } = await this.supabase
+      .from('food_history')
+      .select('*')
+      .eq('user_id', userId)
+      .order('last_used_at', { ascending: false })
+      .limit(safeLimit);
+
+    if (error) throw error;
+    return (data ?? []).map((row: any) => ({
+      id: row.food_id,
+      name: row.food_name,
+      imageUrl: row.image_url || undefined,
+      calories: Number(row.calories) || 0,
+      protein: Number(row.protein) || 0,
+      carbs: Number(row.carbs) || 0,
+      fat: Number(row.fat) || 0,
+      useCount: Number(row.use_count) || 0,
+      lastUsedAt: row.last_used_at,
+    }));
+  }
+
+  async recordFoodSelection(userId: string, dto: RecordFoodHistoryDto) {
+    // Try increment-on-conflict via upsert. We use ignoreDuplicates: false
+    // to update last_used_at + bump use_count.
+    const { data: existing } = await this.supabase
+      .from('food_history')
+      .select('use_count')
+      .eq('user_id', userId)
+      .eq('food_id', dto.food_id)
+      .maybeSingle();
+
+    const useCount = (existing?.use_count ?? 0) + 1;
+
+    const { error } = await this.supabase.from('food_history').upsert(
+      {
+        user_id: userId,
+        food_id: dto.food_id,
+        food_name: dto.food_name,
+        image_url: dto.image_url ?? null,
+        calories: dto.calories ?? 0,
+        protein: dto.protein ?? 0,
+        carbs: dto.carbs ?? 0,
+        fat: dto.fat ?? 0,
+        use_count: useCount,
+        last_used_at: new Date().toISOString(),
+      },
+      { onConflict: 'user_id,food_id' },
+    );
+
+    if (error) throw error;
+    return { ok: true, useCount };
   }
 }

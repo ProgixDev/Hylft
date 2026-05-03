@@ -20,17 +20,42 @@ import { CreateMealDto } from './dto/create-meal.dto';
 import { UpdateGoalsDto } from './dto/update-goals.dto';
 import { UpsertDailyDto } from './dto/upsert-daily.dto';
 import { SearchFoodQueryDto } from './dto/search-food-query.dto';
+import { RecordFoodHistoryDto } from './dto/record-food-history.dto';
 
 @Controller('nutrition')
 @UseGuards(SupabaseJwtGuard)
 export class NutritionController {
   constructor(private readonly nutritionService: NutritionService) {}
 
-  // ── Food search proxy (Open Food Facts) ────────────────────────────────
+  // ── Food search proxy (FatSecret) ──────────────────────────────────────
 
   @Get('search')
   searchFood(@Query() query: SearchFoodQueryDto) {
-    return this.nutritionService.searchFood(query.q, query.lang ?? 'fr');
+    return this.nutritionService.searchFood(
+      query.q,
+      query.lang ?? 'fr',
+      query.page ?? 0,
+      query.pageSize ?? 20,
+    );
+  }
+
+  // ── Food selection history ─────────────────────────────────────────────
+
+  @Get('food-history')
+  getFoodHistory(
+    @CurrentUser() user: AuthUser,
+    @Query('limit') limit?: string,
+  ) {
+    const parsed = limit ? Number(limit) : 20;
+    return this.nutritionService.getFoodHistory(user.id, parsed);
+  }
+
+  @Post('food-history')
+  recordFoodSelection(
+    @CurrentUser() user: AuthUser,
+    @Body() dto: RecordFoodHistoryDto,
+  ) {
+    return this.nutritionService.recordFoodSelection(user.id, dto);
   }
 
   // ── Meals ──────────────────────────────────────────────────────────────
