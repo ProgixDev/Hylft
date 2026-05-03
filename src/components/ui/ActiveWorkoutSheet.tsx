@@ -516,6 +516,7 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
     if (!activeWorkout) return null;
 
     const canStart = activeWorkout.exercises.length > 0;
+    const isEmptyWorkout = !canStart;
 
     return (
       <>
@@ -564,7 +565,10 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
           </View>
 
           <BottomSheetScrollView
-            contentContainerStyle={styles.scrollContent}
+            contentContainerStyle={[
+              styles.scrollContent,
+              isEmptyWorkout && styles.scrollContentInlineActions,
+            ]}
             keyboardShouldPersistTaps="handled"
           >
             {/* ── Stats ──────────────────────────────────────────────────── */}
@@ -671,34 +675,66 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
                 {t("workout.addExercise")}
               </Text>
             </TouchableOpacity>
+
+            {isEmptyWorkout && (
+              <TouchableOpacity
+                activeOpacity={0.85}
+                disabled={!canStart}
+                onPress={handleStartSession}
+                style={[
+                  styles.inlineStartBtn,
+                  !canStart && styles.floatingStartBtnDisabled,
+                ]}
+              >
+                <Ionicons
+                  name="play"
+                  size={20}
+                  color={
+                    canStart ? theme.background.dark : theme.foreground.gray
+                  }
+                />
+                <Text
+                  style={[
+                    styles.floatingStartText,
+                    !canStart && { color: theme.foreground.gray },
+                  ]}
+                >
+                  {t("workout.start")}
+                </Text>
+              </TouchableOpacity>
+            )}
           </BottomSheetScrollView>
 
           {/* ── Floating Start Session button ──────────────────────────── */}
-          <View pointerEvents="box-none" style={styles.floatingStartWrap}>
-            <TouchableOpacity
-              activeOpacity={0.85}
-              disabled={!canStart}
-              onPress={handleStartSession}
-              style={[
-                styles.floatingStartBtn,
-                !canStart && styles.floatingStartBtnDisabled,
-              ]}
-            >
-              <Ionicons
-                name="play"
-                size={20}
-                color={canStart ? theme.background.dark : theme.foreground.gray}
-              />
-              <Text
+          {!isEmptyWorkout && (
+            <View pointerEvents="box-none" style={styles.floatingStartWrap}>
+              <TouchableOpacity
+                activeOpacity={0.85}
+                disabled={!canStart}
+                onPress={handleStartSession}
                 style={[
-                  styles.floatingStartText,
-                  !canStart && { color: theme.foreground.gray },
+                  styles.floatingStartBtn,
+                  !canStart && styles.floatingStartBtnDisabled,
                 ]}
               >
-                {t("workout.start")}
-              </Text>
-            </TouchableOpacity>
-          </View>
+                <Ionicons
+                  name="play"
+                  size={20}
+                  color={
+                    canStart ? theme.background.dark : theme.foreground.gray
+                  }
+                />
+                <Text
+                  style={[
+                    styles.floatingStartText,
+                    !canStart && { color: theme.foreground.gray },
+                  ]}
+                >
+                  {t("workout.start")}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </BottomSheet>
 
         {/* ── Save workout modal ─────────────────────────────────────────── */}
@@ -809,6 +845,7 @@ const createStyles = (theme: Theme) =>
     headerButtons: { flexDirection: "row", gap: 2 },
     headerButton: { padding: 6 },
     scrollContent: { paddingHorizontal: 16, paddingBottom: 110, gap: 10 },
+    scrollContentInlineActions: { paddingBottom: 28 },
     floatingStartWrap: {
       position: "absolute",
       left: 0,
@@ -822,6 +859,15 @@ const createStyles = (theme: Theme) =>
       borderTopColor: theme.foreground.gray + "30",
     },
     floatingStartBtn: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+      backgroundColor: theme.primary.main,
+      borderRadius: 28,
+      paddingVertical: 16,
+    },
+    inlineStartBtn: {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
