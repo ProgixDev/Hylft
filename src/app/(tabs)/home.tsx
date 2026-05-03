@@ -1097,8 +1097,8 @@ export default function Home() {
                       <Text style={styles.healthTilePercent}>{percent}%</Text>
                     </View>
                     <Text style={styles.healthTileValue}>
-                      {item.goal >= 10000
-                        ? `${(item.value / 1000).toFixed(1)}k`
+                      {item.unit === ""
+                        ? Math.round(item.value).toLocaleString()
                         : Number.isInteger(item.value)
                           ? Math.round(item.value)
                           : item.value.toFixed(1)}
@@ -1106,7 +1106,9 @@ export default function Home() {
                     <Text style={styles.healthTileLabel}>{item.label}</Text>
                     <Text style={styles.healthTileGoal}>
                       /{" "}
-                      {item.goal >= 10000 ? `${item.goal / 1000}k` : item.goal}{" "}
+                      {item.unit === ""
+                        ? item.goal.toLocaleString()
+                        : item.goal}{" "}
                       {item.unit}
                     </Text>
                   </LinearGradient>

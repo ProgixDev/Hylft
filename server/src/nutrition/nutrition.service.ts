@@ -5,6 +5,10 @@ import { CreateMealDto } from './dto/create-meal.dto';
 import { UpdateGoalsDto } from './dto/update-goals.dto';
 import { UpsertDailyDto } from './dto/upsert-daily.dto';
 import { RecordFoodHistoryDto } from './dto/record-food-history.dto';
+import {
+  ageFromDateOfBirth,
+  computeNutritionGoals,
+} from './nutrition.utils';
 
 function genId(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
@@ -206,15 +210,29 @@ export class NutritionService {
       .maybeSingle();
 
     if (error) throw error;
-    return (
-      data ?? {
-        user_id: userId,
-        calorie_goal: 2200,
-        protein_goal: 150,
-        carbs_goal: 250,
-        fat_goal: 70,
-      }
-    );
+    if (data) return data;
+
+    // No goals row yet — derive a personalized target from the user profile
+    // so KPIs reflect real numbers instead of a generic 2200 kcal default.
+    const { data: profile } = await this.supabase
+      .from('user_profiles')
+      .select(
+        'height_cm, weight_kg, date_of_birth, gender, fitness_goal, workout_frequency, experience_level',
+      )
+      .eq('id', userId)
+      .maybeSingle();
+
+    const computed = computeNutritionGoals({
+      weightKg: profile?.weight_kg,
+      heightCm: profile?.height_cm,
+      age: ageFromDateOfBirth(profile?.date_of_birth),
+      gender: profile?.gender,
+      workoutFrequency: profile?.workout_frequency,
+      activityLevel: profile?.experience_level,
+      weightGoal: profile?.fitness_goal,
+    });
+
+    return { user_id: userId, ...computed };
   }
 
   async updateGoals(userId: string, dto: UpdateGoalsDto) {

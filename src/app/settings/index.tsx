@@ -14,6 +14,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { Theme, ThemeType } from "../../constants/themes";
 import { useAuth } from "../../contexts/AuthContext";
+import { useHealth } from "../../contexts/HealthContext";
 import { useI18n } from "../../contexts/I18nContext";
 import { useTheme } from "../../contexts/ThemeContext";
 
@@ -308,6 +309,14 @@ export default function Settings() {
   const router = useRouter();
   const { theme, themeType, setTheme } = useTheme();
   const styles = createStyles(theme);
+  const {
+    isAvailable: healthAvailable,
+    isPermissionGranted: healthGranted,
+    initialize: healthInitialize,
+    requestPermissions: healthRequestPermissions,
+    refreshData: healthRefreshData,
+  } = useHealth();
+  const [healthBusy, setHealthBusy] = useState(false);
 
   // ── Preferences state ────────────────────────────────────────────────────────
   const [weightUnit, setWeightUnit] = useState<"kg" | "lbs">("kg");
@@ -369,10 +378,55 @@ export default function Settings() {
     setPrivateAccount(v);
     save(KEYS.privateAccount, String(v));
   };
-  const toggleHealth = (v: boolean) => {
-    setHealthConnect(v);
-    save(KEYS.healthConnect, String(v));
+  const toggleHealth = async (v: boolean) => {
+    if (healthBusy) return;
+    if (v) {
+      setHealthBusy(true);
+      try {
+        const available = healthAvailable || (await healthInitialize());
+        if (!available) {
+          Alert.alert(
+            t("settings.healthConnect"),
+            t(
+              "settings.healthConnectUnavailable",
+              "Health Connect (Android) ou Apple Health (iOS) n'est pas disponible sur cet appareil.",
+            ),
+          );
+          setHealthConnect(false);
+          save(KEYS.healthConnect, "false");
+          return;
+        }
+        const granted =
+          healthGranted || (await healthRequestPermissions());
+        if (granted) {
+          await healthRefreshData();
+          setHealthConnect(true);
+          save(KEYS.healthConnect, "true");
+        } else {
+          setHealthConnect(false);
+          save(KEYS.healthConnect, "false");
+        }
+      } finally {
+        setHealthBusy(false);
+      }
+    } else {
+      // We can't programmatically revoke HC/HK permissions — guide the user.
+      setHealthConnect(false);
+      save(KEYS.healthConnect, "false");
+      Alert.alert(
+        t("settings.healthConnect"),
+        t(
+          "settings.healthConnectRevokeHint",
+          "Pour retirer l'accès, ouvrez les paramètres système de Health Connect / Santé.",
+        ),
+      );
+    }
   };
+
+  // Keep the local toggle in sync with the actual permission state
+  useEffect(() => {
+    setHealthConnect(healthAvailable && healthGranted);
+  }, [healthAvailable, healthGranted]);
   const changeWeightUnit = (v: "kg" | "lbs") => {
     setWeightUnit(v);
     save(KEYS.weightUnit, v);
@@ -704,6 +758,7 @@ export default function Settings() {
               <Switch
                 value={healthConnect}
                 onValueChange={toggleHealth}
+                disabled={healthBusy}
                 thumbColor={switchThumb}
                 trackColor={{ false: "#3a3a3a", true: switchTrackOn }}
               />

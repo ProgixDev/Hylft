@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { View } from "react-native";
 import { CustomTabBar } from "../../components/layout/CustomTabBar";
 import ActiveWorkoutSheet from "../../components/ui/ActiveWorkoutSheet";
+import HealthConnectPromptModal from "../../components/ui/HealthConnectPromptModal";
 import { MiniWorkoutPlayer } from "../../components/ui/MiniWorkoutPlayer";
 import { useActiveWorkout } from "../../contexts/ActiveWorkoutContext";
 
@@ -83,6 +84,8 @@ function TabsLayoutContent() {
           />
         )}
       </View>
+
+      <HealthConnectPromptModal />
     </View>
   );
 }
