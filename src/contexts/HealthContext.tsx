@@ -12,12 +12,30 @@ import React, {
   useMemo,
   useState,
 } from "react";
+import { api } from "../services/api";
 import {
   DailyCaloriesBurned,
   DailySteps,
   HealthService,
   WorkoutSession,
 } from "../services/healthService";
+
+interface ServerWorkout {
+  id: string;
+  date: string;
+  duration_minutes: number;
+  calories_burned: number;
+  source?: string;
+  name?: string;
+}
+
+interface DailyHealthSnapshot {
+  steps: number;
+  calories_burned: number;
+  active_minutes: number;
+  distance_km?: number;
+  water_ml?: number;
+}
 
 // ── Types ──────────────────────────────────────────────────────────────────
 interface HealthContextType {
@@ -26,10 +44,18 @@ interface HealthContextType {
   isPermissionGranted: boolean;
   isLoading: boolean;
 
-  // Today's data
+  // Today's data (from device health platform)
   todaySteps: number;
   todayCaloriesBurned: number;
   todayWorkouts: WorkoutSession[];
+
+  // Today's data (from server)
+  todayServerWorkouts: ServerWorkout[];
+  todayServerSnapshot: DailyHealthSnapshot | null;
+  /** kcal burned today from manually-logged workouts on server */
+  todayManualCalories: number;
+  /** Active minutes today: max(server snapshot, sum of server workouts) */
+  todayActiveMinutes: number;
 
   // Weekly data
   weeklySteps: DailySteps[];
@@ -82,6 +108,9 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
   const [todaySteps, setTodaySteps] = useState(0);
   const [todayCaloriesBurned, setTodayCaloriesBurned] = useState(0);
   const [todayWorkouts, setTodayWorkouts] = useState<WorkoutSession[]>([]);
+  const [todayServerWorkouts, setTodayServerWorkouts] = useState<ServerWorkout[]>([]);
+  const [todayServerSnapshot, setTodayServerSnapshot] =
+    useState<DailyHealthSnapshot | null>(null);
 
   const [weeklySteps, setWeeklySteps] = useState<DailySteps[]>([]);
   const [weeklyCaloriesBurned, setWeeklyCaloriesBurned] = useState<
@@ -164,8 +193,33 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // ── Refresh today's data ───────────────────────────────────────────────
+  // ── Fetch today's server data (workouts + snapshot) ───────────────────
+  const refreshServerToday = useCallback(async () => {
+    const todayStr = new Date().toISOString().split("T")[0];
+    try {
+      const [workoutsRes, snapshotRes] = await Promise.allSettled([
+        api.getWorkouts(todayStr),
+        api.getHealthSnapshot(todayStr),
+      ]);
+      if (workoutsRes.status === "fulfilled") {
+        const list = Array.isArray(workoutsRes.value)
+          ? (workoutsRes.value as ServerWorkout[])
+          : ((workoutsRes.value as any)?.items as ServerWorkout[]) ?? [];
+        setTodayServerWorkouts(list);
+      }
+      if (snapshotRes.status === "fulfilled" && snapshotRes.value) {
+        setTodayServerSnapshot(snapshotRes.value as DailyHealthSnapshot);
+      }
+    } catch (error) {
+      console.warn("[HealthContext] Server today refresh failed:", error);
+    }
+  }, []);
+
+  // ── Refresh today's data from device + server ────────────────────────
   const refreshToday = useCallback(async () => {
+    // Always refresh server-side today data, regardless of HC/HK permission
+    await refreshServerToday();
+
     if (!isAvailable || !isPermissionGranted) return;
 
     try {
@@ -182,13 +236,35 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
         (s, d) => s + d.totalCalories,
         0
       );
+      const activeMinutes = workouts.reduce(
+        (m, w) => m + (w.durationMinutes || 0),
+        0
+      );
 
       setTodaySteps(totalSteps);
       setTodayCaloriesBurned(totalCalories);
       setTodayWorkouts(workouts);
 
-      // Cache
+      // Persist to server snapshot so /health/snapshots stays current.
       const todayStr = new Date().toISOString().split("T")[0];
+      try {
+        await api.upsertHealthSnapshot({
+          date: todayStr,
+          steps: totalSteps,
+          calories_burned: Math.round(totalCalories),
+          active_minutes: activeMinutes,
+        });
+        setTodayServerSnapshot((prev) => ({
+          ...(prev || { steps: 0, calories_burned: 0, active_minutes: 0 }),
+          steps: totalSteps,
+          calories_burned: Math.round(totalCalories),
+          active_minutes: activeMinutes,
+        }));
+      } catch (e) {
+        console.warn("[HealthContext] Snapshot upsert failed:", e);
+      }
+
+      // Cache
       AsyncStorage.setItem(
         STORAGE_KEYS.todayCache,
         JSON.stringify({
@@ -201,7 +277,7 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.warn("[HealthContext] Refresh today failed:", error);
     }
-  }, [isAvailable, isPermissionGranted]);
+  }, [isAvailable, isPermissionGranted, refreshServerToday]);
 
   // ── Refresh full week data ─────────────────────────────────────────────
   const refreshData = useCallback(async () => {
@@ -247,6 +323,32 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [isAvailable, isPermissionGranted, refreshData]);
 
+  // ── Fetch server-side today data on mount (works without HC/HK) ───────
+  useEffect(() => {
+    void refreshServerToday();
+  }, [refreshServerToday]);
+
+  // ── Derived: manual workout calories + active minutes today ───────────
+  const todayManualCalories = useMemo(() => {
+    return todayServerWorkouts.reduce(
+      (sum, w) => sum + (w.calories_burned || 0),
+      0,
+    );
+  }, [todayServerWorkouts]);
+
+  const todayActiveMinutes = useMemo(() => {
+    const fromServerWorkouts = todayServerWorkouts.reduce(
+      (m, w) => m + (w.duration_minutes || 0),
+      0,
+    );
+    const fromDeviceWorkouts = todayWorkouts.reduce(
+      (m, w) => m + (w.durationMinutes || 0),
+      0,
+    );
+    const fromSnapshot = todayServerSnapshot?.active_minutes || 0;
+    return Math.max(fromServerWorkouts, fromDeviceWorkouts, fromSnapshot);
+  }, [todayServerWorkouts, todayWorkouts, todayServerSnapshot]);
+
   const value = useMemo(
     () => ({
       isAvailable,
@@ -255,6 +357,10 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
       todaySteps,
       todayCaloriesBurned,
       todayWorkouts,
+      todayServerWorkouts,
+      todayServerSnapshot,
+      todayManualCalories,
+      todayActiveMinutes,
       weeklySteps,
       weeklyCaloriesBurned,
       weeklyWorkouts,
@@ -270,6 +376,10 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
       todaySteps,
       todayCaloriesBurned,
       todayWorkouts,
+      todayServerWorkouts,
+      todayServerSnapshot,
+      todayManualCalories,
+      todayActiveMinutes,
       weeklySteps,
       weeklyCaloriesBurned,
       weeklyWorkouts,

@@ -13,6 +13,17 @@ import { UpdateProfileDto } from './dto/update-profile.dto';
 const AVATARS_BUCKET = 'avatars';
 const ALLOWED_AVATAR_EXTS = ['jpg', 'jpeg', 'png', 'webp', 'heic'] as const;
 
+function withDerivedFields<T extends Record<string, any>>(profile: T): T & { bmi: number | null } {
+  const h = Number(profile?.height_cm);
+  const w = Number(profile?.weight_kg);
+  let bmi: number | null = null;
+  if (h > 0 && w > 0) {
+    const m = h / 100;
+    bmi = +(w / (m * m)).toFixed(1);
+  }
+  return { ...profile, bmi };
+}
+
 @Injectable()
 export class UsersService {
   private supabase: SupabaseClient;
@@ -37,7 +48,7 @@ export class UsersService {
       if (error.code === 'PGRST116') throw new NotFoundException('Profile not found');
       throw error;
     }
-    return data;
+    return withDerivedFields(data);
   }
 
   async createProfile(userId: string, dto: CreateProfileDto) {
@@ -51,7 +62,7 @@ export class UsersService {
       if (error.code === '23505') throw new ConflictException('Username already taken');
       throw error;
     }
-    return data;
+    return withDerivedFields(data);
   }
 
   async updateProfile(userId: string, dto: UpdateProfileDto) {
@@ -68,7 +79,7 @@ export class UsersService {
       if (error.code === '23505') throw new ConflictException('Username already taken');
       throw error;
     }
-    return data;
+    return withDerivedFields(data);
   }
 
   // Case-insensitive prefix/substring search across username + display_name.
@@ -295,6 +306,6 @@ export class UsersService {
       if (error.code === 'PGRST116') throw new NotFoundException('Profile not found');
       throw error;
     }
-    return data;
+    return withDerivedFields(data);
   }
 }

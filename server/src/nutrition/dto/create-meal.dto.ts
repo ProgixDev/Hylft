@@ -16,10 +16,14 @@ export class CreateMealDto {
 
   @IsString()
   @IsOptional()
-  food_id?: string; // Open Food Facts barcode
+  food_id?: string; // FatSecret food id (or fallback id)
 
   @IsString()
   food_name: string;
+
+  @IsString()
+  @IsOptional()
+  image_url?: string;
 
   @IsNumber()
   @Min(0)

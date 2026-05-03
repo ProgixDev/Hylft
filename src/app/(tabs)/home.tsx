@@ -265,7 +265,13 @@ export default function Home() {
   const { theme, themeType } = useTheme();
   const { t } = useTranslation();
   const { goals, todaySummary } = useNutrition();
-  const { todaySteps, todayCaloriesBurned } = useHealth();
+  const {
+    todaySteps,
+    todayCaloriesBurned,
+    todayManualCalories,
+    todayActiveMinutes,
+    refreshToday: refreshHealthToday,
+  } = useHealth();
   const { user } = useAuth();
   const { startGuidedRoutine } = useActiveWorkout();
   const genderedImages = useGenderedImages();
@@ -284,6 +290,13 @@ export default function Home() {
 
   const now = new Date();
   const todayDayIndex = (now.getDay() + 6) % 7; // Convert Sun=0 to Mon=0 based
+
+  // Refresh today's health KPIs whenever the home tab gains focus
+  useFocusEffect(
+    useCallback(() => {
+      void refreshHealthToday();
+    }, [refreshHealthToday]),
+  );
 
   useFocusEffect(
     useCallback(() => {
@@ -508,7 +521,11 @@ export default function Home() {
 
   // ── Derived calorie data from contexts ─────────────────────────────────
   const caloriesConsumed = todaySummary.totalCalories;
-  const caloriesBurned = todayCaloriesBurned;
+  // Combine HC/HK reading with manual workout calories. If HC/HK already
+  // captured the workout (often the case on Android Health Connect since the
+  // workout was logged via the API), it will return the larger value, so
+  // taking the max avoids double counting.
+  const caloriesBurned = Math.max(todayCaloriesBurned, todayManualCalories);
 
   const macros = useMemo(
     () => ({
@@ -1040,7 +1057,7 @@ export default function Home() {
               gradient: ["rgba(0,0,0,0.4)", "rgba(0,0,0,0.6)"] as const,
               image: genderedImages.health.activity,
               label: t("home.activity", "Activité"),
-              value: 45,
+              value: todayActiveMinutes,
               goal: 60,
               unit: "min",
             },
@@ -1082,7 +1099,9 @@ export default function Home() {
                     <Text style={styles.healthTileValue}>
                       {item.goal >= 10000
                         ? `${(item.value / 1000).toFixed(1)}k`
-                        : Math.round(item.value)}
+                        : Number.isInteger(item.value)
+                          ? Math.round(item.value)
+                          : item.value.toFixed(1)}
                     </Text>
                     <Text style={styles.healthTileLabel}>{item.label}</Text>
                     <Text style={styles.healthTileGoal}>

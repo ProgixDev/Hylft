@@ -2,12 +2,31 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Session, User } from "@supabase/supabase-js";
 import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { api } from "../services/api";
+import { clearAllCachedHistory } from "../services/foodHistoryCache";
 import { supabase } from "../services/supabase";
+
+export interface UserProfile {
+  id: string;
+  username?: string | null;
+  display_name?: string | null;
+  height_cm?: number | null;
+  weight_kg?: number | null;
+  target_weight_kg?: number | null;
+  date_of_birth?: string | null;
+  gender?: string | null;
+  fitness_goal?: string | null;
+  experience_level?: string | null;
+  workout_frequency?: number | null;
+  bmi?: number | null;
+  [key: string]: any;
+}
 
 interface AuthContextType {
   session: Session | null;
   user: User | null;
+  userProfile: UserProfile | null;
   isLoading: boolean;
   signUp: (
     email: string,
@@ -21,6 +40,7 @@ interface AuthContextType {
   setOnboardingCompleted: () => Promise<void>;
   hasCompletedGetStarted: (userId?: string) => Promise<boolean>;
   setGetStartedCompleted: (userId?: string) => Promise<void>;
+  refreshUserProfile: () => Promise<UserProfile | null>;
 }
 
 const ONBOARDING_KEY = "@hylift_onboarding_completed";
@@ -33,7 +53,56 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const hydrateAsyncStorageFromProfile = async (profile: UserProfile) => {
+    const writes: Array<[string, string]> = [];
+    if (profile.height_cm != null)
+      writes.push(["@hylift_height", String(profile.height_cm)]);
+    if (profile.weight_kg != null) {
+      writes.push(["@hylift_weight", String(profile.weight_kg)]);
+      writes.push(["@hylift_food_weight_current", String(profile.weight_kg)]);
+    }
+    if (profile.target_weight_kg != null) {
+      writes.push([
+        "@hylift_food_weight_target",
+        String(profile.target_weight_kg),
+      ]);
+    }
+    if (profile.gender) writes.push(["@hylift_gender", profile.gender]);
+    if (profile.date_of_birth) {
+      const dob = new Date(profile.date_of_birth);
+      if (!Number.isNaN(dob.getTime())) {
+        const age = Math.floor(
+          (Date.now() - dob.getTime()) / (365.25 * 24 * 3600 * 1000),
+        );
+        writes.push(["@hylift_age", String(age)]);
+      }
+    }
+    if (writes.length > 0) await AsyncStorage.multiSet(writes);
+  };
+
+  const refreshUserProfile = useCallback(async (): Promise<UserProfile | null> => {
+    if (!session) return null;
+    try {
+      const profile = (await api.getProfile()) as UserProfile;
+      setUserProfile(profile);
+      await hydrateAsyncStorageFromProfile(profile);
+      return profile;
+    } catch (err) {
+      console.warn("[Auth] Failed to load user profile", err);
+      return null;
+    }
+  }, [session]);
+
+  useEffect(() => {
+    if (session) {
+      void refreshUserProfile();
+    } else {
+      setUserProfile(null);
+    }
+  }, [session, refreshUserProfile]);
 
   const clearLocalAuthState = async () => {
     // Keep this scoped to Supabase auth keys so we do not wipe unrelated app data.
@@ -148,6 +217,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    await clearAllCachedHistory();
   };
 
   const hasCompletedOnboarding = async () => {
@@ -267,6 +337,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         onboarding_completed: true,
       });
       if (error) throw error;
+      void refreshUserProfile();
     } catch (error) {
       console.error(
         "[Auth] Failed to mark onboarding complete or save profile",
@@ -281,6 +352,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       value={{
         session,
         user: session?.user ?? null,
+        userProfile,
         isLoading,
         signUp,
         signIn,
@@ -290,6 +362,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setOnboardingCompleted,
         hasCompletedGetStarted,
         setGetStartedCompleted,
+        refreshUserProfile,
       }}
     >
       {children}
@@ -304,6 +377,7 @@ export const useAuth = () => {
   return {
     session: null,
     user: null,
+    userProfile: null,
     isLoading: true,
     signUp: async () => null,
     signIn: async () => {},
@@ -313,5 +387,6 @@ export const useAuth = () => {
     setOnboardingCompleted: async () => {},
     hasCompletedGetStarted: async () => false,
     setGetStartedCompleted: async () => {},
+    refreshUserProfile: async () => null,
   };
 };

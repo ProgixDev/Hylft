@@ -1,5 +1,6 @@
 import { Platform } from "react-native";
 import { supabase } from "./supabase";
+import { getFoodByCodeOFF, searchFoodsOFF } from "./openFoodFactsApi";
 
 // Primary source: EXPO_PUBLIC_API_BASE_URL from `.env` (Expo injects this at
 // build time). When unset, fall back to sensible dev/prod defaults so the
@@ -72,20 +73,15 @@ export const api = {
   listWallpapers: () => authFetch("/wallpapers"),
 
   // ── Nutrition / Alimentation ────────────────────────────
+  // Food search and detail lookup hit Open Food Facts directly from the
+  // device — no auth needed, one less hop than going through our server.
   searchFood: (
     q: string,
     lang: "fr" | "en" = "fr",
     page = 0,
     pageSize = 20,
-  ) => {
-    const qs = new URLSearchParams({
-      q,
-      lang,
-      page: String(page),
-      pageSize: String(pageSize),
-    });
-    return authFetch(`/nutrition/search?${qs.toString()}`);
-  },
+  ) => searchFoodsOFF(q, lang, page, pageSize),
+  getFoodDetails: (id: string) => getFoodByCodeOFF(id, "fr"),
   getFoodHistory: (limit = 20) =>
     authFetch(`/nutrition/food-history?limit=${limit}`),
   recordFoodSelection: (data: {

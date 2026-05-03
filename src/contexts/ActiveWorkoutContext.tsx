@@ -9,6 +9,9 @@ import React, {
 } from "react";
 import { Routine, RoutineExercise } from "../data/mockData";
 import { api } from "../services/api";
+import { estimateCaloriesBurned } from "../utils/calorieEstimator";
+import { useAuth } from "./AuthContext";
+import { useHealth } from "./HealthContext";
 
 export interface ExerciseSet {
   id: string;
@@ -120,6 +123,8 @@ interface ActiveWorkoutProviderProps {
 export const ActiveWorkoutProvider: React.FC<ActiveWorkoutProviderProps> = ({
   children,
 }) => {
+  const { userProfile } = useAuth();
+  const { refreshToday: refreshHealthToday } = useHealth();
   const [activeWorkout, setActiveWorkout] = useState<ActiveWorkout | null>(
     null,
   );
@@ -194,6 +199,11 @@ export const ActiveWorkoutProvider: React.FC<ActiveWorkoutProviderProps> = ({
     );
 
     const today = new Date().toISOString().split("T")[0];
+    const calories = estimateCaloriesBurned({
+      workoutType: "strength",
+      durationSeconds: activeWorkout.duration,
+      weightKg: userProfile?.weight_kg ?? null,
+    });
 
     try {
       await api.addWorkout({
@@ -203,7 +213,7 @@ export const ActiveWorkoutProvider: React.FC<ActiveWorkoutProviderProps> = ({
         start_time: new Date(startTimeRef.current).toISOString(),
         end_time: new Date().toISOString(),
         duration_minutes: Math.round(activeWorkout.duration / 60),
-        calories_burned: Math.round(activeWorkout.duration * 0.1), // rough estimate
+        calories_burned: calories,
         source: "manual",
         exercises: activeWorkout.exercises.map((ex) => ({
           name: ex.name,
@@ -215,6 +225,7 @@ export const ActiveWorkoutProvider: React.FC<ActiveWorkoutProviderProps> = ({
         })),
         notes: `Volume: ${Math.round(totalVolume)}kg | Sets: ${completedSets}`,
       });
+      void refreshHealthToday();
     } catch (error) {
       console.warn("[ActiveWorkout] Save to server failed:", error);
     }
@@ -222,7 +233,7 @@ export const ActiveWorkoutProvider: React.FC<ActiveWorkoutProviderProps> = ({
     setActiveWorkout(null);
     setIsExpanded(false);
     setIsPaused(false);
-  }, [activeWorkout]);
+  }, [activeWorkout, userProfile, refreshHealthToday]);
 
   // ── Exercise/set management ──────────────────────────────────────────
   const addExerciseToWorkout = useCallback((exercise: any) => {
@@ -473,6 +484,11 @@ export const ActiveWorkoutProvider: React.FC<ActiveWorkoutProviderProps> = ({
           0,
         );
         const today = new Date().toISOString().split("T")[0];
+        const calories = estimateCaloriesBurned({
+          workoutType: "routine",
+          durationSeconds: activeWorkout.duration,
+          weightKg: userProfile?.weight_kg ?? null,
+        });
         try {
           await api.addWorkout({
             name: player.routineName,
@@ -481,7 +497,7 @@ export const ActiveWorkoutProvider: React.FC<ActiveWorkoutProviderProps> = ({
             start_time: new Date(startTimeRef.current).toISOString(),
             end_time: new Date().toISOString(),
             duration_minutes: Math.round(activeWorkout.duration / 60),
-            calories_burned: Math.round(activeWorkout.duration * 0.1),
+            calories_burned: calories,
             source: "routine",
             exercises: player.exercises.map((ex, exIdx) => ({
               name: ex.name,
@@ -504,6 +520,7 @@ export const ActiveWorkoutProvider: React.FC<ActiveWorkoutProviderProps> = ({
         } catch (error) {
           console.warn("[ActiveWorkout] Routine completion increment failed:", error);
         }
+        void refreshHealthToday();
       }
 
       setGuidedPlayer(null);
@@ -511,7 +528,7 @@ export const ActiveWorkoutProvider: React.FC<ActiveWorkoutProviderProps> = ({
       setIsExpanded(false);
       setIsPaused(false);
     },
-    [guidedPlayer, activeWorkout],
+    [guidedPlayer, activeWorkout, userProfile, refreshHealthToday],
   );
 
   return (

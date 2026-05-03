@@ -1,12 +1,29 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { FoodHistoryItem, FoodItem } from "./nutritionApi";
 
-const STORAGE_KEY = "@hylift_food_history_v1";
+const STORAGE_PREFIX = "@hylift_food_history_v2:";
+const LEGACY_KEY = "@hylift_food_history_v1";
 const MAX_ITEMS = 20;
 
-export async function loadCachedHistory(): Promise<FoodHistoryItem[]> {
+const keyFor = (userId?: string | null) =>
+  `${STORAGE_PREFIX}${userId ?? "anon"}`;
+
+// Drop the v1 cache (shared across users + populated by the old FatSecret /
+// OpenFoodFacts API). Safe to call repeatedly — it's a no-op once removed.
+async function dropLegacyCache() {
   try {
-    const raw = await AsyncStorage.getItem(STORAGE_KEY);
+    await AsyncStorage.removeItem(LEGACY_KEY);
+  } catch {
+    /* noop */
+  }
+}
+
+export async function loadCachedHistory(
+  userId?: string | null,
+): Promise<FoodHistoryItem[]> {
+  try {
+    await dropLegacyCache();
+    const raw = await AsyncStorage.getItem(keyFor(userId));
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
@@ -16,10 +33,13 @@ export async function loadCachedHistory(): Promise<FoodHistoryItem[]> {
   }
 }
 
-export async function saveCachedHistory(items: FoodHistoryItem[]): Promise<void> {
+export async function saveCachedHistory(
+  items: FoodHistoryItem[],
+  userId?: string | null,
+): Promise<void> {
   try {
     await AsyncStorage.setItem(
-      STORAGE_KEY,
+      keyFor(userId),
       JSON.stringify(items.slice(0, MAX_ITEMS)),
     );
   } catch {
@@ -28,8 +48,11 @@ export async function saveCachedHistory(items: FoodHistoryItem[]): Promise<void>
 }
 
 // Optimistic update after the user adds a food, before the server round-trip.
-export async function bumpCachedHistory(food: FoodItem): Promise<FoodHistoryItem[]> {
-  const current = await loadCachedHistory();
+export async function bumpCachedHistory(
+  food: FoodItem,
+  userId?: string | null,
+): Promise<FoodHistoryItem[]> {
+  const current = await loadCachedHistory(userId);
   const now = new Date().toISOString();
   const idx = current.findIndex((it) => it.id === food.id);
 
@@ -48,6 +71,19 @@ export async function bumpCachedHistory(food: FoodItem): Promise<FoodHistoryItem
   }
 
   next = next.slice(0, MAX_ITEMS);
-  await saveCachedHistory(next);
+  await saveCachedHistory(next, userId);
   return next;
+}
+
+// Wipe every per-user food-history cache on this device. Call on sign-out.
+export async function clearAllCachedHistory(): Promise<void> {
+  try {
+    const keys = await AsyncStorage.getAllKeys();
+    const targets = keys.filter(
+      (k) => k.startsWith(STORAGE_PREFIX) || k === LEGACY_KEY,
+    );
+    if (targets.length > 0) await AsyncStorage.multiRemove(targets);
+  } catch {
+    /* noop */
+  }
 }

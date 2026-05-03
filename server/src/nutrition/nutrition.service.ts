@@ -5,11 +5,6 @@ import { CreateMealDto } from './dto/create-meal.dto';
 import { UpdateGoalsDto } from './dto/update-goals.dto';
 import { UpsertDailyDto } from './dto/upsert-daily.dto';
 import { RecordFoodHistoryDto } from './dto/record-food-history.dto';
-import { searchFallbackFoods } from './food-catalog';
-import { FatSecretClient, FatSecretSearchResult } from './fatsecret.client';
-
-const DEFAULT_PAGE_SIZE = 20;
-const MAX_PAGE_SIZE = 50;
 
 function genId(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
@@ -20,10 +15,7 @@ export class NutritionService {
   private readonly logger = new Logger(NutritionService.name);
   private supabase: SupabaseClient;
 
-  constructor(
-    config: ConfigService,
-    private readonly fatSecret: FatSecretClient,
-  ) {
+  constructor(config: ConfigService) {
     this.supabase = createClient(
       config.get<string>('SUPABASE_URL')!,
       config.get<string>('SUPABASE_SERVICE_ROLE_KEY')!,
@@ -68,6 +60,7 @@ export class NutritionService {
         meal_type: dto.meal_type,
         food_id: dto.food_id ?? null,
         food_name: dto.food_name,
+        image_url: dto.image_url ?? null,
         servings: dto.servings,
         calories: dto.calories,
         protein: dto.protein,
@@ -240,52 +233,6 @@ export class NutritionService {
 
     if (error) throw error;
     return data;
-  }
-
-  // ── Food search (FatSecret proxy with fallback catalog) ────────────────
-
-  async searchFood(
-    q: string,
-    lang: 'fr' | 'en' = 'fr',
-    page = 0,
-    pageSize = DEFAULT_PAGE_SIZE,
-  ): Promise<FatSecretSearchResult> {
-    const trimmed = (q || '').trim();
-    if (!trimmed) return { items: [], hasMore: false, nextPage: null };
-
-    const safePage = Math.max(0, Math.floor(page));
-    const safeSize = Math.min(MAX_PAGE_SIZE, Math.max(1, Math.floor(pageSize)));
-
-    if (this.fatSecret.isConfigured()) {
-      try {
-        const result = await this.fatSecret.searchFoods({
-          query: trimmed,
-          page: safePage,
-          pageSize: safeSize,
-          lang,
-        });
-        if (result.items.length > 0) return result;
-      } catch (error) {
-        this.logger.warn(
-          `FatSecret search failed for "${trimmed}" (${lang}), using fallback catalog: ${
-            error instanceof Error ? error.message : String(error)
-          }`,
-        );
-      }
-    }
-
-    // Last-resort fallback: hardcoded catalog (only on the first page).
-    if (safePage > 0) return { items: [], hasMore: false, nextPage: null };
-    const items = searchFallbackFoods(trimmed, lang).map((f) => ({
-      id: f.id,
-      name: f.name,
-      imageUrl: undefined,
-      calories: f.calories,
-      protein: f.protein,
-      carbs: f.carbs,
-      fat: f.fat,
-    }));
-    return { items, hasMore: false, nextPage: null };
   }
 
   // ── Food selection history ─────────────────────────────────────────────

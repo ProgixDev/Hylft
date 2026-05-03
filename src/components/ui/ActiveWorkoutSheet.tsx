@@ -31,6 +31,7 @@ import {
   WorkoutExerciseEntry,
 } from "../../contexts/ActiveWorkoutContext";
 import { useTheme } from "../../contexts/ThemeContext";
+import { Routine } from "../../data/mockData";
 import { formatDisplayDate, formatTime } from "../../utils/dateFormatter";
 import {
   translateExerciseName,
@@ -113,8 +114,6 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
     const styles = createStyles(theme);
     const {
       activeWorkout,
-      isPaused,
-      togglePause,
       discardWorkout,
       setIsExpanded,
       removeExerciseFromWorkout,
@@ -122,6 +121,7 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
       updateSet,
       removeSet,
       reorderExercise,
+      startGuidedRoutine,
     } = useActiveWorkout();
 
     // ── Workout name ──────────────────────────────────────────────────────
@@ -477,7 +477,45 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
       [renderSetRow, addSetToExercise, styles, theme, t],
     );
 
+    const handleStartSession = useCallback(() => {
+      if (!activeWorkout || activeWorkout.exercises.length === 0) return;
+
+      const synthRoutine: Routine = {
+        id: `empty-${Date.now()}`,
+        userId: "1",
+        name: t("workout.activeWorkout"),
+        description: "",
+        estimatedDuration: 0,
+        targetMuscles: [],
+        difficulty: "beginner",
+        exercises: activeWorkout.exercises.map((ex) => {
+          const setTargets = ex.sets.map((s, i) => ({
+            setNumber: i + 1,
+            targetKg: parseFloat(s.kg) || 0,
+            targetReps: s.reps || "0",
+          }));
+          const firstReps = ex.sets[0]?.reps || "0";
+          const firstKg = parseFloat(ex.sets[0]?.kg || "0") || 0;
+          return {
+            id: ex.id,
+            name: ex.name,
+            sets: ex.sets.length,
+            reps: firstReps,
+            restTime: 60,
+            targetWeight: firstKg,
+            setTargets,
+          };
+        }),
+      };
+
+      setIsExpanded(false);
+      startGuidedRoutine(synthRoutine);
+      router.push("/workout-player" as any);
+    }, [activeWorkout, startGuidedRoutine, setIsExpanded, router, t]);
+
     if (!activeWorkout) return null;
+
+    const canStart = activeWorkout.exercises.length > 0;
 
     return (
       <>
@@ -493,36 +531,17 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
         >
           {/* ── Header ───────────────────────────────────────────────────── */}
           <View style={styles.header}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-              <TouchableOpacity
-                style={{
-                  width: 34,
-                  height: 34,
-                  borderRadius: 17,
-                  backgroundColor: theme.primary.main,
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-                onPress={togglePause}
-              >
-                <Ionicons
-                  name={isPaused ? "play" : "pause"}
-                  size={16}
-                  color="#fff"
-                />
-              </TouchableOpacity>
-              <View>
-                <Text style={styles.title}>
-                  {isPaused ? t("workout.paused") : t("workout.activeWorkout")}
-                </Text>
-                <Text style={{
-                  fontSize: 12,
-                  fontFamily: "Zain_700Bold",
-                  color: isPaused ? theme.primary.main : theme.foreground.gray,
-                }}>
-                  {formatDuration(activeWorkout.duration)}
-                </Text>
-              </View>
+            <View>
+              <Text style={styles.title}>
+                {t("workout.activeWorkout")}
+              </Text>
+              <Text style={{
+                fontSize: 12,
+                fontFamily: "Zain_700Bold",
+                color: theme.foreground.gray,
+              }}>
+                {formatDuration(activeWorkout.duration)}
+              </Text>
             </View>
             <View style={styles.headerButtons}>
               <TouchableOpacity
@@ -653,6 +672,33 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
               </Text>
             </TouchableOpacity>
           </BottomSheetScrollView>
+
+          {/* ── Floating Start Session button ──────────────────────────── */}
+          <View pointerEvents="box-none" style={styles.floatingStartWrap}>
+            <TouchableOpacity
+              activeOpacity={0.85}
+              disabled={!canStart}
+              onPress={handleStartSession}
+              style={[
+                styles.floatingStartBtn,
+                !canStart && styles.floatingStartBtnDisabled,
+              ]}
+            >
+              <Ionicons
+                name="play"
+                size={20}
+                color={canStart ? theme.background.dark : theme.foreground.gray}
+              />
+              <Text
+                style={[
+                  styles.floatingStartText,
+                  !canStart && { color: theme.foreground.gray },
+                ]}
+              >
+                {t("workout.start")}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </BottomSheet>
 
         {/* ── Save workout modal ─────────────────────────────────────────── */}
@@ -762,7 +808,38 @@ const createStyles = (theme: Theme) =>
     title: { fontSize: 18, fontFamily: FONTS.bold, color: theme.foreground.white },
     headerButtons: { flexDirection: "row", gap: 2 },
     headerButton: { padding: 6 },
-    scrollContent: { paddingHorizontal: 16, paddingBottom: 30, gap: 10 },
+    scrollContent: { paddingHorizontal: 16, paddingBottom: 110, gap: 10 },
+    floatingStartWrap: {
+      position: "absolute",
+      left: 0,
+      right: 0,
+      bottom: 0,
+      paddingHorizontal: 16,
+      paddingTop: 10,
+      paddingBottom: 24,
+      backgroundColor: theme.background.dark,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: theme.foreground.gray + "30",
+    },
+    floatingStartBtn: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+      backgroundColor: theme.primary.main,
+      borderRadius: 28,
+      paddingVertical: 16,
+    },
+    floatingStartBtnDisabled: {
+      backgroundColor: theme.background.darker,
+    },
+    floatingStartText: {
+      fontSize: 16,
+      fontFamily: FONTS.extraBold,
+      color: theme.background.dark,
+      textTransform: "uppercase",
+      letterSpacing: 1,
+    },
     // Stats
     statsGrid: { flexDirection: "row", gap: 8 },
     statCard: {

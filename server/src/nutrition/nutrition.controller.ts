@@ -19,7 +19,6 @@ import { NutritionService } from './nutrition.service';
 import { CreateMealDto } from './dto/create-meal.dto';
 import { UpdateGoalsDto } from './dto/update-goals.dto';
 import { UpsertDailyDto } from './dto/upsert-daily.dto';
-import { SearchFoodQueryDto } from './dto/search-food-query.dto';
 import { RecordFoodHistoryDto } from './dto/record-food-history.dto';
 
 @Controller('nutrition')
@@ -27,17 +26,8 @@ import { RecordFoodHistoryDto } from './dto/record-food-history.dto';
 export class NutritionController {
   constructor(private readonly nutritionService: NutritionService) {}
 
-  // ── Food search proxy (FatSecret) ──────────────────────────────────────
-
-  @Get('search')
-  searchFood(@Query() query: SearchFoodQueryDto) {
-    return this.nutritionService.searchFood(
-      query.q,
-      query.lang ?? 'fr',
-      query.page ?? 0,
-      query.pageSize ?? 20,
-    );
-  }
+  // Food search & detail lookup live on the device — they hit Open Food
+  // Facts directly, no proxy here. See src/services/openFoodFactsApi.ts.
 
   // ── Food selection history ─────────────────────────────────────────────
 

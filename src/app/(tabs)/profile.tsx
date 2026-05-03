@@ -106,8 +106,42 @@ export default function Profile() {
   const [shareOpen, setShareOpen] = useState(false);
   const [avatarSheetOpen, setAvatarSheetOpen] = useState(false);
 
-  const { todayCaloriesBurned, weeklyCaloriesBurned } = useHealth();
+  const {
+    todayCaloriesBurned,
+    weeklyCaloriesBurned,
+    isAvailable: healthAvailable,
+    isPermissionGranted: healthGranted,
+    initialize: healthInitialize,
+    requestPermissions: healthRequestPermissions,
+    refreshData: healthRefreshData,
+  } = useHealth();
   const { goals, todaySummary } = useNutrition();
+  const [healthBusy, setHealthBusy] = useState(false);
+
+  const handleConnectHealth = useCallback(async () => {
+    if (healthBusy) return;
+    setHealthBusy(true);
+    try {
+      let available = healthAvailable;
+      if (!available) {
+        available = await healthInitialize();
+      }
+      if (!available) return;
+      const granted = healthGranted || (await healthRequestPermissions());
+      if (granted) {
+        await healthRefreshData();
+      }
+    } finally {
+      setHealthBusy(false);
+    }
+  }, [
+    healthBusy,
+    healthAvailable,
+    healthGranted,
+    healthInitialize,
+    healthRequestPermissions,
+    healthRefreshData,
+  ]);
 
   const [weight, setWeight] = useState(70);
   const [targetWeight, setTargetWeight] = useState(65);
@@ -363,6 +397,55 @@ export default function Profile() {
             <Text style={styles.bodyUnit}>kcal/{isFr ? "j" : "d"}</Text>
           </View>
         </View>
+
+        {/* ── Santé connectée (Health Connect / HealthKit) ─────── */}
+        <Text style={styles.sectionTitle}>
+          {isFr ? "Santé connectée" : "Connected Health"}
+        </Text>
+        <Pressable
+          style={styles.healthConnectRow}
+          onPress={handleConnectHealth}
+          disabled={healthBusy || (healthAvailable && healthGranted)}
+        >
+          <View style={styles.healthConnectIcon}>
+            <MaterialCommunityIcons
+              name={Platform.OS === "ios" ? "heart-pulse" : "google-fit"}
+              size={22}
+              color={theme.primary.main}
+            />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.healthConnectTitle}>
+              {Platform.OS === "ios" ? "Apple Health" : "Health Connect"}
+            </Text>
+            <Text style={styles.healthConnectSubtitle}>
+              {healthAvailable && healthGranted
+                ? isFr
+                  ? "Connecté · pas et calories synchronisés"
+                  : "Connected · steps & calories syncing"
+                : healthAvailable
+                  ? isFr
+                    ? "Disponible · appuyez pour autoriser"
+                    : "Available · tap to grant permission"
+                  : isFr
+                    ? "Appuyez pour vérifier la disponibilité"
+                    : "Tap to check availability"}
+            </Text>
+          </View>
+          <Ionicons
+            name={
+              healthAvailable && healthGranted
+                ? "checkmark-circle"
+                : "chevron-forward"
+            }
+            size={22}
+            color={
+              healthAvailable && healthGranted
+                ? "#34C759"
+                : theme.foreground.gray
+            }
+          />
+        </Pressable>
 
         {/* ── Calories Brûlées (Bar Chart) ────────────────────── */}
         <Text style={styles.sectionTitle}>{isFr ? "Calories brûlées" : "Calories Burned"}</Text>
@@ -794,6 +877,28 @@ function createStyles(theme: Theme) {
     sectionTitle: {
       fontFamily: FONTS.extraBold, fontSize: 18, color: theme.foreground.white,
       marginHorizontal: 20, marginTop: 16, marginBottom: 12,
+    },
+
+    // Health Connect row
+    healthConnectRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      backgroundColor: theme.background.accent,
+      marginHorizontal: 20,
+      borderRadius: 16,
+      padding: 14,
+    },
+    healthConnectIcon: {
+      width: 40, height: 40, borderRadius: 12,
+      alignItems: "center", justifyContent: "center",
+      backgroundColor: `${theme.primary.main}20`,
+    },
+    healthConnectTitle: {
+      fontFamily: FONTS.bold, fontSize: 14, color: theme.foreground.white,
+    },
+    healthConnectSubtitle: {
+      fontFamily: FONTS.medium, fontSize: 12, color: theme.foreground.gray, marginTop: 2,
     },
 
     // Period tabs

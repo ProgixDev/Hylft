@@ -411,6 +411,19 @@ export default function Alimentation() {
               {meals.length > 0 &&
                 meals.map((meal) => (
                   <View key={meal.id} style={styles.foodItem}>
+                    {meal.imageUrl ? (
+                      <Image
+                        source={{ uri: meal.imageUrl }}
+                        style={styles.foodThumb}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <View style={[styles.foodThumb, styles.foodThumbFallback]}>
+                        <Text style={styles.foodThumbInitial}>
+                          {(meal.foodName || "?").charAt(0).toUpperCase()}
+                        </Text>
+                      </View>
+                    )}
                     <View style={{ flex: 1 }}>
                       <Text style={styles.foodName} numberOfLines={1}>
                         {meal.foodName}
@@ -761,6 +774,21 @@ function createStyles(theme: Theme) {
       paddingHorizontal: 14,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: `${theme.foreground.gray}12`,
+    },
+    foodThumb: {
+      width: 38,
+      height: 38,
+      borderRadius: 10,
+      backgroundColor: theme.background.accent,
+    },
+    foodThumbFallback: {
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    foodThumbInitial: {
+      fontFamily: FONTS.bold,
+      fontSize: 16,
+      color: theme.foreground.gray,
     },
     foodName: {
       fontFamily: FONTS.medium,

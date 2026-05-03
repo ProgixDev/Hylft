@@ -33,6 +33,7 @@ export interface MealEntry {
   mealType: MealType;
   foodId?: string;
   foodName: string;
+  imageUrl?: string;
   servings: number;
   calories: number;
   protein: number;

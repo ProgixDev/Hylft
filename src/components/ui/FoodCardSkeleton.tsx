@@ -75,9 +75,9 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 12,
+    width: 80,
+    height: 80,
+    borderRadius: 14,
   },
   addBtn: {
     width: 40,
