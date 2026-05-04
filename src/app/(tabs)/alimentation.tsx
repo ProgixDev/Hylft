@@ -3,8 +3,8 @@ import { useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  Dimensions,
   Image,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -16,30 +16,39 @@ import Svg, { Circle } from "react-native-svg";
 import AnimatedScreen from "../../components/ui/AnimatedScreen";
 import { FONTS } from "../../constants/fonts";
 import { Theme } from "../../constants/themes";
+import { useAuth } from "../../contexts/AuthContext";
 import { useHealth } from "../../contexts/HealthContext";
 import { useNutrition } from "../../contexts/NutritionContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { TutorialTarget } from "../../contexts/TutorialTargetContext";
+import { api } from "../../services/api";
 import type { MealType } from "../../services/nutritionApi";
+import { WeightHistory } from "../../services/weightHistory";
+import {
+  ageFromDateOfBirth,
+  computeWaterGoalMl,
+} from "../../utils/nutritionGoals";
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
-
-const WATER_GOAL_ML = 2000;
+const DEFAULT_WATER_GOAL_ML = 2000;
 const GLASS_STEP_ML = 250;
-const TOTAL_GLASSES = 8;
+const DEFAULT_TOTAL_GLASSES = 8;
 const DEFAULT_WEIGHT_KG = 70;
 const DEFAULT_WEIGHT_TARGET = 65;
+const NAVY_CARD = "#0A1628";
+const NAVY_CARD_LIGHT = "#1A2F50";
+const NAVY_CARD_DEEP = "#07101F";
+const NAVY_TEXT_MUTED = "rgba(255,255,255,0.72)";
+const NAVY_TEXT_SOFT = "rgba(255,255,255,0.55)";
 
 const MEAL_TABS: {
   type: MealType;
   emoji: string;
-  color: string;
   ratio: number;
 }[] = [
-  { type: "breakfast", emoji: "🥐", color: "#F5A623", ratio: 0.25 },
-  { type: "lunch", emoji: "🍝", color: "#4A90D9", ratio: 0.35 },
-  { type: "dinner", emoji: "🥩", color: "#8B5CF6", ratio: 0.3 },
-  { type: "snack", emoji: "🍎", color: "#34C759", ratio: 0.1 },
+  { type: "breakfast", emoji: "🥐", ratio: 0.25 },
+  { type: "lunch", emoji: "🍝", ratio: 0.35 },
+  { type: "dinner", emoji: "🥩", ratio: 0.3 },
+  { type: "snack", emoji: "🍎", ratio: 0.1 },
 ];
 
 const SHORT_DAY = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
@@ -130,6 +139,7 @@ export default function Alimentation() {
   const { t, i18n } = useTranslation();
   const isFr = i18n.language?.startsWith("fr");
   const { todayCaloriesBurned } = useHealth();
+  const { userProfile, refreshUserProfile } = useAuth();
   const {
     goals,
     selectedDate,
@@ -150,10 +160,31 @@ export default function Alimentation() {
   );
   const [noteInput, setNoteInput] = useState("");
   const [weightTarget] = useState(DEFAULT_WEIGHT_TARGET); // UI only, out of scope for backend
+  const [weightInput, setWeightInput] = useState("");
+  const [isEditingWeight, setIsEditingWeight] = useState(false);
+  const [isSavingWeight, setIsSavingWeight] = useState(false);
 
   const waterMl = daily.waterMl;
   const weightCurrent = daily.weightKg ?? DEFAULT_WEIGHT_KG;
   const dailyNotes = daily.notes;
+
+  const waterGoalMl = useMemo(
+    () =>
+      computeWaterGoalMl({
+        weightKg: daily.weightKg ?? userProfile?.weight_kg,
+        heightCm: userProfile?.height_cm,
+        age: ageFromDateOfBirth(userProfile?.date_of_birth),
+        gender: userProfile?.gender,
+        activityLevel: userProfile?.experience_level,
+        workoutFrequency: userProfile?.workout_frequency,
+        weightGoal: userProfile?.fitness_goal,
+      }) || DEFAULT_WATER_GOAL_ML,
+    [daily.weightKg, userProfile],
+  );
+  const totalGlasses = Math.max(
+    DEFAULT_TOTAL_GLASSES,
+    Math.ceil(waterGoalMl / GLASS_STEP_ML),
+  );
 
   const caloriesEaten = todaySummary.totalCalories;
   const caloriesBurned = todayCaloriesBurned;
@@ -180,6 +211,34 @@ export default function Alimentation() {
     router.push(
       `/food-search?mealType=${mealType}&date=${selectedDate}` as any,
     );
+
+  const startEditWeight = () => {
+    setWeightInput(weightCurrent.toFixed(1));
+    setIsEditingWeight(true);
+  };
+
+  const handleSaveWeight = async () => {
+    const parsed = parseFloat(weightInput.replace(",", "."));
+    if (!parsed || parsed < 30 || parsed > 300) {
+      setIsEditingWeight(false);
+      return;
+    }
+    const rounded = Math.round(parsed * 10) / 10;
+    setIsSavingWeight(true);
+    try {
+      setWeight(rounded);
+      await Promise.all([
+        api.updateProfile({ weight_kg: rounded }),
+        WeightHistory.log(rounded),
+      ]);
+      await refreshUserProfile();
+    } catch (err) {
+      console.warn("[Alimentation] updateProfile(weight) failed:", err);
+    } finally {
+      setIsSavingWeight(false);
+      setIsEditingWeight(false);
+    }
+  };
 
   const handleAddNote = () => {
     const trimmed = noteInput.trim();
@@ -238,7 +297,7 @@ export default function Alimentation() {
               <Ionicons
                 name="time-outline"
                 size={18}
-                color={theme.foreground.gray}
+                color="#FFFFFF"
               />
             </Pressable>
             <Pressable
@@ -249,7 +308,7 @@ export default function Alimentation() {
               <Ionicons
                 name="chevron-back"
                 size={18}
-                color={theme.foreground.gray}
+                color="#FFFFFF"
               />
             </Pressable>
             <Pressable
@@ -260,7 +319,7 @@ export default function Alimentation() {
               <Ionicons
                 name="chevron-forward"
                 size={18}
-                color={theme.foreground.gray}
+                color="#FFFFFF"
               />
             </Pressable>
           </View>
@@ -279,67 +338,91 @@ export default function Alimentation() {
         </View>
 
         <View style={styles.summaryCard}>
-          <View style={styles.totalRow}>
-            <View>
-              <Text style={styles.totalLabel}>
-                {isFr ? "Total consomme" : "Total eaten"}
-              </Text>
-              <Text style={styles.totalValue}>
+          <View style={styles.summaryTopRow}>
+            <View style={styles.summarySide}>
+              <Text style={styles.summarySideValue}>
                 {Math.round(caloriesEaten)}
-                <Text style={styles.totalUnit}> kcal</Text>
+              </Text>
+              <Text style={styles.summarySideLabel}>
+                {isFr ? "Mangées" : "Eaten"}
               </Text>
             </View>
-            <View style={styles.totalMeta}>
-              <Text style={styles.totalMetaValue}>
-                {Math.round(caloriesRemaining)}
+
+            <View style={styles.summaryCenter}>
+              <Ring
+                pct={
+                  goals.calorieGoal > 0
+                    ? caloriesEaten / (goals.calorieGoal + caloriesBurned)
+                    : 0
+                }
+                size={130}
+                strokeWidth={10}
+                color="#FFFFFF"
+                bgColor="rgba(255,255,255,0.18)"
+              >
+                <Text style={styles.summaryCenterValue}>
+                  {Math.round(caloriesRemaining).toLocaleString(
+                    isFr ? "fr-FR" : "en-US",
+                  )}
+                </Text>
+                <Text style={styles.summaryCenterLabel}>
+                  {isFr ? "Restantes" : "Left"}
+                </Text>
+              </Ring>
+            </View>
+
+            <View style={styles.summarySide}>
+              <Text style={styles.summarySideValue}>
+                {Math.round(caloriesBurned)}
               </Text>
-              <Text style={styles.totalMetaLabel}>
-                {isFr ? "restantes" : "left"}
+              <Text style={styles.summarySideLabel}>
+                {isFr ? "Brûlées" : "Burned"}
               </Text>
             </View>
           </View>
 
-          <View style={styles.macroRingRow}>
+          <View style={styles.macroBarRow}>
             {[
               {
                 label: isFr ? "Glucides" : "Carbs",
-                short: isFr ? "Gluc" : "Carb",
                 current: todaySummary.totalCarbs,
                 goal: goals.carbsGoal,
-                color: "#F5A623",
+                color: "#FFFFFF",
               },
               {
-                label: isFr ? "Proteines" : "Protein",
-                short: "Prot",
+                label: isFr ? "Protéines" : "Protein",
                 current: todaySummary.totalProtein,
                 goal: goals.proteinGoal,
-                color: "#4A90D9",
+                color: NAVY_CARD_LIGHT,
               },
               {
                 label: isFr ? "Lipides" : "Fat",
-                short: isFr ? "Lip" : "Fat",
                 current: todaySummary.totalFat,
                 goal: goals.fatGoal,
-                color: "#ED6665",
+                color: NAVY_TEXT_MUTED,
               },
-            ].map((m) => (
-              <View key={m.label} style={styles.macroRingItem}>
-                <Ring
-                  pct={m.goal > 0 ? m.current / m.goal : 0}
-                  size={68}
-                  strokeWidth={7}
-                  color={m.color}
-                  bgColor={`${theme.foreground.gray}22`}
-                >
-                  <Text style={styles.macroRingValue}>
-                    {Math.round(m.current)}
+            ].map((m) => {
+              const pct = m.goal > 0 ? Math.min(m.current / m.goal, 1) : 0;
+              return (
+                <View key={m.label} style={styles.macroBarItem}>
+                  <Text style={styles.macroBarLabel}>{m.label}</Text>
+                  <View style={styles.macroBarTrack}>
+                    <View
+                      style={[
+                        styles.macroBarFill,
+                        {
+                          width: `${pct * 100}%`,
+                          backgroundColor: m.color,
+                        },
+                      ]}
+                    />
+                  </View>
+                  <Text style={styles.macroBarValue}>
+                    {Math.round(m.current)} / {m.goal} g
                   </Text>
-                  <Text style={styles.macroRingUnit}>g</Text>
-                </Ring>
-                <Text style={styles.macroRingLabel}>{m.short}</Text>
-                <Text style={styles.macroRingGoal}>/ {m.goal}g</Text>
-              </View>
-            ))}
+                </View>
+              );
+            })}
           </View>
         </View>
 
@@ -402,7 +485,7 @@ export default function Alimentation() {
                     <Ionicons
                       name="add-circle-outline"
                       size={28}
-                      color={theme.primary.main}
+                      color="#FFFFFF"
                     />
                   </Pressable>
                 </TutorialTarget>
@@ -473,9 +556,22 @@ export default function Alimentation() {
                 color={theme.foreground.gray}
               />
             </Pressable>
-            <Text style={styles.weightValue}>
-              {weightCurrent.toFixed(1)} kg
-            </Text>
+            {isEditingWeight ? (
+              <TextInput
+                style={styles.weightInput}
+                value={weightInput}
+                onChangeText={setWeightInput}
+                keyboardType="decimal-pad"
+                autoFocus
+                selectTextOnFocus
+                onSubmitEditing={handleSaveWeight}
+                onBlur={handleSaveWeight}
+              />
+            ) : (
+              <Text style={styles.weightValue}>
+                {weightCurrent.toFixed(1)} kg
+              </Text>
+            )}
             <Pressable
               style={styles.weightBtn}
               onPress={() => setWeight(Math.min(300, weightCurrent + 0.1))}
@@ -483,10 +579,34 @@ export default function Alimentation() {
               <Ionicons
                 name="add-circle-outline"
                 size={32}
-                color={theme.primary.main}
+                color="#FFFFFF"
               />
             </Pressable>
           </View>
+
+          <Pressable
+            style={[
+              styles.weightSaveBtn,
+              isSavingWeight && { opacity: 0.6 },
+            ]}
+            disabled={isSavingWeight}
+            onPress={isEditingWeight ? handleSaveWeight : startEditWeight}
+          >
+            <Ionicons
+              name={isEditingWeight ? "checkmark" : "create-outline"}
+              size={16}
+              color="#fff"
+            />
+            <Text style={styles.weightSaveText}>
+              {isEditingWeight
+                ? isFr
+                  ? "Enregistrer"
+                  : "Save"
+                : isFr
+                  ? "Mettre à jour le poids"
+                  : "Update weight"}
+            </Text>
+          </Pressable>
         </View>
         {/* ── Suivi eau ──────────────────────────────────────── */}
         <View style={styles.sectionHeader}>
@@ -498,13 +618,13 @@ export default function Alimentation() {
         <View style={styles.waterCard}>
           <Text style={styles.waterTitle}>{isFr ? "Eau" : "Water"}</Text>
           <Text style={styles.waterGoal}>
-            {isFr ? "Objectif" : "Goal"} : {(WATER_GOAL_ML / 1000).toFixed(2)}{" "}
+            {isFr ? "Objectif" : "Goal"} : {(waterGoalMl / 1000).toFixed(2)}{" "}
             {isFr ? "litres" : "liters"}
           </Text>
           <Text style={styles.waterValue}>{(waterMl / 1000).toFixed(2)} L</Text>
 
           <View style={styles.glassRow}>
-            {Array.from({ length: TOTAL_GLASSES }, (_, i) => (
+            {Array.from({ length: totalGlasses }, (_, i) => (
               <Pressable
                 key={i}
                 onPress={() => setWater((i + 1) * GLASS_STEP_ML)}
@@ -513,7 +633,7 @@ export default function Alimentation() {
                   name={i < waterGlasses ? "water" : "water-outline"}
                   size={28}
                   color={
-                    i < waterGlasses ? "#4A90D9" : `${theme.foreground.gray}40`
+                    i < waterGlasses ? "#FFFFFF" : NAVY_TEXT_SOFT
                   }
                 />
               </Pressable>
@@ -525,12 +645,12 @@ export default function Alimentation() {
               style={styles.waterBtn}
               onPress={() => setWater(Math.max(0, waterMl - GLASS_STEP_ML))}
             >
-              <Ionicons name="remove" size={18} color={theme.foreground.gray} />
+              <Ionicons name="remove" size={18} color={NAVY_TEXT_MUTED} />
             </Pressable>
             <Pressable
-              style={[styles.waterBtn, { backgroundColor: "#4A90D9" }]}
+              style={[styles.waterBtn, styles.waterBtnPrimary]}
               onPress={() =>
-                setWater(Math.min(WATER_GOAL_ML * 2, waterMl + GLASS_STEP_ML))
+                setWater(Math.min(waterGoalMl * 2, waterMl + GLASS_STEP_ML))
               }
             >
               <Ionicons name="add" size={18} color="#fff" />
@@ -582,6 +702,22 @@ export default function Alimentation() {
 
 // ── Styles ──────────────────────────────────────────────────────────────────
 function createStyles(theme: Theme) {
+  const navyCard = {
+    backgroundColor: NAVY_CARD,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.14)",
+    borderBottomWidth: 3,
+    borderBottomColor: "rgba(0,0,0,0.24)",
+    ...(Platform.OS === "ios"
+      ? {
+          shadowColor: NAVY_CARD,
+          shadowOpacity: 0.26,
+          shadowRadius: 12,
+          shadowOffset: { width: 0, height: 8 },
+        }
+      : { elevation: 5 }),
+  } as const;
+
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: theme.background.dark },
     bgOverlay: {
@@ -619,7 +755,9 @@ function createStyles(theme: Theme) {
       width: 34,
       height: 34,
       borderRadius: 10,
-      backgroundColor: theme.background.darker,
+      backgroundColor: NAVY_CARD,
+      borderWidth: 1,
+      borderColor: "rgba(255,255,255,0.14)",
       alignItems: "center",
       justifyContent: "center",
     },
@@ -640,85 +778,81 @@ function createStyles(theme: Theme) {
     sectionLink: {
       fontFamily: FONTS.bold,
       fontSize: 13,
-      color: theme.primary.main,
+      color: NAVY_CARD_LIGHT,
     },
 
     summaryCard: {
       marginHorizontal: 20,
       padding: 18,
       borderRadius: 18,
-      backgroundColor: theme.background.darker,
+      ...navyCard,
     },
-    totalRow: {
+    summaryTopRow: {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
     },
-    totalLabel: {
-      fontFamily: FONTS.semiBold,
-      fontSize: 12,
-      color: theme.foreground.gray,
+    summarySide: {
+      flex: 1,
+      alignItems: "center",
     },
-    totalValue: {
+    summarySideValue: {
+      fontFamily: FONTS.extraBold,
+      fontSize: 22,
+      color: "#FFFFFF",
+    },
+    summarySideLabel: {
+      fontFamily: FONTS.regular,
+      fontSize: 12,
+      color: NAVY_TEXT_MUTED,
+      marginTop: 4,
+    },
+    summaryCenter: {
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    summaryCenterValue: {
       fontFamily: FONTS.extraBold,
       fontSize: 28,
-      color: theme.foreground.white,
+      color: "#FFFFFF",
+    },
+    summaryCenterLabel: {
+      fontFamily: FONTS.regular,
+      fontSize: 12,
+      color: NAVY_TEXT_MUTED,
       marginTop: 2,
     },
-    totalUnit: {
-      fontSize: 13,
-      color: theme.foreground.gray,
-    },
-    totalMeta: {
-      minWidth: 82,
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-      borderRadius: 14,
-      backgroundColor: theme.background.dark,
-      alignItems: "center",
-    },
-    totalMetaValue: {
-      fontFamily: FONTS.extraBold,
-      fontSize: 18,
-      color: theme.primary.main,
-    },
-    totalMetaLabel: {
-      fontFamily: FONTS.regular,
-      fontSize: 11,
-      color: theme.foreground.gray,
-    },
 
-    macroRingRow: {
+    macroBarRow: {
       flexDirection: "row",
       justifyContent: "space-between",
-      marginTop: 14,
+      marginTop: 22,
+      gap: 14,
     },
-    macroRingItem: {
-      width: (SCREEN_WIDTH - 76) / 3,
-      alignItems: "center",
+    macroBarItem: {
+      flex: 1,
     },
-    macroRingValue: {
-      fontFamily: FONTS.extraBold,
-      fontSize: 15,
-      color: theme.foreground.white,
-    },
-    macroRingUnit: {
-      fontFamily: FONTS.bold,
-      fontSize: 9,
-      color: theme.foreground.gray,
-      marginTop: -2,
-    },
-    macroRingLabel: {
-      fontFamily: FONTS.bold,
+    macroBarLabel: {
+      fontFamily: FONTS.semiBold,
       fontSize: 12,
-      color: theme.foreground.white,
-      marginTop: 6,
+      color: "#FFFFFF",
+      marginBottom: 6,
     },
-    macroRingGoal: {
+    macroBarTrack: {
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: "rgba(255,255,255,0.18)",
+      overflow: "hidden",
+    },
+    macroBarFill: {
+      height: "100%",
+      borderRadius: 2,
+    },
+    macroBarValue: {
       fontFamily: FONTS.regular,
-      fontSize: 10,
-      color: theme.foreground.gray,
-      marginTop: 1,
+      fontSize: 11,
+      color: NAVY_TEXT_MUTED,
+      marginTop: 6,
     },
 
     mealRow: {
@@ -728,21 +862,21 @@ function createStyles(theme: Theme) {
       marginHorizontal: 20,
       paddingVertical: 14,
       paddingHorizontal: 14,
-      backgroundColor: theme.background.darker,
       borderRadius: 14,
       marginBottom: 2,
+      ...navyCard,
     },
     mealEmoji: { fontSize: 24 },
     mealName: {
       fontFamily: FONTS.bold,
       fontSize: 14,
-      color: theme.foreground.white,
+      color: "#FFFFFF",
       textTransform: "capitalize",
     },
     mealKcal: {
       fontFamily: FONTS.regular,
       fontSize: 12,
-      color: theme.foreground.gray,
+      color: NAVY_TEXT_MUTED,
       marginTop: 1,
     },
     mealMacroRow: {
@@ -754,8 +888,8 @@ function createStyles(theme: Theme) {
     mealMacroText: {
       fontFamily: FONTS.medium,
       fontSize: 10,
-      color: theme.foreground.gray,
-      backgroundColor: `${theme.foreground.gray}14`,
+      color: NAVY_TEXT_MUTED,
+      backgroundColor: "rgba(255,255,255,0.10)",
       borderRadius: 6,
       paddingHorizontal: 6,
       paddingVertical: 3,
@@ -764,7 +898,6 @@ function createStyles(theme: Theme) {
       alignSelf: "center",
     },
     mealPlusBtn: { padding: 4 },
-
     foodItem: {
       flexDirection: "row",
       alignItems: "center",
@@ -806,24 +939,24 @@ function createStyles(theme: Theme) {
       marginHorizontal: 20,
       padding: 18,
       borderRadius: 18,
-      backgroundColor: theme.background.darker,
       alignItems: "center",
+      ...navyCard,
     },
     waterTitle: {
       fontFamily: FONTS.bold,
       fontSize: 15,
-      color: theme.foreground.white,
+      color: "#FFFFFF",
     },
     waterGoal: {
       fontFamily: FONTS.regular,
       fontSize: 12,
-      color: theme.foreground.gray,
+      color: NAVY_TEXT_MUTED,
       marginTop: 2,
     },
     waterValue: {
       fontFamily: FONTS.extraBold,
       fontSize: 28,
-      color: theme.foreground.white,
+      color: "#FFFFFF",
       marginTop: 8,
     },
     glassRow: {
@@ -838,27 +971,33 @@ function createStyles(theme: Theme) {
       width: 36,
       height: 36,
       borderRadius: 18,
-      backgroundColor: theme.background.dark,
+      backgroundColor: NAVY_CARD_DEEP,
+      borderWidth: 1,
+      borderColor: "rgba(255,255,255,0.14)",
       alignItems: "center",
       justifyContent: "center",
+    },
+    waterBtnPrimary: {
+      backgroundColor: NAVY_CARD_LIGHT,
+      borderColor: "rgba(255,255,255,0.18)",
     },
 
     weightCard: {
       marginHorizontal: 20,
       padding: 18,
       borderRadius: 18,
-      backgroundColor: theme.background.darker,
       alignItems: "center",
+      ...navyCard,
     },
     weightLabel: {
       fontFamily: FONTS.bold,
       fontSize: 15,
-      color: theme.foreground.white,
+      color: "#FFFFFF",
     },
     weightGoal: {
       fontFamily: FONTS.regular,
       fontSize: 12,
-      color: theme.foreground.gray,
+      color: NAVY_TEXT_MUTED,
       marginTop: 2,
     },
     weightRow: {
@@ -870,27 +1009,57 @@ function createStyles(theme: Theme) {
     weightValue: {
       fontFamily: FONTS.extraBold,
       fontSize: 28,
-      color: theme.foreground.white,
+      color: "#FFFFFF",
+    },
+    weightInput: {
+      fontFamily: FONTS.extraBold,
+      fontSize: 28,
+      color: "#FFFFFF",
+      minWidth: 110,
+      textAlign: "center",
+      paddingVertical: 4,
+      paddingHorizontal: 12,
+      borderRadius: 10,
+      backgroundColor: NAVY_CARD_DEEP,
+      borderWidth: 1,
+      borderColor: "rgba(255,255,255,0.14)",
     },
     weightBtn: {},
+    weightSaveBtn: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+      marginTop: 16,
+      paddingHorizontal: 14,
+      paddingVertical: 9,
+      borderRadius: 12,
+      backgroundColor: NAVY_CARD_LIGHT,
+      borderWidth: 1,
+      borderColor: "rgba(255,255,255,0.16)",
+    },
+    weightSaveText: {
+      fontFamily: FONTS.bold,
+      fontSize: 13,
+      color: "#fff",
+    },
 
     noteCard: {
       marginHorizontal: 20,
       padding: 18,
       borderRadius: 18,
-      backgroundColor: theme.background.darker,
       marginBottom: 16,
+      ...navyCard,
     },
     notePrompt: {
       fontFamily: FONTS.bold,
       fontSize: 14,
-      color: theme.foreground.white,
+      color: "#FFFFFF",
       textAlign: "center",
     },
     notePromptSub: {
       fontFamily: FONTS.regular,
       fontSize: 12,
-      color: theme.foreground.gray,
+      color: NAVY_TEXT_MUTED,
       textAlign: "center",
       marginTop: 4,
       marginBottom: 14,
@@ -899,8 +1068,8 @@ function createStyles(theme: Theme) {
     noteInput: {
       flex: 1,
       borderRadius: 12,
-      backgroundColor: theme.background.dark,
-      color: theme.foreground.white,
+      backgroundColor: NAVY_CARD_DEEP,
+      color: "#FFFFFF",
       fontFamily: FONTS.regular,
       fontSize: 13,
       paddingHorizontal: 14,
@@ -912,18 +1081,18 @@ function createStyles(theme: Theme) {
       borderRadius: 12,
       alignItems: "center",
       justifyContent: "center",
-      backgroundColor: theme.primary.main,
+      backgroundColor: NAVY_CARD_LIGHT,
     },
     noteItem: {
       paddingVertical: 8,
       marginTop: 8,
       borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: `${theme.foreground.gray}15`,
+      borderTopColor: "rgba(255,255,255,0.12)",
     },
     noteText: {
       fontFamily: FONTS.regular,
       fontSize: 13,
-      color: theme.foreground.gray,
+      color: NAVY_TEXT_MUTED,
       lineHeight: 18,
     },
   });

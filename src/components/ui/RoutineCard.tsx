@@ -1,10 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { memo } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../../contexts/ThemeContext";
 import { Routine } from "../../data/mockData";
-import { translateRoutineName, translateRoutineDescription, translateExerciseTerm, translateApiData } from "../../utils/exerciseTranslator";
+import { translateRoutineName, translateExerciseTerm } from "../../utils/exerciseTranslator";
 
 import { FONTS } from "../../constants/fonts";
 
@@ -27,12 +27,6 @@ const RoutineCard = ({
   const styles = createStyles(theme);
   const translatedName = translateRoutineName(routine.name);
 
-  const difficultyStyle = {
-    beginner: styles.difficulty_beginner,
-    intermediate: styles.difficulty_intermediate,
-    advanced: styles.difficulty_advanced,
-  }[routine.difficulty];
-
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -43,14 +37,7 @@ const RoutineCard = ({
         <Text style={styles.name} numberOfLines={1}>
           {translatedName}
         </Text>
-        <View style={[styles.difficultyBadge, difficultyStyle]}>
-          <Text style={styles.difficultyText}>{translateApiData(routine.difficulty)}</Text>
-        </View>
       </View>
-
-      <Text style={styles.description} numberOfLines={2}>
-        {translateRoutineDescription(routine.description)}
-      </Text>
 
       <View style={styles.statsRow}>
         <View style={styles.statItem}>
@@ -84,23 +71,42 @@ const RoutineCard = ({
           activeOpacity={0.85}
           accessibilityLabel={t("routines.startRoutine")}
         >
-          <Ionicons name="play" size={18} color={theme.background.dark} />
+          <Ionicons name="play" size={18} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
     </TouchableOpacity>
   );
 };
 
-const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
-  StyleSheet.create({
+const NAVY_CARD = "#0A1628";
+const NAVY_CARD_LIGHT = "#1A2F50";
+const NAVY_CARD_DEEP = "#07101F";
+const NAVY_TEXT_MUTED = "rgba(255,255,255,0.72)";
+
+const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) => {
+  const navyShadow = Platform.select({
+    ios: {
+      shadowColor: NAVY_CARD,
+      shadowOpacity: 0.26,
+      shadowRadius: 12,
+      shadowOffset: { width: 0, height: 8 },
+    },
+    android: { elevation: 5 },
+    default: {},
+  });
+
+  return StyleSheet.create({
     card: {
       width: 260,
-      backgroundColor: theme.background.darker,
+      backgroundColor: NAVY_CARD,
       borderRadius: 14,
       padding: 12,
       borderWidth: 1,
-      borderColor: theme.background.darker,
+      borderColor: "rgba(255,255,255,0.14)",
+      borderBottomWidth: 3,
+      borderBottomColor: "rgba(0,0,0,0.24)",
       marginRight: 10,
+      ...navyShadow,
     },
     cardFull: {
       width: "100%",
@@ -111,58 +117,35 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "flex-start",
-      marginBottom: 6,
+      marginBottom: 10,
     },
     name: {
       fontSize: 18,
       fontFamily: FONTS.bold,
-      color: theme.foreground.white,
+      color: "#FFFFFF",
       flex: 1,
       marginRight: 8,
-    },
-    difficultyBadge: {
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-      borderRadius: 6,
-    },
-    difficulty_beginner: {
-      backgroundColor: "rgba(34,197,94,0.12)",
-    },
-    difficulty_intermediate: {
-      backgroundColor: "rgba(245,158,11,0.12)",
-    },
-    difficulty_advanced: {
-      backgroundColor: "rgba(239,68,68,0.12)",
-    },
-    difficultyText: {
-      fontSize: 10,
-      fontFamily: FONTS.semiBold,
-      color: theme.foreground.white,
-      textTransform: "uppercase",
-    },
-    description: {
-      fontSize: 12,
-      color: theme.foreground.gray,
-      marginBottom: 8,
-      lineHeight: 17,
     },
     statsRow: {
       flexDirection: "row",
       gap: 8,
-      marginBottom: 8,
+      marginBottom: 10,
     },
     statItem: {
       alignItems: "center",
       flex: 1,
+      backgroundColor: "rgba(255,255,255,0.08)",
+      borderRadius: 10,
+      paddingVertical: 8,
     },
     statValue: {
-      color: theme.foreground.white,
+      color: "#FFFFFF",
       fontSize: 14,
       fontFamily: FONTS.bold,
       marginBottom: 2,
     },
     statLabel: {
-      color: theme.foreground.gray,
+      color: NAVY_TEXT_MUTED,
       fontSize: 12,
     },
     bottomRow: {
@@ -178,27 +161,30 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       gap: 5,
     },
     muscleTag: {
-      backgroundColor: theme.background.dark,
+      backgroundColor: NAVY_CARD_DEEP,
       paddingHorizontal: 8,
       paddingVertical: 4,
       borderRadius: 6,
       borderWidth: 1,
-      borderColor: theme.primary.main + "30",
+      borderColor: "rgba(255,255,255,0.12)",
     },
     muscleTagText: {
       fontSize: 11,
       fontFamily: FONTS.semiBold,
-      color: theme.primary.main,
+      color: NAVY_TEXT_MUTED,
       textTransform: "capitalize",
     },
     playButton: {
       width: 38,
       height: 38,
       borderRadius: 19,
-      backgroundColor: theme.primary.main,
+      backgroundColor: NAVY_CARD_LIGHT,
       alignItems: "center",
       justifyContent: "center",
+      borderWidth: 1,
+      borderColor: "rgba(255,255,255,0.16)",
     },
   });
+};
 
 export default memo(RoutineCard);

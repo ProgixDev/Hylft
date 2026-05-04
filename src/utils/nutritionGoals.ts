@@ -56,6 +56,35 @@ function goalAdjustment(weightGoal?: string | null): number {
   return 0;
 }
 
+function activityWaterBonusMl(p: ProfileForGoals): number {
+  const lvl = (p.activityLevel || "").toLowerCase();
+  if (lvl.includes("extreme")) return 1000;
+  if (lvl.includes("very") || lvl.includes("active")) return 750;
+  if (lvl.includes("moderate")) return 500;
+  if (lvl.includes("light")) return 250;
+  if (lvl.includes("sedentary")) return 0;
+
+  const freq = p.workoutFrequency ?? 0;
+  if (freq >= 6) return 750;
+  if (freq >= 3) return 500;
+  if (freq >= 1) return 250;
+  return 0;
+}
+
+/**
+ * Compute a personalized daily water target (ml).
+ * Base: 35 ml per kg of body weight, plus a bonus for activity level.
+ * Falls back to 2000 ml when weight is unknown. Clamped to [1500, 4000].
+ */
+export function computeWaterGoalMl(profile: ProfileForGoals): number {
+  const w = Number(profile.weightKg);
+  if (!w || w <= 0) return 2000;
+  const base = w * 35;
+  const total = base + activityWaterBonusMl(profile);
+  const rounded = Math.round(total / 50) * 50;
+  return Math.max(1500, Math.min(4000, rounded));
+}
+
 /**
  * Compute personalized daily targets using Mifflin-St Jeor BMR
  * × activity multiplier ± goal adjustment.

@@ -446,7 +446,7 @@
     "createRoutine": "Create Routine",
     "exploreRoutines": "Explore Routines",
     "browseCommunityTemplates": "Browse community templates",
-    "myRoutines": "My Routines",
+    "myRoutines": "My Program",
     "noRoutinesYet": "No routines yet. Create one to get started!",
     "recentWorkouts": "Recent Workouts",
     "statWorkouts": "Workouts",
@@ -932,13 +932,15 @@
     "eatProtein": "Eat enough protein to aid muscle repair"
   },
   "routines": {
-    "allRoutines": "All Routines",
-    "noRoutinesYetCreate": "No routines yet. Create one to get started!",
-    "routineNotFound": "Routine not found",
+    "allRoutines": "All Sessions",
+    "noRoutinesYetCreate": "No sessions yet. Create one to get started!",
+    "routineNotFound": "Session not found",
     "goBack": "Go back",
-    "routineDetails": "Routine Details",
+    "routineDetails": "Session Details",
+    "createRoutine": "Create Session",
+    "exploreRoutines": "Explore Sessions",
     "saved": "Saved!",
-    "hasBeenAdded": "has been added to My Routines.",
+    "hasBeenAdded": "has been added to My Program.",
     "startRoutine": "Start Routine",
     "exercises": "Exercises",
     "duration": "Duration",
@@ -948,9 +950,9 @@
     "perWeek": "Per Week",
     "totalSets": "Total Sets",
     "lastUsed": "Last used",
-    "routinesLabel": "Routines",
-    "noRoutinesFound": "No routines match your filters",
-    "searchRoutines": "Search routines"
+    "routinesLabel": "Sessions",
+    "noRoutinesFound": "No sessions match your search",
+    "searchRoutines": "Search sessions"
   },
   "exercisePicker": {
     "searchExercise": "Search exercise",

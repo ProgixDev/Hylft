@@ -5,7 +5,6 @@ import React, { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Dimensions,
-  Image,
   Platform,
   Pressable,
   ScrollView,
@@ -22,8 +21,6 @@ import { Routine } from "../../data/mockData";
 import { api } from "../../services/api";
 import { ApiRoutine, mapRoutine } from "../../utils/routineMapper";
 import {
-  translateApiData,
-  translateRoutineDescription,
   translateRoutineName,
   translateExerciseTerm,
 } from "../../utils/exerciseTranslator";
@@ -32,26 +29,19 @@ const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const GRID_PADDING = 20;
 const GRID_GAP = 12;
 const CARD_WIDTH = (SCREEN_WIDTH - GRID_PADDING * 2 - GRID_GAP) / 2;
-
-type DiffFilter = "all" | "beginner" | "intermediate" | "advanced";
-
-const DIFF_GRADIENTS: Record<
-  "beginner" | "intermediate" | "advanced",
-  [string, string]
-> = {
-  beginner: ["#34D399", "#10B981"],
-  intermediate: ["#FBBF24", "#F59E0B"],
-  advanced: ["#FB7185", "#E11D48"],
-};
+const NAVY_CARD = "#0A1628";
+const NAVY_CARD_LIGHT = "#1A2F50";
+const NAVY_CARD_DEEP = "#07101F";
+const NAVY_TEXT_MUTED = "rgba(255,255,255,0.72)";
 
 const surfaceShadow = Platform.select({
   ios: {
-    shadowColor: "#000",
-    shadowOpacity: 0.14,
-    shadowRadius: 16,
+    shadowColor: NAVY_CARD,
+    shadowOpacity: 0.26,
+    shadowRadius: 12,
     shadowOffset: { width: 0, height: 8 },
   },
-  android: { elevation: 6 },
+  android: { elevation: 5 },
   default: {},
 });
 
@@ -75,7 +65,7 @@ export default function AllRoutines() {
 
   const [routines, setRoutines] = useState<Routine[]>([]);
   const [search, setSearch] = useState("");
-  const [difficulty, setDifficulty] = useState<DiffFilter>("all");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   const loadData = useCallback(async () => {
     try {
@@ -100,61 +90,16 @@ export default function AllRoutines() {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return routines.filter((r) => {
-      if (difficulty !== "all" && r.difficulty !== difficulty) return false;
       if (!q) return true;
       return (
         translateRoutineName(r.name).toLowerCase().includes(q) ||
         r.name.toLowerCase().includes(q)
       );
     });
-  }, [routines, search, difficulty]);
-
-  const filters: { key: DiffFilter; label: string }[] = [
-    { key: "all", label: t("common.all") },
-    { key: "beginner", label: translateApiData("beginner") },
-    { key: "intermediate", label: translateApiData("intermediate") },
-    { key: "advanced", label: translateApiData("advanced") },
-  ];
+  }, [routines, search]);
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={[styles.header, { paddingTop: insets.top + 6 }]}>
-        <Pressable
-          style={({ pressed }) => [
-            styles.iconButton,
-            pressed && styles.pressed,
-          ]}
-          onPress={() => router.back()}
-          hitSlop={8}
-        >
-          <Ionicons
-            name="arrow-back"
-            size={22}
-            color={theme.foreground.white}
-          />
-        </Pressable>
-        <Image
-          source={theme.logo}
-          style={styles.headerLogo}
-          resizeMode="contain"
-        />
-        <Pressable
-          style={({ pressed }) => [
-            styles.iconButton,
-            pressed && styles.pressed,
-          ]}
-          onPress={() => router.push("/explore-routines" as any)}
-          hitSlop={8}
-        >
-          <Ionicons
-            name="compass-outline"
-            size={22}
-            color={theme.foreground.white}
-          />
-        </Pressable>
-      </View>
-
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={[
@@ -164,7 +109,7 @@ export default function AllRoutines() {
         showsVerticalScrollIndicator={false}
       >
         {/* Hero */}
-        <View style={styles.hero}>
+        <View style={[styles.hero, { paddingTop: insets.top + 18 }]}>
           <LinearGradient
             colors={[theme.primary.main, theme.primary.light]}
             start={{ x: 0, y: 0 }}
@@ -174,10 +119,18 @@ export default function AllRoutines() {
           <View style={styles.heroOrb1} />
           <View style={styles.heroOrb2} />
 
+          <Pressable
+            style={({ pressed }) => [
+              styles.heroBackButton,
+              pressed && styles.pressed,
+            ]}
+            onPress={() => router.back()}
+            hitSlop={8}
+          >
+            <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
+          </Pressable>
+
           <View style={styles.heroContent}>
-            <Text style={styles.heroEyebrow}>
-              {t("routines.myRoutines").toUpperCase()}
-            </Text>
             <Text style={styles.heroTitle}>
               {t("routines.allRoutines")}
             </Text>
@@ -231,39 +184,31 @@ export default function AllRoutines() {
               </Pressable>
             )}
           </View>
+          <View style={styles.viewToggle}>
+            {(["grid", "list"] as const).map((mode) => {
+              const active = viewMode === mode;
+              return (
+                <Pressable
+                  key={mode}
+                  onPress={() => setViewMode(mode)}
+                  style={[
+                    styles.viewToggleButton,
+                    active && styles.viewToggleButtonActive,
+                  ]}
+                  hitSlop={6}
+                >
+                  <Ionicons
+                    name={mode === "grid" ? "grid-outline" : "list-outline"}
+                    size={18}
+                    color={active ? "#FFFFFF" : NAVY_TEXT_MUTED}
+                  />
+                </Pressable>
+              );
+            })}
+          </View>
         </View>
 
-        {/* Difficulty filter */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.filterRow}
-        >
-          {filters.map((f) => {
-            const active = difficulty === f.key;
-            return (
-              <Pressable
-                key={f.key}
-                onPress={() => setDifficulty(f.key)}
-                style={[
-                  styles.chip,
-                  active && { backgroundColor: theme.primary.main },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.chipText,
-                    active && { color: "#FFFFFF" },
-                  ]}
-                >
-                  {f.label}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
-
-        {/* Grid */}
+        {/* Sessions */}
         {filtered.length === 0 ? (
           <EmptyState
             theme={theme}
@@ -271,6 +216,16 @@ export default function AllRoutines() {
             onCreate={() => router.push("/create-routine" as any)}
             onExplore={() => router.push("/explore-routines" as any)}
           />
+        ) : viewMode === "list" ? (
+          <View style={styles.list}>
+            {filtered.map((r) => (
+              <RoutineListCard
+                key={r.id}
+                routine={r}
+                onPress={() => router.push(`/routines/${r.id}` as any)}
+              />
+            ))}
+          </View>
         ) : (
           <View style={styles.grid}>
             {filtered.map((r, idx) => (
@@ -278,7 +233,6 @@ export default function AllRoutines() {
                 key={r.id}
                 routine={r}
                 theme={theme}
-                index={idx}
                 onPress={() => router.push(`/routines/${r.id}` as any)}
               />
             ))}
@@ -344,18 +298,17 @@ function HeroStat({ value, label }: { value: string; label: string }) {
 function RoutineGridCard({
   routine,
   theme,
-  index,
   onPress,
 }: {
   routine: Routine;
   theme: Theme;
-  index: number;
   onPress: () => void;
 }) {
   const styles = cardStyles(theme);
-  const gradient = DIFF_GRADIENTS[routine.difficulty];
   const name = translateRoutineName(routine.name);
-  const desc = translateRoutineDescription(routine.description || "");
+  const primaryMuscles = routine.targetMuscles?.slice(0, 2) ?? [];
+  const exerciseCount = routine.exercises?.length || 0;
+  const duration = routine.estimatedDuration || 0;
 
   return (
     <Pressable
@@ -365,67 +318,102 @@ function RoutineGridCard({
         pressed && { transform: [{ scale: 0.98 }], opacity: 0.95 },
       ]}
     >
-      {/* Top gradient banner */}
-      <View style={styles.banner}>
-        <LinearGradient
-          colors={gradient}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={StyleSheet.absoluteFill}
-        />
-        <View style={styles.bannerOrb} />
-
-        <View style={styles.diffBadge}>
-          <View
-            style={[styles.diffDot, { backgroundColor: gradient[0] }]}
-          />
-          <Text style={styles.diffBadgeText}>
-            {translateApiData(routine.difficulty)}
-          </Text>
-        </View>
-
-        <View style={styles.bannerIconWrap}>
-          <Ionicons name="barbell" size={28} color="#FFFFFF" />
-        </View>
-      </View>
-
-      {/* Body */}
       <View style={styles.body}>
-        <Text style={styles.name} numberOfLines={1}>
-          {name}
-        </Text>
-        {!!desc && (
-          <Text style={styles.desc} numberOfLines={2}>
-            {desc}
+        <View style={styles.cardTopRow}>
+          <Text style={styles.name} numberOfLines={2}>
+            {name}
           </Text>
+          <Ionicons name="chevron-forward" size={16} color={NAVY_TEXT_MUTED} />
+        </View>
+
+        <View style={styles.statGrid}>
+          <View style={styles.statBox}>
+            <Text style={styles.statValue}>{exerciseCount}</Text>
+            <Text style={styles.statLabel}>Exos</Text>
+          </View>
+          <View style={styles.statBox}>
+            <Text style={styles.statValue}>{duration}</Text>
+            <Text style={styles.statLabel}>Min</Text>
+          </View>
+        </View>
+
+        {primaryMuscles.length > 0 && (
+          <View style={styles.muscleRow}>
+            {primaryMuscles.map((m, i) => (
+              <Text key={i} style={styles.muscle} numberOfLines={1}>
+                {translateExerciseTerm(m, "targetMuscles")}
+              </Text>
+            ))}
+          </View>
         )}
 
+        <View style={styles.cardFooter}>
+          <Text style={styles.footerText}>
+            {routine.timesCompleted || 0}x terminée
+          </Text>
+          <View style={styles.footerLine}>
+            <View
+              style={[
+                styles.footerLineFill,
+                { width: `${Math.min((routine.timesCompleted || 0) * 18, 100)}%` },
+              ]}
+            />
+          </View>
+        </View>
+      </View>
+    </Pressable>
+  );
+}
+
+function RoutineListCard({
+  routine,
+  onPress,
+}: {
+  routine: Routine;
+  onPress: () => void;
+}) {
+  const styles = listCardStyles();
+  const name = translateRoutineName(routine.name);
+  const primaryMuscles = routine.targetMuscles?.slice(0, 2) ?? [];
+
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.card,
+        pressed && { transform: [{ scale: 0.99 }], opacity: 0.95 },
+      ]}
+    >
+      <View style={styles.content}>
+        <View style={styles.titleRow}>
+          <Text style={styles.name} numberOfLines={1}>
+            {name}
+          </Text>
+          <Ionicons name="chevron-forward" size={18} color={NAVY_TEXT_MUTED} />
+        </View>
         <View style={styles.metaRow}>
           <View style={styles.metaPill}>
-            <Ionicons
-              name="list-outline"
-              size={12}
-              color={theme.primary.main}
-            />
+            <Ionicons name="list-outline" size={12} color="#FFFFFF" />
             <Text style={styles.metaPillText}>
               {routine.exercises?.length || 0}
             </Text>
           </View>
           <View style={styles.metaPill}>
-            <Ionicons
-              name="time-outline"
-              size={12}
-              color={theme.primary.main}
-            />
+            <Ionicons name="time-outline" size={12} color="#FFFFFF" />
             <Text style={styles.metaPillText}>
               {routine.estimatedDuration || 0}m
             </Text>
           </View>
+          {!!routine.timesCompleted && (
+            <View style={styles.metaPill}>
+              <Ionicons name="checkmark-circle-outline" size={12} color="#FFFFFF" />
+              <Text style={styles.metaPillText}>{routine.timesCompleted}</Text>
+            </View>
+          )}
         </View>
-
-        {routine.targetMuscles?.length > 0 && (
+        {primaryMuscles.length > 0 && (
           <View style={styles.muscleRow}>
-            {routine.targetMuscles.slice(0, 2).map((m, i) => (
+            {primaryMuscles.map((m, i) => (
               <Text key={i} style={styles.muscle} numberOfLines={1}>
                 {translateExerciseTerm(m, "targetMuscles")}
               </Text>
@@ -502,41 +490,33 @@ const createStyles = (theme: Theme) =>
       flex: 1,
       backgroundColor: theme.background.dark,
     },
-    header: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-      paddingHorizontal: 20,
-      paddingBottom: 10,
-    },
-    iconButton: {
+    heroBackButton: {
       width: 42,
       height: 42,
       borderRadius: 14,
-      backgroundColor: theme.background.darker,
+      backgroundColor: "rgba(255,255,255,0.16)",
       alignItems: "center",
       justifyContent: "center",
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: "rgba(255,255,255,0.24)",
+      zIndex: 2,
     },
     pressed: {
       opacity: 0.85,
       transform: [{ scale: 0.96 }],
     },
-    headerLogo: {
-      height: 26,
-      width: 80,
-    },
     scrollContent: {
-      paddingTop: 8,
+      paddingTop: 0,
     },
     // Hero
     hero: {
-      marginHorizontal: 20,
-      borderRadius: 28,
+      marginHorizontal: 0,
+      borderRadius: 0,
       overflow: "hidden",
-      paddingVertical: 22,
+      justifyContent: "space-between",
+      paddingBottom: 22,
       paddingHorizontal: 22,
-      minHeight: 170,
-      justifyContent: "flex-end",
+      minHeight: 220,
       ...heroShadow,
     },
     heroOrb1: {
@@ -559,13 +539,6 @@ const createStyles = (theme: Theme) =>
     },
     heroContent: {
       zIndex: 1,
-    },
-    heroEyebrow: {
-      color: "rgba(255,255,255,0.85)",
-      fontFamily: FONTS.semiBold,
-      fontSize: 11,
-      letterSpacing: 1.5,
-      marginBottom: 4,
     },
     heroTitle: {
       color: "#FFFFFF",
@@ -590,10 +563,14 @@ const createStyles = (theme: Theme) =>
     },
     // Search
     searchRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
       paddingHorizontal: 20,
       marginTop: 18,
     },
     searchBox: {
+      flex: 1,
       flexDirection: "row",
       alignItems: "center",
       gap: 10,
@@ -611,24 +588,25 @@ const createStyles = (theme: Theme) =>
       fontSize: 14,
       padding: 0,
     },
-    // Filter chips
-    filterRow: {
-      paddingHorizontal: 20,
-      paddingVertical: 14,
-      gap: 8,
+    viewToggle: {
+      flexDirection: "row",
+      padding: 4,
+      borderRadius: 16,
+      backgroundColor: NAVY_CARD,
+      borderWidth: 1,
+      borderColor: "rgba(255,255,255,0.14)",
+      borderBottomWidth: 3,
+      borderBottomColor: "rgba(0,0,0,0.22)",
     },
-    chip: {
-      paddingHorizontal: 16,
-      paddingVertical: 9,
-      borderRadius: 22,
-      backgroundColor: theme.background.darker,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: "rgba(0,0,0,0.06)",
+    viewToggleButton: {
+      width: 34,
+      height: 34,
+      borderRadius: 12,
+      alignItems: "center",
+      justifyContent: "center",
     },
-    chipText: {
-      color: theme.foreground.white,
-      fontFamily: FONTS.semiBold,
-      fontSize: 13,
+    viewToggleButtonActive: {
+      backgroundColor: NAVY_CARD_LIGHT,
     },
     // Grid
     grid: {
@@ -636,6 +614,12 @@ const createStyles = (theme: Theme) =>
       flexWrap: "wrap",
       paddingHorizontal: GRID_PADDING,
       gap: GRID_GAP,
+      paddingTop: 14,
+    },
+    list: {
+      paddingHorizontal: 20,
+      paddingTop: 14,
+      gap: 10,
     },
     // FAB
     fab: {
@@ -662,79 +646,128 @@ const cardStyles = (theme: Theme) =>
     card: {
       width: CARD_WIDTH,
       borderRadius: 20,
-      overflow: "hidden",
-      backgroundColor: theme.background.darker,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: "rgba(0,0,0,0.06)",
+      padding: 14,
+      backgroundColor: NAVY_CARD,
+      borderWidth: 1,
+      borderColor: "rgba(255,255,255,0.14)",
+      borderBottomWidth: 3,
+      borderBottomColor: "rgba(0,0,0,0.24)",
       ...surfaceShadow,
     },
-    banner: {
-      height: 84,
-      padding: 10,
-      justifyContent: "space-between",
-      overflow: "hidden",
-    },
-    bannerOrb: {
-      position: "absolute",
-      width: 90,
-      height: 90,
-      borderRadius: 45,
-      backgroundColor: "rgba(255,255,255,0.18)",
-      top: -30,
-      right: -20,
-    },
-    diffBadge: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 5,
-      alignSelf: "flex-start",
-      backgroundColor: "rgba(255,255,255,0.9)",
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-      borderRadius: 10,
-    },
-    diffDot: {
-      width: 6,
-      height: 6,
-      borderRadius: 3,
-    },
-    diffBadgeText: {
-      fontSize: 10,
-      fontFamily: FONTS.extraBold,
-      color: "#0B0D0E",
-      textTransform: "uppercase",
-      letterSpacing: 0.5,
-    },
-    bannerIconWrap: {
-      alignSelf: "flex-end",
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      backgroundColor: "rgba(255,255,255,0.22)",
-      alignItems: "center",
-      justifyContent: "center",
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: "rgba(255,255,255,0.3)",
-    },
     body: {
-      padding: 12,
-      gap: 6,
+      gap: 12,
+    },
+    cardTopRow: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      gap: 8,
     },
     name: {
+      flex: 1,
+      minHeight: 40,
       fontSize: 15,
+      lineHeight: 20,
       fontFamily: FONTS.extraBold,
-      color: theme.foreground.white,
+      color: "#FFFFFF",
     },
-    desc: {
-      fontSize: 11,
-      lineHeight: 15,
-      color: theme.foreground.gray,
-      fontFamily: FONTS.regular,
+    statGrid: {
+      flexDirection: "row",
+      gap: 8,
+    },
+    statBox: {
+      flex: 1,
+      alignItems: "center",
+      paddingVertical: 9,
+      borderRadius: 12,
+      backgroundColor: NAVY_CARD_DEEP,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: "rgba(255,255,255,0.12)",
+    },
+    statValue: {
+      fontSize: 17,
+      fontFamily: FONTS.extraBold,
+      color: "#FFFFFF",
+    },
+    statLabel: {
+      fontSize: 10,
+      fontFamily: FONTS.bold,
+      color: NAVY_TEXT_MUTED,
+      marginTop: 2,
+      textTransform: "uppercase",
+    },
+    muscleRow: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 5,
+    },
+    muscle: {
+      fontSize: 10,
+      color: NAVY_TEXT_MUTED,
+      fontFamily: FONTS.semiBold,
+      textTransform: "capitalize",
+      backgroundColor: "rgba(255,255,255,0.09)",
+      paddingHorizontal: 7,
+      paddingVertical: 4,
+      borderRadius: 7,
+      overflow: "hidden",
+    },
+    cardFooter: {
+      gap: 6,
+    },
+    footerText: {
+      fontSize: 10,
+      fontFamily: FONTS.bold,
+      color: NAVY_TEXT_MUTED,
+      textTransform: "uppercase",
+    },
+    footerLine: {
+      height: 4,
+      borderRadius: 2,
+      overflow: "hidden",
+      backgroundColor: "rgba(255,255,255,0.12)",
+    },
+    footerLineFill: {
+      height: "100%",
+      borderRadius: 2,
+      backgroundColor: "#FFFFFF",
+    },
+  });
+
+const listCardStyles = () =>
+  StyleSheet.create({
+    card: {
+      flexDirection: "row",
+      alignItems: "center",
+      minHeight: 86,
+      padding: 14,
+      borderRadius: 18,
+      backgroundColor: NAVY_CARD,
+      borderWidth: 1,
+      borderColor: "rgba(255,255,255,0.14)",
+      borderBottomWidth: 3,
+      borderBottomColor: "rgba(0,0,0,0.24)",
+      ...surfaceShadow,
+    },
+    content: {
+      flex: 1,
+      minWidth: 0,
+      gap: 8,
+    },
+    titleRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+    },
+    name: {
+      flex: 1,
+      fontSize: 16,
+      fontFamily: FONTS.extraBold,
+      color: "#FFFFFF",
     },
     metaRow: {
       flexDirection: "row",
+      flexWrap: "wrap",
       gap: 6,
-      marginTop: 4,
     },
     metaPill: {
       flexDirection: "row",
@@ -743,24 +776,28 @@ const cardStyles = (theme: Theme) =>
       paddingHorizontal: 8,
       paddingVertical: 4,
       borderRadius: 10,
-      backgroundColor: theme.primary.main + "18",
+      backgroundColor: "rgba(255,255,255,0.10)",
     },
     metaPillText: {
       fontSize: 11,
       fontFamily: FONTS.bold,
-      color: theme.primary.main,
+      color: "#FFFFFF",
     },
     muscleRow: {
       flexDirection: "row",
-      gap: 4,
-      marginTop: 2,
       flexWrap: "wrap",
+      gap: 5,
     },
     muscle: {
       fontSize: 10,
-      color: theme.foreground.gray,
+      color: NAVY_TEXT_MUTED,
       fontFamily: FONTS.semiBold,
       textTransform: "capitalize",
+      backgroundColor: "rgba(255,255,255,0.09)",
+      paddingHorizontal: 7,
+      paddingVertical: 4,
+      borderRadius: 7,
+      overflow: "hidden",
     },
   });
 

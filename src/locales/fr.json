@@ -446,7 +446,7 @@
     "createRoutine": "Créer un programme",
     "exploreRoutines": "Explorer les programmes",
     "browseCommunityTemplates": "Parcourir les modèles de la communauté",
-    "myRoutines": "Mes programmes",
+    "myRoutines": "Mon programme",
     "noRoutinesYet": "Aucun programme pour le moment. Créez-en un pour commencer !",
     "recentWorkouts": "Entraînements récents",
     "statWorkouts": "Séances",
@@ -932,13 +932,15 @@
     "eatProtein": "Mangez suffisamment de protéines pour aider à la réparation musculaire"
   },
   "routines": {
-    "allRoutines": "Tous les programmes",
-    "noRoutinesYetCreate": "Aucun programme pour le moment. Créez-en un pour commencer !",
-    "routineNotFound": "Programme introuvable",
+    "allRoutines": "Toutes les séances",
+    "noRoutinesYetCreate": "Aucune séance pour le moment. Créez-en une pour commencer !",
+    "routineNotFound": "Séance introuvable",
     "goBack": "Retour",
-    "routineDetails": "Détails du programme",
+    "routineDetails": "Détails de la séance",
+    "createRoutine": "Créer une séance",
+    "exploreRoutines": "Explorer les séances",
     "saved": "Enregistré !",
-    "hasBeenAdded": "a été ajouté à Mes programmes.",
+    "hasBeenAdded": "a été ajoutée à Mon programme.",
     "startRoutine": "Démarrer la séance",
     "exercises": "Exercices",
     "duration": "Durée",
@@ -948,9 +950,9 @@
     "perWeek": "Par semaine",
     "totalSets": "Séries totales",
     "lastUsed": "Dernière utilisation",
-    "routinesLabel": "Programmes",
-    "noRoutinesFound": "Aucun programme ne correspond",
-    "searchRoutines": "Rechercher un programme"
+    "routinesLabel": "Séances",
+    "noRoutinesFound": "Aucune séance ne correspond",
+    "searchRoutines": "Rechercher une séance"
   },
   "exercisePicker": {
     "searchExercise": "Rechercher un exercice",
