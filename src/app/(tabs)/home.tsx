@@ -765,7 +765,8 @@ export default function Home() {
           </Text>
         </AnimatedSection>
 
-        {/* Weekly workout sessions */}
+        {/* Weekly workout sessions - commented out */}
+        {false && (
         <AnimatedSection delay={560} scale>
           <View style={styles.weekSessionsCard}>
             <View style={styles.weekSessionsHeader}>
@@ -966,7 +967,7 @@ export default function Home() {
                           />
                           <Text style={styles.nextWorkoutTagText}>
                             {t("home.nextWorkout", "Prochain : {{day}}", {
-                              day: nextWorkoutDay.longLabel,
+                              day: nextWorkoutDay?.longLabel,
                             })}
                           </Text>
                         </View>
@@ -1007,6 +1008,7 @@ export default function Home() {
             )}
           </View>
         </AnimatedSection>
+        )}
 
         {/* ── Calorie Summary (Donut + Stats) ─────────────────────── */}
         {/* ── Résumé Santé (Bento Grid) ───────────────────────── */}
@@ -2047,31 +2049,31 @@ function createStyles(theme: Theme) {
       borderRadius: 18,
     },
     healthTileOverlay: {
-      padding: 14,
+      padding: 10,
       borderRadius: 18,
     },
     healthTileTop: {
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
-      marginBottom: 12,
+      marginBottom: 8,
     },
     healthTileIcon: {
-      width: 36,
-      height: 36,
-      borderRadius: 12,
+      width: 30,
+      height: 30,
+      borderRadius: 10,
       backgroundColor: "rgba(255,255,255,0.25)",
       justifyContent: "center",
       alignItems: "center",
     },
     healthTilePercent: {
       fontFamily: FONTS.bold,
-      fontSize: 13,
+      fontSize: 12,
       color: "rgba(255,255,255,0.9)",
     },
     healthTileValue: {
       fontFamily: FONTS.extraBold,
-      fontSize: 24,
+      fontSize: 20,
       color: "#FFFFFF",
     },
     healthTileLabel: {

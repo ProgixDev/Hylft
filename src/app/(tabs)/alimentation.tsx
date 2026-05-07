@@ -159,6 +159,14 @@ export default function Alimentation() {
     [selectedDate],
   );
   const [noteInput, setNoteInput] = useState("");
+  const [expandedMeals, setExpandedMeals] = useState<Record<MealType, boolean>>({
+    breakfast: false,
+    lunch: false,
+    dinner: false,
+    snack: false,
+  });
+  const toggleMealExpanded = (type: MealType) =>
+    setExpandedMeals((prev) => ({ ...prev, [type]: !prev[type] }));
   const [weightTarget] = useState(DEFAULT_WEIGHT_TARGET); // UI only, out of scope for backend
   const [weightInput, setWeightInput] = useState("");
   const [isEditingWeight, setIsEditingWeight] = useState(false);
@@ -439,18 +447,19 @@ export default function Alimentation() {
           const macros = getMealTypeMacros(item.type);
           const target = mealCalorieGoal(item.ratio);
 
+          const isExpanded = expandedMeals[item.type];
           return (
             <View key={item.type}>
               <Pressable
                 style={styles.mealRow}
-                onPress={() => openFoodSearch(item.type)}
+                onPress={() => toggleMealExpanded(item.type)}
               >
                 <Text style={styles.mealEmoji}>{item.emoji}</Text>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.mealName}>
                     {t(`food.${item.type}`)}{" "}
                     <Ionicons
-                      name="arrow-forward"
+                      name={isExpanded ? "chevron-up" : "chevron-down"}
                       size={12}
                       color={theme.foreground.gray}
                     />
@@ -491,7 +500,18 @@ export default function Alimentation() {
                 </TutorialTarget>
               </Pressable>
 
-              {meals.length > 0 &&
+              {isExpanded && meals.length === 0 && (
+                <View style={styles.foodEmpty}>
+                  <Text style={styles.foodEmptyText}>
+                    {isFr
+                      ? "Aucun aliment ajouté pour ce repas."
+                      : "No food added for this meal yet."}
+                  </Text>
+                </View>
+              )}
+
+              {isExpanded &&
+                meals.length > 0 &&
                 meals.map((meal) => (
                   <View key={meal.id} style={styles.foodItem}>
                     {meal.imageUrl ? (
@@ -933,6 +953,17 @@ function createStyles(theme: Theme) {
       fontSize: 11,
       color: theme.foreground.gray,
       marginTop: 1,
+    },
+    foodEmpty: {
+      marginHorizontal: 20,
+      paddingVertical: 10,
+      paddingHorizontal: 14,
+    },
+    foodEmptyText: {
+      fontFamily: FONTS.regular,
+      fontSize: 12,
+      color: NAVY_TEXT_SOFT,
+      fontStyle: "italic",
     },
 
     waterCard: {

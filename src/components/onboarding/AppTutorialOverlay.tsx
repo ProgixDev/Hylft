@@ -125,17 +125,6 @@ const STEPS: TutorialStep[] = [
     accent: "#10B981",
   },
   {
-    id: "feed",
-    route: "/(tabs)/feed",
-    tabRoute: "feed",
-    targetId: "tab.feed",
-    labelKey: "tabs.feed",
-    titleKey: "appTutorial.steps.feed.title",
-    bodyKey: "appTutorial.steps.feed.body",
-    icon: "newspaper",
-    accent: "#EC4899",
-  },
-  {
     id: "profile",
     route: "/(tabs)/profile",
     tabRoute: "profile",

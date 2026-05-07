@@ -53,12 +53,6 @@ function TabsLayoutContent() {
           }}
         />
         <Tabs.Screen
-          name="feed"
-          options={{
-            title: t("tabs.feed"),
-          }}
-        />
-        <Tabs.Screen
           name="profile"
           options={{
             title: t("tabs.profile"),

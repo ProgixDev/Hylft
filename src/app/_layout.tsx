@@ -303,7 +303,6 @@ function AppContent() {
         />
         <Stack.Screen name="objective/index" />
         <Stack.Screen name="food-search" />
-        <Stack.Screen name="share-workout/index" />
         <Stack.Screen
           name="workout-player/index"
           options={{ gestureEnabled: false, animation: "slide_from_bottom" }}

@@ -1,6 +1,7 @@
 {
   "cli": {
-    "version": ">= 15.0.0"
+    "version": ">= 15.0.0",
+    "appVersionSource": "local"
   },
   "build": {
     "development": {
@@ -27,6 +28,7 @@
       }
     },
     "production": {
+      "autoIncrement": true,
       "env": {
         "EXPO_PUBLIC_API_BASE_URL": "https://hylft2-0.vercel.app/api",
         "EXPO_PUBLIC_SUPABASE_URL": "https://xmezqfgmzdeybivelhtu.supabase.co",
@@ -37,6 +39,7 @@
       }
     },
     "production-aab": {
+      "autoIncrement": true,
       "env": {
         "EXPO_PUBLIC_API_BASE_URL": "https://hylft2-0.vercel.app/api",
         "EXPO_PUBLIC_SUPABASE_URL": "https://xmezqfgmzdeybivelhtu.supabase.co",

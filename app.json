@@ -16,7 +16,10 @@
     },
     "scheme": "hylift",
     "userInterfaceStyle": "automatic",
-    "platforms": ["ios", "android"],
+    "platforms": [
+      "ios",
+      "android"
+    ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
@@ -57,6 +60,7 @@
         }
       },
       "package": "com.progix.hylift",
+      "versionCode": 4,
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO",

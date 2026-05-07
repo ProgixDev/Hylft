@@ -4,7 +4,6 @@ import { AppController } from './app.controller';
 import { envValidationSchema } from './config/env.validation';
 import { AuthModule } from './auth/auth.module';
 import { ExercisesModule } from './exercises/exercises.module';
-import { FeedModule } from './feed/feed.module';
 import { HealthModule } from './health/health.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { NutritionModule } from './nutrition/nutrition.module';
@@ -27,7 +26,6 @@ import { WeightEntriesModule } from './weight-entries/weight-entries.module';
     NutritionModule,
     HealthModule,
     RoutinesModule,
-    FeedModule,
     SocialModule,
     ScheduleModule,
     WeightEntriesModule,

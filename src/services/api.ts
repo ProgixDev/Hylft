@@ -160,58 +160,6 @@ export const api = {
   deleteWorkout: (id: string) =>
     authFetch(`/health/workouts/${id}`, { method: "DELETE" }),
 
-  // ── Feed / Posts ─────────────────────────────────────────
-  listPosts: (params: {
-    scope?: "timeline" | "author";
-    author_id?: string;
-    limit?: number;
-    cursor?: string;
-  } = {}) => {
-    const qs = new URLSearchParams();
-    if (params.scope) qs.set("scope", params.scope);
-    if (params.author_id) qs.set("author_id", params.author_id);
-    if (params.limit) qs.set("limit", String(params.limit));
-    if (params.cursor) qs.set("cursor", params.cursor);
-    const s = qs.toString();
-    return authFetch(`/posts${s ? `?${s}` : ""}`);
-  },
-  getPost: (id: string) => authFetch(`/posts/${id}`),
-  createPost: (data: Record<string, unknown>) =>
-    authFetch("/posts", { method: "POST", body: JSON.stringify(data) }),
-  updatePost: (id: string, data: Record<string, unknown>) =>
-    authFetch(`/posts/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
-  deletePost: (id: string) =>
-    authFetch(`/posts/${id}`, { method: "DELETE" }),
-  likePost: (id: string) =>
-    authFetch(`/posts/${id}/like`, { method: "POST" }),
-  unlikePost: (id: string) =>
-    authFetch(`/posts/${id}/like`, { method: "DELETE" }),
-  signPostMediaUpload: (data: { count: number; ext?: string }) =>
-    authFetch("/posts/media/sign-upload", {
-      method: "POST",
-      body: JSON.stringify(data),
-    }),
-
-  // ── Comments ─────────────────────────────────────────────
-  listComments: (postId: string) =>
-    authFetch(`/posts/${postId}/comments`),
-  createComment: (postId: string, data: Record<string, unknown>) =>
-    authFetch(`/posts/${postId}/comments`, {
-      method: "POST",
-      body: JSON.stringify(data),
-    }),
-  updateComment: (id: string, data: Record<string, unknown>) =>
-    authFetch(`/comments/${id}`, {
-      method: "PATCH",
-      body: JSON.stringify(data),
-    }),
-  deleteComment: (id: string) =>
-    authFetch(`/comments/${id}`, { method: "DELETE" }),
-  likeComment: (id: string) =>
-    authFetch(`/comments/${id}/like`, { method: "POST" }),
-  unlikeComment: (id: string) =>
-    authFetch(`/comments/${id}/like`, { method: "DELETE" }),
-
   // ── Social / Follows ────────────────────────────────────
   follow: (userId: string) =>
     authFetch(`/follows/${userId}`, { method: "POST" }),

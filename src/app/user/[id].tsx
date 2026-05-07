@@ -3,7 +3,6 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -11,12 +10,9 @@ import {
   View,
 } from "react-native";
 import ProfileHeader from "../../components/profile/ProfileHeader";
-import type { PostData } from "../../components/ui/Post";
 import { Shimmer } from "../../components/ui/PostSkeleton";
 import { useTheme } from "../../contexts/ThemeContext";
 import { api } from "../../services/api";
-import { mapPostToUi, type BackendPost } from "../../services/feedMappers";
-import { FONTS } from "../../constants/fonts";
 
 type PublicProfile = {
   id: string;
@@ -28,8 +24,6 @@ type PublicProfile = {
   is_private: boolean;
   created_at: string | null;
 };
-
-type FollowStats = { followers_count: number; following_count: number };
 
 type UserStats = {
   posts_count: number;
@@ -75,17 +69,6 @@ function ProfileSkeleton({ theme }: { theme: ReturnType<typeof useTheme>["theme"
       <View style={{ marginTop: 16, paddingHorizontal: 20 }}>
         <Shimmer style={{ height: 48, borderRadius: 14 }} baseColor={base} highlightColor={highlight} />
       </View>
-      {/* Posts grid */}
-      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 2, marginTop: 24, paddingHorizontal: 12 }}>
-        {[0, 1, 2, 3, 4, 5].map((i) => (
-          <Shimmer
-            key={i}
-            style={{ width: "32%", aspectRatio: 1, borderRadius: 4 }}
-            baseColor={base}
-            highlightColor={highlight}
-          />
-        ))}
-      </View>
     </View>
   );
 }
@@ -105,7 +88,6 @@ export default function UserProfile() {
     likes_count: 0,
   });
   const [isFollowing, setIsFollowing] = useState(false);
-  const [posts, setPosts] = useState<PostData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [toggling, setToggling] = useState(false);
@@ -123,17 +105,6 @@ export default function UserProfile() {
       setProfile(profileRes);
       setUserStats(userStatsRes);
       setIsFollowing(!!followRes.is_following);
-
-      try {
-        const postsRes = (await api.listPosts({
-          scope: "author",
-          author_id: id,
-          limit: 24,
-        })) as { items: BackendPost[] };
-        setPosts((postsRes.items ?? []).map(mapPostToUi));
-      } catch {
-        setPosts([]);
-      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load profile");
     } finally {
@@ -228,37 +199,6 @@ export default function UserProfile() {
           locale={undefined}
           onPrimaryPress={toggling ? undefined : handleToggleFollow}
         />
-
-        {posts.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Ionicons name="image-outline" size={64} color={theme.foreground.gray} />
-            <Text style={styles.emptyTitle}>{t("user.noPostsYet")}</Text>
-            <Text style={styles.emptySubtitle}>{t("user.userHasntShared")}</Text>
-          </View>
-        ) : (
-          <View style={styles.postsSection}>
-            <Text style={styles.postsTitle}>{t("user.posts")}</Text>
-            <View style={styles.postsGrid}>
-              {posts.map((post, index) => (
-                <TouchableOpacity
-                  key={post.id}
-                  style={styles.gridItem}
-                  onPress={() =>
-                    router.navigate(
-                      `/user/posts?userId=${profile.id}&postIndex=${index}` as any,
-                    )
-                  }
-                >
-                  {post.images[0] ? (
-                    <Image source={{ uri: post.images[0] }} style={styles.gridImage} />
-                  ) : (
-                    <View style={[styles.gridImage, { backgroundColor: theme.background.darker }]} />
-                  )}
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-        )}
       </ScrollView>
     </View>
   );
@@ -276,28 +216,4 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     content: { flex: 1 },
     scrollContent: { paddingBottom: 24 },
-    emptyState: { alignItems: "center", paddingVertical: 60 },
-    emptyTitle: {
-      fontSize: 18,
-      fontFamily: FONTS.semiBold,
-      color: theme.foreground.white,
-      marginTop: 16,
-      marginBottom: 8,
-    },
-    emptySubtitle: {
-      fontSize: 14,
-      color: theme.foreground.gray,
-      textAlign: "center",
-      paddingHorizontal: 32,
-    },
-    postsSection: { paddingHorizontal: 12 },
-    postsTitle: {
-      fontSize: 16,
-      fontFamily: FONTS.bold,
-      color: theme.foreground.white,
-      marginBottom: 10,
-    },
-    postsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 2 },
-    gridItem: { width: "32%", aspectRatio: 1, overflow: "hidden" },
-    gridImage: { width: "100%", height: "100%" },
   });

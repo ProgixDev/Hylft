@@ -1,6 +1,4 @@
 import { api } from "./api";
-import { mapPostToUi, type BackendPost } from "./feedMappers";
-import type { PostData } from "../components/ui/Post";
 
 export type MyProfile = {
   id: string;
@@ -25,34 +23,15 @@ export const DEFAULT_USER_STATS: UserStats = {
   likes_count: 0,
 };
 
-type FeedCache = {
-  userId: string;
-  posts: PostData[];
-  cursor: string | null;
-  hasMore: boolean;
-};
-
 type ProfileCache = {
   userId: string;
   profile: MyProfile | null;
   stats: UserStats;
 };
 
-let feedCache: FeedCache | null = null;
 let profileCache: ProfileCache | null = null;
 let inflight: Promise<void> | null = null;
 let inflightUserId: string | null = null;
-
-const FEED_PAGE_SIZE = 20;
-
-export function getFeedCache(userId: string | undefined | null) {
-  if (!userId || feedCache?.userId !== userId) return null;
-  return feedCache;
-}
-
-export function setFeedCache(cache: FeedCache | null) {
-  feedCache = cache;
-}
 
 export function getProfileCache(userId: string | undefined | null) {
   if (!userId || profileCache?.userId !== userId) return null;
@@ -64,28 +43,9 @@ export function setProfileCache(cache: ProfileCache | null) {
 }
 
 export function clearPreloadCache() {
-  feedCache = null;
   profileCache = null;
   inflight = null;
   inflightUserId = null;
-}
-
-async function preloadFeed(userId: string) {
-  try {
-    const res = (await api.listPosts({
-      scope: "timeline",
-      limit: FEED_PAGE_SIZE,
-    })) as { items: BackendPost[]; next_cursor: string | null };
-    const posts = (res.items ?? []).map(mapPostToUi);
-    feedCache = {
-      userId,
-      posts,
-      cursor: res.next_cursor,
-      hasMore: !!res.next_cursor,
-    };
-  } catch {
-    // Swallow; screen will retry on mount.
-  }
 }
 
 async function preloadProfile(userId: string) {
@@ -105,11 +65,9 @@ export function preloadAppData(userId: string): Promise<void> {
   if (inflight && inflightUserId === userId) return inflight;
 
   inflightUserId = userId;
-  inflight = Promise.all([preloadFeed(userId), preloadProfile(userId)]).then(
-    () => {
-      inflight = null;
-      inflightUserId = null;
-    },
-  );
+  inflight = preloadProfile(userId).then(() => {
+    inflight = null;
+    inflightUserId = null;
+  });
   return inflight;
 }
