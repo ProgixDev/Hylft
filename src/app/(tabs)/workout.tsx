@@ -186,29 +186,27 @@ export default function Workout() {
         <AnimatedSection delay={120} scale>
           <View
             style={{
-              flexDirection: "column",
+              flexDirection: "row",
               marginHorizontal: 20,
               marginBottom: 24,
-              gap: 14,
+              gap: 12,
             }}
           >
             <Pressable
               onPress={handleCreateRoutine}
               style={({ pressed }) => [
                 {
-                  backgroundColor: theme.primary.light,
+                  flex: 1,
+                  backgroundColor: "#10B981",
                   borderRadius: 16,
                   paddingVertical: 16,
                   paddingHorizontal: 8,
                   alignItems: "center",
                   justifyContent: "center",
-                  borderColor: theme.primary.main,
                   flexDirection: "row",
                   gap: 8,
+                  opacity: pressed ? 0.85 : 1,
                 },
-                pressed
-                  ? { borderBottomWidth: 0, marginTop: 4 }
-                  : { borderBottomWidth: 4, marginTop: 0 },
               ]}
             >
               <Ionicons name="add-circle" size={22} color="#FFFFFF" />
@@ -232,22 +230,20 @@ export default function Workout() {
               onPress={() => router.push("/explore-routines" as any)}
               style={({ pressed }) => [
                 {
-                  backgroundColor: "#6B7280", // Gray
+                  flex: 1,
+                  backgroundColor: "#6366F1",
                   borderRadius: 16,
                   paddingVertical: 16,
                   paddingHorizontal: 8,
                   alignItems: "center",
                   justifyContent: "center",
-                  borderColor: "#4B5563", // Darker Gray for 3D effect
                   flexDirection: "row",
                   gap: 8,
+                  opacity: pressed ? 0.85 : 1,
                 },
-                pressed
-                  ? { borderBottomWidth: 0, marginTop: 4 }
-                  : { borderBottomWidth: 4, marginTop: 0 },
               ]}
             >
-              <Ionicons name="compass" size={22} color="#FFFFFF" />
+              <Ionicons name="search" size={22} color="#FFFFFF" />
               <Text
                 numberOfLines={1}
                 adjustsFontSizeToFit
@@ -261,7 +257,7 @@ export default function Workout() {
                   letterSpacing: 0.5,
                 }}
               >
-                {t("workout.exploreRoutines", "Découvrir")}
+                {t("workout.explore", "Explorer")}
               </Text>
             </Pressable>
           </View>
@@ -309,20 +305,17 @@ export default function Workout() {
               </View>
             </Pressable>
           ) : (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.routinesScroll}
-            >
+            <View style={styles.routinesList}>
               {routines.slice(0, 6).map((routine) => (
                 <RoutineCard
                   key={routine.id}
                   routine={routine}
+                  fullWidth
                   onPress={() => router.push(`/routines/${routine.id}` as any)}
                   onStart={() => handleStartRoutine(routine)}
                 />
               ))}
-            </ScrollView>
+            </View>
           )}
         </AnimatedSection>
 
@@ -481,11 +474,16 @@ function createStyles(theme: Theme) {
       backgroundColor: theme.foreground.gray + "40",
     },
 
-    // Routines (carousel + empty)
+    // Routines (list + empty)
     routinesScroll: {
       paddingLeft: 20,
       paddingRight: 6,
       paddingBottom: 24,
+    },
+    routinesList: {
+      paddingHorizontal: 20,
+      paddingBottom: 24,
+      gap: 12,
     },
     routinesEmpty: {
       marginHorizontal: 20,

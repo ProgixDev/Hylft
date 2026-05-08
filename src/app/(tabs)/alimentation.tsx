@@ -4,14 +4,23 @@ import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Image,
+  LayoutAnimation,
   Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
+  UIManager,
   View,
 } from "react-native";
+
+if (
+  Platform.OS === "android" &&
+  UIManager.setLayoutAnimationEnabledExperimental
+) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 import Svg, { Circle } from "react-native-svg";
 import AnimatedScreen from "../../components/ui/AnimatedScreen";
 import { FONTS } from "../../constants/fonts";
@@ -165,8 +174,16 @@ export default function Alimentation() {
     dinner: false,
     snack: false,
   });
-  const toggleMealExpanded = (type: MealType) =>
+  const toggleMealExpanded = (type: MealType) => {
+    LayoutAnimation.configureNext(
+      LayoutAnimation.create(
+        220,
+        LayoutAnimation.Types.easeInEaseOut,
+        LayoutAnimation.Properties.opacity,
+      ),
+    );
     setExpandedMeals((prev) => ({ ...prev, [type]: !prev[type] }));
+  };
   const [weightTarget] = useState(DEFAULT_WEIGHT_TARGET); // UI only, out of scope for backend
   const [weightInput, setWeightInput] = useState("");
   const [isEditingWeight, setIsEditingWeight] = useState(false);

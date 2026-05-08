@@ -10,6 +10,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import { FONTS } from "../../constants/fonts";
@@ -63,6 +64,7 @@ const FoodDetailSheet: React.FC<FoodDetailSheetProps> = ({
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   const [servings, setServings] = useState(1);
+  const [gramsInput, setGramsInput] = useState("100");
   const [detail, setDetail] = useState<FoodItem | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [detailError, setDetailError] = useState(false);
@@ -121,6 +123,7 @@ const FoodDetailSheet: React.FC<FoodDetailSheetProps> = ({
   useEffect(() => {
     if (visible) {
       setServings(1);
+      setGramsInput("100");
       setHiResFailed(false);
     }
   }, [visible]);
@@ -141,11 +144,28 @@ const FoodDetailSheet: React.FC<FoodDetailSheetProps> = ({
   const cPct = (carbs / macroTotal) * 100;
   const fPct = (fat / macroTotal) * 100;
 
-  const handleDecrement = () => {
-    setServings((s) => Math.max(SERVING_MIN, +(s - SERVING_STEP).toFixed(2)));
+  const updateServings = (next: number) => {
+    const clamped = Math.max(SERVING_MIN, Math.min(SERVING_MAX, +next.toFixed(2)));
+    setServings(clamped);
+    setGramsInput(String(Math.round(clamped * 100)));
   };
-  const handleIncrement = () => {
-    setServings((s) => Math.min(SERVING_MAX, +(s + SERVING_STEP).toFixed(2)));
+  const handleDecrement = () => updateServings(servings - SERVING_STEP);
+  const handleIncrement = () => updateServings(servings + SERVING_STEP);
+
+  const handleGramsChange = (text: string) => {
+    const cleaned = text.replace(/[^0-9]/g, "").slice(0, 5);
+    setGramsInput(cleaned);
+    const grams = parseInt(cleaned, 10);
+    if (!Number.isNaN(grams) && grams > 0) {
+      const next = Math.max(
+        SERVING_MIN,
+        Math.min(SERVING_MAX, +(grams / 100).toFixed(2))
+      );
+      setServings(next);
+    }
+  };
+  const handleGramsBlur = () => {
+    setGramsInput(String(Math.round(servings * 100)));
   };
 
   const avatarColor = getAvatarColor(display.name || "?");
@@ -338,6 +358,27 @@ const FoodDetailSheet: React.FC<FoodDetailSheetProps> = ({
                 <Text style={styles.stepperHint}>
                   {`× 100g = ${Math.round(servings * 100)}g`}
                 </Text>
+              </View>
+
+              {/* Grams (poids) input */}
+              <View style={styles.gramsSection}>
+                <Text style={styles.stepperLabel}>
+                  {isFr ? "Poids" : "Weight"}
+                </Text>
+                <View style={styles.gramsInputWrap}>
+                  <TextInput
+                    style={styles.gramsInput}
+                    value={gramsInput}
+                    onChangeText={handleGramsChange}
+                    onBlur={handleGramsBlur}
+                    keyboardType="number-pad"
+                    maxLength={5}
+                    selectTextOnFocus
+                    placeholder="100"
+                    placeholderTextColor={theme.foreground.gray}
+                  />
+                  <Text style={styles.gramsUnit}>g</Text>
+                </View>
               </View>
                 </>
               )}
@@ -610,6 +651,38 @@ function createStyles(theme: Theme) {
     stepperHint: {
       fontFamily: FONTS.regular,
       fontSize: 11,
+      color: theme.foreground.gray,
+    },
+    gramsSection: {
+      paddingHorizontal: 20,
+      paddingTop: 18,
+      alignItems: "center",
+      gap: 10,
+    },
+    gramsInputWrap: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+      backgroundColor: theme.background.darker,
+      borderWidth: 1,
+      borderColor: theme.background.accent,
+      borderRadius: 12,
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      minWidth: 140,
+      justifyContent: "center",
+    },
+    gramsInput: {
+      fontFamily: FONTS.bold,
+      fontSize: 20,
+      color: theme.foreground.white,
+      minWidth: 60,
+      textAlign: "center",
+      padding: 0,
+    },
+    gramsUnit: {
+      fontFamily: FONTS.semiBold,
+      fontSize: 14,
       color: theme.foreground.gray,
     },
     ctaWrap: {

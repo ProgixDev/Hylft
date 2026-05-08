@@ -1,8 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -26,31 +25,9 @@ import { useCreateRoutine } from "../../contexts/CreateRoutineContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { RoutineExercise, SetTarget } from "../../data/mockData";
 import { api } from "../../services/api";
-import { ApiRoutine } from "../../utils/routineMapper";
+import CoverPickerModal from "../../components/profile/CoverPickerModal";
 
 import { FONTS } from "../../constants/fonts";
-
-const WORKOUT_REMINDER_KEY = "@hylift_workout_reminder";
-const WORKOUT_REMINDER_TIME_KEY = "@hylift_workout_reminder_time";
-const DEFAULT_WORKOUT_REMINDER_TIME = "17:30";
-const WORKOUT_DAYS_KEY = "@hylift_workout_days";
-
-const DAY_IDS = [
-  "monday",
-  "tuesday",
-  "wednesday",
-  "thursday",
-  "friday",
-  "saturday",
-  "sunday",
-] as const;
-const DAY_FALLBACK_LABELS = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
-
-type AvailableDay = {
-  index: number;
-  label: string;
-  existingRoutineId?: string | null;
-};
 
 const EDITOR_CARD_COLORS = {
   sets: {
@@ -125,22 +102,7 @@ export default function CreateRoutineScreen() {
   const { theme } = useTheme();
   const styles = createStyles(theme);
   const router = useRouter();
-  const params = useLocalSearchParams<{
-    fromWeekSetup?: string;
-    dayOfWeek?: string;
-    dayLabel?: string;
-  }>();
   const DIFFICULTIES = getDifficulties(t);
-  const setupDayIndex = Number(params.dayOfWeek);
-  const isWeekSetup =
-    params.fromWeekSetup === "1" &&
-    Number.isInteger(setupDayIndex) &&
-    setupDayIndex >= 0 &&
-    setupDayIndex <= 6;
-  const setupDayLabel =
-    typeof params.dayLabel === "string" && params.dayLabel.trim()
-      ? params.dayLabel.trim()
-      : t("home.todaysWorkout");
 
   const {
     isCreating,
@@ -152,21 +114,8 @@ export default function CreateRoutineScreen() {
     clearCreation,
   } = useCreateRoutine();
 
-  const didPrefillWeekSetup = useRef(false);
   useEffect(() => {
     if (!isCreating) initCreation();
-    if (isWeekSetup && !didPrefillWeekSetup.current && !draft.name.trim()) {
-      didPrefillWeekSetup.current = true;
-      updateDraft({
-        name: t("createRoutine.weekRoutineName", "{{day}} workout", {
-          day: setupDayLabel,
-        }),
-        description: t(
-          "createRoutine.weekRoutineDescription",
-          "Planned from your weekly workout setup.",
-        ),
-      });
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -174,71 +123,8 @@ export default function CreateRoutineScreen() {
     null,
   );
   const [isSavingRoutine, setIsSavingRoutine] = useState(false);
-  const [availableDays, setAvailableDays] = useState<AvailableDay[]>([]);
-  const [isLoadingDays, setIsLoadingDays] = useState(true);
-  const [assignedDayIndex, setAssignedDayIndex] = useState<number | null>(
-    isWeekSetup ? setupDayIndex : null,
-  );
-
-  useEffect(() => {
-    if (isWeekSetup) {
-      setIsLoadingDays(false);
-      return;
-    }
-    let cancelled = false;
-    (async () => {
-      const getLabel = (idx: number) =>
-        t(
-          `onboarding.workoutFrequency.days.${DAY_IDS[idx]}`,
-          DAY_FALLBACK_LABELS[idx],
-        );
-      let days: AvailableDay[] = [];
-      try {
-        const schedule = await api.getSchedule();
-        const items = (schedule?.items ?? []) as Array<{
-          day_of_week: number;
-          is_rest_day: boolean;
-          routine_id?: string | null;
-        }>;
-        const workoutItems = items.filter((i) => !i.is_rest_day);
-        if (workoutItems.length > 0) {
-          days = workoutItems
-            .map((i) => ({
-              index: i.day_of_week,
-              label: getLabel(i.day_of_week),
-              existingRoutineId: i.routine_id ?? null,
-            }))
-            .sort((a, b) => a.index - b.index);
-        }
-      } catch {
-        // fall through to AsyncStorage fallback
-      }
-      if (days.length === 0) {
-        try {
-          const raw = await AsyncStorage.getItem(WORKOUT_DAYS_KEY);
-          if (raw) {
-            const ids = JSON.parse(raw) as string[];
-            const indices = ids
-              .map((id) => DAY_IDS.indexOf(id as (typeof DAY_IDS)[number]))
-              .filter((i) => i >= 0);
-            days = indices
-              .sort((a, b) => a - b)
-              .map((i) => ({ index: i, label: getLabel(i) }));
-          }
-        } catch {
-          // ignore
-        }
-      }
-      if (!cancelled) {
-        setAvailableDays(days);
-        setIsLoadingDays(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const [isWallpaperPickerVisible, setIsWallpaperPickerVisible] =
+    useState(false);
   const editingExercise = editingExerciseId
     ? draft.exercises.find((e) => e.id === editingExerciseId) ?? null
     : null;
@@ -257,30 +143,22 @@ export default function CreateRoutineScreen() {
     if (isSavingRoutine) return;
 
     if (draft.exercises.length === 0) {
-      Alert.alert(t("createRoutine.noExercises"), t("createRoutine.addAtLeastOneExercise"));
+      Alert.alert(
+        t("createRoutine.noExercises"),
+        t("createRoutine.addAtLeastOneExercise"),
+      );
       return;
     }
-    if (!isWeekSetup && assignedDayIndex == null) {
+    if (!draft.name.trim()) {
       Alert.alert(
-        t("createRoutine.missingDay", "Jour manquant"),
+        t("createRoutine.missingName", "Nom manquant"),
         t(
-          "createRoutine.pleaseAssignDay",
-          "Choisis un jour pour cette séance.",
+          "createRoutine.pleaseNameRoutine",
+          "Donnez un nom à votre séance.",
         ),
       );
       return;
     }
-
-    const dayLabelForName =
-      assignedDayIndex != null
-        ? availableDays.find((d) => d.index === assignedDayIndex)?.label ??
-          setupDayLabel
-        : setupDayLabel;
-    const resolvedName =
-      draft.name.trim() ||
-      t("createRoutine.weekRoutineName", "{{day}} workout", {
-        day: dayLabelForName,
-      });
 
     const estimatedDuration = draft.exercises.reduce(
       (total, ex) =>
@@ -289,72 +167,27 @@ export default function CreateRoutineScreen() {
       0,
     );
 
-    let createdRoutine: ApiRoutine | undefined;
-    let saveError: any = null;
-
     setIsSavingRoutine(true);
     try {
-      createdRoutine = (await api.createRoutine({
-        name: resolvedName,
+      await api.createRoutine({
+        name: draft.name.trim(),
         description: draft.description.trim(),
         difficulty: draft.difficulty,
         targetMuscles: draft.targetMuscles,
         exercises: draft.exercises,
         estimatedDuration: Math.round(estimatedDuration),
-      })) as ApiRoutine;
-
-      if (isWeekSetup && createdRoutine?.id) {
-        await api.upsertScheduleAssignment(setupDayIndex, {
-          is_rest_day: false,
-          routine_id: createdRoutine.id,
-        });
-        await AsyncStorage.multiSet([
-          [WORKOUT_REMINDER_KEY, "true"],
-          [WORKOUT_REMINDER_TIME_KEY, DEFAULT_WORKOUT_REMINDER_TIME],
-        ]);
-      }
+        wallpaperUrl: draft.wallpaperUrl ?? null,
+      });
     } catch (error: any) {
-      saveError = error;
-    }
-
-    let assignError: any = null;
-    if (
-      !saveError &&
-      !isWeekSetup &&
-      createdRoutine?.id &&
-      assignedDayIndex != null
-    ) {
-      try {
-        await api.upsertScheduleAssignment(assignedDayIndex, {
-          is_rest_day: false,
-          routine_id: createdRoutine.id,
-        });
-      } catch (error: any) {
-        assignError = error;
-      }
-    }
-
-    setIsSavingRoutine(false);
-
-    if (saveError) {
+      setIsSavingRoutine(false);
       Alert.alert(
         t("createRoutine.saveRoutineFailed", "Could not save routine"),
-        saveError?.message || t("createRoutine.tryAgain", "Please try again."),
+        error?.message || t("createRoutine.tryAgain", "Please try again."),
       );
       return;
     }
 
-    if (assignError) {
-      Alert.alert(
-        t(
-          "createRoutine.assignDayFailed",
-          "La routine est créée, mais l'assignation au jour a échoué.",
-        ),
-        assignError?.message ||
-          t("createRoutine.tryAgain", "Please try again."),
-      );
-    }
-
+    setIsSavingRoutine(false);
     clearCreation();
     router.back();
   };
@@ -397,102 +230,60 @@ export default function CreateRoutineScreen() {
         contentContainerStyle={{ paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Day assignment (replaces routine name — the day IS the session identity) */}
-        {isWeekSetup ? (
-          <View style={styles.section}>
-            <Text style={styles.label}>
-              {t("createRoutine.assignToDay", "Assigner à un jour")}
-            </Text>
-            <View style={[styles.dayPickerChip, styles.dayPickerChipSelected]}>
-              <Text
-                style={[
-                  styles.dayPickerChipText,
-                  styles.dayPickerChipTextSelected,
-                ]}
-              >
-                {setupDayLabel}
+        {/* Routine name */}
+        <View style={styles.section}>
+          <Text style={styles.label}>
+            {t("createRoutine.name", "Nom de la séance")}
+          </Text>
+          <TextInput
+            style={styles.nameInput}
+            value={draft.name}
+            onChangeText={(value) => updateDraft({ name: value })}
+            placeholder={t("createRoutine.namePlaceholder", "Push day, Full body…")}
+            placeholderTextColor={theme.foreground.gray}
+          />
+        </View>
+
+        {/* Wallpaper */}
+        <View style={styles.section}>
+          <Text style={styles.label}>
+            {t("createRoutine.wallpaper", "Image de fond")}
+          </Text>
+          <Pressable
+            style={({ pressed }) => [
+              styles.wallpaperPreview,
+              pressed && { opacity: 0.9 },
+            ]}
+            onPress={() => setIsWallpaperPickerVisible(true)}
+          >
+            {draft.wallpaperUrl ? (
+              <Image
+                source={{ uri: draft.wallpaperUrl }}
+                style={StyleSheet.absoluteFill}
+                contentFit="cover"
+              />
+            ) : (
+              <View style={[StyleSheet.absoluteFill, styles.wallpaperEmpty]}>
+                <Ionicons
+                  name="image-outline"
+                  size={28}
+                  color={theme.foreground.gray}
+                />
+              </View>
+            )}
+            <LinearGradient
+              colors={["rgba(0,0,0,0.0)", "rgba(0,0,0,0.55)"]}
+              style={StyleSheet.absoluteFill}
+            />
+            <View style={styles.wallpaperOverlay}>
+              <Text style={styles.wallpaperOverlayText}>
+                {draft.wallpaperUrl
+                  ? t("createRoutine.changeWallpaper", "Changer")
+                  : t("createRoutine.chooseWallpaper", "Choisir une image")}
               </Text>
             </View>
-          </View>
-        ) : (
-          <View style={styles.section}>
-            <Text style={styles.label}>
-              {t("createRoutine.assignToDay", "Assigner à un jour")}
-            </Text>
-            {isLoadingDays ? (
-              <ActivityIndicator color={theme.foreground.gray} />
-            ) : availableDays.length === 0 ? (
-              <View style={styles.dayPickerEmpty}>
-                <Text style={styles.dayPickerEmptyText}>
-                  {t(
-                    "createRoutine.noWorkoutDays",
-                    "Vous n'avez pas encore de jours d'entraînement.",
-                  )}
-                </Text>
-                <TouchableOpacity
-                  style={styles.dayPickerCta}
-                  onPress={() => router.push("/objective" as any)}
-                >
-                  <Text style={styles.dayPickerCtaText}>
-                    {t(
-                      "createRoutine.configureDaysFirst",
-                      "Configurer ma semaine",
-                    )}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            ) : (
-              <>
-                <View style={styles.dayPickerRow}>
-                  {availableDays.map((day) => {
-                    const isSelected = assignedDayIndex === day.index;
-                    return (
-                      <TouchableOpacity
-                        key={day.index}
-                        style={[
-                          styles.dayPickerChip,
-                          isSelected && styles.dayPickerChipSelected,
-                        ]}
-                        onPress={() => {
-                          setAssignedDayIndex(day.index);
-                          updateDraft({
-                            name: t(
-                              "createRoutine.weekRoutineName",
-                              "{{day}} workout",
-                              { day: day.label },
-                            ),
-                          });
-                        }}
-                      >
-                        <Text
-                          style={[
-                            styles.dayPickerChipText,
-                            isSelected && styles.dayPickerChipTextSelected,
-                          ]}
-                          numberOfLines={1}
-                        >
-                          {day.label}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-                {assignedDayIndex != null &&
-                  availableDays.find(
-                    (d) =>
-                      d.index === assignedDayIndex && !!d.existingRoutineId,
-                  ) && (
-                    <Text style={styles.dayPickerWarning}>
-                      {t(
-                        "createRoutine.dayAlreadyAssigned",
-                        "Remplacera la routine actuelle",
-                      )}
-                    </Text>
-                  )}
-              </>
-            )}
-          </View>
-        )}
+          </Pressable>
+        </View>
 
         {/* Exercises */}
         <View style={styles.section}>
@@ -634,6 +425,16 @@ export default function CreateRoutineScreen() {
           </View>
         </View>
       </Modal>
+
+      <CoverPickerModal
+        visible={isWallpaperPickerVisible}
+        currentUrl={draft.wallpaperUrl ?? null}
+        onClose={() => setIsWallpaperPickerVisible(false)}
+        onSelect={(url) => {
+          updateDraft({ wallpaperUrl: url });
+          setIsWallpaperPickerVisible(false);
+        }}
+      />
     </View>
   );
 }
@@ -1608,6 +1409,44 @@ const createStyles = (theme: Theme) => {
     section: {
       paddingHorizontal: 18,
       marginTop: 18,
+    },
+    nameInput: {
+      backgroundColor: theme.background.darker,
+      borderRadius: 14,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      color: theme.foreground.white,
+      fontFamily: FONTS.semiBold,
+      fontSize: 15,
+      borderWidth: 1,
+      borderColor: theme.background.accent,
+    },
+    wallpaperPreview: {
+      height: 140,
+      borderRadius: 16,
+      overflow: "hidden",
+      borderWidth: 1,
+      borderColor: theme.background.accent,
+    },
+    wallpaperEmpty: {
+      backgroundColor: theme.background.darker,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    wallpaperOverlay: {
+      position: "absolute",
+      bottom: 10,
+      right: 10,
+      backgroundColor: "rgba(0,0,0,0.55)",
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 14,
+    },
+    wallpaperOverlayText: {
+      fontFamily: FONTS.bold,
+      fontSize: 12,
+      color: "#fff",
+      letterSpacing: 0.3,
     },
     label: {
       fontSize: 11,

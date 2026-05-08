@@ -192,19 +192,6 @@ export const api = {
   cancelOutgoingFollowRequest: (targetId: string) =>
     authFetch(`/follow-requests/outgoing/${targetId}`, { method: "DELETE" }),
 
-  // ── Schedule ─────────────────────────────────────────────
-  getSchedule: () => authFetch("/schedule"),
-  upsertScheduleAssignment: (
-    dayOfWeek: number,
-    data: { is_rest_day: boolean; routine_id?: string | null },
-  ) =>
-    authFetch(`/schedule/${dayOfWeek}`, {
-      method: "PUT",
-      body: JSON.stringify(data),
-    }),
-  deleteScheduleAssignment: (dayOfWeek: number) =>
-    authFetch(`/schedule/${dayOfWeek}`, { method: "DELETE" }),
-
   // ── Weight history ──────────────────────────────────────
   listWeightEntries: (params: {
     start?: string;

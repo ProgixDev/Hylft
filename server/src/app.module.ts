@@ -8,7 +8,6 @@ import { HealthModule } from './health/health.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { NutritionModule } from './nutrition/nutrition.module';
 import { RoutinesModule } from './routines/routines.module';
-import { ScheduleModule } from './schedule/schedule.module';
 import { SocialModule } from './social/social.module';
 import { UsersModule } from './users/users.module';
 import { WallpapersModule } from './wallpapers/wallpapers.module';
@@ -27,7 +26,6 @@ import { WeightEntriesModule } from './weight-entries/weight-entries.module';
     HealthModule,
     RoutinesModule,
     SocialModule,
-    ScheduleModule,
     WeightEntriesModule,
     NotificationsModule,
     ExercisesModule,

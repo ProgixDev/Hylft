@@ -8,6 +8,7 @@ export interface RoutineDraft {
   difficulty: "beginner" | "intermediate" | "advanced";
   targetMuscles: string[];
   exercises: RoutineExercise[];
+  wallpaperUrl?: string | null;
 }
 
 interface CreateRoutineContextType {
@@ -31,6 +32,7 @@ const DEFAULT_DRAFT: RoutineDraft = {
   difficulty: "intermediate",
   targetMuscles: [],
   exercises: [],
+  wallpaperUrl: null,
 };
 
 const CreateRoutineContext = createContext<

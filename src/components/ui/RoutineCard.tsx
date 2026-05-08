@@ -1,190 +1,242 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { memo } from "react";
-import { Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../../contexts/ThemeContext";
 import { Routine } from "../../data/mockData";
-import { translateRoutineName, translateExerciseTerm } from "../../utils/exerciseTranslator";
-
+import {
+  translateRoutineName,
+  translateExerciseTerm,
+} from "../../utils/exerciseTranslator";
 import { FONTS } from "../../constants/fonts";
 
 type Props = {
   routine: Routine;
   onPress?: () => void;
   onStart?: () => void;
-  /** when true the card expands to full width (use on list/detail screens) */
   fullWidth?: boolean;
 };
 
-const RoutineCard = ({
-  routine,
-  onPress,
-  onStart,
-  fullWidth = false,
-}: Props) => {
+const DIFFICULTY_ACCENT: Record<string, { color: string }> = {
+  beginner: { color: "#22C55E" },
+  intermediate: { color: "#B652C7" },
+  advanced: { color: "#EF4444" },
+};
+
+const RoutineCard = ({ routine, onPress, onStart, fullWidth = false }: Props) => {
   const { t } = useTranslation();
-  const { theme } = useTheme();
-  const styles = createStyles(theme);
+  const { theme, themeType } = useTheme();
   const translatedName = translateRoutineName(routine.name);
+
+  const accent = DIFFICULTY_ACCENT[routine.difficulty] ?? { color: "#22C55E" };
+  const isDark = themeType === "dark";
+
+  const cardBg = isDark ? "#151719" : "#F8F9FB";
+  const cardBorder = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.07)";
+  const textPrimary = isDark ? "#F0E6D3" : "#0B0D0E";
+  const textMuted = isDark ? "rgba(240,230,211,0.5)" : "rgba(11,13,14,0.45)";
+  const statBg = isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.04)";
+  const divider = isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.07)";
+
+  const shadow = Platform.select({
+    ios: {
+      shadowColor: "#000",
+      shadowOpacity: isDark ? 0.35 : 0.1,
+      shadowRadius: 16,
+      shadowOffset: { width: 0, height: 6 },
+    },
+    android: { elevation: isDark ? 6 : 3 },
+    default: {},
+  });
 
   return (
     <TouchableOpacity
       onPress={onPress}
-      activeOpacity={0.85}
-      style={[styles.card, fullWidth && styles.cardFull]}
+      activeOpacity={0.88}
+      style={[
+        styles.card,
+        { backgroundColor: cardBg, borderColor: cardBorder },
+        fullWidth ? styles.cardFull : styles.cardFixed,
+        shadow,
+      ]}
     >
-      <View style={styles.header}>
-        <Text style={styles.name} numberOfLines={1}>
-          {translatedName}
-        </Text>
-      </View>
+      {/* Left accent stripe */}
+      <View style={[styles.accentStripe, { backgroundColor: accent.color }]} />
 
-      <View style={styles.statsRow}>
-        <View style={styles.statItem}>
-          <Text style={styles.statValue}>{routine.exercises.length}</Text>
-          <Text style={styles.statLabel}>{t("routines.exercises")}</Text>
-        </View>
-        <View style={styles.statItem}>
-          <Text style={styles.statValue}>{routine.estimatedDuration}m</Text>
-          <Text style={styles.statLabel}>{t("routines.duration")}</Text>
-        </View>
-        <View style={styles.statItem}>
-          <Text style={styles.statValue}>{routine.timesCompleted}</Text>
-          <Text style={styles.statLabel}>{t("routines.completed")}</Text>
-        </View>
-      </View>
-
-      <View style={styles.bottomRow}>
-        <View style={styles.musclesContainer}>
-          {routine.targetMuscles.slice(0, 3).map((m, i) => (
-            <View key={i} style={styles.muscleTag}>
-              <Text style={styles.muscleTagText}>
-                {translateExerciseTerm(m, "targetMuscles")}
+      <View style={styles.inner}>
+        {/* Top row: name + times completed */}
+        <View style={styles.topRow}>
+          <Text style={[styles.name, { color: textPrimary }]} numberOfLines={1}>
+            {translatedName}
+          </Text>
+          {routine.timesCompleted > 0 && (
+            <View style={styles.completedPill}>
+              <Ionicons name="checkmark-circle" size={12} color={textMuted} />
+              <Text style={[styles.completedText, { color: textMuted }]}>
+                {routine.timesCompleted}×
               </Text>
             </View>
-          ))}
+          )}
         </View>
 
-        <TouchableOpacity
-          onPress={onStart}
-          style={styles.playButton}
-          activeOpacity={0.85}
-          accessibilityLabel={t("routines.startRoutine")}
-        >
-          <Ionicons name="play" size={18} color="#FFFFFF" />
-        </TouchableOpacity>
+        {/* Stats row */}
+        <View style={styles.statsRow}>
+          <View style={[styles.statChip, { backgroundColor: statBg }]}>
+            <Ionicons name="barbell-outline" size={13} color={accent.color} />
+            <Text style={[styles.statText, { color: textPrimary }]}>
+              {routine.exercises.length}{" "}
+              <Text style={{ color: textMuted, fontFamily: FONTS.regular }}>
+                {t("routines.exercises")}
+              </Text>
+            </Text>
+          </View>
+          <View style={[styles.statChip, { backgroundColor: statBg }]}>
+            <Ionicons name="time-outline" size={13} color={accent.color} />
+            <Text style={[styles.statText, { color: textPrimary }]}>
+              {routine.estimatedDuration}
+              <Text style={{ color: textMuted, fontFamily: FONTS.regular }}> min</Text>
+            </Text>
+          </View>
+        </View>
+
+        {/* Divider */}
+        <View style={[styles.divider, { backgroundColor: divider }]} />
+
+        {/* Bottom row: muscles + start button */}
+        <View style={styles.bottomRow}>
+          <View style={styles.musclesRow}>
+            {routine.targetMuscles.slice(0, 2).map((m, i) => (
+              <Text key={i} style={[styles.muscle, { color: textMuted }]}>
+                {i > 0 ? " · " : ""}
+                {translateExerciseTerm(m, "targetMuscles")}
+              </Text>
+            ))}
+            {routine.targetMuscles.length > 2 && (
+              <Text style={[styles.muscle, { color: textMuted }]}>
+                {" "}+{routine.targetMuscles.length - 2}
+              </Text>
+            )}
+          </View>
+
+          <Pressable
+            onPress={onStart}
+            accessibilityLabel={t("routines.startRoutine")}
+            style={({ pressed }) => [
+              styles.startBtn,
+              { backgroundColor: accent.color, opacity: pressed ? 0.8 : 1 },
+            ]}
+          >
+            <Ionicons name="play" size={12} color="#fff" />
+            <Text style={styles.startBtnText}>START</Text>
+          </Pressable>
+        </View>
       </View>
     </TouchableOpacity>
   );
 };
 
-const NAVY_CARD = "#0A1628";
-const NAVY_CARD_LIGHT = "#1A2F50";
-const NAVY_CARD_DEEP = "#07101F";
-const NAVY_TEXT_MUTED = "rgba(255,255,255,0.72)";
-
-const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) => {
-  const navyShadow = Platform.select({
-    ios: {
-      shadowColor: NAVY_CARD,
-      shadowOpacity: 0.26,
-      shadowRadius: 12,
-      shadowOffset: { width: 0, height: 8 },
-    },
-    android: { elevation: 5 },
-    default: {},
-  });
-
-  return StyleSheet.create({
-    card: {
-      width: 260,
-      backgroundColor: NAVY_CARD,
-      borderRadius: 14,
-      padding: 12,
-      borderWidth: 1,
-      borderColor: "rgba(255,255,255,0.14)",
-      borderBottomWidth: 3,
-      borderBottomColor: "rgba(0,0,0,0.24)",
-      marginRight: 10,
-      ...navyShadow,
-    },
-    cardFull: {
-      width: "100%",
-      marginRight: 0,
-      marginBottom: 10,
-    },
-    header: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "flex-start",
-      marginBottom: 10,
-    },
-    name: {
-      fontSize: 18,
-      fontFamily: FONTS.bold,
-      color: "#FFFFFF",
-      flex: 1,
-      marginRight: 8,
-    },
-    statsRow: {
-      flexDirection: "row",
-      gap: 8,
-      marginBottom: 10,
-    },
-    statItem: {
-      alignItems: "center",
-      flex: 1,
-      backgroundColor: "rgba(255,255,255,0.08)",
-      borderRadius: 10,
-      paddingVertical: 8,
-    },
-    statValue: {
-      color: "#FFFFFF",
-      fontSize: 14,
-      fontFamily: FONTS.bold,
-      marginBottom: 2,
-    },
-    statLabel: {
-      color: NAVY_TEXT_MUTED,
-      fontSize: 12,
-    },
-    bottomRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-      gap: 10,
-    },
-    musclesContainer: {
-      flex: 1,
-      flexDirection: "row",
-      flexWrap: "wrap",
-      gap: 5,
-    },
-    muscleTag: {
-      backgroundColor: NAVY_CARD_DEEP,
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-      borderRadius: 6,
-      borderWidth: 1,
-      borderColor: "rgba(255,255,255,0.12)",
-    },
-    muscleTagText: {
-      fontSize: 11,
-      fontFamily: FONTS.semiBold,
-      color: NAVY_TEXT_MUTED,
-      textTransform: "capitalize",
-    },
-    playButton: {
-      width: 38,
-      height: 38,
-      borderRadius: 19,
-      backgroundColor: NAVY_CARD_LIGHT,
-      alignItems: "center",
-      justifyContent: "center",
-      borderWidth: 1,
-      borderColor: "rgba(255,255,255,0.16)",
-    },
-  });
-};
+const styles = StyleSheet.create({
+  card: {
+    borderRadius: 18,
+    borderWidth: 1,
+    overflow: "hidden",
+    flexDirection: "row",
+  },
+  cardFixed: {
+    width: 280,
+    marginRight: 12,
+  },
+  cardFull: {
+    width: "100%",
+  },
+  accentStripe: {
+    width: 4,
+  },
+  inner: {
+    flex: 1,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    gap: 6,
+  },
+  topRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+  },
+  completedPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    flexShrink: 0,
+  },
+  completedText: {
+    fontFamily: FONTS.medium,
+    fontSize: 11,
+  },
+  name: {
+    fontFamily: FONTS.extraBold,
+    fontSize: 16,
+    letterSpacing: -0.2,
+    flex: 1,
+  },
+  statsRow: {
+    flexDirection: "row",
+    gap: 6,
+  },
+  statChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  statText: {
+    fontFamily: FONTS.bold,
+    fontSize: 12,
+  },
+  divider: {
+    height: 1,
+    marginVertical: 0,
+  },
+  bottomRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  musclesRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+    flexWrap: "nowrap",
+  },
+  muscle: {
+    fontFamily: FONTS.medium,
+    fontSize: 12,
+    textTransform: "capitalize",
+  },
+  startBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  startBtnText: {
+    fontFamily: FONTS.bold,
+    fontSize: 11,
+    color: "#fff",
+    letterSpacing: 0.5,
+  },
+});
 
 export default memo(RoutineCard);

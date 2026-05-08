@@ -29,4 +29,8 @@ export class UpdateRoutineDto {
   @IsNumber()
   @IsOptional()
   estimatedDuration?: number;
+
+  @IsString()
+  @IsOptional()
+  wallpaperUrl?: string;
 }
