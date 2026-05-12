@@ -1,4 +1,4 @@
-import { IsString, IsNumber, IsOptional, IsArray, IsIn, ValidateNested } from 'class-validator';
+import { IsString, IsNumber, IsOptional, IsArray, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { RoutineExerciseDto } from './create-routine.dto';
 
@@ -10,11 +10,6 @@ export class UpdateRoutineDto {
   @IsString()
   @IsOptional()
   description?: string;
-
-  @IsString()
-  @IsOptional()
-  @IsIn(['beginner', 'intermediate', 'advanced'])
-  difficulty?: string;
 
   @IsArray()
   @IsOptional()

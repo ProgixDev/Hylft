@@ -3,7 +3,6 @@ import {
   IsNumber,
   IsOptional,
   IsArray,
-  IsIn,
   Min,
   ValidateNested,
 } from 'class-validator';
@@ -67,10 +66,6 @@ export class CreateRoutineDto {
   @IsString()
   @IsOptional()
   description?: string;
-
-  @IsString()
-  @IsIn(['beginner', 'intermediate', 'advanced'])
-  difficulty: string;
 
   @IsArray()
   @IsOptional()

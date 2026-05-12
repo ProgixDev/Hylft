@@ -87,7 +87,6 @@ export class RoutinesService {
         user_id: userId,
         name: dto.name,
         description: dto.description ?? '',
-        difficulty: dto.difficulty,
         target_muscles: dto.targetMuscles ?? [],
         exercises: dto.exercises,
         estimated_duration: dto.estimatedDuration ?? 0,
@@ -105,7 +104,6 @@ export class RoutinesService {
     const updateData: Record<string, any> = { updated_at: new Date().toISOString() };
     if (dto.name !== undefined) updateData.name = dto.name;
     if (dto.description !== undefined) updateData.description = dto.description;
-    if (dto.difficulty !== undefined) updateData.difficulty = dto.difficulty;
     if (dto.targetMuscles !== undefined) updateData.target_muscles = dto.targetMuscles;
     if (dto.exercises !== undefined) updateData.exercises = dto.exercises;
     if (dto.estimatedDuration !== undefined) updateData.estimated_duration = dto.estimatedDuration;

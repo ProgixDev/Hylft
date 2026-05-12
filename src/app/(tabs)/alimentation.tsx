@@ -1,8 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  Animated,
   Image,
   LayoutAnimation,
   Platform,
@@ -14,13 +15,6 @@ import {
   UIManager,
   View,
 } from "react-native";
-
-if (
-  Platform.OS === "android" &&
-  UIManager.setLayoutAnimationEnabledExperimental
-) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
 import Svg, { Circle } from "react-native-svg";
 import AnimatedScreen from "../../components/ui/AnimatedScreen";
 import { FONTS } from "../../constants/fonts";
@@ -37,6 +31,13 @@ import {
   ageFromDateOfBirth,
   computeWaterGoalMl,
 } from "../../utils/nutritionGoals";
+
+if (
+  Platform.OS === "android" &&
+  UIManager.setLayoutAnimationEnabledExperimental
+) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 const DEFAULT_WATER_GOAL_ML = 2000;
 const GLASS_STEP_ML = 250;
@@ -168,11 +169,19 @@ export default function Alimentation() {
     [selectedDate],
   );
   const [noteInput, setNoteInput] = useState("");
-  const [expandedMeals, setExpandedMeals] = useState<Record<MealType, boolean>>({
-    breakfast: false,
-    lunch: false,
-    dinner: false,
-    snack: false,
+  const [expandedMeals, setExpandedMeals] = useState<Record<MealType, boolean>>(
+    {
+      breakfast: false,
+      lunch: false,
+      dinner: false,
+      snack: false,
+    },
+  );
+  const chevronOpacityRefs = useRef<Record<MealType, Animated.Value>>({
+    breakfast: new Animated.Value(1),
+    lunch: new Animated.Value(1),
+    dinner: new Animated.Value(1),
+    snack: new Animated.Value(1),
   });
   const toggleMealExpanded = (type: MealType) => {
     LayoutAnimation.configureNext(
@@ -183,6 +192,19 @@ export default function Alimentation() {
       ),
     );
     setExpandedMeals((prev) => ({ ...prev, [type]: !prev[type] }));
+    const opacity = chevronOpacityRefs.current[type];
+    Animated.sequence([
+      Animated.timing(opacity, {
+        toValue: 0.2,
+        duration: 120,
+        useNativeDriver: true,
+      }),
+      Animated.timing(opacity, {
+        toValue: 1,
+        duration: 220,
+        useNativeDriver: true,
+      }),
+    ]).start();
   };
   const [weightTarget] = useState(DEFAULT_WEIGHT_TARGET); // UI only, out of scope for backend
   const [weightInput, setWeightInput] = useState("");
@@ -319,49 +341,26 @@ export default function Alimentation() {
               style={styles.headerIconBtn}
               hitSlop={8}
             >
-              <Ionicons
-                name="time-outline"
-                size={18}
-                color="#FFFFFF"
-              />
+              <Ionicons name="time-outline" size={18} color="#FFFFFF" />
             </Pressable>
             <Pressable
               onPress={() => shiftDate(-1)}
               style={styles.headerIconBtn}
               hitSlop={8}
             >
-              <Ionicons
-                name="chevron-back"
-                size={18}
-                color="#FFFFFF"
-              />
+              <Ionicons name="chevron-back" size={18} color="#FFFFFF" />
             </Pressable>
             <Pressable
               onPress={() => shiftDate(1)}
               style={styles.headerIconBtn}
               hitSlop={8}
             >
-              <Ionicons
-                name="chevron-forward"
-                size={18}
-                color="#FFFFFF"
-              />
+              <Ionicons name="chevron-forward" size={18} color="#FFFFFF" />
             </Pressable>
           </View>
         </View>
 
         {/* ── Résumé ─────────────────────────────────────────── */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>{isFr ? "Résumé" : "Summary"}</Text>
-          <Pressable
-            onPress={() => router.push("/alimentation-history" as any)}
-          >
-            <Text style={styles.sectionLink}>
-              {isFr ? "Historique" : "History"}
-            </Text>
-          </Pressable>
-        </View>
-
         <View style={styles.summaryCard}>
           <View style={styles.summaryTopRow}>
             <View style={styles.summarySide}>
@@ -382,8 +381,8 @@ export default function Alimentation() {
                 }
                 size={130}
                 strokeWidth={10}
-                color="#FFFFFF"
-                bgColor="rgba(255,255,255,0.18)"
+                color={NAVY_CARD}
+                bgColor="rgba(10,22,40,0.18)"
               >
                 <Text style={styles.summaryCenterValue}>
                   {Math.round(caloriesRemaining).toLocaleString(
@@ -412,7 +411,7 @@ export default function Alimentation() {
                 label: isFr ? "Glucides" : "Carbs",
                 current: todaySummary.totalCarbs,
                 goal: goals.carbsGoal,
-                color: "#FFFFFF",
+                color: NAVY_CARD,
               },
               {
                 label: isFr ? "Protéines" : "Protein",
@@ -424,7 +423,7 @@ export default function Alimentation() {
                 label: isFr ? "Lipides" : "Fat",
                 current: todaySummary.totalFat,
                 goal: goals.fatGoal,
-                color: NAVY_TEXT_MUTED,
+                color: NAVY_CARD_DEEP,
               },
             ].map((m) => {
               const pct = m.goal > 0 ? Math.min(m.current / m.goal, 1) : 0;
@@ -458,117 +457,141 @@ export default function Alimentation() {
           </Text>
         </View>
 
-        {MEAL_TABS.map((item) => {
-          const meals = getMealsForType(item.type);
-          const consumed = getMealTypeCalories(item.type);
-          const macros = getMealTypeMacros(item.type);
-          const target = mealCalorieGoal(item.ratio);
+        <View style={styles.mealsBlock}>
+          {MEAL_TABS.map((item, index) => {
+            const meals = getMealsForType(item.type);
+            const consumed = getMealTypeCalories(item.type);
+            const macros = getMealTypeMacros(item.type);
+            const target = mealCalorieGoal(item.ratio);
 
-          const isExpanded = expandedMeals[item.type];
-          return (
-            <View key={item.type}>
-              <Pressable
-                style={styles.mealRow}
-                onPress={() => toggleMealExpanded(item.type)}
-              >
-                <Text style={styles.mealEmoji}>{item.emoji}</Text>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.mealName}>
-                    {t(`food.${item.type}`)}{" "}
-                    <Ionicons
-                      name={isExpanded ? "chevron-up" : "chevron-down"}
-                      size={12}
-                      color={theme.foreground.gray}
-                    />
-                  </Text>
-                  <Text style={styles.mealKcal}>
-                    {Math.round(consumed)} / {target} kcal
-                  </Text>
-                  <View style={styles.mealMacroRow}>
-                    <Text style={styles.mealMacroText}>
-                      {isFr ? "Prot" : "Protein"} {Math.round(macros.protein)}g
-                    </Text>
-                    <Text style={styles.mealMacroText}>
-                      {isFr ? "Lip" : "Fat"} {Math.round(macros.fat)}g
-                    </Text>
-                    <Text style={styles.mealMacroText}>
-                      {isFr ? "Gluc" : "Carbs"} {Math.round(macros.carbs)}g
-                    </Text>
-                  </View>
-                </View>
-                <TutorialTarget
-                  id={
-                    item.type === "breakfast"
-                      ? "alimentation.breakfastAddButton"
-                      : `alimentation.${item.type}AddButton`
-                  }
-                  style={styles.mealPlusTarget}
+            const isExpanded = expandedMeals[item.type];
+            const isLast = index === MEAL_TABS.length - 1;
+            return (
+              <View key={item.type}>
+                <Pressable
+                  style={styles.mealRow}
+                  onPress={() => toggleMealExpanded(item.type)}
                 >
-                  <Pressable
-                    style={styles.mealPlusBtn}
-                    onPress={() => openFoodSearch(item.type)}
-                  >
-                    <Ionicons
-                      name="add-circle-outline"
-                      size={28}
-                      color="#FFFFFF"
-                    />
-                  </Pressable>
-                </TutorialTarget>
-              </Pressable>
-
-              {isExpanded && meals.length === 0 && (
-                <View style={styles.foodEmpty}>
-                  <Text style={styles.foodEmptyText}>
-                    {isFr
-                      ? "Aucun aliment ajouté pour ce repas."
-                      : "No food added for this meal yet."}
-                  </Text>
-                </View>
-              )}
-
-              {isExpanded &&
-                meals.length > 0 &&
-                meals.map((meal) => (
-                  <View key={meal.id} style={styles.foodItem}>
-                    {meal.imageUrl ? (
-                      <Image
-                        source={{ uri: meal.imageUrl }}
-                        style={styles.foodThumb}
-                        resizeMode="cover"
-                      />
-                    ) : (
-                      <View style={[styles.foodThumb, styles.foodThumbFallback]}>
-                        <Text style={styles.foodThumbInitial}>
-                          {(meal.foodName || "?").charAt(0).toUpperCase()}
-                        </Text>
-                      </View>
-                    )}
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.foodName} numberOfLines={1}>
-                        {meal.foodName}
+                  <Text style={styles.mealEmoji}>{item.emoji}</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.mealName}>
+                      {t(`food.${item.type}`)}
+                    </Text>
+                    <Text style={styles.mealKcal}>
+                      {Math.round(consumed)} / {target} kcal
+                    </Text>
+                    <View style={styles.mealMacroRow}>
+                      <Text style={styles.mealMacroText} numberOfLines={1}>
+                        {isFr ? "Prot" : "Protein"} {Math.round(macros.protein)}
+                        g
                       </Text>
-                      <Text style={styles.foodInfo}>
-                        {Math.round(meal.calories)} kcal |{" "}
-                        {isFr ? "Prot" : "Protein"} {Math.round(meal.protein)}g
-                        {" | "}
-                        {isFr ? "Lip" : "Fat"} {Math.round(meal.fat)}g
-                        {" | "}
-                        {isFr ? "Gluc" : "Carbs"} {Math.round(meal.carbs)}g
+                      <Text style={styles.mealMacroText} numberOfLines={1}>
+                        {isFr ? "Lip" : "Fat"} {Math.round(macros.fat)}g
+                      </Text>
+                      <Text style={styles.mealMacroText} numberOfLines={1}>
+                        {isFr ? "Gluc" : "Carbs"} {Math.round(macros.carbs)}g
                       </Text>
                     </View>
-                    <Pressable hitSlop={8} onPress={() => removeMeal(meal.id)}>
-                      <Ionicons
-                        name="close-circle"
-                        size={20}
-                        color={`${theme.foreground.gray}50`}
-                      />
+                  </View>
+                  <View style={styles.mealActionsCol}>
+                    <TutorialTarget
+                      id={
+                        item.type === "breakfast"
+                          ? "alimentation.breakfastAddButton"
+                          : `alimentation.${item.type}AddButton`
+                      }
+                      style={styles.mealPlusTarget}
+                    >
+                      <Pressable
+                        style={styles.mealPlusBtn}
+                        onPress={() => openFoodSearch(item.type)}
+                      >
+                        <Ionicons
+                          name="add-circle-outline"
+                          size={28}
+                          color="#FFFFFF"
+                        />
+                      </Pressable>
+                    </TutorialTarget>
+                    <Pressable
+                      style={styles.mealChevronBtn}
+                      onPress={() => toggleMealExpanded(item.type)}
+                      hitSlop={8}
+                    >
+                      <Animated.View
+                        style={{
+                          opacity: chevronOpacityRefs.current[item.type],
+                        }}
+                      >
+                        <Ionicons
+                          name={isExpanded ? "chevron-up" : "chevron-down"}
+                          size={22}
+                          color="#FFFFFF"
+                        />
+                      </Animated.View>
                     </Pressable>
                   </View>
-                ))}
-            </View>
-          );
-        })}
+                </Pressable>
+
+                {isExpanded && meals.length === 0 && (
+                  <View style={styles.foodEmpty}>
+                    <Text style={styles.foodEmptyText}>
+                      {isFr
+                        ? "Aucun aliment ajouté pour ce repas."
+                        : "No food added for this meal yet."}
+                    </Text>
+                  </View>
+                )}
+
+                {isExpanded &&
+                  meals.length > 0 &&
+                  meals.map((meal) => (
+                    <View key={meal.id} style={styles.foodItem}>
+                      {meal.imageUrl ? (
+                        <Image
+                          source={{ uri: meal.imageUrl }}
+                          style={styles.foodThumb}
+                          resizeMode="cover"
+                        />
+                      ) : (
+                        <View
+                          style={[styles.foodThumb, styles.foodThumbFallback]}
+                        >
+                          <Text style={styles.foodThumbInitial}>
+                            {(meal.foodName || "?").charAt(0).toUpperCase()}
+                          </Text>
+                        </View>
+                      )}
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.foodName} numberOfLines={1}>
+                          {meal.foodName}
+                        </Text>
+                        <Text style={styles.foodInfo}>
+                          {Math.round(meal.calories)} kcal |{" "}
+                          {isFr ? "Prot" : "Protein"} {Math.round(meal.protein)}
+                          g{" | "}
+                          {isFr ? "Lip" : "Fat"} {Math.round(meal.fat)}g{" | "}
+                          {isFr ? "Gluc" : "Carbs"} {Math.round(meal.carbs)}g
+                        </Text>
+                      </View>
+                      <Pressable
+                        hitSlop={8}
+                        onPress={() => removeMeal(meal.id)}
+                      >
+                        <Ionicons
+                          name="close-circle"
+                          size={20}
+                          color={`${theme.foreground.gray}50`}
+                        />
+                      </Pressable>
+                    </View>
+                  ))}
+
+                {!isLast && <View style={styles.mealDivider} />}
+              </View>
+            );
+          })}
+        </View>
 
         {/* ── Données corporelles ────────────────────────────── */}
         <View style={styles.sectionHeader}>
@@ -613,19 +636,12 @@ export default function Alimentation() {
               style={styles.weightBtn}
               onPress={() => setWeight(Math.min(300, weightCurrent + 0.1))}
             >
-              <Ionicons
-                name="add-circle-outline"
-                size={32}
-                color="#FFFFFF"
-              />
+              <Ionicons name="add-circle-outline" size={32} color="#FFFFFF" />
             </Pressable>
           </View>
 
           <Pressable
-            style={[
-              styles.weightSaveBtn,
-              isSavingWeight && { opacity: 0.6 },
-            ]}
+            style={[styles.weightSaveBtn, isSavingWeight && { opacity: 0.6 }]}
             disabled={isSavingWeight}
             onPress={isEditingWeight ? handleSaveWeight : startEditWeight}
           >
@@ -669,9 +685,7 @@ export default function Alimentation() {
                 <Ionicons
                   name={i < waterGlasses ? "water" : "water-outline"}
                   size={28}
-                  color={
-                    i < waterGlasses ? "#FFFFFF" : NAVY_TEXT_SOFT
-                  }
+                  color={i < waterGlasses ? "#FFFFFF" : NAVY_TEXT_SOFT}
                 />
               </Pressable>
             ))}
@@ -822,7 +836,6 @@ function createStyles(theme: Theme) {
       marginHorizontal: 20,
       padding: 18,
       borderRadius: 18,
-      ...navyCard,
     },
     summaryTopRow: {
       flexDirection: "row",
@@ -836,12 +849,12 @@ function createStyles(theme: Theme) {
     summarySideValue: {
       fontFamily: FONTS.extraBold,
       fontSize: 22,
-      color: "#FFFFFF",
+      color: NAVY_CARD,
     },
     summarySideLabel: {
       fontFamily: FONTS.regular,
       fontSize: 12,
-      color: NAVY_TEXT_MUTED,
+      color: NAVY_CARD,
       marginTop: 4,
     },
     summaryCenter: {
@@ -851,12 +864,12 @@ function createStyles(theme: Theme) {
     summaryCenterValue: {
       fontFamily: FONTS.extraBold,
       fontSize: 28,
-      color: "#FFFFFF",
+      color: NAVY_CARD,
     },
     summaryCenterLabel: {
       fontFamily: FONTS.regular,
       fontSize: 12,
-      color: NAVY_TEXT_MUTED,
+      color: NAVY_CARD,
       marginTop: 2,
     },
 
@@ -871,37 +884,46 @@ function createStyles(theme: Theme) {
     },
     macroBarLabel: {
       fontFamily: FONTS.semiBold,
-      fontSize: 12,
-      color: "#FFFFFF",
+      fontSize: 14,
+      color: NAVY_CARD,
       marginBottom: 6,
+      textAlign: "center",
     },
     macroBarTrack: {
-      height: 4,
-      borderRadius: 2,
-      backgroundColor: "rgba(255,255,255,0.18)",
+      height: 10,
+      borderRadius: 6,
+      backgroundColor: "rgba(10,22,40,0.18)",
       overflow: "hidden",
     },
     macroBarFill: {
       height: "100%",
-      borderRadius: 2,
+      borderRadius: 4,
     },
     macroBarValue: {
       fontFamily: FONTS.regular,
-      fontSize: 11,
-      color: NAVY_TEXT_MUTED,
+      fontSize: 12,
+      color: NAVY_CARD,
       marginTop: 6,
+      textAlign: "center",
     },
 
+    mealsBlock: {
+      marginHorizontal: 20,
+      borderRadius: 18,
+      overflow: "hidden",
+      ...navyCard,
+    },
+    mealDivider: {
+      height: 2,
+      backgroundColor: "rgba(255,255,255,0.22)",
+      marginHorizontal: 14,
+    },
     mealRow: {
       flexDirection: "row",
       alignItems: "center",
       gap: 12,
-      marginHorizontal: 20,
       paddingVertical: 14,
       paddingHorizontal: 14,
-      borderRadius: 14,
-      marginBottom: 2,
-      ...navyCard,
     },
     mealEmoji: { fontSize: 24 },
     mealName: {
@@ -918,28 +940,43 @@ function createStyles(theme: Theme) {
     },
     mealMacroRow: {
       flexDirection: "row",
-      flexWrap: "wrap",
       gap: 6,
       marginTop: 6,
     },
     mealMacroText: {
+      flex: 1,
+      height: 22,
+      lineHeight: 22,
+      textAlign: "center",
+      textAlignVertical: "center",
       fontFamily: FONTS.medium,
       fontSize: 10,
       color: NAVY_TEXT_MUTED,
       backgroundColor: "rgba(255,255,255,0.10)",
       borderRadius: 6,
       paddingHorizontal: 6,
-      paddingVertical: 3,
+      paddingVertical: 0,
+      overflow: "hidden",
+    },
+    mealActionsCol: {
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 2,
     },
     mealPlusTarget: {
       alignSelf: "center",
     },
     mealPlusBtn: { padding: 4 },
+    mealChevronBtn: {
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      alignItems: "center",
+      justifyContent: "center",
+    },
     foodItem: {
       flexDirection: "row",
       alignItems: "center",
       gap: 10,
-      marginHorizontal: 20,
       paddingVertical: 10,
       paddingHorizontal: 14,
       borderBottomWidth: StyleSheet.hairlineWidth,
@@ -963,16 +1000,15 @@ function createStyles(theme: Theme) {
     foodName: {
       fontFamily: FONTS.medium,
       fontSize: 13,
-      color: theme.foreground.white,
+      color: "#FFFFFF",
     },
     foodInfo: {
       fontFamily: FONTS.regular,
       fontSize: 11,
-      color: theme.foreground.gray,
+      color: "#FFFFFF",
       marginTop: 1,
     },
     foodEmpty: {
-      marginHorizontal: 20,
       paddingVertical: 10,
       paddingHorizontal: 14,
     },
