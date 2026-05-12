@@ -12,7 +12,6 @@ import React, {
 } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  Animated,
   Dimensions,
   Image,
   ImageBackground,
@@ -21,11 +20,21 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  View,
+  View
 } from "react-native";
+import Reanimated, {
+  Extrapolation,
+  interpolate,
+  type SharedValue,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  useSharedValue,
+} from "react-native-reanimated";
 import AnimatedScreen from "../../components/ui/AnimatedScreen";
 import AnimatedSection from "../../components/ui/AnimatedSection";
 import ProModal from "../../components/ui/ProModal";
+import SegmentedTabs from "../../components/ui/SegmentedTabs";
+import TrainingHistoryView from "../../components/home/TrainingHistoryView";
 import { FONTS } from "../../constants/fonts";
 import { Theme } from "../../constants/themes";
 import { useActiveWorkout } from "../../contexts/ActiveWorkoutContext";
@@ -41,11 +50,25 @@ import { ApiRoutine, mapRoutine } from "../../utils/routineMapper";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CHALLENGE_CARD_WIDTH = SCREEN_WIDTH * 0.78;
 
+const COVERFLOW_CARD_WIDTH = SCREEN_WIDTH * 0.62;
+const COVERFLOW_OVERLAP = Math.round(COVERFLOW_CARD_WIDTH * 0.18);
+const COVERFLOW_ITEM_WIDTH = COVERFLOW_CARD_WIDTH - COVERFLOW_OVERLAP;
+const COVERFLOW_SIDE_PADDING = (SCREEN_WIDTH - COVERFLOW_ITEM_WIDTH) / 2;
+const SESSIONS_CARD_HORIZONTAL_INSET = 20 + 18;
+
 const DISPLAY_NAME_KEY = "@hylift_display_name";
 const HOME_CAROUSEL_ROUTINES_KEY = "@hylift_home_carousel_routines";
 
 const DAY_LABELS_SHORT = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
-const DAY_SHORT_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
+const DAY_SHORT_KEYS = [
+  "mon",
+  "tue",
+  "wed",
+  "thu",
+  "fri",
+  "sat",
+  "sun",
+] as const;
 
 const CHIP_GREEN = { face: "#16A34A", text: "#F0FDF4", border: "#86EFAC" };
 const CHIP_RED = { face: "#DC2626", text: "#FEF2F2", border: "#FCA5A5" };
@@ -65,7 +88,11 @@ function WeekDayChip({
   state: DayState;
 }) {
   const palette =
-    state === "trained" ? CHIP_GREEN : state === "missed" ? CHIP_RED : CHIP_GRAY;
+    state === "trained"
+      ? CHIP_GREEN
+      : state === "missed"
+        ? CHIP_RED
+        : CHIP_GRAY;
   return (
     <View
       style={[
@@ -132,6 +159,127 @@ function DifficultyBolts({ level, theme }: { level: number; theme: Theme }) {
   );
 }
 
+type SessionCoverflowCardProps = {
+  routine: ApiRoutine;
+  index: number;
+  scrollX: SharedValue<number>;
+  styles: ReturnType<typeof createStyles>;
+  t: ReturnType<typeof useTranslation>["t"];
+  genderedImages: ReturnType<typeof useGenderedImages>;
+  onPress: () => void;
+};
+
+function SessionCoverflowCard({
+  routine,
+  index,
+  scrollX,
+  styles,
+  t,
+  genderedImages,
+  onPress,
+}: SessionCoverflowCardProps) {
+  const animatedStyle = useAnimatedStyle(() => {
+    const distance = index * COVERFLOW_ITEM_WIDTH - scrollX.value;
+    const inputRange = [-COVERFLOW_ITEM_WIDTH, 0, COVERFLOW_ITEM_WIDTH];
+    const rotateY = interpolate(
+      distance,
+      inputRange,
+      [25, 0, -25],
+      Extrapolation.CLAMP,
+    );
+    const scale = interpolate(
+      distance,
+      inputRange,
+      [0.88, 1, 0.88],
+      Extrapolation.CLAMP,
+    );
+    const opacity = interpolate(
+      distance,
+      inputRange,
+      [0.78, 1, 0.78],
+      Extrapolation.CLAMP,
+    );
+    const zIndex = Math.round(
+      interpolate(distance, inputRange, [1, 10, 1], Extrapolation.CLAMP),
+    );
+    return {
+      opacity,
+      zIndex,
+      transform: [
+        { perspective: 1000 },
+        { rotateY: `${rotateY}deg` },
+        { scale },
+      ],
+    };
+  });
+
+  return (
+    <Reanimated.View style={[styles.coverflowSlot, animatedStyle]}>
+      <Pressable
+        style={({ pressed }) => [
+          styles.nextWorkoutCard,
+          styles.carouselCard,
+          pressed && {
+            opacity: 0.95,
+            transform: [{ scale: 0.98 }],
+          },
+        ]}
+        onPress={onPress}
+      >
+        <Image
+          source={
+            routine.wallpaper_url
+              ? { uri: routine.wallpaper_url }
+              : genderedImages.nextWorkout
+          }
+          style={styles.nextWorkoutImage}
+          resizeMode="cover"
+        />
+        <LinearGradient
+          colors={["rgba(0,0,0,0.12)", "rgba(0,0,0,0.78)"]}
+          style={styles.nextWorkoutGradient}
+        />
+        <View style={styles.nextWorkoutContent}>
+          <View style={styles.nextWorkoutInfo}>
+            <Text style={styles.nextWorkoutName} numberOfLines={2}>
+              {routine.name}
+            </Text>
+            <View style={styles.sessionDetails}>
+              <View style={styles.sessionTag}>
+                <Ionicons
+                  name="barbell-outline"
+                  size={12}
+                  color="rgba(255,255,255,0.82)"
+                />
+                <Text style={styles.sessionTagText} numberOfLines={1}>
+                  {`${routine.exercises?.length ?? 0} ${t("home.exercises")}`}
+                </Text>
+              </View>
+              {(routine.estimated_duration ?? 0) > 0 && (
+                <View style={styles.sessionTag}>
+                  <Ionicons
+                    name="time-outline"
+                    size={12}
+                    color="rgba(255,255,255,0.82)"
+                  />
+                  <Text style={styles.sessionTagText} numberOfLines={1}>
+                    {`${routine.estimated_duration} min`}
+                  </Text>
+                </View>
+              )}
+            </View>
+          </View>
+          <View style={styles.nextWorkoutBtn}>
+            <Text style={styles.nextWorkoutBtnText}>
+              {t("home.start", "Démarrer")}
+            </Text>
+          </View>
+        </View>
+      </Pressable>
+    </Reanimated.View>
+  );
+}
+
 export default function Home() {
   const router = useRouter();
   const { theme, themeType } = useTheme();
@@ -148,8 +296,22 @@ export default function Home() {
   const { startGuidedRoutine } = useActiveWorkout();
   const genderedImages = useGenderedImages();
   const [selectedBodyFocus, setSelectedBodyFocus] = useState(0);
+  const [homeTab, setHomeTab] = useState<"history" | "home">("home");
   const [userRoutines, setUserRoutines] = useState<ApiRoutine[]>([]);
   const [carouselRoutineIds, setCarouselRoutineIds] = useState<string[]>([]);
+  const sessionsScrollX = useSharedValue(0);
+  const hasAlignedSessionsScrollRef = useRef(false);
+  const sessionsScrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      sessionsScrollX.value = event.contentOffset.x;
+    },
+  });
+  useEffect(() => {
+    if (!hasAlignedSessionsScrollRef.current && carouselRoutineIds.length > 1) {
+      hasAlignedSessionsScrollRef.current = true;
+      sessionsScrollX.value = COVERFLOW_ITEM_WIDTH;
+    }
+  }, [carouselRoutineIds.length, sessionsScrollX]);
   const [isRoutinePickerVisible, setIsRoutinePickerVisible] = useState(false);
   const [trainedDayKeys, setTrainedDayKeys] = useState<Set<string>>(
     () => new Set(),
@@ -249,7 +411,7 @@ export default function Home() {
           const subCategory = routine.sub_category ?? "";
           if (!category || !subCategory) return acc;
           if (!acc[category]) acc[category] = {};
-          acc[category][`${subCategory}:${routine.difficulty}`] = routine;
+          acc[category][subCategory] = routine;
           return acc;
         }, {});
 
@@ -422,91 +584,49 @@ export default function Home() {
     selectedBodyFocus
   ];
 
+  const bodyFocusRoutine = bodyFocusRoutines[selectedBodyFocusKey];
   const bodyFocusExercises = [
     {
-      routine: bodyFocusRoutines[`${selectedBodyFocusKey}:beginner`],
-      name: selectedLabel + " " + t("home.beginner"),
-      duration: `${bodyFocusRoutines[`${selectedBodyFocusKey}:beginner`]?.estimated_duration ?? 15} mins`,
-      exercises:
-        bodyFocusRoutines[`${selectedBodyFocusKey}:beginner`]?.exercises
-          ?.length ?? 16,
+      routine: bodyFocusRoutine,
+      name: selectedLabel,
+      duration: `${bodyFocusRoutine?.estimated_duration ?? 24} mins`,
+      exercises: bodyFocusRoutine?.exercises?.length ?? 16,
       difficulty: 1,
       image:
         genderedImages.bodyFocus[
           selectedBodyFocus % genderedImages.bodyFocus.length
         ],
     },
-    {
-      routine: bodyFocusRoutines[`${selectedBodyFocusKey}:intermediate`],
-      name: selectedLabel + " " + t("home.intermediate"),
-      duration: `${bodyFocusRoutines[`${selectedBodyFocusKey}:intermediate`]?.estimated_duration ?? 24} mins`,
-      exercises:
-        bodyFocusRoutines[`${selectedBodyFocusKey}:intermediate`]?.exercises
-          ?.length ?? 21,
-      difficulty: 2,
-      image:
-        genderedImages.bodyFocus[
-          (selectedBodyFocus + 1) % genderedImages.bodyFocus.length
-        ],
-    },
-    {
-      routine: bodyFocusRoutines[`${selectedBodyFocusKey}:advanced`],
-      name: selectedLabel + " " + t("home.advanced"),
-      duration: `${bodyFocusRoutines[`${selectedBodyFocusKey}:advanced`]?.estimated_duration ?? 27} mins`,
-      exercises:
-        bodyFocusRoutines[`${selectedBodyFocusKey}:advanced`]?.exercises
-          ?.length ?? 21,
-      difficulty: 3,
-      image:
-        genderedImages.bodyFocus[
-          (selectedBodyFocus + 2) % genderedImages.bodyFocus.length
-        ],
-    },
   ];
 
   const justForYouWorkouts = [
     {
-      routine: justForYouRoutines["killer_chest:intermediate"],
+      routine: justForYouRoutines["killer_chest"],
       name: t("home.killerChestRoutine"),
-      duration: `${justForYouRoutines["killer_chest:intermediate"]?.estimated_duration ?? 10} min`,
-      level:
-        justForYouRoutines["killer_chest:intermediate"]?.difficulty ===
-        "beginner"
-          ? t("home.beginner")
-          : justForYouRoutines["killer_chest:intermediate"]?.difficulty ===
-              "advanced"
-            ? t("home.advanced")
-            : t("home.intermediate"),
+      duration: `${justForYouRoutines["killer_chest"]?.estimated_duration ?? 10} min`,
       image: genderedImages.bodyFocus[0],
     },
     {
-      routine: justForYouRoutines["quick_abs:beginner"],
+      routine: justForYouRoutines["quick_abs"],
       name: t("home.sevenMinAbs"),
-      duration: `${justForYouRoutines["quick_abs:beginner"]?.estimated_duration ?? 7} min`,
-      level:
-        justForYouRoutines["quick_abs:beginner"]?.difficulty === "advanced"
-          ? t("home.advanced")
-          : justForYouRoutines["quick_abs:beginner"]?.difficulty ===
-              "intermediate"
-            ? t("home.intermediate")
-            : t("home.beginner"),
+      duration: `${justForYouRoutines["quick_abs"]?.estimated_duration ?? 7} min`,
       image: genderedImages.bodyFocus[1],
     },
   ];
 
   const stretchWorkouts = [
     {
-      routine: stretchWarmUpRoutines["sleepy_time:beginner"],
+      routine: stretchWarmUpRoutines["sleepy_time"],
       name: t("home.sleepyTimeStretching"),
       image: genderedImages.bodyFocus[2],
     },
     {
-      routine: stretchWarmUpRoutines["tabata_4min:intermediate"],
+      routine: stretchWarmUpRoutines["tabata_4min"],
       name: t("home.fourMinTabata"),
       image: genderedImages.bodyFocus[3],
     },
     {
-      routine: stretchWarmUpRoutines["morning_stretch:beginner"],
+      routine: stretchWarmUpRoutines["morning_stretch"],
       name: t("home.morningStretch"),
       image: genderedImages.bodyFocus[0],
     },
@@ -571,8 +691,117 @@ export default function Home() {
           </Text>
         </AnimatedSection>
 
+        {/* ── Résumé Santé (Bento Grid) ─────────────────────────  
+        <AnimatedSection delay={100}>
+          <Text style={styles.sectionTitle}>
+            {t("home.healthSummary", "RÉSUMÉ SANTÉ")}
+          </Text>
+        </AnimatedSection>*/}
+        <View style={styles.healthGrid}>
+          {[
+            {
+              icon: "fire" as const,
+              iconType: "mci" as const,
+              color: "#FF6B35",
+              gradient: ["rgba(0,0,0,0.4)", "rgba(0,0,0,0.6)"] as const,
+              image: genderedImages.health.calories,
+              label: t("home.burned", "Brûlées"),
+              value: caloriesBurned,
+              goal: 1000,
+              unit: "kcal",
+            },
+            {
+              icon: "shoe-sneaker" as const,
+              iconType: "mci" as const,
+              color: "#4A90D9",
+              gradient: ["rgba(0,0,0,0.4)", "rgba(0,0,0,0.6)"] as const,
+              image: genderedImages.health.steps,
+              label: t("home.steps", "Pas"),
+              value: todaySteps || 0,
+              goal: 10000,
+              unit: "",
+            },
+            {
+              icon: "food-apple" as const,
+              iconType: "mci" as const,
+              color: "#34C759",
+              gradient: ["rgba(0,0,0,0.4)", "rgba(0,0,0,0.6)"] as const,
+              image: genderedImages.health.food,
+              label: t("home.eaten", "Consommées"),
+              value: caloriesConsumed,
+              goal: goals.calorieGoal,
+              unit: "kcal",
+            },
+            {
+              icon: "timer-outline" as const,
+              iconType: "ion" as const,
+              color: "#F5A623",
+              gradient: ["rgba(0,0,0,0.4)", "rgba(0,0,0,0.6)"] as const,
+              image: genderedImages.health.activity,
+              label: t("home.activity", "Activité"),
+              value: todayActiveMinutes,
+              goal: 60,
+              unit: "min",
+            },
+          ].map((item, index) => {
+            const percent = Math.min(
+              Math.round((item.value / item.goal) * 100),
+              100,
+            );
+            return (
+              <AnimatedSection key={index} delay={140 + index * 70} scale>
+                <ImageBackground
+                  source={item.image}
+                  style={styles.healthTile}
+                  imageStyle={styles.healthTileImage}
+                  resizeMode="cover"
+                >
+                  <LinearGradient
+                    colors={[item.gradient[0], item.gradient[1]]}
+                    style={styles.healthTileOverlay}
+                  >
+                    <View style={styles.healthTileTop}>
+                      <View style={styles.healthTileIcon}>
+                        {item.iconType === "mci" ? (
+                          <MaterialCommunityIcons
+                            name={item.icon as any}
+                            size={18}
+                            color="#FFF"
+                          />
+                        ) : (
+                          <Ionicons
+                            name={item.icon as any}
+                            size={18}
+                            color="#FFF"
+                          />
+                        )}
+                      </View>
+                      <Text style={styles.healthTilePercent}>{percent}%</Text>
+                    </View>
+                    <Text style={styles.healthTileValue}>
+                      {item.unit === ""
+                        ? Math.round(item.value).toLocaleString()
+                        : Number.isInteger(item.value)
+                          ? Math.round(item.value)
+                          : item.value.toFixed(1)}
+                    </Text>
+                    <Text style={styles.healthTileLabel}>{item.label}</Text>
+                    <Text style={styles.healthTileGoal}>
+                      /{" "}
+                      {item.unit === ""
+                        ? item.goal.toLocaleString()
+                        : item.goal}{" "}
+                      {item.unit}
+                    </Text>
+                  </LinearGradient>
+                </ImageBackground>
+              </AnimatedSection>
+            );
+          })}
+        </View>
+
         {/* Weekly training overview */}
-        <AnimatedSection delay={100} scale>
+        <AnimatedSection delay={460} scale>
           <View style={styles.weekOverviewCard}>
             <Text style={styles.weekOverviewTitle}>
               {t("home.weekOverview", "SEANCES DE LA SEMAINE")}
@@ -627,7 +856,7 @@ export default function Home() {
         </AnimatedSection>
 
         {/* My sessions carousel */}
-        <AnimatedSection delay={120} scale>
+        <AnimatedSection delay={520} scale>
           <View style={styles.weekSessionsCard}>
             <View style={styles.weekSessionsHeader}>
               <View style={styles.weekSessionsTitleBlock}>
@@ -697,200 +926,63 @@ export default function Home() {
                 </View>
               </Pressable>
             ) : (
-              <ScrollView
+              <Reanimated.ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                snapToInterval={CHALLENGE_CARD_WIDTH + 12}
+                snapToInterval={COVERFLOW_ITEM_WIDTH}
                 decelerationRate="fast"
-                contentContainerStyle={{ gap: 12, paddingRight: 8 }}
+                onScroll={sessionsScrollHandler}
+                scrollEventThrottle={16}
+                contentOffset={{
+                  x: carouselRoutines.length > 1 ? COVERFLOW_ITEM_WIDTH : 0,
+                  y: 0,
+                }}
+                style={{
+                  marginHorizontal: -SESSIONS_CARD_HORIZONTAL_INSET,
+                }}
+                contentContainerStyle={{
+                  paddingHorizontal: COVERFLOW_SIDE_PADDING,
+                }}
               >
-                {carouselRoutines.map((routine) => (
-                  <Pressable
+                {carouselRoutines.map((routine, index) => (
+                  <SessionCoverflowCard
                     key={routine.id}
-                    style={({ pressed }) => [
-                      styles.nextWorkoutCard,
-                      styles.carouselCard,
-                      pressed && {
-                        opacity: 0.95,
-                        transform: [{ scale: 0.98 }],
-                      },
-                    ]}
+                    routine={routine}
+                    index={index}
+                    scrollX={sessionsScrollX}
+                    styles={styles}
+                    t={t}
+                    genderedImages={genderedImages}
                     onPress={() => handleStartRoutine(routine)}
-                  >
-                    <Image
-                      source={
-                        routine.wallpaper_url
-                          ? { uri: routine.wallpaper_url }
-                          : genderedImages.nextWorkout
-                      }
-                      style={styles.nextWorkoutImage}
-                      resizeMode="cover"
-                    />
-                    <LinearGradient
-                      colors={["rgba(0,0,0,0.12)", "rgba(0,0,0,0.78)"]}
-                      style={styles.nextWorkoutGradient}
-                    />
-                    <View style={styles.nextWorkoutContent}>
-                      <View style={styles.nextWorkoutInfo}>
-                        <Text
-                          style={styles.nextWorkoutName}
-                          numberOfLines={2}
-                        >
-                          {routine.name}
-                        </Text>
-                        <View style={styles.sessionDetails}>
-                          <View style={styles.sessionTag}>
-                            <Ionicons
-                              name="barbell-outline"
-                              size={12}
-                              color="rgba(255,255,255,0.82)"
-                            />
-                            <Text
-                              style={styles.sessionTagText}
-                              numberOfLines={1}
-                            >
-                              {`${routine.exercises?.length ?? 0} ${t("home.exercises")}`}
-                            </Text>
-                          </View>
-                          {(routine.estimated_duration ?? 0) > 0 && (
-                            <View style={styles.sessionTag}>
-                              <Ionicons
-                                name="time-outline"
-                                size={12}
-                                color="rgba(255,255,255,0.82)"
-                              />
-                              <Text
-                                style={styles.sessionTagText}
-                                numberOfLines={1}
-                              >
-                                {`${routine.estimated_duration} min`}
-                              </Text>
-                            </View>
-                          )}
-                        </View>
-                      </View>
-                      <View style={styles.nextWorkoutBtn}>
-                        <Text style={styles.nextWorkoutBtnText}>
-                          {t("home.start", "Démarrer")}
-                        </Text>
-                      </View>
-                    </View>
-                  </Pressable>
+                  />
                 ))}
-              </ScrollView>
+              </Reanimated.ScrollView>
             )}
           </View>
         </AnimatedSection>
 
-        {/* ── Calorie Summary (Donut + Stats) ─────────────────────── */}
-        {/* ── Résumé Santé (Bento Grid) ───────────────────────── */}
-        <AnimatedSection delay={160}>
-          <Text style={styles.sectionTitle}>
-            {t("home.healthSummary", "RÉSUMÉ SANTÉ")}
-          </Text>
+        {/* ── Home/History segmented control ──────────────────────── */}
+        <AnimatedSection delay={580}>
+          <SegmentedTabs<"history" | "home">
+            value={homeTab}
+            onChange={setHomeTab}
+            items={[
+              { value: "history", label: t("home.history.tabHistory") },
+              { value: "home", label: t("home.history.tabHome") },
+            ]}
+            theme={theme}
+            themeType={themeType as "dark" | "light"}
+            itemWidth={120}
+          />
         </AnimatedSection>
-        <View style={styles.healthGrid}>
-          {[
-            {
-              icon: "fire" as const,
-              iconType: "mci" as const,
-              color: "#FF6B35",
-              gradient: ["rgba(0,0,0,0.4)", "rgba(0,0,0,0.6)"] as const,
-              image: genderedImages.health.calories,
-              label: t("home.burned", "Brûlées"),
-              value: caloriesBurned,
-              goal: 1000,
-              unit: "kcal",
-            },
-            {
-              icon: "shoe-sneaker" as const,
-              iconType: "mci" as const,
-              color: "#4A90D9",
-              gradient: ["rgba(0,0,0,0.4)", "rgba(0,0,0,0.6)"] as const,
-              image: genderedImages.health.steps,
-              label: t("home.steps", "Pas"),
-              value: todaySteps || 0,
-              goal: 10000,
-              unit: "",
-            },
-            {
-              icon: "food-apple" as const,
-              iconType: "mci" as const,
-              color: "#34C759",
-              gradient: ["rgba(0,0,0,0.4)", "rgba(0,0,0,0.6)"] as const,
-              image: genderedImages.health.food,
-              label: t("home.eaten", "Consommées"),
-              value: caloriesConsumed,
-              goal: goals.calorieGoal,
-              unit: "kcal",
-            },
-            {
-              icon: "timer-outline" as const,
-              iconType: "ion" as const,
-              color: "#F5A623",
-              gradient: ["rgba(0,0,0,0.4)", "rgba(0,0,0,0.6)"] as const,
-              image: genderedImages.health.activity,
-              label: t("home.activity", "Activité"),
-              value: todayActiveMinutes,
-              goal: 60,
-              unit: "min",
-            },
-          ].map((item, index) => {
-            const percent = Math.min(
-              Math.round((item.value / item.goal) * 100),
-              100,
-            );
-            return (
-              <AnimatedSection key={index} delay={200 + index * 90} scale>
-                <ImageBackground
-                  source={item.image}
-                  style={styles.healthTile}
-                  imageStyle={styles.healthTileImage}
-                  resizeMode="cover"
-                >
-                  <LinearGradient
-                    colors={[item.gradient[0], item.gradient[1]]}
-                    style={styles.healthTileOverlay}
-                  >
-                    <View style={styles.healthTileTop}>
-                      <View style={styles.healthTileIcon}>
-                        {item.iconType === "mci" ? (
-                          <MaterialCommunityIcons
-                            name={item.icon as any}
-                            size={18}
-                            color="#FFF"
-                          />
-                        ) : (
-                          <Ionicons
-                            name={item.icon as any}
-                            size={18}
-                            color="#FFF"
-                          />
-                        )}
-                      </View>
-                      <Text style={styles.healthTilePercent}>{percent}%</Text>
-                    </View>
-                    <Text style={styles.healthTileValue}>
-                      {item.unit === ""
-                        ? Math.round(item.value).toLocaleString()
-                        : Number.isInteger(item.value)
-                          ? Math.round(item.value)
-                          : item.value.toFixed(1)}
-                    </Text>
-                    <Text style={styles.healthTileLabel}>{item.label}</Text>
-                    <Text style={styles.healthTileGoal}>
-                      /{" "}
-                      {item.unit === ""
-                        ? item.goal.toLocaleString()
-                        : item.goal}{" "}
-                      {item.unit}
-                    </Text>
-                  </LinearGradient>
-                </ImageBackground>
-              </AnimatedSection>
-            );
-          })}
-        </View>
+
+        {homeTab === "history" && (
+          <AnimatedSection delay={620}>
+            <TrainingHistoryView />
+          </AnimatedSection>
+        )}
+
+        {homeTab === "home" && (<>
         {/* ── Challenge Section ───────────────────────────────────── */}
         <AnimatedSection delay={640}>
           <Text style={styles.sectionTitle}>{t("home.challenge")}</Text>
@@ -1086,9 +1178,7 @@ export default function Home() {
                 />
                 <View style={styles.justForYouInfo}>
                   <Text style={styles.justForYouName}>{workout.name}</Text>
-                  <Text style={styles.justForYouMeta}>
-                    {workout.duration} · {workout.level}
-                  </Text>
+                  <Text style={styles.justForYouMeta}>{workout.duration}</Text>
                 </View>
 
                 <Ionicons
@@ -1151,6 +1241,7 @@ export default function Home() {
             ))}
           </ScrollView>
         </AnimatedSection>
+        </>)}
       </ScrollView>
 
       {/* ── Routine picker for home carousel ──────────────────────── */}
@@ -1214,7 +1305,9 @@ export default function Home() {
                       <Ionicons
                         name={checked ? "checkbox" : "square-outline"}
                         size={22}
-                        color={checked ? theme.primary.main : theme.foreground.gray}
+                        color={
+                          checked ? theme.primary.main : theme.foreground.gray
+                        }
                       />
                     </Pressable>
                   );
@@ -2070,8 +2163,12 @@ function createStyles(theme: Theme) {
       justifyContent: "center",
     },
     carouselCard: {
-      width: CHALLENGE_CARD_WIDTH,
+      width: COVERFLOW_CARD_WIDTH,
       borderWidth: 0,
+    },
+    coverflowSlot: {
+      width: COVERFLOW_ITEM_WIDTH,
+      alignItems: "center",
     },
     sessionDetails: {
       flexDirection: "row",

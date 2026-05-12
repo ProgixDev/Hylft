@@ -2,7 +2,7 @@ import BottomSheet, {
   BottomSheetScrollView,
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
-import React, { Dispatch, forwardRef, SetStateAction, useMemo } from "react";
+import React, { forwardRef, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Theme } from "../../constants/themes";
@@ -15,24 +15,14 @@ import { translateRoutineCategory } from "../../utils/exerciseTranslator";
 
 import { FONTS } from "../../constants/fonts";
 
-type FilterTab = "difficulty" | "category";
-
 interface ExploreRoutineFilterSheetProps {
   isExpanded?: boolean;
   onClose?: () => void;
-  activeTab: FilterTab;
-  onTabChange: Dispatch<SetStateAction<FilterTab>>;
-  selectedDifficulty: "All" | "beginner" | "intermediate" | "advanced" | null;
-  onDifficultyChange: (
-    difficulty: "All" | "beginner" | "intermediate" | "advanced" | null,
-  ) => void;
   selectedCategory: ExploreCategory | "All" | null;
   onCategoryChange: (category: ExploreCategory | "All" | null) => void;
   hasActiveFilters: boolean;
   onClearAll: () => void;
 }
-
-// DIFFICULTIES will be translated dynamically
 
 const ExploreRoutineFilterSheet = forwardRef<
   BottomSheet,
@@ -42,10 +32,6 @@ const ExploreRoutineFilterSheet = forwardRef<
     {
       isExpanded,
       onClose,
-      activeTab,
-      onTabChange,
-      selectedDifficulty,
-      onDifficultyChange,
       selectedCategory,
       onCategoryChange,
       hasActiveFilters,
@@ -79,47 +65,31 @@ const ExploreRoutineFilterSheet = forwardRef<
       </TouchableOpacity>
     );
 
-    const renderTabContent = () => {
-      switch (activeTab) {
-        case "difficulty":
-          return (
-            <View style={styles.chipContainer}>
-              {[
-                {
-                  label:
-                    i18n.language === "fr"
-                      ? t("filters.allLevels")
-                      : "All Levels",
-                  value: "All",
-                },
-                {
-                  label:
-                    i18n.language === "fr" ? t("filters.beginner") : "Beginner",
-                  value: "beginner",
-                },
-                {
-                  label:
-                    i18n.language === "fr"
-                      ? t("filters.intermediate")
-                      : "Intermediate",
-                  value: "intermediate",
-                },
-                {
-                  label:
-                    i18n.language === "fr" ? t("filters.advanced") : "Advanced",
-                  value: "advanced",
-                },
-              ].map(({ label, value }) =>
-                renderChip(label, selectedDifficulty === value, () =>
-                  onDifficultyChange(
-                    selectedDifficulty === value ? null : value,
-                  ),
-                ),
-              )}
-            </View>
-          );
-        case "category":
-          return (
+    return (
+      <BottomSheet
+        ref={ref}
+        index={isExpanded ? 0 : -1}
+        snapPoints={snapPoints}
+        enablePanDownToClose
+        enableDynamicSizing={false}
+        onClose={onClose}
+        backgroundStyle={styles.bottomSheetBackground}
+        handleIndicatorStyle={styles.handleIndicator}
+      >
+        <BottomSheetView style={styles.container}>
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={styles.title}>{t("filters.category")}</Text>
+            {hasActiveFilters && (
+              <TouchableOpacity style={styles.clearButton} onPress={onClearAll}>
+                <Text style={styles.clearButtonText}>Reset</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          <BottomSheetScrollView
+            contentContainerStyle={styles.scrollViewContent}
+          >
             <View style={styles.chipContainer}>
               {(["All", ...EXPLORE_CATEGORIES] as const).map((cat) => {
                 const displayLabel =
@@ -135,65 +105,6 @@ const ExploreRoutineFilterSheet = forwardRef<
                 );
               })}
             </View>
-          );
-      }
-    };
-
-    const getTabLabel = (tab: FilterTab) => {
-      switch (tab) {
-        case "difficulty":
-          return t("filters.level");
-        case "category":
-          return t("filters.category");
-      }
-    };
-
-    return (
-      <BottomSheet
-        ref={ref}
-        index={isExpanded ? 0 : -1}
-        snapPoints={snapPoints}
-        enablePanDownToClose
-        enableDynamicSizing={false}
-        onClose={onClose}
-        backgroundStyle={styles.bottomSheetBackground}
-        handleIndicatorStyle={styles.handleIndicator}
-      >
-        <BottomSheetView style={styles.container}>
-          {/* Header */}
-          <View style={styles.header}>
-            <Text style={styles.title}>Filter Routines</Text>
-            {hasActiveFilters && (
-              <TouchableOpacity style={styles.clearButton} onPress={onClearAll}>
-                <Text style={styles.clearButtonText}>Reset</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-
-          {/* Tabs */}
-          <View style={styles.tabsContainer}>
-            {(["difficulty", "category"] as const).map((tab) => (
-              <TouchableOpacity
-                key={tab}
-                style={[styles.tab, activeTab === tab && styles.tabActive]}
-                onPress={() => onTabChange(tab)}
-              >
-                <Text
-                  style={[
-                    styles.tabText,
-                    activeTab === tab && styles.tabTextActive,
-                  ]}
-                >
-                  {getTabLabel(tab)}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          <BottomSheetScrollView
-            contentContainerStyle={styles.scrollViewContent}
-          >
-            {renderTabContent()}
             <View style={styles.footerSpacer} />
           </BottomSheetScrollView>
         </BottomSheetView>
@@ -237,33 +148,6 @@ const createStyles = (theme: Theme) =>
       fontSize: 14,
       fontFamily: FONTS.semiBold,
       color: theme.primary.main,
-    },
-    tabsContainer: {
-      flexDirection: "row",
-      paddingHorizontal: 18,
-      paddingVertical: 8,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.background.accent,
-      gap: 8,
-    },
-    tab: {
-      flex: 1,
-      paddingVertical: 6,
-      paddingHorizontal: 8,
-      borderRadius: 8,
-      backgroundColor: theme.background.accent,
-      alignItems: "center",
-    },
-    tabActive: {
-      backgroundColor: theme.primary.main,
-    },
-    tabText: {
-      fontSize: 13,
-      fontFamily: FONTS.semiBold,
-      color: theme.foreground.gray,
-    },
-    tabTextActive: {
-      color: theme.background.dark,
     },
     scrollViewContent: {
       padding: 18,

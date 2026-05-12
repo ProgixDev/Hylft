@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import React, { memo } from "react";
 import {
   Platform,
@@ -22,132 +23,198 @@ type Props = {
   onPress?: () => void;
   onStart?: () => void;
   fullWidth?: boolean;
+  compact?: boolean;
 };
 
-const DIFFICULTY_ACCENT: Record<string, { color: string }> = {
-  beginner: { color: "#22C55E" },
-  intermediate: { color: "#B652C7" },
-  advanced: { color: "#EF4444" },
-};
+const NAVY = "#0A1628";
+const NAVY_LIGHT = "#1A2F50";
 
-const RoutineCard = ({ routine, onPress, onStart, fullWidth = false }: Props) => {
+const RoutineCard = ({
+  routine,
+  onPress,
+  onStart,
+  fullWidth = false,
+  compact = false,
+}: Props) => {
   const { t } = useTranslation();
-  const { theme, themeType } = useTheme();
+  const { themeType } = useTheme();
   const translatedName = translateRoutineName(routine.name);
 
-  const accent = DIFFICULTY_ACCENT[routine.difficulty] ?? { color: "#22C55E" };
+  const accent = NAVY;
   const isDark = themeType === "dark";
 
-  const cardBg = isDark ? "#151719" : "#F8F9FB";
-  const cardBorder = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.07)";
+  const surfaceGradient: [string, string] = isDark
+    ? ["#1A1D20", "#0D0F11"]
+    : ["#FFFFFF", "#EDEFF2"];
+  const cardBorder = isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.08)";
   const textPrimary = isDark ? "#F0E6D3" : "#0B0D0E";
-  const textMuted = isDark ? "rgba(240,230,211,0.5)" : "rgba(11,13,14,0.45)";
-  const statBg = isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.04)";
+  const textMuted = isDark ? "rgba(240,230,211,0.55)" : "rgba(11,13,14,0.5)";
+  const textDim = isDark ? "rgba(240,230,211,0.38)" : "rgba(11,13,14,0.4)";
+  const statBg = isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.035)";
+  const statBorder = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)";
   const divider = isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.07)";
 
   const shadow = Platform.select({
     ios: {
       shadowColor: "#000",
-      shadowOpacity: isDark ? 0.35 : 0.1,
-      shadowRadius: 16,
-      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: isDark ? 0.4 : 0.12,
+      shadowRadius: 18,
+      shadowOffset: { width: 0, height: 8 },
     },
-    android: { elevation: isDark ? 6 : 3 },
+    android: { elevation: isDark ? 7 : 4 },
     default: {},
   });
+
+  const muscles = routine.targetMuscles
+    .slice(0, 2)
+    .map((m) => translateExerciseTerm(m, "targetMuscles"))
+    .join(" · ");
+  const muscleExtra =
+    routine.targetMuscles.length > 2
+      ? ` +${routine.targetMuscles.length - 2}`
+      : "";
 
   return (
     <TouchableOpacity
       onPress={onPress}
-      activeOpacity={0.88}
+      activeOpacity={0.9}
       style={[
         styles.card,
-        { backgroundColor: cardBg, borderColor: cardBorder },
+        { borderColor: cardBorder },
         fullWidth ? styles.cardFull : styles.cardFixed,
         shadow,
       ]}
     >
-      {/* Left accent stripe */}
-      <View style={[styles.accentStripe, { backgroundColor: accent.color }]} />
-
-      <View style={styles.inner}>
-        {/* Top row: name + times completed */}
-        <View style={styles.topRow}>
-          <Text style={[styles.name, { color: textPrimary }]} numberOfLines={1}>
-            {translatedName}
-          </Text>
-          {routine.timesCompleted > 0 && (
-            <View style={styles.completedPill}>
-              <Ionicons name="checkmark-circle" size={12} color={textMuted} />
-              <Text style={[styles.completedText, { color: textMuted }]}>
-                {routine.timesCompleted}×
-              </Text>
-            </View>
-          )}
-        </View>
-
-        {/* Stats row */}
-        <View style={styles.statsRow}>
-          <View style={[styles.statChip, { backgroundColor: statBg }]}>
-            <Ionicons name="barbell-outline" size={13} color={accent.color} />
-            <Text style={[styles.statText, { color: textPrimary }]}>
-              {routine.exercises.length}{" "}
-              <Text style={{ color: textMuted, fontFamily: FONTS.regular }}>
-                {t("routines.exercises")}
-              </Text>
+      <LinearGradient
+        colors={surfaceGradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.surface}
+      >
+        <View style={styles.body}>
+          {/* Top row: routine name + completed count */}
+          <View style={styles.topRow}>
+            <Text
+              style={[styles.name, { color: textPrimary }]}
+              numberOfLines={1}
+            >
+              {translatedName}
             </Text>
-          </View>
-          <View style={[styles.statChip, { backgroundColor: statBg }]}>
-            <Ionicons name="time-outline" size={13} color={accent.color} />
-            <Text style={[styles.statText, { color: textPrimary }]}>
-              {routine.estimatedDuration}
-              <Text style={{ color: textMuted, fontFamily: FONTS.regular }}> min</Text>
-            </Text>
-          </View>
-        </View>
 
-        {/* Divider */}
-        <View style={[styles.divider, { backgroundColor: divider }]} />
-
-        {/* Bottom row: muscles + start button */}
-        <View style={styles.bottomRow}>
-          <View style={styles.musclesRow}>
-            {routine.targetMuscles.slice(0, 2).map((m, i) => (
-              <Text key={i} style={[styles.muscle, { color: textMuted }]}>
-                {i > 0 ? " · " : ""}
-                {translateExerciseTerm(m, "targetMuscles")}
-              </Text>
-            ))}
-            {routine.targetMuscles.length > 2 && (
-              <Text style={[styles.muscle, { color: textMuted }]}>
-                {" "}+{routine.targetMuscles.length - 2}
-              </Text>
+            {routine.timesCompleted > 0 && (
+              <View style={styles.completedPill}>
+                <Ionicons
+                  name="repeat"
+                  size={11}
+                  color={textMuted}
+                />
+                <Text style={[styles.completedText, { color: textMuted }]}>
+                  ×{routine.timesCompleted}
+                </Text>
+              </View>
             )}
           </View>
 
-          <Pressable
-            onPress={onStart}
-            accessibilityLabel={t("routines.startRoutine")}
-            style={({ pressed }) => [
-              styles.startBtn,
-              { backgroundColor: accent.color, opacity: pressed ? 0.8 : 1 },
+          {/* Stats: boxed metrics — horizontal grid (list) or vertical stack (compact) */}
+          <View
+            style={[
+              compact ? styles.statsStack : styles.statsGrid,
+              { backgroundColor: statBg, borderColor: statBorder },
             ]}
           >
-            <Ionicons name="play" size={12} color="#fff" />
-            <Text style={styles.startBtnText}>START</Text>
-          </Pressable>
+            <View style={compact ? styles.statRow : styles.statCell}>
+              <Ionicons name="barbell" size={14} color={accent} />
+              <Text style={[styles.statValue, { color: textPrimary }]}>
+                {routine.exercises.length}
+              </Text>
+              <Text style={[styles.statLabel, { color: textDim }]}>
+                {t("routines.exercises").toUpperCase()}
+              </Text>
+            </View>
+            <View
+              style={
+                compact
+                  ? [styles.statRowDivider, { backgroundColor: divider }]
+                  : [styles.statDivider, { backgroundColor: divider }]
+              }
+            />
+            <View style={compact ? styles.statRow : styles.statCell}>
+              <Ionicons name="time" size={14} color={accent} />
+              <Text style={[styles.statValue, { color: textPrimary }]}>
+                {routine.estimatedDuration}
+              </Text>
+              <Text style={[styles.statLabel, { color: textDim }]}>MIN</Text>
+            </View>
+            <View
+              style={
+                compact
+                  ? [styles.statRowDivider, { backgroundColor: divider }]
+                  : [styles.statDivider, { backgroundColor: divider }]
+              }
+            />
+            <View style={compact ? styles.statRow : styles.statCell}>
+              <Ionicons name="layers" size={14} color={accent} />
+              <Text style={[styles.statValue, { color: textPrimary }]}>
+                {routine.targetMuscles.length}
+              </Text>
+              <Text style={[styles.statLabel, { color: textDim }]}>
+                ZONES
+              </Text>
+            </View>
+          </View>
+
+          {/* Bottom: muscles + START button */}
+          <View style={styles.bottomRow}>
+            <View style={styles.musclesWrap}>
+              <Ionicons
+                name="body-outline"
+                size={12}
+                color={textMuted}
+                style={{ marginRight: 4 }}
+              />
+              <Text
+                style={[styles.muscles, { color: textMuted }]}
+                numberOfLines={1}
+              >
+                {muscles}
+                {muscleExtra}
+              </Text>
+            </View>
+
+            <Pressable
+              onPress={onStart}
+              accessibilityLabel={t("routines.startRoutine")}
+              style={({ pressed }) => [
+                styles.startBtn,
+                pressed && { opacity: 0.82, transform: [{ scale: 0.94 }] },
+              ]}
+            >
+              <LinearGradient
+                colors={[NAVY_LIGHT, NAVY]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.startBtnInner}
+              >
+                <Ionicons
+                  name="play"
+                  size={16}
+                  color="#fff"
+                  style={{ marginLeft: 2 }}
+                />
+              </LinearGradient>
+            </Pressable>
+          </View>
         </View>
-      </View>
+      </LinearGradient>
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 18,
+    borderRadius: 14,
     borderWidth: 1,
     overflow: "hidden",
-    flexDirection: "row",
   },
   cardFixed: {
     width: 280,
@@ -156,14 +223,14 @@ const styles = StyleSheet.create({
   cardFull: {
     width: "100%",
   },
-  accentStripe: {
-    width: 4,
+  surface: {
+    flexDirection: "row",
   },
-  inner: {
+  body: {
     flex: 1,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    gap: 6,
+    gap: 10,
   },
   topRow: {
     flexDirection: "row",
@@ -175,67 +242,92 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 3,
-    flexShrink: 0,
   },
   completedText: {
-    fontFamily: FONTS.medium,
+    fontFamily: FONTS.bold,
     fontSize: 11,
+    letterSpacing: 0.4,
   },
   name: {
     fontFamily: FONTS.extraBold,
-    fontSize: 16,
+    fontSize: 17,
     letterSpacing: -0.2,
+    textTransform: "uppercase",
     flex: 1,
   },
-  statsRow: {
-    flexDirection: "row",
-    gap: 6,
-  },
-  statChip: {
+  statsGrid: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
     borderRadius: 8,
+    borderWidth: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
   },
-  statText: {
-    fontFamily: FONTS.bold,
-    fontSize: 12,
+  statsStack: {
+    borderRadius: 8,
+    borderWidth: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    gap: 6,
   },
-  divider: {
+  statCell: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 5,
+  },
+  statRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  statRowDivider: {
     height: 1,
-    marginVertical: 0,
+    width: "100%",
+  },
+  statValue: {
+    fontFamily: FONTS.extraBold,
+    fontSize: 14,
+    letterSpacing: -0.2,
+  },
+  statLabel: {
+    fontFamily: FONTS.bold,
+    fontSize: 9,
+    letterSpacing: 1,
+  },
+  statDivider: {
+    width: 1,
+    height: 22,
   },
   bottomRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    gap: 8,
   },
-  musclesRow: {
+  musclesWrap: {
     flexDirection: "row",
     alignItems: "center",
     flex: 1,
     flexWrap: "nowrap",
   },
-  muscle: {
-    fontFamily: FONTS.medium,
-    fontSize: 12,
-    textTransform: "capitalize",
+  muscles: {
+    fontFamily: FONTS.semiBold,
+    fontSize: 11,
+    letterSpacing: 0.4,
+    textTransform: "uppercase",
+    flexShrink: 1,
   },
   startBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
+    borderRadius: 999,
+    overflow: "hidden",
   },
-  startBtnText: {
-    fontFamily: FONTS.bold,
-    fontSize: 11,
-    color: "#fff",
-    letterSpacing: 0.5,
+  startBtnInner: {
+    width: 36,
+    height: 36,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
 

@@ -112,7 +112,6 @@ export interface Routine {
   exercises: RoutineExercise[];
   estimatedDuration: number; // in minutes
   targetMuscles: string[];
-  difficulty: "beginner" | "intermediate" | "advanced";
   lastUsed?: string;
   timesCompleted: number;
 }
@@ -773,7 +772,6 @@ export const ROUTINES: Routine[] = [
     description: "Heavy compound movements for chest, shoulders and triceps",
     estimatedDuration: 90,
     targetMuscles: ["chest", "shoulders", "triceps"],
-    difficulty: "advanced",
     lastUsed: "2024-02-12",
     timesCompleted: 24,
     exercises: [
@@ -829,7 +827,6 @@ export const ROUTINES: Routine[] = [
     description: "Back and biceps focused on muscle growth",
     estimatedDuration: 85,
     targetMuscles: ["back", "biceps", "rear delts"],
-    difficulty: "intermediate",
     lastUsed: "2024-02-11",
     timesCompleted: 31,
     exercises: [
@@ -884,7 +881,6 @@ export const ROUTINES: Routine[] = [
     description: "High volume leg workout for quad and hamstring development",
     estimatedDuration: 120,
     targetMuscles: ["quads", "hamstrings", "glutes"],
-    difficulty: "advanced",
     lastUsed: "2024-02-10",
     timesCompleted: 18,
     exercises: [
@@ -940,7 +936,6 @@ export const ROUTINES: Routine[] = [
     description: "Full upper body strength and power workout",
     estimatedDuration: 75,
     targetMuscles: ["chest", "back", "shoulders", "arms"],
-    difficulty: "intermediate",
     timesCompleted: 12,
     exercises: [
       {

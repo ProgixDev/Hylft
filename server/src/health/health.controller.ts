@@ -68,6 +68,28 @@ export class HealthController {
     return this.healthService.getWorkoutsRange(user.id, startDate, endDate);
   }
 
+  @Get('workouts/history')
+  getWorkoutsHistory(
+    @CurrentUser() user: AuthUser,
+    @Query('limit') limit?: string,
+    @Query('before') before?: string,
+  ) {
+    const parsedLimit = Math.min(Math.max(parseInt(limit ?? '20', 10) || 20, 1), 100);
+    return this.healthService.getWorkoutsHistory(
+      user.id,
+      parsedLimit,
+      before ?? null,
+    );
+  }
+
+  @Get('workouts/:id')
+  getWorkoutDetail(
+    @CurrentUser() user: AuthUser,
+    @Param('id') workoutId: string,
+  ) {
+    return this.healthService.getWorkoutDetail(user.id, workoutId);
+  }
+
   @Post('workouts')
   addWorkout(
     @CurrentUser() user: AuthUser,

@@ -1,14 +1,8 @@
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from "react-native-reanimated";
 import { useTranslation } from "react-i18next";
 import {
   Dimensions,
@@ -24,6 +18,7 @@ import { BarChart, LineChart } from "react-native-gifted-charts";
 import Svg, { Circle } from "react-native-svg";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import AnimatedScreen from "../../components/ui/AnimatedScreen";
+import SegmentedTabs from "../../components/ui/SegmentedTabs";
 import AvatarActionSheet from "../../components/profile/AvatarActionSheet";
 import CoverPickerModal from "../../components/profile/CoverPickerModal";
 import ProfileHeader from "../../components/profile/ProfileHeader";
@@ -90,82 +85,14 @@ function ProgressRing({ pct, size, color, strokeWidth = 6, children }: {
   );
 }
 
-// ── iOS-style glass segmented control ──────────────────────────────────────
-const PERIOD_ITEM_WIDTH = 92;
-const PERIOD_TRACK_PADDING = 4;
 const PERIOD_ACTIVE_NAVY = "#0A1628";
 
-function PeriodSegment({
-  value,
-  onChange,
-  isFr,
-  theme,
-  themeType,
-  styles,
-}: {
-  value: Period;
-  onChange: (p: Period) => void;
-  isFr: boolean;
-  theme: Theme;
-  themeType: string;
-  styles: any;
-}) {
-  const periods: Period[] = ["daily", "weekly", "monthly"];
-  const activeIdx = periods.indexOf(value);
-  const x = useSharedValue(activeIdx * PERIOD_ITEM_WIDTH);
-
-  useEffect(() => {
-    x.value = withTiming(activeIdx * PERIOD_ITEM_WIDTH, { duration: 280 });
-  }, [activeIdx, x]);
-
-  const indicatorStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: x.value }],
-  }));
-
-  const blurTint = themeType === "dark" ? "dark" : "light";
-
-  return (
-    <View style={styles.periodWrap}>
-      <View style={styles.periodTrack}>
-        <Animated.View
-          style={[styles.periodIndicator, indicatorStyle]}
-          pointerEvents="none"
-        >
-          <BlurView
-            intensity={50}
-            tint={blurTint}
-            style={StyleSheet.absoluteFill}
-          />
-          <View style={styles.periodIndicatorOverlay} />
-        </Animated.View>
-        {periods.map((p) => {
-          const active = p === value;
-          const label =
-            p === "daily"
-              ? isFr ? "Jour" : "Today"
-              : p === "weekly"
-                ? isFr ? "Semaine" : "Week"
-                : isFr ? "Mois" : "Month";
-          return (
-            <Pressable
-              key={p}
-              style={styles.periodItem}
-              onPress={() => onChange(p)}
-            >
-              <Text
-                style={[
-                  styles.periodText,
-                  active && styles.periodTextActive,
-                ]}
-              >
-                {label}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
-    </View>
-  );
+function buildPeriodItems(isFr: boolean): { value: Period; label: string }[] {
+  return [
+    { value: "daily", label: isFr ? "Jour" : "Today" },
+    { value: "weekly", label: isFr ? "Semaine" : "Week" },
+    { value: "monthly", label: isFr ? "Mois" : "Month" },
+  ];
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -406,13 +333,12 @@ export default function Profile() {
         <Text style={styles.sectionTitle}>{isFr ? "Activité" : "Activity"}</Text>
 
         {/* Period tabs (iOS-style glass segmented control) */}
-        <PeriodSegment
+        <SegmentedTabs<Period>
           value={activityPeriod}
           onChange={setActivityPeriod}
-          isFr={!!isFr}
+          items={buildPeriodItems(!!isFr)}
           theme={theme}
-          themeType={themeType}
-          styles={styles}
+          themeType={themeType as "dark" | "light"}
         />
 
         {/* ── Weight Progress ──────────────────────────────────── */}
@@ -988,62 +914,12 @@ function createStyles(theme: Theme) {
     },
 
     // Period segmented control (iOS glass)
-    periodWrap: {
-      alignItems: "center",
-      marginBottom: 16,
-    },
     periodRow: {
       flexDirection: "row",
       marginHorizontal: 20,
       gap: 10,
       marginBottom: 16,
     },
-    periodTrack: {
-      flexDirection: "row",
-      padding: PERIOD_TRACK_PADDING,
-      borderRadius: 10,
-      backgroundColor: theme.background.darker,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: `${theme.foreground.gray}30`,
-      overflow: "hidden",
-      ...(Platform.OS === "ios"
-        ? {
-            shadowColor: "#000",
-            shadowOpacity: 0.12,
-            shadowRadius: 8,
-            shadowOffset: { width: 0, height: 4 },
-          }
-        : { elevation: 2 }),
-    },
-    periodIndicator: {
-      position: "absolute",
-      top: PERIOD_TRACK_PADDING,
-      left: PERIOD_TRACK_PADDING,
-      width: PERIOD_ITEM_WIDTH,
-      bottom: PERIOD_TRACK_PADDING,
-      borderRadius: 10,
-      overflow: "hidden",
-      backgroundColor: PERIOD_ACTIVE_NAVY,
-    },
-    periodIndicatorOverlay: {
-      ...StyleSheet.absoluteFillObject,
-      borderRadius: 10,
-      backgroundColor: PERIOD_ACTIVE_NAVY,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: `${PERIOD_ACTIVE_NAVY}55`,
-    },
-    periodItem: {
-      width: PERIOD_ITEM_WIDTH,
-      paddingVertical: 9,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    periodText: {
-      fontFamily: FONTS.bold,
-      fontSize: 13,
-      color: theme.foreground.gray,
-    },
-    periodTextActive: { color: "#FFFFFF" },
 
     // Chart
     chartCard: {

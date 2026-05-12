@@ -115,9 +115,10 @@ export default function ExercisePicker() {
           bodyParts: selectedBodyPart,
           equipments: selectedEquipment,
         });
-        const filtered = selectedDifficulty
+        const filtered = (selectedDifficulty
           ? result.exercises.filter((e) => e.difficulty === selectedDifficulty)
-          : result.exercises;
+          : result.exercises
+        ).filter((e) => !!e.gifUrl);
         setExercises((prev) => (reset ? filtered : [...prev, ...filtered]));
         setHasMore(result.hasMore);
         setCursor(result.nextCursor);
@@ -165,6 +166,7 @@ export default function ExercisePicker() {
       try {
         const raw = await searchExercisesExerciseDb(searchQuery, shouldTranslate);
         const filtered = raw.filter((e) => {
+          if (!e.gifUrl) return false;
           if (
             selectedBodyPart &&
             !e.rawBodyParts.includes(selectedBodyPart.toLowerCase())
@@ -234,6 +236,7 @@ export default function ExercisePicker() {
                 style={styles.exerciseThumbnail}
                 contentFit="cover"
                 transition={200}
+                autoplay={false}
               />
             ) : (
               <View style={styles.exerciseThumbnailPlaceholder}>
@@ -257,7 +260,7 @@ export default function ExercisePicker() {
               <Ionicons
                 name="body-outline"
                 size={11}
-                color={theme.foreground.gray}
+                color="rgba(255,255,255,0.75)"
               />
               <Text style={styles.exerciseMeta} numberOfLines={1}>
                 {translateExerciseTerm(item.bodyPart, "bodyParts")}
@@ -266,7 +269,7 @@ export default function ExercisePicker() {
               <Ionicons
                 name="barbell-outline"
                 size={11}
-                color={theme.foreground.gray}
+                color="rgba(255,255,255,0.75)"
               />
               <Text style={styles.exerciseMeta} numberOfLines={1}>
                 {translateExerciseTerm(item.equipment, "equipment")}
@@ -284,7 +287,7 @@ export default function ExercisePicker() {
               <Ionicons
                 name="information-circle-outline"
                 size={20}
-                color={theme.foreground.gray}
+                color="rgba(255,255,255,0.85)"
               />
             </TouchableOpacity>
             <View
@@ -297,7 +300,7 @@ export default function ExercisePicker() {
                 <Ionicons
                   name="checkmark"
                   size={14}
-                  color={theme.background.dark}
+                  color="#0A1628"
                 />
               )}
             </View>
@@ -333,6 +336,7 @@ export default function ExercisePicker() {
                 style={styles.gridThumb}
                 contentFit="cover"
                 transition={200}
+                autoplay={false}
               />
             ) : (
               <View style={styles.gridThumbPlaceholder}>
@@ -359,7 +363,7 @@ export default function ExercisePicker() {
               <Ionicons
                 name="information-circle"
                 size={18}
-                color={theme.foreground.white}
+                color="#FFFFFF"
               />
             </TouchableOpacity>
 
@@ -374,7 +378,7 @@ export default function ExercisePicker() {
                 <Ionicons
                   name="checkmark"
                   size={14}
-                  color={theme.background.dark}
+                  color="#0A1628"
                 />
               )}
             </View>
@@ -687,11 +691,12 @@ const createStyles = (theme: Theme) =>
       alignItems: "center",
       padding: 10,
       marginBottom: 8,
-      backgroundColor: theme.background.darker,
+      backgroundColor: "#0A1628",
       borderRadius: 14,
       borderWidth: 1,
       borderColor: "transparent",
       gap: 12,
+      overflow: "hidden",
     },
     exerciseThumbnailContainer: {
       position: "relative",
@@ -710,11 +715,10 @@ const createStyles = (theme: Theme) =>
       height: 8,
       borderRadius: 4,
       borderWidth: 1.5,
-      borderColor: theme.background.darker,
+      borderColor: "#0A1628",
     },
     exerciseRowSelected: {
-      borderColor: theme.primary.main,
-      backgroundColor: theme.background.accent,
+      borderColor: "#FFFFFF",
     },
     rowActions: {
       flexDirection: "row",
@@ -733,14 +737,14 @@ const createStyles = (theme: Theme) =>
       height: 22,
       borderRadius: 11,
       borderWidth: 1.5,
-      borderColor: theme.foreground.gray,
+      borderColor: "rgba(255,255,255,0.7)",
       alignItems: "center",
       justifyContent: "center",
       backgroundColor: "transparent",
     },
     selectIndicatorActive: {
-      backgroundColor: theme.primary.main,
-      borderColor: theme.primary.main,
+      backgroundColor: "#FFFFFF",
+      borderColor: "#FFFFFF",
     },
     exerciseMetaRow: {
       flexDirection: "row",
@@ -752,7 +756,7 @@ const createStyles = (theme: Theme) =>
       width: 3,
       height: 3,
       borderRadius: 1.5,
-      backgroundColor: theme.foreground.gray,
+      backgroundColor: "rgba(255,255,255,0.5)",
       marginHorizontal: 4,
     },
     // Grid view
@@ -761,7 +765,7 @@ const createStyles = (theme: Theme) =>
     },
     gridCard: {
       flex: 1,
-      backgroundColor: theme.background.darker,
+      backgroundColor: "#0A1628",
       borderRadius: 16,
       overflow: "hidden",
       marginBottom: 12,
@@ -769,7 +773,7 @@ const createStyles = (theme: Theme) =>
       borderColor: "transparent",
     },
     gridCardSelected: {
-      borderColor: theme.primary.main,
+      borderColor: "#FFFFFF",
     },
     gridThumbWrap: {
       position: "relative",
@@ -818,8 +822,8 @@ const createStyles = (theme: Theme) =>
       backgroundColor: "rgba(0,0,0,0.4)",
     },
     gridSelectIndicatorActive: {
-      backgroundColor: theme.primary.main,
-      borderColor: theme.primary.main,
+      backgroundColor: "#FFFFFF",
+      borderColor: "#FFFFFF",
     },
     gridInfo: {
       paddingHorizontal: 10,
@@ -829,13 +833,13 @@ const createStyles = (theme: Theme) =>
     gridName: {
       fontSize: 12,
       fontFamily: FONTS.bold,
-      color: theme.foreground.white,
+      color: "#FFFFFF",
       textTransform: "capitalize",
     },
     gridMeta: {
       fontSize: 10,
       fontFamily: FONTS.medium,
-      color: theme.foreground.gray,
+      color: "rgba(255,255,255,0.75)",
       textTransform: "capitalize",
     },
     bulkFooter: {
@@ -872,12 +876,12 @@ const createStyles = (theme: Theme) =>
     exerciseName: {
       fontSize: 14,
       fontFamily: FONTS.bold,
-      color: theme.foreground.white,
+      color: "#FFFFFF",
       textTransform: "capitalize",
     },
     exerciseMeta: {
       fontSize: 11,
-      color: theme.foreground.gray,
+      color: "rgba(255,255,255,0.75)",
       fontFamily: FONTS.medium,
       textTransform: "capitalize",
     },

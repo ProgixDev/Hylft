@@ -24,10 +24,7 @@ import {
   ExploreCategory,
   getExploreRoutines,
 } from "../../services/exploreService";
-import {
-  translateRoutineName,
-  translateApiData,
-} from "../../utils/exerciseTranslator";
+import { translateRoutineName } from "../../utils/exerciseTranslator";
 import { buildActiveWorkoutFromRoutine } from "../../utils/workoutBuilder";
 
 import { FONTS } from "../../constants/fonts";
@@ -48,15 +45,6 @@ const cardShadow = Platform.select({
   default: {},
 });
 
-const diffColors: Record<string, string> = {
-  beginner: "#4CAF50",
-  intermediate: "#FF9800",
-  advanced: "#F44336",
-};
-
-type DifficultyFilter = "All" | "beginner" | "intermediate" | "advanced";
-type FilterTab = "difficulty" | "category";
-
 export default function ExploreRoutines() {
   const { theme } = useTheme();
   const styles = createStyles(theme);
@@ -71,20 +59,13 @@ export default function ExploreRoutines() {
   const [activeCategory, setActiveCategory] = useState<ExploreCategory | "All">(
     "All",
   );
-  const [activeDifficulty, setActiveDifficulty] =
-    useState<DifficultyFilter>("All");
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
-  const [activeFilterTab, setActiveFilterTab] =
-    useState<FilterTab>("difficulty");
 
-  const hasActiveFilters =
-    activeDifficulty !== "All" || activeCategory !== "All";
+  const hasActiveFilters = activeCategory !== "All";
 
-  const activeFilterCount =
-    (activeDifficulty !== "All" ? 1 : 0) + (activeCategory !== "All" ? 1 : 0);
+  const activeFilterCount = activeCategory !== "All" ? 1 : 0;
 
   const handleClearFilters = () => {
-    setActiveDifficulty("All");
     setActiveCategory("All");
   };
 
@@ -92,10 +73,9 @@ export default function ExploreRoutines() {
     () =>
       getExploreRoutines({
         category: activeCategory,
-        difficulty: activeDifficulty === "All" ? "All" : activeDifficulty,
         search,
       }),
-    [activeCategory, activeDifficulty, search],
+    [activeCategory, search],
   );
 
   const handleStart = (routine: (typeof routines)[number]) => {
@@ -199,8 +179,6 @@ export default function ExploreRoutines() {
           <View style={styles.grid}>
             {routines.map((routine, i) => {
               const img = routineImages[i % routineImages.length];
-              const diffColor =
-                diffColors[routine.difficulty] ?? theme.primary.main;
               return (
                 <Pressable
                   key={routine.id}
@@ -222,16 +200,6 @@ export default function ExploreRoutines() {
                     colors={["transparent", "rgba(0,0,0,0.85)"]}
                     style={styles.gridCardGradient}
                   />
-                  <View
-                    style={[
-                      styles.gridCardDiffBadge,
-                      { backgroundColor: diffColor + "EE" },
-                    ]}
-                  >
-                    <Text style={styles.gridCardDiffText}>
-                      {translateApiData(routine.difficulty)}
-                    </Text>
-                  </View>
                   <View style={styles.gridCardContent}>
                     <Text style={styles.gridCardTitle} numberOfLines={2}>
                       {translateRoutineName(routine.name)}
@@ -268,10 +236,6 @@ export default function ExploreRoutines() {
         ref={filterSheetRef}
         isExpanded={filterSheetOpen}
         onClose={() => setFilterSheetOpen(false)}
-        activeTab={activeFilterTab}
-        onTabChange={setActiveFilterTab}
-        selectedDifficulty={activeDifficulty}
-        onDifficultyChange={(d) => setActiveDifficulty(d || "All")}
         selectedCategory={activeCategory}
         onCategoryChange={(c) => setActiveCategory(c || "All")}
         hasActiveFilters={hasActiveFilters}
@@ -406,21 +370,6 @@ const createStyles = (theme: Theme) =>
       right: 0,
       bottom: 0,
       height: "70%",
-    },
-    gridCardDiffBadge: {
-      position: "absolute",
-      top: 10,
-      left: 10,
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-      borderRadius: 10,
-    },
-    gridCardDiffText: {
-      fontSize: 9,
-      fontFamily: FONTS.extraBold,
-      color: "#fff",
-      textTransform: "uppercase",
-      letterSpacing: 0.6,
     },
     gridCardContent: {
       position: "absolute",

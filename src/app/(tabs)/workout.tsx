@@ -13,9 +13,17 @@ import {
   Text,
   View,
 } from "react-native";
+import Animated, {
+  FadeIn,
+  FadeOut,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from "react-native-reanimated";
 import AnimatedScreen from "../../components/ui/AnimatedScreen";
 import AnimatedSection from "../../components/ui/AnimatedSection";
 import RoutineCard from "../../components/ui/RoutineCard";
+import RoutineDetailModal from "../../components/ui/RoutineDetailModal";
 import { FONTS } from "../../constants/fonts";
 import { Theme } from "../../constants/themes";
 import { useActiveWorkout } from "../../contexts/ActiveWorkoutContext";
@@ -60,6 +68,21 @@ export default function Workout() {
 
   const [workouts, setWorkouts] = useState<WorkoutData[]>([]);
   const [routines, setRoutines] = useState<Routine[]>([]);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("list");
+  const [selectedRoutine, setSelectedRoutine] = useState<Routine | null>(null);
+
+  // Sliding pill indicator for the grid/list toggle
+  const togglePos = useSharedValue(0);
+  useEffect(() => {
+    togglePos.value = withSpring(viewMode === "grid" ? 0 : 30, {
+      damping: 16,
+      stiffness: 220,
+      mass: 0.7,
+    });
+  }, [viewMode, togglePos]);
+  const togglePillStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: togglePos.value }],
+  }));
   const { startWorkout, startGuidedRoutine } = useActiveWorkout();
   const { initCreation } = useCreateRoutine();
   const scrollRef = useRef<ScrollView | null>(null);
@@ -184,82 +207,69 @@ export default function Workout() {
 
         {/* ── Action Buttons ────────────────────────────────────── */}
         <AnimatedSection delay={120} scale>
-          <View
-            style={{
-              flexDirection: "row",
-              marginHorizontal: 20,
-              marginBottom: 24,
-              gap: 12,
-            }}
-          >
-            <Pressable
-              onPress={handleCreateRoutine}
-              style={({ pressed }) => [
-                {
-                  flex: 1,
-                  backgroundColor: "#10B981",
-                  borderRadius: 16,
-                  paddingVertical: 16,
-                  paddingHorizontal: 8,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexDirection: "row",
-                  gap: 8,
-                  opacity: pressed ? 0.85 : 1,
-                },
-              ]}
-            >
-              <Ionicons name="add-circle" size={22} color="#FFFFFF" />
-              <Text
-                numberOfLines={1}
-                adjustsFontSizeToFit
-                style={{
-                  flexShrink: 1,
-                  fontFamily: FONTS.bold,
-                  color: "#FFFFFF",
-                  fontSize: 16,
-                  textAlign: "center",
-                  textTransform: "uppercase",
-                  letterSpacing: 0.5,
-                }}
-              >
-                {t("workout.createRoutine", "Créer un programme")}
-              </Text>
-            </Pressable>
-            <Pressable
-              onPress={() => router.push("/explore-routines" as any)}
-              style={({ pressed }) => [
-                {
-                  flex: 1,
-                  backgroundColor: "#6366F1",
-                  borderRadius: 16,
-                  paddingVertical: 16,
-                  paddingHorizontal: 8,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexDirection: "row",
-                  gap: 8,
-                  opacity: pressed ? 0.85 : 1,
-                },
-              ]}
-            >
-              <Ionicons name="search" size={22} color="#FFFFFF" />
-              <Text
-                numberOfLines={1}
-                adjustsFontSizeToFit
-                style={{
-                  flexShrink: 1,
-                  fontFamily: FONTS.bold,
-                  color: "#FFFFFF",
-                  fontSize: 16,
-                  textAlign: "center",
-                  textTransform: "uppercase",
-                  letterSpacing: 0.5,
-                }}
-              >
-                {t("workout.explore", "Explorer")}
-              </Text>
-            </Pressable>
+          <View style={styles.actionRow}>
+            {(() => {
+              const navyGradient: [string, string] = ["#1A2F50", "#0A1628"];
+              const cyanGradient: [string, string] = ["#06B6D4", "#0891B2"];
+
+              const ActionBtn = ({
+                onPress,
+                gradient,
+                icon,
+                title,
+              }: {
+                onPress: () => void;
+                gradient: [string, string];
+                icon: keyof typeof Ionicons.glyphMap;
+                title: string;
+              }) => (
+                <Pressable
+                  onPress={onPress}
+                  style={({ pressed }) => [
+                    styles.actionBtnWrap,
+                    pressed && {
+                      opacity: 0.9,
+                      transform: [{ scale: 0.97 }],
+                    },
+                  ]}
+                >
+                  <LinearGradient
+                    colors={gradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.actionBtnInner}
+                  >
+                    <View style={styles.actionIconBox}>
+                      <Ionicons name={icon} size={18} color="#FFFFFF" />
+                    </View>
+                    <Text
+                      numberOfLines={1}
+                      adjustsFontSizeToFit
+                      style={styles.actionTitle}
+                    >
+                      {title}
+                    </Text>
+                  </LinearGradient>
+                </Pressable>
+              );
+
+              return (
+                <>
+                  <ActionBtn
+                    onPress={handleCreateRoutine}
+                    gradient={navyGradient}
+                    icon="add"
+                    title={t("workout.createRoutine", "Nouv. séance")}
+                  />
+                  <ActionBtn
+                    onPress={() => router.push("/explore-routines" as any)}
+                    gradient={cyanGradient}
+                    icon="compass"
+                    title={t("workout.explore", "Explorer")}
+                  />
+                </>
+              );
+            })()}
           </View>
         </AnimatedSection>
 
@@ -268,14 +278,35 @@ export default function Workout() {
           <View style={styles.sectionHeaderRow}>
             <Text style={styles.sectionTitle}>{t("workout.myRoutines")}</Text>
             {routines.length > 0 && (
-              <Pressable
-                onPress={() => router.push("/routines" as any)}
-                style={({ pressed }) => pressed && { opacity: 0.7 }}
-              >
-                <Text style={styles.moreLink}>
-                  {t("workout.viewAll")} {">"}
-                </Text>
-              </Pressable>
+              <View style={styles.viewToggle}>
+                <Animated.View
+                  pointerEvents="none"
+                  style={[styles.viewTogglePill, togglePillStyle]}
+                />
+                {(["grid", "list"] as const).map((mode) => {
+                  const active = viewMode === mode;
+                  return (
+                    <Pressable
+                      key={mode}
+                      onPress={() => setViewMode(mode)}
+                      style={styles.viewToggleButton}
+                      hitSlop={6}
+                    >
+                      <Ionicons
+                        name={mode === "grid" ? "grid-outline" : "list-outline"}
+                        size={16}
+                        color={
+                          active
+                            ? "#FFFFFF"
+                            : themeType === "dark"
+                              ? "rgba(240,230,211,0.6)"
+                              : "rgba(11,13,14,0.55)"
+                        }
+                      />
+                    </Pressable>
+                  );
+                })}
+              </View>
             )}
           </View>
         </AnimatedSection>
@@ -304,18 +335,46 @@ export default function Workout() {
                 </Text>
               </View>
             </Pressable>
-          ) : (
-            <View style={styles.routinesList}>
+          ) : viewMode === "list" ? (
+            <Animated.View
+              key="list"
+              entering={FadeIn.duration(220)}
+              exiting={FadeOut.duration(160)}
+              style={styles.routinesList}
+              shouldRasterizeIOS
+              renderToHardwareTextureAndroid
+            >
               {routines.slice(0, 6).map((routine) => (
                 <RoutineCard
                   key={routine.id}
                   routine={routine}
                   fullWidth
-                  onPress={() => router.push(`/routines/${routine.id}` as any)}
+                  onPress={() => setSelectedRoutine(routine)}
                   onStart={() => handleStartRoutine(routine)}
                 />
               ))}
-            </View>
+            </Animated.View>
+          ) : (
+            <Animated.View
+              key="grid"
+              entering={FadeIn.duration(220)}
+              exiting={FadeOut.duration(160)}
+              style={styles.routinesGrid}
+              shouldRasterizeIOS
+              renderToHardwareTextureAndroid
+            >
+              {routines.slice(0, 6).map((routine) => (
+                <View key={routine.id} style={styles.routinesGridCell}>
+                  <RoutineCard
+                    routine={routine}
+                    fullWidth
+                    compact
+                    onPress={() => setSelectedRoutine(routine)}
+                    onStart={() => handleStartRoutine(routine)}
+                  />
+                </View>
+              ))}
+            </Animated.View>
           )}
         </AnimatedSection>
 
@@ -402,6 +461,16 @@ export default function Workout() {
         </Pressable>
         </AnimatedSection> */}
       </ScrollView>
+
+      <RoutineDetailModal
+        visible={selectedRoutine !== null}
+        routine={selectedRoutine}
+        onClose={() => setSelectedRoutine(null)}
+        onStart={(routine) => {
+          setSelectedRoutine(null);
+          handleStartRoutine(routine);
+        }}
+      />
     </AnimatedScreen>
   );
 }
@@ -517,6 +586,42 @@ function createStyles(theme: Theme) {
       fontFamily: FONTS.bold,
       fontSize: 12,
       color: theme.background.dark,
+    },
+
+    // Action Buttons (Créer / Explorer)
+    actionRow: {
+      flexDirection: "row",
+      marginHorizontal: 20,
+      marginBottom: 24,
+      gap: 12,
+    },
+    actionBtnWrap: {
+      flex: 1,
+      borderRadius: 16,
+      overflow: "hidden",
+      ...surfaceShadow,
+    },
+    actionBtnInner: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: 14,
+      paddingHorizontal: 14,
+      gap: 10,
+    },
+    actionIconBox: {
+      width: 34,
+      height: 34,
+      borderRadius: 17,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: "rgba(255,255,255,0.18)",
+    },
+    actionTitle: {
+      flex: 1,
+      fontFamily: FONTS.bold,
+      fontSize: 13,
+      letterSpacing: 0.2,
+      color: "#FFFFFF",
     },
 
     // Quick Start Hero
@@ -638,6 +743,41 @@ function createStyles(theme: Theme) {
       fontFamily: FONTS.semiBold,
       fontSize: 14,
       color: theme.primary.main,
+    },
+    viewToggle: {
+      flexDirection: "row",
+      padding: 3,
+      borderRadius: 12,
+      backgroundColor: theme.background.darker,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: "rgba(255,255,255,0.08)",
+      position: "relative",
+    },
+    viewTogglePill: {
+      position: "absolute",
+      top: 3,
+      left: 3,
+      width: 30,
+      height: 30,
+      borderRadius: 9,
+      backgroundColor: "#1A2F50",
+    },
+    viewToggleButton: {
+      width: 30,
+      height: 30,
+      borderRadius: 9,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    routinesGrid: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      paddingHorizontal: 20,
+      paddingBottom: 24,
+      gap: 12,
+    },
+    routinesGridCell: {
+      width: (SCREEN_WIDTH - 40 - 12) / 2,
     },
 
     // Empty

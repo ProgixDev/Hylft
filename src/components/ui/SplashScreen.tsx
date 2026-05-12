@@ -223,8 +223,8 @@ export default function SplashScreen({
     <Animated.View style={[StyleSheet.absoluteFill, { opacity: screenAlpha }]}>
       {/* ── Background ──────────────────────────────────────── */}
       <LinearGradient
-        colors={["#2A5CE0", "#1F47C9", "#1838A8"]}
-        locations={[0, 0.5, 1]}
+        colors={["#0A1F44", "#061227", "#02060F"]}
+        locations={[0, 0.6, 1]}
         style={StyleSheet.absoluteFill}
       />
 

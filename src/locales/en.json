@@ -101,6 +101,32 @@
     "passwordResetComingSoon": "Password reset functionality coming soon!"
   },
   "onboarding": {
+    "s1": {
+      "eyebrow": "System online",
+      "titleStart": "Welcome to",
+      "brand": "Hylift",
+      "sub": "Your fitness OS — adaptive, intelligent, always synced."
+    },
+    "s2": {
+      "titleStart": "Live",
+      "accent": "telemetry",
+      "sub": "Calories, lifts, sleep — synced in real time.",
+      "today": "TODAY",
+      "goal": "/ 2,200 KCAL",
+      "meal": "Breakfast",
+      "mealDesc": "Avocado toast",
+      "workout": "Push Day",
+      "workoutDesc": "52 min · 8 sets"
+    },
+    "s3": {
+      "eyebrow": "Goal · synced",
+      "badge": "+18% THIS WEEK",
+      "peak": "PEAK",
+      "titleStart": "Built",
+      "accent": "for you",
+      "sub": "Adaptive recommendations tuned to your trajectory every day.",
+      "cta": "Initialize"
+    },
     "page1Title": "Your Fitness, Your",
     "page1TitleBold": "Ways!",
     "page1Subtitle": "\"Built for your body and goals.\"",
@@ -443,7 +469,7 @@
   "workout": {
     "title": "Workout",
     "startEmptyWorkout": "Start Empty Workout",
-    "createRoutine": "Create Routine",
+    "createRoutine": "New session",
     "exploreRoutines": "Explore Routines",
     "browseCommunityTemplates": "Browse community templates",
     "myRoutines": "My Program",
@@ -701,7 +727,28 @@
     "seeAll": "See All",
     "streak": "Streak",
     "water": "Water",
-    "steps": "Steps"
+    "steps": "Steps",
+    "history": {
+      "tabHistory": "History",
+      "tabHome": "Home",
+      "emptyTitle": "No sessions yet",
+      "emptyMessage": "Start your first session to see it here.",
+      "emptyCta": "Start a session",
+      "errorLoading": "Couldn't load history.",
+      "retry": "Retry",
+      "unitMin": "min",
+      "unitEx": "ex",
+      "unitSets": "sets",
+      "unitKcal": "kcal",
+      "unitVolume": "volume",
+      "loadMore": "Load more",
+      "untitled": "Workout",
+      "statTime": "Time",
+      "statVolume": "Volume",
+      "statSets": "Sets",
+      "setsCount": "{{count}} sets",
+      "seeMore": "See {{count}} more exercises"
+    }
   },
   "schedule": {
     "mySchedule": "My Schedule",
@@ -1006,7 +1053,25 @@
     "finish": "Finish",
     "endWorkout": "End workout?",
     "endWorkoutConfirm": "Your progress will be saved.",
-    "endAndSave": "End and save"
+    "endAndSave": "End and save",
+    "title": "Workout",
+    "duration": "Duration",
+    "sets": "Sets",
+    "set": "SET",
+    "previous": "PREVIOUS",
+    "kg": "KG",
+    "reps": "REPS",
+    "warmupShort": "W",
+    "addSet": "Add Set",
+    "addNotesPlaceholder": "Add notes here...",
+    "restLabel": "Rest",
+    "rest2": "Rest: {{value}}",
+    "markAsWarmup": "Mark as warm-up",
+    "markAsWorking": "Mark as working set",
+    "removeSet": "Remove Set",
+    "finish": "Finish",
+    "noSets": "No sets logged yet",
+    "seeExercise": "See exercise"
   },
   "search": {
     "findPeople": "Search",

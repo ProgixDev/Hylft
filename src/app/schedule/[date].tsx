@@ -325,13 +325,6 @@ export default function ScheduleDetailPage() {
     });
   };
 
-  const diffColor =
-    routine?.difficulty === "beginner"
-      ? "#4CAF50"
-      : routine?.difficulty === "intermediate"
-        ? "#FF9800"
-        : "#F44336";
-
   return (
     <View
       style={[styles.container, { backgroundColor: theme.background.dark }]}
@@ -529,19 +522,6 @@ export default function ScheduleDetailPage() {
                     ]}
                   >
                     {translateRoutineDescription(routine.description)}
-                  </Text>
-                </View>
-                <View
-                  style={[
-                    styles.diffBadge,
-                    {
-                      backgroundColor: diffColor + "22",
-                      borderColor: diffColor,
-                    },
-                  ]}
-                >
-                  <Text style={[styles.diffText, { color: diffColor }]}>
-                    {translateApiData(routine.difficulty)}
                   </Text>
                 </View>
               </View>
@@ -898,17 +878,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 3,
     lineHeight: 17,
-  },
-  diffBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 7,
-    borderWidth: 1,
-    marginTop: 2,
-  },
-  diffText: {
-    fontSize: 9,
-    fontFamily: FONTS.bold,
   },
   routineStats: {
     flexDirection: "row",

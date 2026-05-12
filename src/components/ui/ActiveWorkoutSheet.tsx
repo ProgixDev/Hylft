@@ -198,6 +198,15 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
       // Persist to server
       try {
         const { api } = require("../../services/api");
+        const completedSetsCount = activeWorkout.exercises.reduce(
+          (count: number, ex: any) =>
+            count + ex.sets.filter((s: any) => s.isCompleted).length,
+          0,
+        );
+        const totalSetsCount = activeWorkout.exercises.reduce(
+          (count: number, ex: any) => count + ex.sets.length,
+          0,
+        );
         api.addWorkout({
           name: tempWorkoutName,
           workout_type: "strength",
@@ -207,9 +216,15 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
           duration_minutes: durationMins,
           calories_burned: Math.round(durationMins * 6),
           source: "manual",
-          exercises: activeWorkout.exercises.map((ex) => ({
+          total_volume_kg: Number(totalKg.toFixed(2)),
+          total_sets: totalSetsCount,
+          completed_sets: completedSetsCount,
+          exercise_count: activeWorkout.exercises.length,
+          exercises: activeWorkout.exercises.map((ex: any) => ({
             name: ex.name,
-            sets: ex.sets.map((s) => ({
+            exercise_id: ex.exerciseId ?? null,
+            gif_url: ex.gifUrl ?? null,
+            sets: ex.sets.map((s: any) => ({
               kg: s.kg,
               reps: s.reps,
               completed: s.isCompleted,
@@ -487,7 +502,6 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
         description: "",
         estimatedDuration: 0,
         targetMuscles: [],
-        difficulty: "beginner",
         exercises: activeWorkout.exercises.map((ex) => {
           const setTargets = ex.sets.map((s, i) => ({
             setNumber: i + 1,

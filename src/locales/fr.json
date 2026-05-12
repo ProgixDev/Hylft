@@ -101,6 +101,32 @@
     "passwordResetComingSoon": "La fonctionnalité de réinitialisation du mot de passe arrive bientôt !"
   },
   "onboarding": {
+    "s1": {
+      "eyebrow": "Système en ligne",
+      "titleStart": "Bienvenue sur",
+      "brand": "Hylift",
+      "sub": "Votre OS fitness — adaptatif, intelligent, toujours synchronisé."
+    },
+    "s2": {
+      "titleStart": "Télémétrie",
+      "accent": "en direct",
+      "sub": "Calories, séances, sommeil — synchronisés en temps réel.",
+      "today": "AUJOURD'HUI",
+      "goal": "/ 2 200 kcal",
+      "meal": "Petit-déjeuner",
+      "mealDesc": "Avocado toast",
+      "workout": "Push day",
+      "workoutDesc": "52 min · 8 exercices"
+    },
+    "s3": {
+      "eyebrow": "Objectif · synchronisé",
+      "badge": "+18% CETTE SEMAINE",
+      "peak": "PIC",
+      "titleStart": "Conçu",
+      "accent": "pour vous",
+      "sub": "Des recommandations adaptées à votre trajectoire chaque jour.",
+      "cta": "Commencer"
+    },
     "page1Title": "Votre Fitness, Vos",
     "page1TitleBold": "Façons !",
     "page1Subtitle": "\"Conçu pour votre corps et vos objectifs.\"",
@@ -443,7 +469,7 @@
   "workout": {
     "title": "Entraînement",
     "startEmptyWorkout": "Démarrer un entraînement vide",
-    "createRoutine": "Créer un programme",
+    "createRoutine": "Nouv. séance",
     "exploreRoutines": "Explorer les programmes",
     "browseCommunityTemplates": "Parcourir les modèles de la communauté",
     "myRoutines": "Mon programme",
@@ -701,7 +727,28 @@
     "seeAll": "Voir tout",
     "streak": "Série",
     "water": "Eau",
-    "steps": "Pas"
+    "steps": "Pas",
+    "history": {
+      "tabHistory": "Historique",
+      "tabHome": "Accueil",
+      "emptyTitle": "Aucune séance pour le moment",
+      "emptyMessage": "Commencez votre première séance pour la voir ici.",
+      "emptyCta": "Démarrer une séance",
+      "errorLoading": "Impossible de charger l'historique.",
+      "retry": "Réessayer",
+      "unitMin": "min",
+      "unitEx": "ex",
+      "unitSets": "séries",
+      "unitKcal": "kcal",
+      "unitVolume": "volume",
+      "loadMore": "Charger plus",
+      "untitled": "Séance",
+      "statTime": "Temps",
+      "statVolume": "Volume",
+      "statSets": "Séries",
+      "setsCount": "{{count}} sets",
+      "seeMore": "Voir {{count}} exercices en plus"
+    }
   },
   "schedule": {
     "mySchedule": "Mon Planning",
@@ -1006,7 +1053,25 @@
     "finish": "Terminer",
     "endWorkout": "Terminer la séance ?",
     "endWorkoutConfirm": "Votre progression sera enregistrée.",
-    "endAndSave": "Terminer et enregistrer"
+    "endAndSave": "Terminer et enregistrer",
+    "title": "Entraînement",
+    "duration": "Durée",
+    "sets": "Séries",
+    "set": "SÉRIE",
+    "previous": "PRÉCÉDENT",
+    "kg": "KG",
+    "reps": "RÉPS",
+    "warmupShort": "W",
+    "addSet": "Ajouter une Série",
+    "addNotesPlaceholder": "Ajouter des notes ici...",
+    "restLabel": "Repos",
+    "rest2": "Repos : {{value}}",
+    "markAsWarmup": "Marquer comme échauffement",
+    "markAsWorking": "Marquer comme série de travail",
+    "removeSet": "Supprimer la série",
+    "finish": "Terminer",
+    "noSets": "Aucune série enregistrée",
+    "seeExercise": "Voir l'exercice"
   },
   "search": {
     "findPeople": "Rechercher",

@@ -5,7 +5,6 @@ import { ExerciseDbExercise } from "../services/exerciseDbApi";
 export interface RoutineDraft {
   name: string;
   description: string;
-  difficulty: "beginner" | "intermediate" | "advanced";
   targetMuscles: string[];
   exercises: RoutineExercise[];
   wallpaperUrl?: string | null;
@@ -29,7 +28,6 @@ interface CreateRoutineContextType {
 const DEFAULT_DRAFT: RoutineDraft = {
   name: "",
   description: "",
-  difficulty: "intermediate",
   targetMuscles: [],
   exercises: [],
   wallpaperUrl: null,

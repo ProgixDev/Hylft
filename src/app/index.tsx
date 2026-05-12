@@ -2,6 +2,7 @@ import { useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import SplashScreen from "../components/ui/SplashScreen";
 import { useAuth } from "../contexts/AuthContext";
+import { hasSeenOnboarding } from "../storage/onboarding";
 
 export default function Index() {
   const router = useRouter();
@@ -16,6 +17,11 @@ export default function Index() {
 
     (async () => {
       try {
+        const seen = await hasSeenOnboarding();
+        if (!seen) {
+          setDestination("/onboarding");
+          return;
+        }
         setDestination(user ? "/(tabs)/home" : "/get-started/language");
       } catch (error) {
         console.error("Error checking auth status:", error);

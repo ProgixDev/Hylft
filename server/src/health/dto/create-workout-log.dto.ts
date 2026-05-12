@@ -4,7 +4,7 @@ import {
   IsOptional,
   IsIn,
   Min,
-  IsObject,
+  IsArray,
 } from 'class-validator';
 
 export class CreateWorkoutLogDto {
@@ -36,12 +36,36 @@ export class CreateWorkoutLogDto {
 
   @IsString()
   @IsOptional()
-  @IsIn(['manual', 'health_connect', 'apple_health'])
+  @IsIn(['manual', 'routine', 'health_connect', 'apple_health'])
   source?: string;
 
-  @IsObject()
+  @IsString()
   @IsOptional()
-  exercises?: any;
+  routine_id?: string;
+
+  @IsNumber()
+  @IsOptional()
+  @Min(0)
+  total_volume_kg?: number;
+
+  @IsNumber()
+  @IsOptional()
+  @Min(0)
+  total_sets?: number;
+
+  @IsNumber()
+  @IsOptional()
+  @Min(0)
+  completed_sets?: number;
+
+  @IsNumber()
+  @IsOptional()
+  @Min(0)
+  exercise_count?: number;
+
+  @IsArray()
+  @IsOptional()
+  exercises?: any[];
 
   @IsString()
   @IsOptional()

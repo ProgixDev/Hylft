@@ -8,7 +8,6 @@ export type ApiRoutine = {
   exercises?: RoutineExercise[] | null;
   estimated_duration?: number | null;
   target_muscles?: string[] | null;
-  difficulty: "beginner" | "intermediate" | "advanced";
   last_used?: string | null;
   times_completed?: number | null;
   is_public?: boolean | null;
@@ -29,7 +28,6 @@ export function mapRoutine(routine: ApiRoutine): Routine {
     exercises: routine.exercises ?? [],
     estimatedDuration: routine.estimated_duration ?? 0,
     targetMuscles: routine.target_muscles ?? [],
-    difficulty: routine.difficulty,
     lastUsed: routine.last_used ?? undefined,
     timesCompleted: routine.times_completed ?? 0,
   };

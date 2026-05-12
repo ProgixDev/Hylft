@@ -1,30 +1,37 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  Alert,
   BackHandler,
-  Dimensions,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
+  TouchableOpacity,
   View,
 } from "react-native";
 import ConfirmationModal from "../../components/ui/ConfirmationModal";
 import WorkoutCompletionView from "../../components/ui/WorkoutCompletionView";
 import { FONTS } from "../../constants/fonts";
 import { Theme } from "../../constants/themes";
-import { useActiveWorkout } from "../../contexts/ActiveWorkoutContext";
+import {
+  GuidedPlayerExercise,
+  PlayerSet,
+  useActiveWorkout,
+} from "../../contexts/ActiveWorkoutContext";
 import { useTheme } from "../../contexts/ThemeContext";
-import { RoutineExercise } from "../../data/mockData";
 import { findExerciseByNameExerciseDb } from "../../services/exerciseDbApi";
 import { translateExerciseName } from "../../utils/exerciseTranslator";
 
-const { width: SCREEN_W } = Dimensions.get("window");
-const GIF_SIZE = Math.min(SCREEN_W - 48, 360);
+const WARMUP_COLOR = "#F5A524";
+const NAVY_BLUE = "#0B1437";
 
 export default function WorkoutPlayerScreen() {
   const router = useRouter();
@@ -36,37 +43,36 @@ export default function WorkoutPlayerScreen() {
     activeWorkout,
     endGuidedRoutine,
     updateGuidedExercise,
+    updatePlayerSet,
+    addPlayerSet,
+    removePlayerSet,
+    togglePlayerSetWarmup,
+    togglePlayerSetCompleted,
+    stopPlayerRest,
   } = useActiveWorkout();
 
-  const currentExercise: RoutineExercise | undefined =
-    guidedPlayer?.exercises[guidedPlayer.currentExerciseIndex];
-
-  // ── Hydrate missing gifUrls lazily (mock routines have no gif) ──────
+  // ── Lazy-hydrate missing gifUrls for each exercise ────────────────
   useEffect(() => {
-    if (!guidedPlayer || !currentExercise) return;
-    if (currentExercise.gifUrl) return;
+    if (!guidedPlayer) return;
     let cancelled = false;
-    (async () => {
-      const found = await findExerciseByNameExerciseDb(currentExercise.name);
+    guidedPlayer.exercises.forEach(async (ex) => {
+      if (ex.gifUrl) return;
+      const found = await findExerciseByNameExerciseDb(ex.name);
       if (cancelled || !found) return;
-      updateGuidedExercise(guidedPlayer.currentExerciseIndex, {
+      updateGuidedExercise(ex.id, {
         gifUrl: found.gifUrl,
         bodyPart: found.bodyPart,
         target: found.target,
         equipment: found.equipment,
       });
-    })();
+    });
     return () => {
       cancelled = true;
     };
-  }, [
-    currentExercise?.name,
-    currentExercise?.gifUrl,
-    guidedPlayer?.currentExerciseIndex,
-  ]);
+  }, [guidedPlayer?.exercises.length]);
 
-  // ── Exit confirmation handler (hardware + header back) ──────────────
   const [exitModalVisible, setExitModalVisible] = useState(false);
+  const [completionVisible, setCompletionVisible] = useState(false);
 
   const confirmExit = useCallback(() => {
     setExitModalVisible(true);
@@ -74,8 +80,13 @@ export default function WorkoutPlayerScreen() {
 
   const handleEndConfirm = useCallback(async () => {
     setExitModalVisible(false);
+    setCompletionVisible(true);
+  }, []);
+
+  const handleCompletionFinish = useCallback(async () => {
+    setCompletionVisible(false);
     await endGuidedRoutine(true);
-    router.back();
+    router.replace("/(tabs)/workout" as any);
   }, [endGuidedRoutine, router]);
 
   useEffect(() => {
@@ -86,7 +97,6 @@ export default function WorkoutPlayerScreen() {
     return () => sub.remove();
   }, [confirmExit]);
 
-  // ── Navigate out on COMPLETE ────────────────────────────────────────
   if (!guidedPlayer) {
     return (
       <View style={[styles.root, styles.centered]}>
@@ -98,344 +108,456 @@ export default function WorkoutPlayerScreen() {
     );
   }
 
-  const totalSets = guidedPlayer.exercises.reduce((s, e) => s + e.sets, 0);
-  const completedSets = guidedPlayer.loggedSets.length;
-  const progress = totalSets > 0 ? completedSets / totalSets : 0;
+  // ── Aggregated stats ───────────────────────────────────────────────
+  const completedSets = guidedPlayer.exercises.reduce(
+    (acc, ex) =>
+      acc + ex.sets.filter((s) => s.isCompleted && !s.isWarmup).length,
+    0,
+  );
+  const totalVolume = guidedPlayer.exercises.reduce((acc, ex) => {
+    return (
+      acc +
+      ex.sets.reduce((v, s) => {
+        if (!s.isCompleted || s.isWarmup) return v;
+        const kg = parseFloat(s.kg) || 0;
+        const reps = parseInt(s.reps, 10) || 0;
+        return v + kg * reps;
+      }, 0)
+    );
+  }, 0);
 
-  const isRest = guidedPlayer.phase === "REST";
+  const duration = activeWorkout?.duration ?? 0;
 
   return (
-    <View style={[styles.root, isRest && styles.rootRest]}>
-      {/* Top bar */}
-      {!isRest && guidedPlayer.phase !== "COMPLETE" && (
-      <View style={styles.topBar}>
-        <Pressable style={styles.iconButton} onPress={confirmExit}>
-          <Ionicons name="close" size={22} color={theme.foreground.white} />
-        </Pressable>
-        <View style={styles.progressWrap}>
-          <View style={styles.progressBar}>
-            <View
-              style={[styles.progressFill, { width: `${progress * 100}%` }]}
-            />
-          </View>
-          <Text style={styles.progressText}>
-            {completedSets}/{totalSets} {t("createRoutine.sets")}
-          </Text>
-        </View>
-        <View style={styles.timerPill}>
-          <Ionicons
-            name="time-outline"
-            size={14}
-            color={theme.foreground.white}
-          />
-          <Text style={styles.timerText}>
-            {formatDuration(activeWorkout?.duration ?? 0)}
-          </Text>
-        </View>
-      </View>
-      )}
-
-      {(guidedPlayer.phase === "EXERCISE" ||
-        guidedPlayer.phase === "LOG_SET") && (
-        <ExercisePhase theme={theme} />
-      )}
-      {guidedPlayer.phase === "REST" && <RestPhase theme={theme} />}
-      {guidedPlayer.phase === "COMPLETE" && (
-        <CompletionPhase
-          theme={theme}
-          onFinish={async () => {
-            await endGuidedRoutine(true);
-            router.replace("/(tabs)/workout" as any);
-          }}
-        />
-      )}
-
-      <ConfirmationModal
-        visible={exitModalVisible}
-        variant="success"
-        icon="flag"
-        title={t("workoutPlayer.endWorkout")}
-        message={t("workoutPlayer.endWorkoutConfirm")}
-        confirmLabel={t("workoutPlayer.endAndSave")}
-        cancelLabel={t("workoutPlayer.cancel")}
-        onCancel={() => setExitModalVisible(false)}
-        onConfirm={handleEndConfirm}
-      />
-    </View>
-  );
-}
-
-// ─── EXERCISE phase ─────────────────────────────────────────────────────
-function ExercisePhase({ theme }: { theme: Theme }) {
-  const styles = createStyles(theme);
-  const { t } = useTranslation();
-  const { guidedPlayer, completeCurrentSet } = useActiveWorkout();
-
-  if (!guidedPlayer) return null;
-  const exercise = guidedPlayer.exercises[guidedPlayer.currentExerciseIndex];
-  if (!exercise) return null;
-
-  const currentSetNumber = guidedPlayer.currentSetIndex + 1;
-  const setTarget = exercise.setTargets?.[guidedPlayer.currentSetIndex];
-  const targetKg = setTarget?.targetKg ?? exercise.targetWeight ?? 0;
-  const targetReps = setTarget?.targetReps ?? exercise.reps;
-  const defaultRepsNum = parseInt(String(targetReps).split("-")[0]) || 0;
-
-  // Inline input state — reset whenever the active set changes
-  const [kg, setKg] = useState(targetKg > 0 ? String(targetKg) : "");
-  const [reps, setReps] = useState(
-    defaultRepsNum > 0 ? String(defaultRepsNum) : "",
-  );
-
-  useEffect(() => {
-    setKg(targetKg > 0 ? String(targetKg) : "");
-    setReps(defaultRepsNum > 0 ? String(defaultRepsNum) : "");
-  }, [
-    guidedPlayer.currentExerciseIndex,
-    guidedPlayer.currentSetIndex,
-    targetKg,
-    defaultRepsNum,
-  ]);
-
-  // Timed set: auto-advance when countdown hits 0
-  const trainingTime = exercise.trainingTime ?? 0;
-  const [remaining, setRemaining] = useState(trainingTime);
-
-  useEffect(() => {
-    setRemaining(trainingTime);
-  }, [trainingTime, guidedPlayer.currentExerciseIndex, guidedPlayer.currentSetIndex]);
-
-  useEffect(() => {
-    if (!trainingTime) return;
-    if (remaining <= 0) {
-      // auto-complete timed set with target values
-      completeCurrentSet(targetKg, 0);
-      return;
-    }
-    const id = setTimeout(() => setRemaining((r) => r - 1), 1000);
-    return () => clearTimeout(id);
-  }, [remaining, trainingTime]);
-
-  const handleCompleteSet = () => {
-    completeCurrentSet(parseFloat(kg) || 0, parseInt(reps, 10) || 0);
-  };
-
-  return (
-    <ScrollView
+    <KeyboardAvoidingView
       style={{ flex: 1 }}
-      contentContainerStyle={styles.phaseContainer}
-      keyboardShouldPersistTaps="handled"
-      showsVerticalScrollIndicator={false}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <Text style={styles.exerciseLabel}>
-        {t("workoutPlayer.exerciseOf", {
-          current: guidedPlayer.currentExerciseIndex + 1,
-          total: guidedPlayer.exercises.length,
-        })}
-      </Text>
-      <Text style={styles.exerciseTitle}>
-        {translateExerciseName(exercise.name)}
-      </Text>
-
-      <View style={styles.gifWrap}>
-        {exercise.gifUrl ? (
-          <Image
-            source={{ uri: exercise.gifUrl }}
-            style={styles.gif}
-            contentFit="contain"
-            transition={200}
-          />
-        ) : (
-          <View style={[styles.gif, styles.gifPlaceholder]}>
+      <View style={styles.root}>
+        {/* ── Header ────────────────────────────────────────────────── */}
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.headerIconBtn}
+            onPress={confirmExit}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
             <Ionicons
-              name="barbell-outline"
-              size={48}
-              color={theme.foreground.gray}
+              name="chevron-down"
+              size={22}
+              color={theme.foreground.white}
             />
-          </View>
-        )}
-      </View>
-
-      {/* Set progress dots */}
-      <View style={styles.setDotsRow}>
-        {Array.from({ length: exercise.sets }).map((_, i) => {
-          const isDone = i < guidedPlayer.currentSetIndex;
-          const isCurrent = i === guidedPlayer.currentSetIndex;
-          return (
-            <View
-              key={i}
-              style={[
-                styles.setDot,
-                isDone && {
-                  backgroundColor: theme.primary.main,
-                  borderColor: theme.primary.main,
-                },
-                isCurrent && {
-                  backgroundColor: theme.primary.main + "30",
-                  borderColor: theme.primary.main,
-                  width: 28,
-                },
-              ]}
-            />
-          );
-        })}
-      </View>
-
-      <Text style={styles.setCounterText}>
-        {t("workoutPlayer.setOf", {
-          current: currentSetNumber,
-          total: exercise.sets,
-        })}
-      </Text>
-
-      {/* Inline editable inputs */}
-      <View style={styles.inputRow}>
-        <View style={styles.inputCell}>
-          <Text style={styles.inputLabel}>{t("workoutPlayer.weight")}</Text>
-          <TextInput
-            style={styles.inputBox}
-            keyboardType="numeric"
-            value={kg}
-            onChangeText={setKg}
-            placeholder={targetKg > 0 ? String(targetKg) : "0"}
-            placeholderTextColor={theme.foreground.gray + "60"}
-            selectTextOnFocus
-          />
-          <Text style={styles.inputUnit}>kg</Text>
-        </View>
-        <View style={styles.inputDivider} />
-        <View style={styles.inputCell}>
-          <Text style={styles.inputLabel}>{t("createRoutine.reps")}</Text>
-          <TextInput
-            style={styles.inputBox}
-            keyboardType="numeric"
-            value={reps}
-            onChangeText={setReps}
-            placeholder={String(targetReps)}
-            placeholderTextColor={theme.foreground.gray + "60"}
-            selectTextOnFocus
-          />
-          <Text style={styles.inputUnit}>{t("createRoutine.reps")}</Text>
-        </View>
-        {!!trainingTime && (
-          <>
-            <View style={styles.inputDivider} />
-            <View style={styles.inputCell}>
-              <Text style={styles.inputLabel}>{t("workoutPlayer.timer")}</Text>
-              <Text style={styles.inputBoxStatic}>
-                {formatSeconds(remaining)}
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>{t("workoutPlayer.title")}</Text>
+          <View style={styles.headerRight}>
+            <TouchableOpacity
+              style={styles.headerIconBtn}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Ionicons
+                name="alarm-outline"
+                size={20}
+                color={theme.foreground.white}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.finishBtn}
+              onPress={handleEndConfirm}
+            >
+              <Text style={styles.finishBtnText}>
+                {t("workoutPlayer.finish")}
               </Text>
-              <Text style={styles.inputUnit}> </Text>
-            </View>
-          </>
-        )}
-      </View>
+            </TouchableOpacity>
+          </View>
+        </View>
 
-      <Pressable
-        style={({ pressed }) => [
-          styles.primaryButton,
-          pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
-        ]}
-        onPress={handleCompleteSet}
-      >
-        <Ionicons
-          name="checkmark-circle"
-          size={22}
-          color={theme.background.dark}
+        {/* ── Stats strip ───────────────────────────────────────────── */}
+        <View style={styles.statsStrip}>
+          <View style={styles.statCol}>
+            <Text style={styles.statLabel}>{t("workoutPlayer.duration")}</Text>
+            <Text style={styles.statValue}>{formatDuration(duration)}</Text>
+          </View>
+          <View style={styles.statCol}>
+            <Text style={styles.statLabel}>{t("workoutPlayer.volume")}</Text>
+            <Text style={styles.statValue}>{Math.round(totalVolume)} kg</Text>
+          </View>
+          <View style={styles.statCol}>
+            <Text style={styles.statLabel}>{t("workoutPlayer.sets")}</Text>
+            <Text style={styles.statValue}>{completedSets}</Text>
+          </View>
+        </View>
+
+        {/* ── Rest banner ───────────────────────────────────────────── */}
+        {guidedPlayer.restEndsAt ? (
+          <RestBanner
+            theme={theme}
+            endsAt={guidedPlayer.restEndsAt}
+            onSkip={stopPlayerRest}
+          />
+        ) : null}
+
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          {guidedPlayer.exercises.map((ex) => (
+            <ExerciseCard
+              key={ex.id}
+              theme={theme}
+              exercise={ex}
+              onSetChange={(setId, updates) =>
+                updatePlayerSet(ex.id, setId, updates)
+              }
+              onAddSet={() => addPlayerSet(ex.id)}
+              onRemoveSet={(setId) => removePlayerSet(ex.id, setId)}
+              onToggleWarmup={(setId) => togglePlayerSetWarmup(ex.id, setId)}
+              onToggleComplete={(setId) =>
+                togglePlayerSetCompleted(ex.id, setId)
+              }
+            />
+          ))}
+        </ScrollView>
+
+        <ConfirmationModal
+          visible={exitModalVisible}
+          variant="success"
+          icon="flag"
+          title={t("workoutPlayer.endWorkout")}
+          message={t("workoutPlayer.endWorkoutConfirm")}
+          confirmLabel={t("workoutPlayer.endAndSave")}
+          cancelLabel={t("workoutPlayer.cancel")}
+          onCancel={() => setExitModalVisible(false)}
+          onConfirm={handleEndConfirm}
         />
-        <Text style={styles.primaryButtonText}>
-          {t("workoutPlayer.doneSet")}
-        </Text>
-      </Pressable>
-    </ScrollView>
-  );
-}
 
-// ─── REST phase ─────────────────────────────────────────────────────────
-function RestPhase({ theme }: { theme: Theme }) {
-  const styles = createStyles(theme);
-  const { t } = useTranslation();
-  const { guidedPlayer, skipRest } = useActiveWorkout();
-
-  if (!guidedPlayer) return null;
-
-  const currentExercise = guidedPlayer.exercises[guidedPlayer.currentExerciseIndex];
-  const restTime = currentExercise?.restTime ?? 60;
-  const [remaining, setRemaining] = useState(restTime);
-
-  useEffect(() => {
-    setRemaining(restTime);
-  }, [restTime, guidedPlayer.currentExerciseIndex, guidedPlayer.currentSetIndex]);
-
-  useEffect(() => {
-    if (remaining <= 0) {
-      skipRest();
-      return;
-    }
-    const id = setTimeout(() => setRemaining((r) => r - 1), 1000);
-    return () => clearTimeout(id);
-  }, [remaining]);
-
-  return (
-    <View style={styles.restContainer}>
-      <View style={styles.restCenter}>
-        <Text style={styles.restLabel}>{t("workoutPlayer.rest")}</Text>
-        <Text style={styles.restCountdownWhite}>{formatSeconds(remaining)}</Text>
+        <Modal
+          visible={completionVisible}
+          animationType="slide"
+          onRequestClose={handleCompletionFinish}
+        >
+          <WorkoutCompletionView
+            theme={theme}
+            routineName={guidedPlayer.routineName}
+            exercises={guidedPlayer.exercises.length}
+            calories={Math.round(duration * 0.1)}
+            duration={formatDuration(duration)}
+            onFinish={handleCompletionFinish}
+          />
+        </Modal>
       </View>
-
-      <Pressable
-        style={({ pressed }) => [
-          styles.skipRestButton,
-          pressed && { opacity: 0.85, transform: [{ scale: 0.98 }] },
-        ]}
-        onPress={skipRest}
-      >
-        <Text style={styles.skipRestButtonText}>
-          {t("workoutPlayer.skipRest")}
-        </Text>
-      </Pressable>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
-// ─── COMPLETE phase ─────────────────────────────────────────────────────
-function CompletionPhase({
+// ─── Rest banner ──────────────────────────────────────────────────────
+function RestBanner({
   theme,
-  onFinish,
+  endsAt,
+  onSkip,
 }: {
   theme: Theme;
-  onFinish: () => Promise<void>;
+  endsAt: number;
+  onSkip: () => void;
 }) {
-  const { guidedPlayer, activeWorkout } = useActiveWorkout();
-  const [finishing, setFinishing] = useState(false);
-  if (!guidedPlayer) return null;
+  const styles = createStyles(theme);
+  const [remaining, setRemaining] = useState(() =>
+    Math.max(0, Math.round((endsAt - Date.now()) / 1000)),
+  );
 
-  const durationSeconds = activeWorkout?.duration ?? 0;
-
-  const handleFinish = async () => {
-    if (finishing) return;
-    setFinishing(true);
-    await onFinish();
-  };
+  useEffect(() => {
+    setRemaining(Math.max(0, Math.round((endsAt - Date.now()) / 1000)));
+    const id = setInterval(() => {
+      const next = Math.max(0, Math.round((endsAt - Date.now()) / 1000));
+      setRemaining(next);
+      if (next <= 0) {
+        clearInterval(id);
+        onSkip();
+      }
+    }, 500);
+    return () => clearInterval(id);
+  }, [endsAt, onSkip]);
 
   return (
-    <WorkoutCompletionView
-      theme={theme}
-      routineName={guidedPlayer.routineName}
-      exercises={guidedPlayer.exercises.length}
-      calories={Math.round(durationSeconds * 0.1)}
-      duration={formatDuration(durationSeconds)}
-      onFinish={handleFinish}
-    />
+    <View style={styles.restBanner}>
+      <Ionicons name="timer-outline" size={18} color={theme.primary.main} />
+      <Text style={styles.restBannerLabel}>Rest</Text>
+      <Text style={styles.restBannerValue}>{formatRest(remaining)}</Text>
+      <TouchableOpacity
+        onPress={onSkip}
+        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+      >
+        <Ionicons
+          name="play-skip-forward-outline"
+          size={18}
+          color={theme.foreground.gray}
+        />
+      </TouchableOpacity>
+    </View>
   );
 }
 
-function formatSeconds(seconds: number) {
+// ─── Exercise card ────────────────────────────────────────────────────
+function ExerciseCard({
+  theme,
+  exercise,
+  onSetChange,
+  onAddSet,
+  onRemoveSet,
+  onToggleWarmup,
+  onToggleComplete,
+}: {
+  theme: Theme;
+  exercise: GuidedPlayerExercise;
+  onSetChange: (setId: string, updates: Partial<PlayerSet>) => void;
+  onAddSet: () => void;
+  onRemoveSet: (setId: string) => void;
+  onToggleWarmup: (setId: string) => void;
+  onToggleComplete: (setId: string) => void;
+}) {
+  const { t } = useTranslation();
+  const styles = createStyles(theme);
+  const [gifModalVisible, setGifModalVisible] = useState(false);
+
+  const displayName = translateExerciseName(exercise.name);
+  const restLabel = useMemo(() => {
+    const s = exercise.restSeconds;
+    if (s <= 0) return null;
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    if (m === 0) return `${sec}s`;
+    if (sec === 0) return `${m}min`;
+    return `${m}min ${sec}s`;
+  }, [exercise.restSeconds]);
+
+  // Number working sets sequentially; warmup sets show "W"
+  const setLabels = useMemo(() => {
+    let working = 0;
+    return exercise.sets.map((s) => {
+      if (s.isWarmup) return "W";
+      working += 1;
+      return String(working);
+    });
+  }, [exercise.sets]);
+
+  const handleSetLongPress = (set: PlayerSet) => {
+    Alert.alert(displayName, undefined, [
+      {
+        text: set.isWarmup
+          ? t("workoutPlayer.markAsWorking")
+          : t("workoutPlayer.markAsWarmup"),
+        onPress: () => onToggleWarmup(set.id),
+      },
+      {
+        text: t("workoutPlayer.removeSet"),
+        style: "destructive",
+        onPress: () => onRemoveSet(set.id),
+      },
+      { text: t("workoutPlayer.cancel"), style: "cancel" },
+    ]);
+  };
+
+  return (
+    <View style={styles.exerciseCard}>
+      {/* Header row */}
+      <View style={styles.exerciseHeader}>
+        <TouchableOpacity
+          style={styles.thumbWrap}
+          onPress={() => exercise.gifUrl && setGifModalVisible(true)}
+          activeOpacity={0.85}
+        >
+          {exercise.gifUrl ? (
+            <Image
+              source={{ uri: exercise.gifUrl }}
+              style={styles.thumb}
+              contentFit="cover"
+              transition={150}
+              autoplay={true}
+            />
+          ) : (
+            <Ionicons
+              name="barbell-outline"
+              size={22}
+              color={theme.foreground.gray}
+            />
+          )}
+        </TouchableOpacity>
+        <Text style={styles.exerciseName} numberOfLines={2}>
+          {displayName}
+        </Text>
+        {exercise.gifUrl ? (
+          <TouchableOpacity
+            hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+            style={styles.seeExerciseBtn}
+            onPress={() => setGifModalVisible(true)}
+          >
+            <Ionicons name="eye-outline" size={16} color="#FFFFFF" />
+            <Text style={styles.seeExerciseText}>
+              {t("workoutPlayer.seeExercise")}
+            </Text>
+          </TouchableOpacity>
+        ) : null}
+        <TouchableOpacity
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          style={styles.menuBtn}
+        >
+          <Ionicons
+            name="ellipsis-vertical"
+            size={18}
+            color={theme.foreground.gray}
+          />
+        </TouchableOpacity>
+      </View>
+
+      {/* Per-exercise rest */}
+      {restLabel ? (
+        <View style={styles.restRow}>
+          <Ionicons name="timer-outline" size={14} color={theme.primary.main} />
+          <Text style={styles.restRowText}>
+            {t("workoutPlayer.rest2", { value: restLabel })}
+          </Text>
+        </View>
+      ) : null}
+
+      {/* Column headers */}
+      <View style={styles.setHeaderRow}>
+        <Text style={[styles.setHeaderLabel, styles.colSet]}>
+          {t("workoutPlayer.set")}
+        </Text>
+        <Text style={[styles.setHeaderLabel, styles.colPrev]}>
+          {t("workoutPlayer.previous")}
+        </Text>
+        <Text style={[styles.setHeaderLabel, styles.colInput]}>
+          {t("workoutPlayer.kg")}
+        </Text>
+        <Text style={[styles.setHeaderLabel, styles.colInput]}>
+          {t("workoutPlayer.reps")}
+        </Text>
+        <View style={styles.colCheck}>
+          <Ionicons name="checkmark" size={14} color={theme.foreground.gray} />
+        </View>
+      </View>
+
+      {/* Set rows */}
+      {exercise.sets.map((set, idx) => {
+        const prevLabel =
+          set.previousKg !== undefined && set.previousReps !== undefined
+            ? `${set.previousKg}kg x ${set.previousReps}`
+            : "—";
+        return (
+          <View
+            key={set.id}
+            style={[styles.setRow, set.isCompleted && styles.setRowCompleted]}
+          >
+            <TouchableOpacity
+              style={styles.colSet}
+              onLongPress={() => handleSetLongPress(set)}
+              onPress={() => handleSetLongPress(set)}
+              hitSlop={{ top: 6, bottom: 6, left: 4, right: 4 }}
+            >
+              <Text
+                style={[
+                  styles.setLabel,
+                  set.isCompleted && { color: "#FFFFFF" },
+                  set.isWarmup && { color: WARMUP_COLOR },
+                ]}
+              >
+                {setLabels[idx]}
+              </Text>
+            </TouchableOpacity>
+            <Text
+              style={[styles.prevText, set.isCompleted && { color: "#FFFFFF" }]}
+            >
+              {prevLabel}
+            </Text>
+            <TextInput
+              style={[
+                styles.input,
+                styles.colInput,
+                set.isCompleted && { color: "#FFFFFF" },
+              ]}
+              value={set.kg}
+              onChangeText={(v) => onSetChange(set.id, { kg: v })}
+              keyboardType="decimal-pad"
+              placeholder="0"
+              placeholderTextColor={theme.foreground.gray + "80"}
+              selectTextOnFocus
+            />
+            <TextInput
+              style={[
+                styles.input,
+                styles.colInput,
+                set.isCompleted && { color: "#FFFFFF" },
+              ]}
+              value={set.reps}
+              onChangeText={(v) => onSetChange(set.id, { reps: v })}
+              keyboardType="default"
+              placeholder={exercise.targetReps || "0"}
+              placeholderTextColor={theme.foreground.gray + "80"}
+              selectTextOnFocus
+            />
+            <TouchableOpacity
+              style={styles.colCheck}
+              onPress={() => onToggleComplete(set.id)}
+            >
+              <View
+                style={[styles.checkBox, set.isCompleted && styles.checkBoxOn]}
+              >
+                {set.isCompleted ? (
+                  <Ionicons name="checkmark" size={14} color="#fff" />
+                ) : null}
+              </View>
+            </TouchableOpacity>
+          </View>
+        );
+      })}
+
+      {/* Add set */}
+      <TouchableOpacity style={styles.addSetBtn} onPress={onAddSet}>
+        <Ionicons name="add" size={16} color="#FFFFFF" />
+        <Text style={styles.addSetText}>{t("workoutPlayer.addSet")}</Text>
+      </TouchableOpacity>
+
+      {/* Gif preview modal */}
+      <Modal
+        visible={gifModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setGifModalVisible(false)}
+      >
+        <Pressable
+          style={styles.gifModalOverlay}
+          onPress={() => setGifModalVisible(false)}
+        >
+          <View style={styles.gifModalContent}>
+            <Text style={styles.gifModalTitle} numberOfLines={2}>
+              {displayName}
+            </Text>
+            {exercise.gifUrl ? (
+              <Image
+                source={{ uri: exercise.gifUrl }}
+                style={styles.gifModalImage}
+                contentFit="contain"
+              />
+            ) : null}
+            <TouchableOpacity
+              style={styles.gifModalCloseBtn}
+              onPress={() => setGifModalVisible(false)}
+            >
+              <Ionicons name="close" size={22} color={theme.foreground.white} />
+            </TouchableOpacity>
+          </View>
+        </Pressable>
+      </Modal>
+    </View>
+  );
+}
+
+function formatRest(seconds: number) {
   if (seconds < 0) seconds = 0;
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
-  if (m > 0) return `${m}:${String(s).padStart(2, "0")}`;
-  return `${s}s`;
+  return `${m}:${String(s).padStart(2, "0")}`;
 }
 
 function formatDuration(seconds: number) {
@@ -443,59 +565,15 @@ function formatDuration(seconds: number) {
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
   const s = seconds % 60;
-  const mm = String(m).padStart(2, "0");
-  const ss = String(s).padStart(2, "0");
-  return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
+  if (h > 0) return `${h}h ${m}min ${String(s).padStart(2, "0")}s`;
+  return `${m}min ${String(s).padStart(2, "0")}s`;
 }
 
-// ─── Styles ─────────────────────────────────────────────────────────────
 const createStyles = (theme: Theme) =>
   StyleSheet.create({
     root: {
       flex: 1,
       backgroundColor: theme.background.dark,
-    },
-    rootRest: {
-      backgroundColor: "#004BFF",
-    },
-    restContainer: {
-      flex: 1,
-      paddingHorizontal: 24,
-      paddingBottom: 40,
-      paddingTop: 24,
-      backgroundColor: "#004BFF",
-    },
-    restCenter: {
-      flex: 1,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    restLabel: {
-      color: "#fff",
-      fontSize: 14,
-      fontFamily: FONTS.semiBold,
-      textTransform: "uppercase",
-      letterSpacing: 3,
-      opacity: 0.85,
-      marginBottom: 16,
-    },
-    restCountdownWhite: {
-      color: "#fff",
-      fontSize: 120,
-      fontFamily: FONTS.extraBold,
-    },
-    skipRestButton: {
-      alignItems: "center",
-      justifyContent: "center",
-      paddingVertical: 14,
-      width: "100%",
-    },
-    skipRestButtonText: {
-      color: "#fff",
-      fontSize: 16,
-      fontFamily: FONTS.extraBold,
-      textTransform: "uppercase",
-      letterSpacing: 1,
     },
     centered: {
       justifyContent: "center",
@@ -506,208 +584,6 @@ const createStyles = (theme: Theme) =>
       color: theme.foreground.gray,
       marginBottom: 16,
       fontSize: 15,
-    },
-    topBar: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 12,
-      paddingHorizontal: 16,
-      paddingTop: 8,
-      paddingBottom: 12,
-    },
-    iconButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 14,
-      backgroundColor: theme.background.darker,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    progressWrap: {
-      flex: 1,
-      gap: 4,
-    },
-    progressBar: {
-      height: 6,
-      borderRadius: 4,
-      backgroundColor: theme.background.darker,
-      overflow: "hidden",
-    },
-    progressFill: {
-      height: "100%",
-      backgroundColor: theme.primary.main,
-      borderRadius: 4,
-    },
-    progressText: {
-      color: theme.foreground.gray,
-      fontSize: 11,
-      fontFamily: FONTS.semiBold,
-    },
-    timerPill: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 4,
-      paddingVertical: 6,
-      paddingHorizontal: 10,
-      backgroundColor: theme.background.darker,
-      borderRadius: 12,
-    },
-    timerText: {
-      color: theme.foreground.white,
-      fontSize: 12,
-      fontFamily: FONTS.semiBold,
-    },
-    phaseContainer: {
-      flex: 1,
-      paddingHorizontal: 24,
-      paddingTop: 8,
-      paddingBottom: 32,
-      alignItems: "center",
-    },
-    exerciseLabel: {
-      color: theme.foreground.gray,
-      fontSize: 13,
-      fontFamily: FONTS.semiBold,
-      textTransform: "uppercase",
-      letterSpacing: 1,
-      marginBottom: 6,
-    },
-    exerciseTitle: {
-      color: theme.foreground.white,
-      fontSize: 22,
-      fontFamily: FONTS.extraBold,
-      textAlign: "center",
-      marginBottom: 18,
-    },
-    gifWrap: {
-      width: GIF_SIZE,
-      height: GIF_SIZE,
-      borderRadius: 28,
-      backgroundColor: theme.background.darker,
-      alignItems: "center",
-      justifyContent: "center",
-      overflow: "hidden",
-      marginBottom: 18,
-    },
-    gif: {
-      width: "100%",
-      height: "100%",
-    },
-    gifPlaceholder: {
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    setDotsRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 6,
-      marginBottom: 6,
-    },
-    setDot: {
-      width: 10,
-      height: 10,
-      borderRadius: 6,
-      borderWidth: 1,
-      borderColor: theme.foreground.gray + "60",
-      backgroundColor: "transparent",
-    },
-    setCounterText: {
-      color: theme.foreground.gray,
-      fontSize: 12,
-      fontFamily: FONTS.semiBold,
-      textTransform: "uppercase",
-      letterSpacing: 1,
-      marginBottom: 18,
-    },
-    inputRow: {
-      flexDirection: "row",
-      alignItems: "stretch",
-      backgroundColor: theme.background.darker,
-      borderRadius: 20,
-      paddingVertical: 16,
-      paddingHorizontal: 8,
-      width: "100%",
-      marginBottom: 24,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: theme.primary.main + "30",
-    },
-    inputCell: {
-      flex: 1,
-      alignItems: "center",
-      gap: 4,
-    },
-    inputLabel: {
-      color: theme.foreground.gray,
-      fontSize: 10,
-      fontFamily: FONTS.semiBold,
-      textTransform: "uppercase",
-      letterSpacing: 1,
-    },
-    inputBox: {
-      color: theme.foreground.white,
-      fontSize: 28,
-      fontFamily: FONTS.extraBold,
-      textAlign: "center",
-      minWidth: 60,
-      paddingVertical: 0,
-      paddingHorizontal: 4,
-    },
-    inputBoxStatic: {
-      color: theme.primary.main,
-      fontSize: 26,
-      fontFamily: FONTS.extraBold,
-      textAlign: "center",
-      paddingVertical: 0,
-    },
-    inputUnit: {
-      color: theme.foreground.gray,
-      fontSize: 11,
-      fontFamily: FONTS.medium,
-      textTransform: "uppercase",
-      letterSpacing: 0.8,
-    },
-    inputDivider: {
-      width: StyleSheet.hairlineWidth,
-      backgroundColor: theme.foreground.gray + "30",
-      marginVertical: 4,
-    },
-    targetItem: {
-      flex: 1,
-      alignItems: "center",
-    },
-    targetValue: {
-      color: theme.foreground.white,
-      fontSize: 20,
-      fontFamily: FONTS.extraBold,
-    },
-    targetLabel: {
-      color: theme.foreground.gray,
-      fontSize: 11,
-      marginTop: 2,
-      textTransform: "uppercase",
-      letterSpacing: 0.5,
-    },
-    targetDivider: {
-      width: StyleSheet.hairlineWidth,
-      height: 36,
-      backgroundColor: "rgba(128,128,128,0.25)",
-    },
-    primaryButton: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: 8,
-      backgroundColor: theme.primary.main,
-      borderRadius: 28,
-      paddingVertical: 16,
-      paddingHorizontal: 24,
-      width: "100%",
-      marginTop: "auto",
-    },
-    primaryButtonText: {
-      color: theme.background.dark,
-      fontSize: 17,
-      fontFamily: FONTS.extraBold,
     },
     exitButton: {
       paddingVertical: 12,
@@ -720,91 +596,279 @@ const createStyles = (theme: Theme) =>
       fontFamily: FONTS.bold,
       fontSize: 15,
     },
-    // Rest
-    restTitle: {
-      color: theme.foreground.gray,
-      fontSize: 14,
-      fontFamily: FONTS.semiBold,
-      textTransform: "uppercase",
-      letterSpacing: 2,
-      marginTop: 24,
-    },
-    restCountdown: {
-      color: theme.primary.main,
-      fontSize: 96,
-      fontFamily: FONTS.extraBold,
-      marginTop: 8,
-      marginBottom: 4,
-    },
-    restSubtitle: {
-      color: theme.foreground.gray,
-      fontSize: 14,
-      marginBottom: 24,
-    },
-    nextCard: {
-      width: "100%",
-      backgroundColor: theme.background.darker,
-      borderRadius: 20,
-      padding: 16,
-      marginBottom: 24,
-    },
-    nextLabel: {
-      color: theme.foreground.gray,
-      fontSize: 11,
-      fontFamily: FONTS.semiBold,
-      textTransform: "uppercase",
-      letterSpacing: 1,
-      marginBottom: 10,
-    },
-    nextRow: {
+    // Header
+    header: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 12,
+      paddingHorizontal: 12,
+      paddingTop: 6,
+      paddingBottom: 10,
+      gap: 8,
     },
-    nextGif: {
-      width: 56,
-      height: 56,
-      borderRadius: 14,
-      backgroundColor: theme.background.dark,
-    },
-    nextName: {
-      flex: 1,
-      color: theme.foreground.white,
-      fontSize: 15,
-      fontFamily: FONTS.bold,
-    },
-    // Completion
-    trophy: {
-      width: 96,
-      height: 96,
-      borderRadius: 48,
-      backgroundColor: theme.primary.main + "20",
+    headerIconBtn: {
+      width: 32,
+      height: 32,
       alignItems: "center",
       justifyContent: "center",
-      marginTop: 32,
-      marginBottom: 16,
     },
-    completeTitle: {
+    headerTitle: {
+      flex: 1,
+      fontSize: 18,
+      fontFamily: FONTS.bold,
       color: theme.foreground.white,
-      fontSize: 26,
-      fontFamily: FONTS.extraBold,
-      textAlign: "center",
     },
-    completeSubtitle: {
+    headerRight: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+    },
+    finishBtn: {
+      backgroundColor: theme.primary.main,
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderRadius: 8,
+    },
+    finishBtnText: {
+      color: theme.background.dark,
+      fontFamily: FONTS.bold,
+      fontSize: 14,
+    },
+    // Stats strip
+    statsStrip: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderColor: theme.foreground.gray + "30",
+      gap: 16,
+    },
+    statCol: {
+      gap: 2,
+    },
+    statLabel: {
+      fontSize: 11,
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.gray,
-      fontSize: 15,
-      marginTop: 4,
-      marginBottom: 24,
-      textAlign: "center",
     },
-    summaryRow: {
+    statValue: {
+      fontSize: 15,
+      fontFamily: FONTS.bold,
+      color: theme.foreground.white,
+    },
+    // Rest banner
+    restBanner: {
       flexDirection: "row",
       alignItems: "center",
       backgroundColor: theme.background.darker,
-      borderRadius: 20,
-      paddingVertical: 16,
-      paddingHorizontal: 8,
+      marginHorizontal: 12,
+      marginTop: 10,
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+      borderRadius: 10,
+      gap: 10,
+    },
+    restBannerLabel: {
+      fontSize: 13,
+      fontFamily: FONTS.semiBold,
+      color: theme.foreground.white,
+    },
+    restBannerValue: {
+      flex: 1,
+      fontSize: 15,
+      fontFamily: FONTS.bold,
+      color: theme.primary.main,
+    },
+    // Scroll
+    scrollContent: {
+      paddingHorizontal: 12,
+      paddingTop: 14,
+      paddingBottom: 60,
+      gap: 24,
+    },
+    // Exercise card
+    exerciseCard: {
+      gap: 6,
+    },
+    exerciseHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+    },
+    thumbWrap: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: theme.background.darker,
+      alignItems: "center",
+      justifyContent: "center",
+      overflow: "hidden",
+    },
+    thumb: {
       width: "100%",
-      marginBottom: 24,
+      height: "100%",
+    },
+    exerciseName: {
+      flex: 1,
+      color: theme.primary.main,
+      fontSize: 16,
+      fontFamily: FONTS.bold,
+    },
+    menuBtn: {
+      padding: 4,
+    },
+    seeExerciseBtn: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      paddingVertical: 6,
+      paddingHorizontal: 10,
+      borderRadius: 14,
+      backgroundColor: NAVY_BLUE,
+    },
+    seeExerciseText: {
+      color: "#FFFFFF",
+      fontSize: 12,
+      fontFamily: FONTS.semiBold,
+    },
+    // Rest row
+    restRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+      marginTop: 2,
+      marginBottom: 4,
+    },
+    restRowText: {
+      fontSize: 13,
+      fontFamily: FONTS.semiBold,
+      color: theme.primary.main,
+    },
+    // Set table headers
+    setHeaderRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: 8,
+    },
+    setHeaderLabel: {
+      fontSize: 11,
+      fontFamily: FONTS.bold,
+      color: theme.foreground.gray,
+      letterSpacing: 0.5,
+    },
+    colSet: {
+      width: 36,
+      alignItems: "center",
+      textAlign: "center",
+    },
+    colPrev: {
+      flex: 1,
+      textAlign: "center",
+    },
+    colInput: {
+      width: 60,
+      textAlign: "center",
+    },
+    colCheck: {
+      width: 36,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    // Set rows
+    setRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: 6,
+      borderRadius: 8,
+    },
+    setRowCompleted: {
+      backgroundColor: NAVY_BLUE,
+      borderRadius: 14,
+      paddingHorizontal: 6,
+    },
+    setLabel: {
+      fontSize: 14,
+      fontFamily: FONTS.bold,
+      color: theme.foreground.white,
+    },
+    prevText: {
+      flex: 1,
+      textAlign: "center",
+      color: theme.foreground.gray,
+      fontSize: 13,
+      fontFamily: FONTS.medium,
+    },
+    input: {
+      backgroundColor: "transparent",
+      color: theme.foreground.white,
+      fontSize: 14,
+      fontFamily: FONTS.semiBold,
+      textAlign: "center",
+      paddingVertical: 6,
+    },
+    checkBox: {
+      width: 24,
+      height: 24,
+      borderRadius: 6,
+      backgroundColor: theme.background.darker,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    checkBoxOn: {
+      backgroundColor: NAVY_BLUE,
+    },
+    // Add set
+    addSetBtn: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 6,
+      backgroundColor: NAVY_BLUE,
+      paddingVertical: 10,
+      borderRadius: 10,
+      marginTop: 6,
+    },
+    addSetText: {
+      color: "#FFFFFF",
+      fontSize: 13,
+      fontFamily: FONTS.semiBold,
+    },
+    // Gif preview modal
+    gifModalOverlay: {
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.75)",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 20,
+    },
+    gifModalContent: {
+      backgroundColor: theme.background.darker,
+      borderRadius: 18,
+      padding: 16,
+      width: "100%",
+      maxWidth: 420,
+      alignItems: "center",
+      gap: 10,
+    },
+    gifModalTitle: {
+      fontSize: 16,
+      fontFamily: FONTS.bold,
+      color: theme.foreground.white,
+      textAlign: "center",
+    },
+    gifModalImage: {
+      width: "100%",
+      aspectRatio: 1,
+      borderRadius: 12,
+      backgroundColor: theme.background.dark,
+    },
+    gifModalCloseBtn: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: theme.background.dark,
+      alignItems: "center",
+      justifyContent: "center",
     },
   });

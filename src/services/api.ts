@@ -155,6 +155,12 @@ export const api = {
     authFetch(`/health/workouts?date=${date}`),
   getWorkoutsRange: (start: string, end: string) =>
     authFetch(`/health/workouts/range?start=${start}&end=${end}`),
+  getWorkoutsHistory: (limit = 20, before?: string | null) => {
+    const qs = new URLSearchParams({ limit: String(limit) });
+    if (before) qs.set("before", before);
+    return authFetch(`/health/workouts/history?${qs.toString()}`);
+  },
+  getWorkoutDetail: (id: string) => authFetch(`/health/workouts/${id}`),
   addWorkout: (data: Record<string, unknown>) =>
     authFetch("/health/workouts", { method: "POST", body: JSON.stringify(data) }),
   deleteWorkout: (id: string) =>

@@ -14,11 +14,8 @@ import { Theme } from "../../constants/themes";
 import { useActiveWorkout } from "../../contexts/ActiveWorkoutContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { addRoutine, getRoutinesByUserId } from "../../data/mockData";
-import { translateRoutineName, translateRoutineCategory, translateRoutineDescription, translateExerciseTerm, translateExerciseName, translateApiData } from "../../utils/exerciseTranslator";
-import {
-    DIFFICULTY_META,
-    getExploreRoutineById,
-} from "../../services/exploreService";
+import { translateRoutineName, translateRoutineCategory, translateRoutineDescription, translateExerciseTerm, translateExerciseName } from "../../utils/exerciseTranslator";
+import { getExploreRoutineById } from "../../services/exploreService";
 import { buildActiveWorkoutFromRoutine } from "../../utils/workoutBuilder";
 
 import { FONTS } from "../../constants/fonts";
@@ -62,7 +59,6 @@ export default function ExploreRoutineDetail() {
     );
   }
 
-  const diff = DIFFICULTY_META[routine.difficulty];
   const totalSets = routine.exercises.reduce((s, e) => s + e.sets, 0);
 
   const handleAddToMine = () => {
@@ -111,13 +107,8 @@ export default function ExploreRoutineDetail() {
       >
         {/* ── Hero block ── */}
         <View style={styles.heroBlock}>
-          {/* Difficulty + category badges */}
+          {/* Category badge */}
           <View style={styles.badgeRow}>
-            <View style={[styles.badge, { backgroundColor: diff.bg }]}>
-              <Text style={[styles.badgeText, { color: diff.text }]}>
-                {translateApiData(diff.label.toLowerCase())}
-              </Text>
-            </View>
             <View style={styles.categoryBadge}>
               <Text style={styles.categoryBadgeText}>
                 {translateRoutineCategory(routine.category)}
@@ -331,16 +322,6 @@ const createStyles = (theme: Theme) =>
       flexDirection: "row",
       gap: 6,
       marginBottom: 8,
-    },
-    badge: {
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-      borderRadius: 16,
-    },
-    badgeText: {
-      fontSize: 10,
-      fontFamily: FONTS.bold,
-      textTransform: "uppercase",
     },
     categoryBadge: {
       paddingHorizontal: 8,

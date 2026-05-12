@@ -116,10 +116,54 @@ export class HealthService {
         duration_minutes: dto.duration_minutes,
         calories_burned: dto.calories_burned,
         source: dto.source ?? 'manual',
+        routine_id: dto.routine_id ?? null,
+        total_volume_kg: dto.total_volume_kg ?? 0,
+        total_sets: dto.total_sets ?? 0,
+        completed_sets: dto.completed_sets ?? 0,
+        exercise_count: dto.exercise_count ?? 0,
         exercises: dto.exercises ?? null,
         notes: dto.notes ?? null,
       })
       .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  async getWorkoutsHistory(
+    userId: string,
+    limit: number,
+    before: string | null,
+  ) {
+    let query = this.supabase
+      .from('workout_logs')
+      .select(
+        'id, name, date, start_time, end_time, duration_minutes, calories_burned, source, routine_id, total_volume_kg, total_sets, completed_sets, exercise_count, exercises, created_at',
+      )
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (before) {
+      query = query.lt('created_at', before);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    const rows = data ?? [];
+    const nextCursor =
+      rows.length === limit ? rows[rows.length - 1].created_at : null;
+    return { items: rows, nextCursor };
+  }
+
+  async getWorkoutDetail(userId: string, workoutId: string) {
+    const { data, error } = await this.supabase
+      .from('workout_logs')
+      .select('*')
+      .eq('id', workoutId)
+      .eq('user_id', userId)
       .single();
 
     if (error) throw error;

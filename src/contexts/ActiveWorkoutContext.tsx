@@ -7,7 +7,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Routine, RoutineExercise } from "../data/mockData";
+import { Routine } from "../data/mockData";
 import { api } from "../services/api";
 import { estimateCaloriesBurned } from "../utils/calorieEstimator";
 import { useAuth } from "./AuthContext";
@@ -43,25 +43,43 @@ interface ActiveWorkout {
   exercises: WorkoutExerciseEntry[];
 }
 
-/** Phases of the full-screen guided routine player. */
-export type PlayerPhase = "EXERCISE" | "LOG_SET" | "REST" | "COMPLETE";
+/** A single set inside the Hevy-style guided player. */
+export interface PlayerSet {
+  id: string;
+  kg: string;
+  reps: string;
+  isWarmup: boolean;
+  isCompleted: boolean;
+  /** Last time the user trained this set, for the PREVIOUS column. */
+  previousKg?: number;
+  previousReps?: number;
+}
 
-export interface LoggedSet {
-  exerciseIndex: number;
-  setIndex: number;
-  kg: number;
-  reps: number;
-  completedAt: number;
+/** Per-exercise state inside the Hevy-style guided player. */
+export interface GuidedPlayerExercise {
+  id: string;
+  name: string;
+  gifUrl?: string;
+  bodyPart?: string;
+  target?: string;
+  equipment?: string;
+  /** Target rep range string (e.g. "10-12"). */
+  targetReps?: string;
+  /** User notes — persisted with the workout. */
+  notes: string;
+  /** Per-exercise rest, in seconds — persisted with the workout. */
+  restSeconds: number;
+  sets: PlayerSet[];
 }
 
 export interface GuidedPlayerState {
   routineId: string;
   routineName: string;
-  exercises: RoutineExercise[];
-  phase: PlayerPhase;
-  currentExerciseIndex: number;
-  currentSetIndex: number;
-  loggedSets: LoggedSet[];
+  exercises: GuidedPlayerExercise[];
+  /** When the active rest timer ends (epoch ms). */
+  restEndsAt?: number;
+  /** Exercise id that started the active rest timer. */
+  restExerciseId?: string;
 }
 
 interface ActiveWorkoutContextType {
@@ -94,11 +112,20 @@ interface ActiveWorkoutContextType {
   guidedPlayer: GuidedPlayerState | null;
   startGuidedRoutine: (routine: Routine) => void;
   updateGuidedExercise: (
-    exerciseIndex: number,
-    updates: Partial<RoutineExercise>,
+    exerciseId: string,
+    updates: Partial<GuidedPlayerExercise>,
   ) => void;
-  completeCurrentSet: (actualKg: number, actualReps: number) => void;
-  skipRest: () => void;
+  updatePlayerSet: (
+    exerciseId: string,
+    setId: string,
+    updates: Partial<PlayerSet>,
+  ) => void;
+  addPlayerSet: (exerciseId: string) => void;
+  removePlayerSet: (exerciseId: string, setId: string) => void;
+  togglePlayerSetWarmup: (exerciseId: string, setId: string) => void;
+  togglePlayerSetCompleted: (exerciseId: string, setId: string) => void;
+  startPlayerRest: (exerciseId: string, seconds?: number) => void;
+  stopPlayerRest: () => void;
   endGuidedRoutine: (save: boolean) => Promise<void>;
 }
 
@@ -205,6 +232,11 @@ export const ActiveWorkoutProvider: React.FC<ActiveWorkoutProviderProps> = ({
       weightKg: userProfile?.weight_kg ?? null,
     });
 
+    const totalSets = activeWorkout.exercises.reduce(
+      (count, ex) => count + ex.sets.length,
+      0,
+    );
+
     try {
       await api.addWorkout({
         name: name || "Workout",
@@ -215,8 +247,14 @@ export const ActiveWorkoutProvider: React.FC<ActiveWorkoutProviderProps> = ({
         duration_minutes: Math.round(activeWorkout.duration / 60),
         calories_burned: calories,
         source: "manual",
+        total_volume_kg: Number(totalVolume.toFixed(2)),
+        total_sets: totalSets,
+        completed_sets: completedSets,
+        exercise_count: activeWorkout.exercises.length,
         exercises: activeWorkout.exercises.map((ex) => ({
           name: ex.name,
+          exercise_id: ex.exerciseId ?? null,
+          gif_url: (ex as any).gifUrl ?? null,
           sets: ex.sets.map((s) => ({
             kg: s.kg,
             reps: s.reps,
@@ -375,37 +413,70 @@ export const ActiveWorkoutProvider: React.FC<ActiveWorkoutProviderProps> = ({
   );
 
   // ── Guided routine player ──────────────────────────────────────────
-  const startGuidedRoutine = useCallback((routine: Routine) => {
-    setGuidedPlayer({
-      routineId: routine.id,
-      routineName: routine.name,
-      exercises: routine.exercises.map((ex) => ({ ...ex })),
-      phase: "EXERCISE",
-      currentExerciseIndex: 0,
-      currentSetIndex: 0,
-      loggedSets: [],
-    });
-    const workoutId = `workout-${Date.now()}`;
-    setActiveWorkout({
-      id: workoutId,
-      duration: 0,
-      volume: 0,
-      sets: 0,
-      exercises: [],
-    });
-    setIsExpanded(false);
-    setIsPaused(false);
-    startTimeRef.current = Date.now();
-  }, []);
+  const buildPlayerExercises = useCallback(
+    (routine: Routine): GuidedPlayerExercise[] => {
+      return routine.exercises.map((ex) => {
+        const sets: PlayerSet[] = Array.from({ length: Math.max(1, ex.sets) }).map(
+          (_, i) => {
+            const target = ex.setTargets?.[i];
+            const kgValue = target?.targetKg ?? ex.targetWeight ?? 0;
+            const repsValue = target?.targetReps ?? ex.reps ?? "";
+            return {
+              id: `${Date.now()}-${i}-${Math.random().toString(36).slice(2, 7)}`,
+              kg: kgValue > 0 ? String(kgValue) : "",
+              reps: repsValue ? String(repsValue) : "",
+              isWarmup: false,
+              isCompleted: false,
+            };
+          },
+        );
+        return {
+          id: ex.id,
+          name: ex.name,
+          gifUrl: ex.gifUrl,
+          bodyPart: ex.bodyPart,
+          target: ex.target,
+          equipment: ex.equipment,
+          targetReps: ex.reps,
+          notes: ex.notes ?? "",
+          restSeconds: ex.restTime ?? 60,
+          sets,
+        };
+      });
+    },
+    [],
+  );
+
+  const startGuidedRoutine = useCallback(
+    (routine: Routine) => {
+      setGuidedPlayer({
+        routineId: routine.id,
+        routineName: routine.name,
+        exercises: buildPlayerExercises(routine),
+      });
+      const workoutId = `workout-${Date.now()}`;
+      setActiveWorkout({
+        id: workoutId,
+        duration: 0,
+        volume: 0,
+        sets: 0,
+        exercises: [],
+      });
+      setIsExpanded(false);
+      setIsPaused(false);
+      startTimeRef.current = Date.now();
+    },
+    [buildPlayerExercises],
+  );
 
   const updateGuidedExercise = useCallback(
-    (exerciseIndex: number, updates: Partial<RoutineExercise>) => {
+    (exerciseId: string, updates: Partial<GuidedPlayerExercise>) => {
       setGuidedPlayer((prev) => {
         if (!prev) return prev;
         return {
           ...prev,
-          exercises: prev.exercises.map((ex, i) =>
-            i === exerciseIndex ? { ...ex, ...updates } : ex,
+          exercises: prev.exercises.map((ex) =>
+            ex.id === exerciseId ? { ...ex, ...updates } : ex,
           ),
         };
       });
@@ -413,74 +484,155 @@ export const ActiveWorkoutProvider: React.FC<ActiveWorkoutProviderProps> = ({
     [],
   );
 
-  const completeCurrentSet = useCallback(
-    (actualKg: number, actualReps: number) => {
+  const updatePlayerSet = useCallback(
+    (exerciseId: string, setId: string, updates: Partial<PlayerSet>) => {
       setGuidedPlayer((prev) => {
         if (!prev) return prev;
-        const { currentExerciseIndex, currentSetIndex, exercises } = prev;
-        const currentExercise = exercises[currentExerciseIndex];
-        if (!currentExercise) return prev;
-
-        const newLogged: LoggedSet = {
-          exerciseIndex: currentExerciseIndex,
-          setIndex: currentSetIndex,
-          kg: actualKg,
-          reps: actualReps,
-          completedAt: Date.now(),
+        return {
+          ...prev,
+          exercises: prev.exercises.map((ex) => {
+            if (ex.id !== exerciseId) return ex;
+            return {
+              ...ex,
+              sets: ex.sets.map((s) =>
+                s.id === setId ? { ...s, ...updates } : s,
+              ),
+            };
+          }),
         };
-
-        const loggedSets = [...prev.loggedSets, newLogged];
-
-        const isLastSet = currentSetIndex + 1 >= currentExercise.sets;
-        const isLastExercise = currentExerciseIndex + 1 >= exercises.length;
-
-        if (isLastSet && isLastExercise) {
-          return { ...prev, loggedSets, phase: "COMPLETE" };
-        }
-
-        return { ...prev, loggedSets, phase: "REST" };
       });
     },
     [],
   );
 
-  const skipRest = useCallback(() => {
+  const addPlayerSet = useCallback((exerciseId: string) => {
     setGuidedPlayer((prev) => {
       if (!prev) return prev;
-      const { currentExerciseIndex, currentSetIndex, exercises } = prev;
-      const currentExercise = exercises[currentExerciseIndex];
-      if (!currentExercise) return prev;
-
-      const isLastSet = currentSetIndex + 1 >= currentExercise.sets;
-      if (isLastSet) {
-        const nextExerciseIndex = currentExerciseIndex + 1;
-        if (nextExerciseIndex >= exercises.length) {
-          return { ...prev, phase: "COMPLETE" };
-        }
-        return {
-          ...prev,
-          phase: "EXERCISE",
-          currentExerciseIndex: nextExerciseIndex,
-          currentSetIndex: 0,
-        };
-      }
-
       return {
         ...prev,
-        phase: "EXERCISE",
-        currentSetIndex: currentSetIndex + 1,
+        exercises: prev.exercises.map((ex) => {
+          if (ex.id !== exerciseId) return ex;
+          const last = ex.sets[ex.sets.length - 1];
+          const newSet: PlayerSet = {
+            id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+            kg: last?.kg ?? "",
+            reps: last?.reps ?? "",
+            isWarmup: false,
+            isCompleted: false,
+          };
+          return { ...ex, sets: [...ex.sets, newSet] };
+        }),
       };
     });
   }, []);
+
+  const removePlayerSet = useCallback((exerciseId: string, setId: string) => {
+    setGuidedPlayer((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        exercises: prev.exercises.map((ex) => {
+          if (ex.id !== exerciseId) return ex;
+          return { ...ex, sets: ex.sets.filter((s) => s.id !== setId) };
+        }),
+      };
+    });
+  }, []);
+
+  const togglePlayerSetWarmup = useCallback(
+    (exerciseId: string, setId: string) => {
+      setGuidedPlayer((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          exercises: prev.exercises.map((ex) => {
+            if (ex.id !== exerciseId) return ex;
+            return {
+              ...ex,
+              sets: ex.sets.map((s) =>
+                s.id === setId ? { ...s, isWarmup: !s.isWarmup } : s,
+              ),
+            };
+          }),
+        };
+      });
+    },
+    [],
+  );
+
+  const startPlayerRest = useCallback(
+    (exerciseId: string, secondsOverride?: number) => {
+      setGuidedPlayer((prev) => {
+        if (!prev) return prev;
+        const ex = prev.exercises.find((e) => e.id === exerciseId);
+        const seconds = secondsOverride ?? ex?.restSeconds ?? 60;
+        if (seconds <= 0) return prev;
+        return {
+          ...prev,
+          restEndsAt: Date.now() + seconds * 1000,
+          restExerciseId: exerciseId,
+        };
+      });
+    },
+    [],
+  );
+
+  const stopPlayerRest = useCallback(() => {
+    setGuidedPlayer((prev) => {
+      if (!prev) return prev;
+      const { restEndsAt: _r, restExerciseId: _e, ...rest } = prev;
+      return { ...rest };
+    });
+  }, []);
+
+  const togglePlayerSetCompleted = useCallback(
+    (exerciseId: string, setId: string) => {
+      let willComplete = false;
+      let restSecondsForExercise = 0;
+      setGuidedPlayer((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          exercises: prev.exercises.map((ex) => {
+            if (ex.id !== exerciseId) return ex;
+            restSecondsForExercise = ex.restSeconds;
+            return {
+              ...ex,
+              sets: ex.sets.map((s) => {
+                if (s.id !== setId) return s;
+                willComplete = !s.isCompleted;
+                return { ...s, isCompleted: !s.isCompleted };
+              }),
+            };
+          }),
+        };
+      });
+      if (willComplete && restSecondsForExercise > 0) {
+        startPlayerRest(exerciseId, restSecondsForExercise);
+      }
+    },
+    [startPlayerRest],
+  );
 
   const endGuidedRoutine = useCallback(
     async (save: boolean) => {
       const player = guidedPlayer;
       if (!player) return;
 
-      if (save && player.loggedSets.length > 0 && activeWorkout) {
-        const totalVolume = player.loggedSets.reduce(
-          (sum, s) => sum + s.kg * s.reps,
+      const completedFlat = player.exercises.flatMap((ex) =>
+        ex.sets
+          .filter((s) => s.isCompleted)
+          .map((s) => ({
+            exerciseId: ex.id,
+            kg: parseFloat(s.kg) || 0,
+            reps: parseInt(s.reps, 10) || 0,
+            isWarmup: s.isWarmup,
+          })),
+      );
+
+      if (save && completedFlat.length > 0 && activeWorkout) {
+        const totalVolume = completedFlat.reduce(
+          (sum, s) => sum + (s.isWarmup ? 0 : s.kg * s.reps),
           0,
         );
         const today = new Date().toISOString().split("T")[0];
@@ -489,6 +641,11 @@ export const ActiveWorkoutProvider: React.FC<ActiveWorkoutProviderProps> = ({
           durationSeconds: activeWorkout.duration,
           weightKg: userProfile?.weight_kg ?? null,
         });
+        const totalSets = player.exercises.reduce(
+          (count, ex) => count + ex.sets.length,
+          0,
+        );
+
         try {
           await api.addWorkout({
             name: player.routineName,
@@ -499,17 +656,27 @@ export const ActiveWorkoutProvider: React.FC<ActiveWorkoutProviderProps> = ({
             duration_minutes: Math.round(activeWorkout.duration / 60),
             calories_burned: calories,
             source: "routine",
-            exercises: player.exercises.map((ex, exIdx) => ({
+            routine_id: player.routineId,
+            total_volume_kg: Number(totalVolume.toFixed(2)),
+            total_sets: totalSets,
+            completed_sets: completedFlat.length,
+            exercise_count: player.exercises.length,
+            exercises: player.exercises.map((ex) => ({
               name: ex.name,
-              sets: player.loggedSets
-                .filter((s) => s.exerciseIndex === exIdx)
+              exercise_id: ex.id ?? null,
+              gif_url: ex.gifUrl ?? null,
+              notes: ex.notes || undefined,
+              rest_seconds: ex.restSeconds,
+              sets: ex.sets
+                .filter((s) => s.isCompleted)
                 .map((s) => ({
-                  kg: String(s.kg),
-                  reps: String(s.reps),
+                  kg: s.kg,
+                  reps: s.reps,
                   completed: true,
+                  is_warmup: s.isWarmup,
                 })),
             })),
-            notes: `Routine: ${player.routineName} | Volume: ${Math.round(totalVolume)}kg | Sets: ${player.loggedSets.length}`,
+            notes: `Routine: ${player.routineName} | Volume: ${Math.round(totalVolume)}kg | Sets: ${completedFlat.length}`,
           });
         } catch (error) {
           console.warn("[ActiveWorkout] Guided save failed:", error);
@@ -555,8 +722,13 @@ export const ActiveWorkoutProvider: React.FC<ActiveWorkoutProviderProps> = ({
         guidedPlayer,
         startGuidedRoutine,
         updateGuidedExercise,
-        completeCurrentSet,
-        skipRest,
+        updatePlayerSet,
+        addPlayerSet,
+        removePlayerSet,
+        togglePlayerSetWarmup,
+        togglePlayerSetCompleted,
+        startPlayerRest,
+        stopPlayerRest,
         endGuidedRoutine,
       }}
     >

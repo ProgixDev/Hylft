@@ -48,7 +48,6 @@ const TEMPLATES: ExploreRoutine[] = [
     category: "Full Body",
     author: "Hylift Team",
     daysPerWeek: 3,
-    difficulty: "beginner",
     estimatedDuration: 45,
     timesCompleted: 0,
     targetMuscles: ["Chest", "Back", "Quads", "Hamstrings", "Shoulders"],
@@ -101,7 +100,6 @@ const TEMPLATES: ExploreRoutine[] = [
     category: "Full Body",
     author: "Mehdi – StrongLifts",
     daysPerWeek: 3,
-    difficulty: "beginner",
     estimatedDuration: 45,
     timesCompleted: 0,
     targetMuscles: ["Quads", "Back", "Chest", "Glutes"],
@@ -141,7 +139,6 @@ const TEMPLATES: ExploreRoutine[] = [
     category: "Push",
     author: "Hylift Team",
     daysPerWeek: 6,
-    difficulty: "intermediate",
     estimatedDuration: 60,
     timesCompleted: 0,
     targetMuscles: ["Chest", "Shoulders", "Triceps"],
@@ -201,7 +198,6 @@ const TEMPLATES: ExploreRoutine[] = [
     category: "Push",
     author: "Hylift Team",
     daysPerWeek: 2,
-    difficulty: "advanced",
     estimatedDuration: 70,
     timesCompleted: 0,
     targetMuscles: ["Chest", "Triceps", "Front Delts"],
@@ -269,7 +265,6 @@ const TEMPLATES: ExploreRoutine[] = [
     category: "Pull",
     author: "Hylift Team",
     daysPerWeek: 6,
-    difficulty: "intermediate",
     estimatedDuration: 60,
     timesCompleted: 0,
     targetMuscles: ["Back", "Biceps", "Rear Delts"],
@@ -330,7 +325,6 @@ const TEMPLATES: ExploreRoutine[] = [
     category: "Legs",
     author: "Hylift Team",
     daysPerWeek: 6,
-    difficulty: "intermediate",
     estimatedDuration: 65,
     timesCompleted: 0,
     targetMuscles: ["Quads", "Hamstrings", "Glutes", "Calves"],
@@ -390,7 +384,6 @@ const TEMPLATES: ExploreRoutine[] = [
     category: "Legs",
     author: "Hylift Team",
     daysPerWeek: 2,
-    difficulty: "advanced",
     estimatedDuration: 75,
     timesCompleted: 0,
     targetMuscles: ["Quads", "Hamstrings", "Glutes", "Lower Back"],
@@ -444,7 +437,6 @@ const TEMPLATES: ExploreRoutine[] = [
     category: "Upper",
     author: "Hylift Team",
     daysPerWeek: 4,
-    difficulty: "intermediate",
     estimatedDuration: 55,
     timesCompleted: 0,
     targetMuscles: ["Chest", "Back", "Shoulders", "Biceps", "Triceps"],
@@ -505,7 +497,6 @@ const TEMPLATES: ExploreRoutine[] = [
     category: "Lower",
     author: "Hylift Team",
     daysPerWeek: 4,
-    difficulty: "intermediate",
     estimatedDuration: 60,
     timesCompleted: 0,
     targetMuscles: ["Quads", "Hamstrings", "Glutes", "Calves"],
@@ -566,7 +557,6 @@ const TEMPLATES: ExploreRoutine[] = [
     category: "Core",
     author: "Hylift Team",
     daysPerWeek: 3,
-    difficulty: "beginner",
     estimatedDuration: 30,
     timesCompleted: 0,
     targetMuscles: ["Abs", "Obliques", "Lower Back", "Glutes"],
@@ -619,7 +609,6 @@ const TEMPLATES: ExploreRoutine[] = [
     category: "Core",
     author: "Hylift Team",
     daysPerWeek: 3,
-    difficulty: "advanced",
     estimatedDuration: 40,
     timesCompleted: 0,
     targetMuscles: ["Abs", "Obliques", "Hip Flexors", "Lower Back"],
@@ -666,20 +655,15 @@ const TEMPLATES: ExploreRoutine[] = [
 
 // ─── Public API ───────────────────────────────────────────────────────────────
 
-/** Return all explore templates, optionally filtered by category and/or difficulty. */
+/** Return all explore templates, optionally filtered by category. */
 export function getExploreRoutines(opts?: {
   category?: ExploreCategory | "All";
-  difficulty?: Routine["difficulty"] | "All";
   search?: string;
 }): ExploreRoutine[] {
   let results = TEMPLATES;
 
   if (opts?.category && opts.category !== "All") {
     results = results.filter((r) => r.category === opts.category);
-  }
-
-  if (opts?.difficulty && opts.difficulty !== "All") {
-    results = results.filter((r) => r.difficulty === opts.difficulty);
   }
 
   if (opts?.search?.trim()) {
@@ -713,13 +697,3 @@ export const EXPLORE_CATEGORIES: ExploreCategory[] = [
   "Cardio",
 ];
 
-/** Colour accent per difficulty — shared across screens. */
-export const DIFFICULTY_META = {
-  beginner: { bg: "rgba(34,197,94,0.15)", text: "#22c55e", label: "Beginner" },
-  intermediate: {
-    bg: "rgba(245,158,11,0.15)",
-    text: "#f59e0b",
-    label: "Intermediate",
-  },
-  advanced: { bg: "rgba(239,68,68,0.15)", text: "#ef4444", label: "Advanced" },
-} as const;

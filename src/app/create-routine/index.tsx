@@ -172,7 +172,6 @@ export default function CreateRoutineScreen() {
       await api.createRoutine({
         name: draft.name.trim(),
         description: draft.description.trim(),
-        difficulty: draft.difficulty,
         targetMuscles: draft.targetMuscles,
         exercises: draft.exercises,
         estimatedDuration: Math.round(estimatedDuration),
@@ -1470,34 +1469,6 @@ const createStyles = (theme: Theme) => {
     inputMultiline: {
       minHeight: 80,
       textAlignVertical: "top",
-    },
-
-    // ── Difficulty
-    difficultyRow: {
-      flexDirection: "row",
-      gap: 8,
-    },
-    difficultyBtn: {
-      flex: 1,
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: 6,
-      paddingVertical: 12,
-      borderRadius: 14,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: theme.foreground.gray + "20",
-      backgroundColor: theme.background.darker,
-    },
-    difficultyDot: {
-      width: 8,
-      height: 8,
-      borderRadius: 4,
-    },
-    difficultyBtnText: {
-      fontSize: 13,
-      fontFamily: FONTS.bold,
-      color: theme.foreground.gray,
     },
 
     // ── Day picker

@@ -52,9 +52,11 @@ function AppContent() {
   const [isProEntitled, setIsProEntitled] = React.useState(false);
   const routeSegments = segments as string[];
   const isAuthRoute = routeSegments[0] === "auth";
+  const isOnboardingRoute = routeSegments[0] === "onboarding";
   const isGetStartedRoute = routeSegments[0] === "get-started";
   const isPlanBuildingRoute =
     isGetStartedRoute && routeSegments[1] === "ready";
+  const isFullBleedRoute = isAuthRoute || isOnboardingRoute;
   const shellBackgroundColor = isAuthRoute ? "#06101F" : theme.background.dark;
 
   useEffect(() => {
@@ -186,7 +188,7 @@ function AppContent() {
     <>
       <StatusBar
         style={
-          isAuthRoute || isPlanBuildingRoute
+          isAuthRoute || isOnboardingRoute || isPlanBuildingRoute
             ? "light"
             : isGetStartedRoute || themeType !== "dark"
               ? "dark"
@@ -207,18 +209,20 @@ function AppContent() {
           contentStyle: {
             backgroundColor: isAuthRoute
               ? shellBackgroundColor
+              : isOnboardingRoute
+              ? "#02060F"
               : isGetStartedRoute
               ? isPlanBuildingRoute
                 ? "#101011"
                 : "#FFFFFF"
               : shellBackgroundColor,
-            paddingTop: isAuthRoute ? 0 : insets.top,
-            paddingBottom: isAuthRoute ? 0 : insets.bottom,
+            paddingTop: isFullBleedRoute ? 0 : insets.top,
+            paddingBottom: isFullBleedRoute ? 0 : insets.bottom,
             paddingLeft: insets.left,
             paddingRight: insets.right,
           },
           statusBarStyle:
-            isAuthRoute || isPlanBuildingRoute
+            isAuthRoute || isOnboardingRoute || isPlanBuildingRoute
               ? "light"
               : isGetStartedRoute || themeType !== "dark"
                 ? "dark"
@@ -230,10 +234,6 @@ function AppContent() {
         <Stack.Screen name="index" />
         <Stack.Screen name="OnBoarding" options={{ animation: "none" }} />
         <Stack.Screen name="onboarding/index" options={{ animation: "none" }} />
-        <Stack.Screen
-          name="onboarding/second"
-          options={{ animation: "none" }}
-        />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="exercise-picker/index" />
         <Stack.Screen name="create-routine/index" />

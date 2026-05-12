@@ -28,12 +28,6 @@ import { ApiRoutine, mapRoutine } from "../../utils/routineMapper";
 
 import { FONTS } from "../../constants/fonts";
 
-const DIFFICULTY_COLORS = {
-  beginner: { bg: "rgba(34, 197, 94, 0.15)", text: "#22c55e" },
-  intermediate: { bg: "rgba(245, 158, 11, 0.15)", text: "#f59e0b" },
-  advanced: { bg: "rgba(239, 68, 68, 0.15)", text: "#ef4444" },
-};
-
 const REST_LABEL = (seconds: number) => {
   if (seconds < 60) return `${seconds}s`;
   const m = Math.floor(seconds / 60);
@@ -131,9 +125,6 @@ export default function RoutineDetail() {
     );
   }
 
-  const difficultyColor =
-    DIFFICULTY_COLORS[routine.difficulty] ?? DIFFICULTY_COLORS.intermediate;
-
   const totalSets = routine.exercises.reduce((sum, ex) => sum + ex.sets, 0);
 
   const handleStartRoutine = () => {
@@ -178,18 +169,6 @@ export default function RoutineDetail() {
             <Text style={styles.heroName}>
               {translateRoutineName(routine.name)}
             </Text>
-            <View
-              style={[
-                styles.difficultyBadge,
-                { backgroundColor: difficultyColor.bg },
-              ]}
-            >
-              <Text
-                style={[styles.difficultyText, { color: difficultyColor.text }]}
-              >
-                {translateApiData(routine.difficulty)}
-              </Text>
-            </View>
           </View>
 
           {/* Description */}
@@ -442,17 +421,6 @@ const createStyles = (theme: Theme) =>
       fontFamily: FONTS.extraBold,
       color: theme.foreground.white,
       flex: 1,
-    },
-    difficultyBadge: {
-      paddingHorizontal: 10,
-      paddingVertical: 5,
-      borderRadius: 20,
-    },
-    difficultyText: {
-      fontSize: 11,
-      fontFamily: FONTS.bold,
-      textTransform: "uppercase",
-      letterSpacing: 0.5,
     },
     heroDescription: {
       fontSize: 14,
