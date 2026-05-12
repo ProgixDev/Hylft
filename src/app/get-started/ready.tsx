@@ -162,6 +162,7 @@ const ExerciseMarquee = React.memo(function ExerciseMarquee({
               source={source}
               style={styles.exerciseImage}
               contentFit="contain"
+              autoplay={false}
             />
           </View>
         ))}

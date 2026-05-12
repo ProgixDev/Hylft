@@ -227,11 +227,7 @@ function SessionCoverflowCard({
         onPress={onPress}
       >
         <Image
-          source={
-            routine.wallpaper_url
-              ? { uri: routine.wallpaper_url }
-              : genderedImages.nextWorkout
-          }
+          source={genderedImages.nextWorkout}
           style={styles.nextWorkoutImage}
           resizeMode="cover"
         />

@@ -16,6 +16,13 @@ import {
 import ChipButton from "../../components/ui/ChipButton";
 import SignupProgress from "../../components/ui/SignupProgress";
 import { FONTS } from "../../constants/fonts";
+import { useTheme } from "../../contexts/ThemeContext";
+
+function getPrimaryDepth(primary: string): string {
+  if (primary.toUpperCase() === "#D4A44C") return "#8A6424";
+  if (primary.toUpperCase() === "#C48A6A") return "#8A5B43";
+  return "#071527";
+}
 
 const BG = "#FBFCFA";
 
@@ -23,71 +30,61 @@ const HABITS: {
   id: string;
   icon: keyof typeof Ionicons.glyphMap;
   accent: string;
-  depth: string;
   tint: string;
 }[] = [
   {
     id: "eat_balanced",
     icon: "nutrition-outline",
-    accent: "#22C17A",
-    depth: "#168E5A",
-    tint: "#EAF8F1",
+    accent: "#059669",
+    tint: "#ECFDF5",
   },
   {
     id: "drink_water",
     icon: "water-outline",
-    accent: "#38BDF8",
-    depth: "#0284C7",
-    tint: "#E8F7FF",
+    accent: "#0369A1",
+    tint: "#EFF6FF",
   },
   {
     id: "sleep_well",
     icon: "moon-outline",
-    accent: "#8B5CF6",
-    depth: "#6D28D9",
-    tint: "#F3EEFF",
+    accent: "#6D28D9",
+    tint: "#F5F3FF",
   },
   {
     id: "move_daily",
     icon: "walk-outline",
-    accent: "#F97316",
-    depth: "#C2410C",
-    tint: "#FFF1E6",
+    accent: "#C2410C",
+    tint: "#FFF7ED",
   },
   {
     id: "strength",
     icon: "barbell-outline",
-    accent: "#14B8A6",
-    depth: "#0F766E",
-    tint: "#E8FAF7",
+    accent: "#0F766E",
+    tint: "#F0FDFA",
   },
   {
     id: "reduce_stress",
     icon: "leaf-outline",
-    accent: "#84CC16",
-    depth: "#4D7C0F",
-    tint: "#F3FCE7",
+    accent: "#4D7C0F",
+    tint: "#F7FEE7",
   },
   {
     id: "cut_sugar",
     icon: "ice-cream-outline",
-    accent: "#EC4899",
-    depth: "#BE185D",
-    tint: "#FCE7F3",
+    accent: "#9D174D",
+    tint: "#FDF2F8",
   },
   {
     id: "track_progress",
     icon: "stats-chart-outline",
-    accent: "#3B82F6",
-    depth: "#1D5FC4",
-    tint: "#EDF4FF",
+    accent: "#1D4ED8",
+    tint: "#EFF6FF",
   },
   {
     id: "mindful_eating",
     icon: "happy-outline",
-    accent: "#F59E0B",
-    depth: "#C87504",
-    tint: "#FFF4DF",
+    accent: "#92400E",
+    tint: "#FFFBEB",
   },
 ];
 
@@ -106,6 +103,10 @@ function HabitTile({
   onPress: () => void;
   label: string;
 }) {
+  const { theme } = useTheme();
+  const primaryColor = theme.primary.main;
+  const depthColor = getPrimaryDepth(primaryColor);
+
   const entrance = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(1)).current;
   const pressDepth = useRef(new Animated.Value(0)).current;
@@ -177,13 +178,13 @@ function HabitTile({
         },
       ]}
     >
-      <View style={[styles.tileBase, { backgroundColor: habit.depth }]}>
+      <View style={[styles.tileBase, { backgroundColor: selected ? depthColor : "#D1D5DB" }]}>
         <Animated.View
           style={[
             styles.tileFace,
             {
-              backgroundColor: selected ? habit.accent : "#FFFFFF",
-              borderColor: selected ? habit.accent : "#E8EDF0",
+              backgroundColor: selected ? primaryColor : "#FFFFFF",
+              borderColor: selected ? primaryColor : "#E5E7EB",
               transform: [{ translateY: pressDepth }],
             },
           ]}
@@ -193,7 +194,7 @@ function HabitTile({
               styles.tileIcon,
               {
                 backgroundColor: selected
-                  ? "rgba(255,255,255,0.22)"
+                  ? "rgba(255,255,255,0.08)"
                   : habit.tint,
               },
             ]}
@@ -217,13 +218,13 @@ function HabitTile({
             style={[
               styles.tileCheck,
               {
-                backgroundColor: selected ? "#FFFFFF" : habit.tint,
-                borderColor: selected ? "#FFFFFF" : habit.accent + "55",
+                backgroundColor: selected ? "rgba(255,255,255,0.1)" : "#F9FAFB",
+                borderColor: selected ? "rgba(255,255,255,0.2)" : "#E5E7EB",
               },
             ]}
           >
             {selected && (
-              <Ionicons name="checkmark" size={12} color={habit.accent} />
+              <Ionicons name="checkmark" size={12} color="#FFFFFF" />
             )}
           </View>
         </Animated.View>

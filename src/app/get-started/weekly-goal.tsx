@@ -13,6 +13,7 @@ import {
 import ChipButton from "../../components/ui/ChipButton";
 import SignupProgress from "../../components/ui/SignupProgress";
 import { FONTS } from "../../constants/fonts";
+import { useTheme } from "../../contexts/ThemeContext";
 
 const BORDER = "#DDE3EA";
 const SURFACE = "#F6F8FA";
@@ -90,11 +91,6 @@ const MAINTAIN_OPTIONS: GoalOption[] = [
   },
 ];
 
-const PACE_COLORS = {
-  slow: "#22C55E",
-  steady: "#3B82F6",
-  fast: "#F59E0B",
-};
 
 const PACE_LABELS = {
   slow: "Gentle",
@@ -104,6 +100,7 @@ const PACE_LABELS = {
 
 export default function WeeklyGoalScreen() {
   const router = useRouter();
+  const { theme } = useTheme();
   const [goal, setGoal] = useState<string>("");
   const [selected, setSelected] = useState<string>("");
   const fade = useRef(new Animated.Value(0)).current;
@@ -174,7 +171,7 @@ export default function WeeklyGoalScreen() {
         <View style={s.list}>
           {options.map((o) => {
             const isSelected = selected === o.id;
-            const paceColor = PACE_COLORS[o.pace];
+            const primary = theme.primary.main;
             return (
               <View key={o.id}>
                 <TouchableOpacity
@@ -183,8 +180,8 @@ export default function WeeklyGoalScreen() {
                   style={[
                     s.card,
                     {
-                      borderColor: isSelected ? paceColor : BORDER,
-                      backgroundColor: isSelected ? paceColor + "10" : SURFACE,
+                      borderColor: isSelected ? primary : BORDER,
+                      backgroundColor: isSelected ? primary + "10" : SURFACE,
                     },
                   ]}
                 >
@@ -193,7 +190,7 @@ export default function WeeklyGoalScreen() {
                       s.iconWrap,
                       {
                         backgroundColor: isSelected
-                          ? paceColor + "18"
+                          ? primary + "18"
                           : "#FFFFFF",
                       },
                     ]}
@@ -207,7 +204,7 @@ export default function WeeklyGoalScreen() {
                             : "remove"
                       }
                       size={26}
-                      color={isSelected ? paceColor : "#64748B"}
+                      color={isSelected ? primary : "#64748B"}
                     />
                   </View>
 
@@ -216,7 +213,7 @@ export default function WeeklyGoalScreen() {
                       <Text
                         style={[
                           s.cardTitle,
-                          { color: isSelected ? paceColor : "#111827" },
+                          { color: isSelected ? primary : "#111827" },
                         ]}
                       >
                         {o.label}
@@ -225,12 +222,12 @@ export default function WeeklyGoalScreen() {
                         style={[
                           s.paceTag,
                           {
-                            backgroundColor: paceColor + "20",
-                            borderColor: paceColor + "55",
+                            backgroundColor: primary + "15",
+                            borderColor: primary + "40",
                           },
                         ]}
                       >
-                        <Text style={[s.paceTagText, { color: paceColor }]}>
+                        <Text style={[s.paceTagText, { color: primary }]}>
                           {PACE_LABELS[o.pace]}
                         </Text>
                       </View>
@@ -242,8 +239,8 @@ export default function WeeklyGoalScreen() {
                     style={[
                       s.check,
                       {
-                        backgroundColor: isSelected ? paceColor : "transparent",
-                        borderColor: isSelected ? paceColor : "#64748B",
+                        backgroundColor: isSelected ? primary : "transparent",
+                        borderColor: isSelected ? primary : "#64748B",
                       },
                     ]}
                   >

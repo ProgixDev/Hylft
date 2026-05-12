@@ -16,43 +16,40 @@ import {
 } from "react-native";
 import SignupProgress from "../../components/ui/SignupProgress";
 import { FONTS } from "../../constants/fonts";
+import { useTheme } from "../../contexts/ThemeContext";
+
+function getPrimaryDepth(primary: string): string {
+  if (primary.toUpperCase() === "#D4A44C") return "#8A6424";
+  if (primary.toUpperCase() === "#C48A6A") return "#8A5B43";
+  return "#071527";
+}
 
 const GOALS: {
   id: "lose_weight" | "maintain" | "gain_weight" | "build_muscle";
   image: ImageSourcePropType;
-  accent: string;
-  depth: string;
-  tint: string;
+  iconBg: string;
   recommended?: boolean;
 }[] = [
   {
     id: "lose_weight",
     image: require("../../../assets/weight__loss.gif"),
-    accent: "#F97316",
-    depth: "#C2410C",
-    tint: "#FFF1E6",
+    iconBg: "#FEF9EE",
     recommended: true,
   },
   {
     id: "maintain",
     image: require("../../../assets/maintain_weight.gif"),
-    accent: "#3B82F6",
-    depth: "#1D5FC4",
-    tint: "#EDF4FF",
+    iconBg: "#EFF6FF",
   },
   {
     id: "gain_weight",
     image: require("../../../assets/weight_gain.gif"),
-    accent: "#8B5CF6",
-    depth: "#6D28D9",
-    tint: "#F3EEFF",
+    iconBg: "#F5F3FF",
   },
   {
     id: "build_muscle",
     image: require("../../../assets/muscle_gain.gif"),
-    accent: "#14B8A6",
-    depth: "#0F766E",
-    tint: "#E8FAF7",
+    iconBg: "#F0FDF4",
   },
 ];
 
@@ -71,6 +68,10 @@ function GoalCard({
   onPress: () => void;
   t: (key: string) => string;
 }) {
+  const { theme } = useTheme();
+  const primaryColor = theme.primary.main;
+  const depthColor = getPrimaryDepth(primaryColor);
+
   const scale = useRef(new Animated.Value(1)).current;
   const pressDepth = useRef(new Animated.Value(0)).current;
   const entrance = useRef(new Animated.Value(0)).current;
@@ -138,24 +139,25 @@ function GoalCard({
         },
       ]}
     >
-      <View style={[styles.buttonBase, { backgroundColor: g.depth }]}>
+      <View style={[styles.buttonBase, { backgroundColor: isSelected ? depthColor : "#D1D5DB" }]}>
         <Animated.View
           style={[
             styles.buttonFace,
             {
-              backgroundColor: g.accent,
+              backgroundColor: isSelected ? primaryColor : "#FFFFFF",
+              borderColor: isSelected ? primaryColor : "#E5E7EB",
               transform: [{ translateY: pressDepth }],
             },
           ]}
         >
           <View style={styles.leftCluster}>
-            <View style={[styles.iconWrap, { backgroundColor: g.tint }]}>
+            <View style={[styles.iconWrap, { backgroundColor: isSelected ? "rgba(255,255,255,0.08)" : g.iconBg, borderColor: isSelected ? "rgba(255,255,255,0.12)" : "#E5E7EB" }]}>
               <Image source={g.image} style={styles.goalImage} />
             </View>
 
             <View style={styles.buttonCopy}>
               <Text
-                style={styles.buttonTitle}
+                style={[styles.buttonTitle, { color: isSelected ? "#FFFFFF" : "#111827" }]}
                 numberOfLines={2}
                 adjustsFontSizeToFit
                 minimumFontScale={0.82}
@@ -163,8 +165,8 @@ function GoalCard({
                 {t(`onboarding.goalFlow.options.${g.id}.label`)}
               </Text>
               {g.recommended && (
-                <View style={styles.tag}>
-                  <Text style={styles.tagText}>
+                <View style={[styles.tag, { borderColor: isSelected ? "rgba(255,255,255,0.2)" : "#E5E7EB", backgroundColor: isSelected ? "rgba(255,255,255,0.07)" : "#F9FAFB" }]}>
+                  <Text style={[styles.tagText, { color: isSelected ? "rgba(255,255,255,0.75)" : "#6B7280" }]}>
                     {t("onboarding.goalFlow.popular")}
                   </Text>
                 </View>
@@ -176,7 +178,7 @@ function GoalCard({
             <Ionicons
               name={isSelected ? "checkmark" : "chevron-forward"}
               size={26}
-              color="#FFFFFF"
+              color={isSelected ? "#FFFFFF" : "#9CA3AF"}
             />
           </View>
         </Animated.View>
@@ -294,6 +296,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     minHeight: 92,
     borderRadius: 24,
+    borderWidth: 1,
     paddingHorizontal: 18,
     paddingVertical: 14,
   },
@@ -323,7 +326,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   buttonTitle: {
-    color: "#FFFFFF",
     fontSize: 23,
     lineHeight: 28,
     fontFamily: FONTS.extraBold,
@@ -339,7 +341,6 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.18)",
   },
   tagText: {
-    color: "#FFFFFF",
     fontSize: 11,
     fontFamily: FONTS.bold,
     letterSpacing: 0.2,

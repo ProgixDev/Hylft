@@ -1,12 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Animated,
   Modal,
   Platform,
   Pressable,
@@ -25,71 +23,7 @@ import { useCreateRoutine } from "../../contexts/CreateRoutineContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { RoutineExercise, SetTarget } from "../../data/mockData";
 import { api } from "../../services/api";
-import CoverPickerModal from "../../components/profile/CoverPickerModal";
-
 import { FONTS } from "../../constants/fonts";
-
-const EDITOR_CARD_COLORS = {
-  sets: {
-    depth: "#075985",
-    face: "#0E7490",
-    accent: "#67E8F9",
-    text: "#F0FDFF",
-    muted: "#BAF4FF",
-    input: "#083344",
-  },
-  reps: {
-    depth: "#6D28D9",
-    face: "#7C3AED",
-    accent: "#C4B5FD",
-    text: "#F5F3FF",
-    muted: "#DDD6FE",
-    input: "#2E1065",
-  },
-  weight: {
-    depth: "#BE123C",
-    face: "#E11D48",
-    accent: "#FDA4AF",
-    text: "#FFF1F2",
-    muted: "#FFE4E6",
-    input: "#4C0519",
-  },
-  rest: {
-    depth: "#0F766E",
-    face: "#0D9488",
-    accent: "#99F6E4",
-    text: "#F0FDFA",
-    muted: "#CCFBF1",
-    input: "#134E4A",
-  },
-  time: {
-    depth: "#9A3412",
-    face: "#EA580C",
-    accent: "#FDBA74",
-    text: "#FFF7ED",
-    muted: "#FED7AA",
-    input: "#431407",
-  },
-  setDetails: {
-    depth: "#1D4ED8",
-    face: "#2563EB",
-    accent: "#BFDBFE",
-    text: "#EFF6FF",
-    muted: "#DBEAFE",
-    input: "#1E3A8A",
-  },
-  notes: {
-    depth: "#166534",
-    face: "#16A34A",
-    accent: "#BBF7D0",
-    text: "#F0FDF4",
-    muted: "#DCFCE7",
-    input: "#14532D",
-  },
-} as const;
-
-type EditorCardColor =
-  (typeof EDITOR_CARD_COLORS)[keyof typeof EDITOR_CARD_COLORS];
 
 const getDifficulties = (t: (key: string) => string) => [
   { value: "beginner", label: t("createRoutine.beginner"), color: "#22c55e" },
@@ -123,13 +57,10 @@ export default function CreateRoutineScreen() {
     null,
   );
   const [isSavingRoutine, setIsSavingRoutine] = useState(false);
-  const [isWallpaperPickerVisible, setIsWallpaperPickerVisible] =
-    useState(false);
   const editingExercise = editingExerciseId
     ? draft.exercises.find((e) => e.id === editingExerciseId) ?? null
     : null;
 
-  // Auto scroll when exercises change
   const scrollRef = useRef<ScrollView>(null);
   const prevExCount = useRef(draft.exercises.length);
   useEffect(() => {
@@ -175,7 +106,6 @@ export default function CreateRoutineScreen() {
         targetMuscles: draft.targetMuscles,
         exercises: draft.exercises,
         estimatedDuration: Math.round(estimatedDuration),
-        wallpaperUrl: draft.wallpaperUrl ?? null,
       });
     } catch (error: any) {
       setIsSavingRoutine(false);
@@ -241,47 +171,6 @@ export default function CreateRoutineScreen() {
             placeholder={t("createRoutine.namePlaceholder", "Push day, Full body…")}
             placeholderTextColor={theme.foreground.gray}
           />
-        </View>
-
-        {/* Wallpaper */}
-        <View style={styles.section}>
-          <Text style={styles.label}>
-            {t("createRoutine.wallpaper", "Image de fond")}
-          </Text>
-          <Pressable
-            style={({ pressed }) => [
-              styles.wallpaperPreview,
-              pressed && { opacity: 0.9 },
-            ]}
-            onPress={() => setIsWallpaperPickerVisible(true)}
-          >
-            {draft.wallpaperUrl ? (
-              <Image
-                source={{ uri: draft.wallpaperUrl }}
-                style={StyleSheet.absoluteFill}
-                contentFit="cover"
-              />
-            ) : (
-              <View style={[StyleSheet.absoluteFill, styles.wallpaperEmpty]}>
-                <Ionicons
-                  name="image-outline"
-                  size={28}
-                  color={theme.foreground.gray}
-                />
-              </View>
-            )}
-            <LinearGradient
-              colors={["rgba(0,0,0,0.0)", "rgba(0,0,0,0.55)"]}
-              style={StyleSheet.absoluteFill}
-            />
-            <View style={styles.wallpaperOverlay}>
-              <Text style={styles.wallpaperOverlayText}>
-                {draft.wallpaperUrl
-                  ? t("createRoutine.changeWallpaper", "Changer")
-                  : t("createRoutine.chooseWallpaper", "Choisir une image")}
-              </Text>
-            </View>
-          </Pressable>
         </View>
 
         {/* Exercises */}
@@ -365,34 +254,46 @@ export default function CreateRoutineScreen() {
           style={styles.discardModalBackdrop}
           onPress={() => setIsDiscardModalVisible(false)}
         >
-          <Pressable style={styles.discardModalDepth} onPress={() => {}}>
-            <View style={styles.discardModalCard}>
-              <View style={styles.discardIconWrap}>
-                <Ionicons name="warning" size={28} color="#FCA5A5" />
-              </View>
-              <Text style={styles.discardModalTitle}>
-                {t("createRoutine.discardRoutine", "Abandonner la séance ?")}
-              </Text>
-              <Text style={styles.discardModalText}>
-                {t(
-                  "createRoutine.allChangesLost",
-                  "Tous les changements seront perdus.",
-                )}
-              </Text>
-              <View style={styles.discardModalActions}>
-                <Discard3DButton
-                  label={t("common.cancel", "Annuler")}
-                  variant="cancel"
-                  onPress={() => setIsDiscardModalVisible(false)}
-                  styles={styles}
-                />
-                <Discard3DButton
-                  label={t("createRoutine.discard", "Abandonner")}
-                  variant="destructive"
-                  onPress={confirmDiscard}
-                  styles={styles}
-                />
-              </View>
+          <Pressable style={styles.discardModalCard} onPress={() => {}}>
+            <View style={styles.discardIconWrap}>
+              <Ionicons name="warning" size={28} color={theme.primary.main} />
+            </View>
+            <Text style={styles.discardModalTitle}>
+              {t("createRoutine.discardRoutine", "Abandonner la séance ?")}
+            </Text>
+            <Text style={styles.discardModalText}>
+              {t(
+                "createRoutine.allChangesLost",
+                "Tous les changements seront perdus.",
+              )}
+            </Text>
+            <View style={styles.discardModalActions}>
+              <Pressable
+                onPress={() => setIsDiscardModalVisible(false)}
+                style={({ pressed }) => [
+                  styles.discardBtn,
+                  styles.discardBtnCancel,
+                  pressed && { opacity: 0.75 },
+                ]}
+                android_ripple={{ color: "rgba(255,255,255,0.1)" }}
+              >
+                <Text style={[styles.discardBtnText, styles.discardBtnTextCancel]}>
+                  {t("common.cancel", "Annuler")}
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={confirmDiscard}
+                style={({ pressed }) => [
+                  styles.discardBtn,
+                  styles.discardBtnDestructive,
+                  pressed && { opacity: 0.75 },
+                ]}
+                android_ripple={{ color: "rgba(255,255,255,0.1)" }}
+              >
+                <Text style={[styles.discardBtnText, styles.discardBtnTextDestructive]}>
+                  {t("createRoutine.discard", "Abandonner")}
+                </Text>
+              </Pressable>
             </View>
           </Pressable>
         </Pressable>
@@ -406,126 +307,24 @@ export default function CreateRoutineScreen() {
         onRequestClose={() => null}
       >
         <View style={styles.savingModalBackdrop}>
-          <View style={styles.savingModalDepth}>
-            <View style={styles.savingModalCard}>
-              <View style={styles.savingSpinnerWrap}>
-                <ActivityIndicator size="large" color="#67E8F9" />
-              </View>
-              <Text style={styles.savingModalTitle}>
-                {t("createRoutine.saveRoutineInProgress", "Saving routine...")}
-              </Text>
-              <Text style={styles.savingModalText}>
-                {t(
-                  "createRoutine.saveRoutineInProgressSubtitle",
-                  "One moment, we are saving your workout.",
-                )}
-              </Text>
+          <View style={styles.savingModalCard}>
+            <View style={styles.savingSpinnerWrap}>
+              <ActivityIndicator size="large" color={theme.primary.main} />
             </View>
+            <Text style={styles.savingModalTitle}>
+              {t("createRoutine.saveRoutineInProgress", "Saving routine...")}
+            </Text>
+            <Text style={styles.savingModalText}>
+              {t(
+                "createRoutine.saveRoutineInProgressSubtitle",
+                "One moment, we are saving your workout.",
+              )}
+            </Text>
           </View>
         </View>
       </Modal>
 
-      <CoverPickerModal
-        visible={isWallpaperPickerVisible}
-        currentUrl={draft.wallpaperUrl ?? null}
-        onClose={() => setIsWallpaperPickerVisible(false)}
-        onSelect={(url) => {
-          updateDraft({ wallpaperUrl: url });
-          setIsWallpaperPickerVisible(false);
-        }}
-      />
     </View>
-  );
-}
-
-// ─── 3D button used in the discard modal ───────────────────────────────
-function Discard3DButton({
-  label,
-  variant,
-  onPress,
-  styles,
-}: {
-  label: string;
-  variant: "cancel" | "destructive";
-  onPress: () => void;
-  styles: ReturnType<typeof createStyles>;
-}) {
-  const depthAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-
-  const pressIn = () => {
-    Animated.parallel([
-      Animated.spring(depthAnim, {
-        toValue: 5,
-        speed: 40,
-        bounciness: 0,
-        useNativeDriver: true,
-      }),
-      Animated.spring(scaleAnim, {
-        toValue: 0.97,
-        speed: 40,
-        bounciness: 0,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  };
-  const pressOut = () => {
-    Animated.parallel([
-      Animated.spring(depthAnim, {
-        toValue: 0,
-        speed: 28,
-        bounciness: 6,
-        useNativeDriver: true,
-      }),
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        speed: 28,
-        bounciness: 6,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  };
-
-  const depthStyle =
-    variant === "destructive"
-      ? styles.discardBtnDepthDestructive
-      : styles.discardBtnDepthCancel;
-  const faceStyle =
-    variant === "destructive"
-      ? styles.discardBtnFaceDestructive
-      : styles.discardBtnFaceCancel;
-  const textStyle =
-    variant === "destructive"
-      ? styles.discardBtnTextDestructive
-      : styles.discardBtnTextCancel;
-
-  return (
-    <Animated.View
-      style={[
-        styles.discardBtnShell,
-        { transform: [{ scale: scaleAnim }] },
-      ]}
-    >
-      <View style={[styles.discardBtnDepth, depthStyle]}>
-        <Animated.View
-          style={[
-            styles.discardBtnFace,
-            faceStyle,
-            { transform: [{ translateY: depthAnim }] },
-          ]}
-        >
-          <Pressable
-            onPress={onPress}
-            onPressIn={pressIn}
-            onPressOut={pressOut}
-            style={styles.discardBtnPressable}
-            android_ripple={{ color: "rgba(255,255,255,0.14)" }}
-          >
-            <Text style={[styles.discardBtnText, textStyle]}>{label}</Text>
-          </Pressable>
-        </Animated.View>
-      </View>
-    </Animated.View>
   );
 }
 
@@ -548,95 +347,93 @@ function ExerciseSummaryCard({
   onRemove,
 }: SummaryProps) {
   return (
-    <View style={styles.exerciseCardShell}>
-      <Pressable
-        onPress={onEdit}
-        style={({ pressed }) => [
-          styles.exerciseCard,
-          pressed && styles.exerciseCardPressed,
-        ]}
-      >
-        <View style={styles.exerciseCardAccent} />
+    <Pressable
+      onPress={onEdit}
+      style={({ pressed }) => [
+        styles.exerciseCard,
+        pressed && { opacity: 0.8 },
+      ]}
+    >
+      <View style={styles.exerciseCardAccent} />
 
-        <View style={styles.exerciseGifWrap}>
-          {exercise.gifUrl ? (
-            <Image
-              source={{ uri: exercise.gifUrl }}
-              style={styles.exerciseGif}
-              contentFit="cover"
-              transition={200}
+      <View style={styles.exerciseGifWrap}>
+        {exercise.gifUrl ? (
+          <Image
+            source={{ uri: exercise.gifUrl }}
+            style={styles.exerciseGif}
+            contentFit="cover"
+            transition={200}
+          />
+        ) : (
+          <View style={[styles.exerciseGif, styles.exerciseGifPlaceholder]}>
+            <Ionicons
+              name="barbell-outline"
+              size={26}
+              color={theme.foreground.gray}
             />
-          ) : (
-            <View style={[styles.exerciseGif, styles.exerciseGifPlaceholder]}>
-              <Ionicons
-                name="barbell-outline"
-                size={26}
-                color="#BAF4FF"
-              />
+          </View>
+        )}
+        <View style={styles.exerciseIndexBadge}>
+          <Text style={styles.exerciseIndexText}>{index + 1}</Text>
+        </View>
+      </View>
+
+      <View style={styles.exerciseBody}>
+        <Text style={styles.exerciseName} numberOfLines={1}>
+          {translateExerciseName(exercise.name)}
+        </Text>
+        <View style={styles.exerciseSummaryRow}>
+          <View style={styles.summaryPill}>
+            <Text style={styles.summaryPillStrong}>{exercise.sets}</Text>
+            <Text style={styles.summaryPillSoft}>×</Text>
+            <Text style={styles.summaryPillStrong}>{exercise.reps}</Text>
+          </View>
+          {!!exercise.targetWeight && (
+            <View style={styles.summaryPill}>
+              <Text style={styles.summaryPillStrong}>
+                {exercise.targetWeight}
+              </Text>
+              <Text style={styles.summaryPillSoft}>kg</Text>
             </View>
           )}
-          <View style={styles.exerciseIndexBadge}>
-            <Text style={styles.exerciseIndexText}>{index + 1}</Text>
-          </View>
-        </View>
-
-        <View style={styles.exerciseBody}>
-          <Text style={styles.exerciseName} numberOfLines={1}>
-            {translateExerciseName(exercise.name)}
-          </Text>
-          <View style={styles.exerciseSummaryRow}>
-            <View style={styles.summaryPill}>
-              <Text style={styles.summaryPillStrong}>{exercise.sets}</Text>
-              <Text style={styles.summaryPillSoft}>×</Text>
-              <Text style={styles.summaryPillStrong}>{exercise.reps}</Text>
-            </View>
-            {!!exercise.targetWeight && (
-              <View style={styles.summaryPill}>
-                <Text style={styles.summaryPillStrong}>
-                  {exercise.targetWeight}
-                </Text>
-                <Text style={styles.summaryPillSoft}>kg</Text>
-              </View>
-            )}
-            <View style={styles.summaryPill}>
-              <Ionicons
-                name="time-outline"
-                size={11}
-                color="#BAF4FF"
-              />
-              <Text style={styles.summaryPillSoft}>{exercise.restTime}s</Text>
-            </View>
-          </View>
-        </View>
-
-        <View style={styles.exerciseActions}>
-          <Pressable
-            onPress={onEdit}
-            hitSlop={6}
-            style={({ pressed }) => [
-              styles.iconBtn,
-              pressed && styles.iconBtnPressed,
-            ]}
-          >
+          <View style={styles.summaryPill}>
             <Ionicons
-              name="create-outline"
-              size={18}
-              color="#0E7490"
+              name="time-outline"
+              size={11}
+              color={theme.foreground.gray}
             />
-          </Pressable>
-          <Pressable
-            onPress={onRemove}
-            hitSlop={6}
-            style={({ pressed }) => [
-              styles.iconBtn,
-              pressed && styles.iconBtnPressed,
-            ]}
-          >
-            <Ionicons name="trash-outline" size={18} color="#ef4444" />
-          </Pressable>
+            <Text style={styles.summaryPillSoft}>{exercise.restTime}s</Text>
+          </View>
         </View>
-      </Pressable>
-    </View>
+      </View>
+
+      <View style={styles.exerciseActions}>
+        <Pressable
+          onPress={onEdit}
+          hitSlop={6}
+          style={({ pressed }) => [
+            styles.iconBtn,
+            pressed && { opacity: 0.6 },
+          ]}
+        >
+          <Ionicons
+            name="create-outline"
+            size={18}
+            color={theme.primary.main}
+          />
+        </Pressable>
+        <Pressable
+          onPress={onRemove}
+          hitSlop={6}
+          style={({ pressed }) => [
+            styles.iconBtn,
+            pressed && { opacity: 0.6 },
+          ]}
+        >
+          <Ionicons name="trash-outline" size={18} color="#ef4444" />
+        </Pressable>
+      </View>
+    </Pressable>
   );
 }
 
@@ -658,14 +455,14 @@ function formatRest(seconds: number): string {
 interface RestPickerProps {
   value: number;
   onChange: (value: number) => void;
-  color: EditorCardColor;
+  theme: Theme;
 }
 
-function RestTimePicker({ value, onChange, color }: RestPickerProps) {
+function RestTimePicker({ value, onChange, theme }: RestPickerProps) {
   const clamp = (n: number) => Math.max(REST_MIN, Math.min(REST_MAX, n));
   const dec = () => onChange(clamp(value - REST_STEP));
   const inc = () => onChange(clamp(value + REST_STEP));
-  const s = restPickerStyles(color);
+  const s = restPickerStyles(theme);
 
   return (
     <View style={s.wrap}>
@@ -675,7 +472,7 @@ function RestTimePicker({ value, onChange, color }: RestPickerProps) {
           hitSlop={8}
           style={({ pressed }) => [s.stepBtn, pressed && { opacity: 0.6 }]}
         >
-          <Ionicons name="remove" size={22} color={color.depth} />
+          <Ionicons name="remove" size={22} color={theme.primary.main} />
         </Pressable>
 
         <View style={s.display}>
@@ -688,7 +485,7 @@ function RestTimePicker({ value, onChange, color }: RestPickerProps) {
           hitSlop={8}
           style={({ pressed }) => [s.stepBtn, pressed && { opacity: 0.6 }]}
         >
-          <Ionicons name="add" size={22} color={color.depth} />
+          <Ionicons name="add" size={22} color={theme.primary.main} />
         </Pressable>
       </View>
 
@@ -720,7 +517,7 @@ function RestTimePicker({ value, onChange, color }: RestPickerProps) {
   );
 }
 
-const restPickerStyles = (color: EditorCardColor) =>
+const restPickerStyles = (theme: Theme) =>
   StyleSheet.create({
     wrap: {
       gap: 12,
@@ -729,17 +526,17 @@ const restPickerStyles = (color: EditorCardColor) =>
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      backgroundColor: color.input,
-      borderRadius: 16,
+      backgroundColor: theme.background.dark,
+      borderRadius: 12,
       padding: 8,
-      borderWidth: 1,
-      borderColor: "rgba(255,255,255,0.16)",
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: theme.foreground.gray + "30",
     },
     stepBtn: {
       width: 44,
       height: 44,
       borderRadius: 12,
-      backgroundColor: color.accent,
+      backgroundColor: theme.primary.main + "15",
       alignItems: "center",
       justifyContent: "center",
     },
@@ -750,12 +547,12 @@ const restPickerStyles = (color: EditorCardColor) =>
     displayValue: {
       fontFamily: FONTS.bold,
       fontSize: 22,
-      color: color.text,
+      color: theme.foreground.white,
     },
     displayHint: {
       fontFamily: FONTS.regular,
       fontSize: 11,
-      color: color.muted,
+      color: theme.foreground.gray,
       marginTop: 2,
     },
     presetsRow: {
@@ -766,47 +563,37 @@ const restPickerStyles = (color: EditorCardColor) =>
       paddingHorizontal: 14,
       paddingVertical: 8,
       borderRadius: 18,
-      backgroundColor: color.input,
-      borderWidth: 1,
-      borderColor: "rgba(255,255,255,0.12)",
+      backgroundColor: theme.background.accent,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: theme.foreground.gray + "20",
     },
     presetActive: {
-      backgroundColor: color.accent,
-      borderColor: "rgba(255,255,255,0.58)",
+      backgroundColor: theme.primary.main + "20",
+      borderColor: theme.primary.main + "60",
     },
     presetText: {
       fontFamily: FONTS.semiBold,
       fontSize: 13,
-      color: color.muted,
+      color: theme.foreground.gray,
     },
     presetTextActive: {
-      color: color.depth,
+      color: theme.primary.main,
     },
   });
 
-// ─── Focused per-exercise editor (modal sheet) ─────────────────────────
-function Editor3DCard({
+// ─── Simple editor card ────────────────────────────────────────────────
+function EditorCard({
   children,
-  color,
   flex,
   styles,
 }: {
   children: React.ReactNode;
-  color: EditorCardColor;
   flex?: boolean;
   styles: ReturnType<typeof createStyles>;
 }) {
   return (
-    <View
-      style={[
-        styles.editor3dShell,
-        flex && styles.editor3dShellFlex,
-        { backgroundColor: color.depth },
-      ]}
-    >
-      <View style={[styles.editor3dFace, { backgroundColor: color.face }]}>
-        {children}
-      </View>
+    <View style={[styles.editorBlock, flex && { flex: 1 }]}>
+      {children}
     </View>
   );
 }
@@ -847,7 +634,6 @@ function ExerciseEditorSheet({
 
   const incSets = () => onUpdate({ sets: Math.min(exercise.sets + 1, 99) });
   const decSets = () => onUpdate({ sets: Math.max(exercise.sets - 1, 1) });
-  const cards = EDITOR_CARD_COLORS;
 
   return (
     <Modal
@@ -882,10 +668,6 @@ function ExerciseEditorSheet({
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.editorGifWrap}>
-            <LinearGradient
-              colors={[theme.primary.main + "20", "transparent"]}
-              style={StyleSheet.absoluteFill}
-            />
             {exercise.gifUrl ? (
               <Image
                 source={{ uri: exercise.gifUrl }}
@@ -905,227 +687,148 @@ function ExerciseEditorSheet({
           </View>
 
           {/* Sets stepper */}
-          <Editor3DCard color={cards.sets} styles={styles}>
-            <Text style={[styles.editorBlockLabel, { color: cards.sets.muted }]}>
+          <EditorCard styles={styles}>
+            <Text style={styles.editorBlockLabel}>
               {t("createRoutine.sets")}
             </Text>
-            <View
-              style={[
-                styles.stepperRow,
-                {
-                  backgroundColor: cards.sets.input,
-                  borderColor: "rgba(255,255,255,0.16)",
-                },
-              ]}
-            >
+            <View style={styles.stepperRow}>
               <Pressable
                 onPress={decSets}
                 style={({ pressed }) => [
                   styles.stepperBtn,
-                  { backgroundColor: cards.sets.accent },
                   pressed && { opacity: 0.7 },
                 ]}
               >
-                <Ionicons name="remove" size={20} color={cards.sets.depth} />
+                <Ionicons name="remove" size={20} color={theme.primary.main} />
               </Pressable>
-              <Text style={[styles.stepperValue, { color: cards.sets.text }]}>
+              <Text style={styles.stepperValue}>
                 {exercise.sets}
               </Text>
               <Pressable
                 onPress={incSets}
                 style={({ pressed }) => [
                   styles.stepperBtn,
-                  { backgroundColor: cards.sets.accent },
                   pressed && { opacity: 0.7 },
                 ]}
               >
-                <Ionicons name="add" size={20} color={cards.sets.depth} />
+                <Ionicons name="add" size={20} color={theme.primary.main} />
               </Pressable>
             </View>
-          </Editor3DCard>
+          </EditorCard>
 
           {/* Reps + Weight */}
           <View style={styles.editorRow}>
-            <Editor3DCard color={cards.reps} flex styles={styles}>
-              <Text style={[styles.editorBlockLabel, { color: cards.reps.muted }]}>
+            <EditorCard flex styles={styles}>
+              <Text style={styles.editorBlockLabel}>
                 {t("createRoutine.reps")}
               </Text>
               <TextInput
-                style={[
-                  styles.editorBigInput,
-                  {
-                    backgroundColor: cards.reps.input,
-                    borderColor: "rgba(255,255,255,0.16)",
-                    color: cards.reps.text,
-                  },
-                ]}
+                style={styles.editorBigInput}
                 value={exercise.reps}
                 onChangeText={(v) => onUpdate({ reps: v })}
                 placeholder="8-12"
-                placeholderTextColor={cards.reps.muted}
+                placeholderTextColor={theme.foreground.gray}
                 maxLength={8}
               />
-            </Editor3DCard>
-            <Editor3DCard color={cards.weight} flex styles={styles}>
-              <Text style={[styles.editorBlockLabel, { color: cards.weight.muted }]}>
+            </EditorCard>
+            <EditorCard flex styles={styles}>
+              <Text style={styles.editorBlockLabel}>
                 {t("createRoutine.weight")} (kg)
               </Text>
               <TextInput
-                style={[
-                  styles.editorBigInput,
-                  {
-                    backgroundColor: cards.weight.input,
-                    borderColor: "rgba(255,255,255,0.16)",
-                    color: cards.weight.text,
-                  },
-                ]}
+                style={styles.editorBigInput}
                 keyboardType="numeric"
                 value={exercise.targetWeight ? String(exercise.targetWeight) : ""}
                 onChangeText={(v) =>
                   onUpdate({ targetWeight: parseFloat(v) || 0 })
                 }
                 placeholder="0"
-                placeholderTextColor={cards.weight.muted}
+                placeholderTextColor={theme.foreground.gray}
                 maxLength={5}
               />
-            </Editor3DCard>
+            </EditorCard>
           </View>
 
           {/* Rest picker */}
-          <Editor3DCard color={cards.rest} styles={styles}>
-            <Text style={[styles.editorBlockLabel, { color: cards.rest.muted }]}>
+          <EditorCard styles={styles}>
+            <Text style={styles.editorBlockLabel}>
               {t("createRoutine.rest")}
             </Text>
             <RestTimePicker
               value={exercise.restTime}
               onChange={(v) => onUpdate({ restTime: v })}
-              color={cards.rest}
+              theme={theme}
             />
-          </Editor3DCard>
+          </EditorCard>
 
           {/* Training time */}
-          <Editor3DCard color={cards.time} styles={styles}>
-            <Text style={[styles.editorBlockLabel, { color: cards.time.muted }]}>
+          <EditorCard styles={styles}>
+            <Text style={styles.editorBlockLabel}>
               {t("createRoutine.trainingTime")} (s)
             </Text>
             <TextInput
-              style={[
-                styles.editorBigInput,
-                {
-                  backgroundColor: cards.time.input,
-                  borderColor: "rgba(255,255,255,0.16)",
-                  color: cards.time.text,
-                },
-              ]}
+              style={styles.editorBigInput}
               keyboardType="numeric"
               value={exercise.trainingTime ? String(exercise.trainingTime) : ""}
               onChangeText={(v) =>
                 onUpdate({ trainingTime: parseInt(v) || 0 })
               }
               placeholder="0"
-              placeholderTextColor={cards.time.muted}
+              placeholderTextColor={theme.foreground.gray}
               maxLength={4}
             />
-          </Editor3DCard>
+          </EditorCard>
 
           {/* Per-set targets (collapsed by default) */}
-          <View
-            style={[
-              styles.editor3dShell,
-              { backgroundColor: cards.setDetails.depth },
+          <Pressable
+            style={({ pressed }) => [
+              styles.editorBlock,
+              styles.editorAccordionToggle,
+              pressed && { opacity: 0.8 },
             ]}
+            onPress={() => setShowSetDetails((s) => !s)}
           >
-            <Pressable
-              style={({ pressed }) => [
-                styles.editorAccordionToggle,
-                { backgroundColor: cards.setDetails.face },
-                pressed && { transform: [{ translateY: 5 }] },
-              ]}
-              onPress={() => setShowSetDetails((s) => !s)}
-            >
-              <View
-                style={[
-                  styles.editorAccordionIcon,
-                  { backgroundColor: cards.setDetails.accent },
-                ]}
-              >
-                <Ionicons
-                  name={showSetDetails ? "chevron-up" : "chevron-down"}
-                  size={16}
-                  color={cards.setDetails.depth}
-                />
-              </View>
-              <Text
-                style={[
-                  styles.editorAccordionText,
-                  { color: cards.setDetails.text },
-                ]}
-              >
-                {t("createRoutine.perSet")}
-              </Text>
-            </Pressable>
-          </View>
+            <View style={styles.editorAccordionIcon}>
+              <Ionicons
+                name={showSetDetails ? "chevron-up" : "chevron-down"}
+                size={16}
+                color={theme.primary.main}
+              />
+            </View>
+            <Text style={styles.editorAccordionText}>
+              {t("createRoutine.perSet")}
+            </Text>
+          </Pressable>
 
           {showSetDetails &&
             exercise.setTargets &&
             exercise.setTargets.length > 0 && (
-              <View
-                style={[
-                  styles.setTargetsContainer,
-                  {
-                    backgroundColor: cards.setDetails.face,
-                    borderColor: "rgba(255,255,255,0.16)",
-                  },
-                ]}
-              >
+              <View style={styles.setTargetsContainer}>
                 <View style={styles.setTargetRow}>
                   <Text
-                    style={[
-                      styles.setTargetHeader,
-                      { flex: 0.5, color: cards.setDetails.muted },
-                    ]}
+                    style={[styles.setTargetHeader, { flex: 0.5 }]}
                   >
                     #
                   </Text>
-                  <Text
-                    style={[
-                      styles.setTargetHeader,
-                      { color: cards.setDetails.muted },
-                    ]}
-                  >
+                  <Text style={styles.setTargetHeader}>
                     {t("createRoutine.weight")} (kg)
                   </Text>
-                  <Text
-                    style={[
-                      styles.setTargetHeader,
-                      { color: cards.setDetails.muted },
-                    ]}
-                  >
+                  <Text style={styles.setTargetHeader}>
                     {t("createRoutine.reps")}
                   </Text>
                 </View>
                 {exercise.setTargets.map((st, i) => (
                   <View key={i} style={styles.setTargetRow}>
                     <Text
-                      style={[
-                        styles.setTargetNum,
-                        { flex: 0.5, color: cards.setDetails.accent },
-                      ]}
+                      style={[styles.setTargetNum, { flex: 0.5 }]}
                     >
                       {i + 1}
                     </Text>
                     <TextInput
-                      style={[
-                        styles.setTargetInput,
-                        {
-                          backgroundColor: cards.setDetails.input,
-                          borderColor: "rgba(255,255,255,0.16)",
-                          color: cards.setDetails.text,
-                        },
-                      ]}
+                      style={styles.setTargetInput}
                       keyboardType="numeric"
                       placeholder={String(exercise.targetWeight || 0)}
-                      placeholderTextColor={cards.setDetails.muted}
+                      placeholderTextColor={theme.foreground.gray}
                       value={st.targetKg ? String(st.targetKg) : ""}
                       onChangeText={(v) =>
                         handleSetTargetUpdate(i, {
@@ -1134,16 +837,9 @@ function ExerciseEditorSheet({
                       }
                     />
                     <TextInput
-                      style={[
-                        styles.setTargetInput,
-                        {
-                          backgroundColor: cards.setDetails.input,
-                          borderColor: "rgba(255,255,255,0.16)",
-                          color: cards.setDetails.text,
-                        },
-                      ]}
+                      style={styles.setTargetInput}
                       placeholder={exercise.reps}
-                      placeholderTextColor={cards.setDetails.muted}
+                      placeholderTextColor={theme.foreground.gray}
                       value={
                         st.targetReps !== exercise.reps ? st.targetReps : ""
                       }
@@ -1159,27 +855,19 @@ function ExerciseEditorSheet({
             )}
 
           {/* Notes */}
-          <Editor3DCard color={cards.notes} styles={styles}>
-            <Text style={[styles.editorBlockLabel, { color: cards.notes.muted }]}>
+          <EditorCard styles={styles}>
+            <Text style={styles.editorBlockLabel}>
               {t("createRoutine.addNotes")}
             </Text>
             <TextInput
-              style={[
-                styles.editorBigInput,
-                styles.editorNotesInput,
-                {
-                  backgroundColor: cards.notes.input,
-                  borderColor: "rgba(255,255,255,0.16)",
-                  color: cards.notes.text,
-                },
-              ]}
+              style={[styles.editorBigInput, styles.editorNotesInput]}
               placeholder={t("createRoutine.addNotes")}
-              placeholderTextColor={cards.notes.muted}
+              placeholderTextColor={theme.foreground.gray}
               value={exercise.notes ?? ""}
               onChangeText={(v) => onUpdate({ notes: v })}
               multiline
             />
-          </Editor3DCard>
+          </EditorCard>
         </ScrollView>
       </SafeAreaView>
     </Modal>
@@ -1187,18 +875,6 @@ function ExerciseEditorSheet({
 }
 
 const createStyles = (theme: Theme) => {
-  const exercise3d = {
-    depth: "#075985",
-    face: "#0E7490",
-    faceTop: "#0891B2",
-    accent: "#22D3EE",
-    text: "#F0FDFF",
-    muted: "#BAF4FF",
-    pill: "#083344",
-    pillBorder: "rgba(186,244,255,0.18)",
-    iconBg: "#E6FAFF",
-  };
-
   return StyleSheet.create({
     container: {
       flex: 1,
@@ -1246,7 +922,7 @@ const createStyles = (theme: Theme) => {
       letterSpacing: 0.5,
     },
 
-    // ── Body
+    // ── Saving modal
     savingModalBackdrop: {
       flex: 1,
       alignItems: "center",
@@ -1254,54 +930,42 @@ const createStyles = (theme: Theme) => {
       padding: 24,
       backgroundColor: "rgba(3,7,18,0.72)",
     },
-    savingModalDepth: {
+    savingModalCard: {
       width: "100%",
       maxWidth: 320,
-      borderRadius: 24,
-      paddingBottom: 8,
-      backgroundColor: "#075985",
-      shadowColor: "#000",
-      shadowOpacity: 0.28,
-      shadowRadius: 18,
-      shadowOffset: { width: 0, height: 14 },
-      elevation: 12,
-    },
-    savingModalCard: {
       alignItems: "center",
       gap: 10,
       paddingHorizontal: 22,
       paddingVertical: 24,
-      borderRadius: 24,
-      backgroundColor: "#0E7490",
-      borderWidth: 1,
-      borderColor: "rgba(186,244,255,0.28)",
+      borderRadius: 20,
+      backgroundColor: theme.background.darker,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: theme.foreground.gray + "20",
     },
     savingSpinnerWrap: {
       width: 68,
       height: 68,
-      borderRadius: 24,
+      borderRadius: 20,
       alignItems: "center",
       justifyContent: "center",
       marginBottom: 4,
-      backgroundColor: "#083344",
-      borderWidth: 1,
-      borderColor: "rgba(103,232,249,0.36)",
+      backgroundColor: theme.background.accent,
     },
     savingModalTitle: {
       fontSize: 17,
       fontFamily: FONTS.extraBold,
-      color: "#F0FDFF",
+      color: theme.foreground.white,
       textAlign: "center",
     },
     savingModalText: {
       fontSize: 13,
       lineHeight: 19,
       fontFamily: FONTS.medium,
-      color: "#BAF4FF",
+      color: theme.foreground.gray,
       textAlign: "center",
     },
 
-    // ── Discard modal (3D)
+    // ── Discard modal
     discardModalBackdrop: {
       flex: 1,
       alignItems: "center",
@@ -1309,27 +973,17 @@ const createStyles = (theme: Theme) => {
       padding: 24,
       backgroundColor: "rgba(3,7,18,0.78)",
     },
-    discardModalDepth: {
+    discardModalCard: {
       width: "100%",
       maxWidth: 340,
-      borderRadius: 24,
-      paddingBottom: 10,
-      backgroundColor: "#7F1D1D",
-      shadowColor: "#000",
-      shadowOpacity: 0.36,
-      shadowRadius: 22,
-      shadowOffset: { width: 0, height: 16 },
-      elevation: 14,
-    },
-    discardModalCard: {
       alignItems: "center",
       gap: 12,
       paddingHorizontal: 22,
       paddingVertical: 24,
-      borderRadius: 24,
-      backgroundColor: "#1F2937",
-      borderWidth: 1,
-      borderColor: "rgba(252,165,165,0.24)",
+      borderRadius: 20,
+      backgroundColor: theme.background.darker,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: theme.foreground.gray + "20",
     },
     discardIconWrap: {
       width: 56,
@@ -1337,22 +991,20 @@ const createStyles = (theme: Theme) => {
       borderRadius: 20,
       alignItems: "center",
       justifyContent: "center",
-      backgroundColor: "rgba(127,29,29,0.45)",
-      borderWidth: 1,
-      borderColor: "rgba(252,165,165,0.45)",
+      backgroundColor: theme.background.accent,
       marginBottom: 2,
     },
     discardModalTitle: {
       fontSize: 17,
       fontFamily: FONTS.extraBold,
-      color: "#F9FAFB",
+      color: theme.foreground.white,
       textAlign: "center",
     },
     discardModalText: {
       fontSize: 13,
       lineHeight: 19,
       fontFamily: FONTS.medium,
-      color: "#D1D5DB",
+      color: theme.foreground.gray,
       textAlign: "center",
       marginBottom: 6,
     },
@@ -1361,36 +1013,21 @@ const createStyles = (theme: Theme) => {
       gap: 10,
       width: "100%",
     },
-    discardBtnShell: {
+    discardBtn: {
       flex: 1,
-    },
-    discardBtnDepth: {
-      borderRadius: 16,
-      paddingBottom: 5,
-    },
-    discardBtnDepthCancel: {
-      backgroundColor: "#0B1220",
-    },
-    discardBtnDepthDestructive: {
-      backgroundColor: "#7F1D1D",
-    },
-    discardBtnFace: {
-      borderRadius: 16,
-      borderWidth: 1,
-      overflow: "hidden",
-    },
-    discardBtnFaceCancel: {
-      backgroundColor: "#374151",
-      borderColor: "rgba(209,213,219,0.18)",
-    },
-    discardBtnFaceDestructive: {
-      backgroundColor: "#DC2626",
-      borderColor: "rgba(254,202,202,0.45)",
-    },
-    discardBtnPressable: {
+      borderRadius: 14,
       paddingVertical: 13,
       alignItems: "center",
       justifyContent: "center",
+      overflow: "hidden",
+    },
+    discardBtnCancel: {
+      backgroundColor: theme.background.accent,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: theme.foreground.gray + "30",
+    },
+    discardBtnDestructive: {
+      backgroundColor: "#DC2626",
     },
     discardBtnText: {
       fontFamily: FONTS.extraBold,
@@ -1398,7 +1035,7 @@ const createStyles = (theme: Theme) => {
       letterSpacing: 0.4,
     },
     discardBtnTextCancel: {
-      color: "#F9FAFB",
+      color: theme.foreground.white,
     },
     discardBtnTextDestructive: {
       color: "#FFF1F2",
@@ -1419,33 +1056,6 @@ const createStyles = (theme: Theme) => {
       fontSize: 15,
       borderWidth: 1,
       borderColor: theme.background.accent,
-    },
-    wallpaperPreview: {
-      height: 140,
-      borderRadius: 16,
-      overflow: "hidden",
-      borderWidth: 1,
-      borderColor: theme.background.accent,
-    },
-    wallpaperEmpty: {
-      backgroundColor: theme.background.darker,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    wallpaperOverlay: {
-      position: "absolute",
-      bottom: 10,
-      right: 10,
-      backgroundColor: "rgba(0,0,0,0.55)",
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      borderRadius: 14,
-    },
-    wallpaperOverlayText: {
-      fontFamily: FONTS.bold,
-      fontSize: 12,
-      color: "#fff",
-      letterSpacing: 0.3,
     },
     label: {
       fontSize: 11,
@@ -1469,64 +1079,6 @@ const createStyles = (theme: Theme) => {
     inputMultiline: {
       minHeight: 80,
       textAlignVertical: "top",
-    },
-
-    // ── Day picker
-    dayPickerRow: {
-      flexDirection: "row",
-      flexWrap: "wrap",
-      gap: 8,
-    },
-    dayPickerChip: {
-      paddingVertical: 10,
-      paddingHorizontal: 14,
-      borderRadius: 14,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: theme.foreground.gray + "20",
-      backgroundColor: theme.background.darker,
-    },
-    dayPickerChipSelected: {
-      borderColor: theme.primary.main,
-      backgroundColor: theme.primary.main + "25",
-    },
-    dayPickerChipText: {
-      fontSize: 13,
-      fontFamily: FONTS.bold,
-      color: theme.foreground.gray,
-    },
-    dayPickerChipTextSelected: {
-      color: theme.foreground.white,
-    },
-    dayPickerWarning: {
-      marginTop: 8,
-      fontSize: 12,
-      fontFamily: FONTS.medium,
-      color: "#F59E0B",
-    },
-    dayPickerEmpty: {
-      gap: 10,
-      padding: 14,
-      borderRadius: 14,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: theme.foreground.gray + "20",
-      backgroundColor: theme.background.darker,
-    },
-    dayPickerEmptyText: {
-      fontSize: 13,
-      fontFamily: FONTS.medium,
-      color: theme.foreground.gray,
-    },
-    dayPickerCta: {
-      alignSelf: "flex-start",
-      paddingVertical: 8,
-      paddingHorizontal: 14,
-      borderRadius: 12,
-      backgroundColor: theme.primary.main,
-    },
-    dayPickerCtaText: {
-      fontSize: 13,
-      fontFamily: FONTS.bold,
-      color: theme.background.dark,
     },
 
     // ── Exercises section header
@@ -1567,67 +1119,37 @@ const createStyles = (theme: Theme) => {
       color: theme.foreground.gray,
     },
 
-    // ── Exercise summary card (collapsed in list)
-    exerciseCardShell: {
-      marginBottom: 14,
-      borderRadius: 18,
-      paddingBottom: 7,
-      backgroundColor: exercise3d.depth,
-      ...Platform.select({
-        ios: {
-          shadowColor: exercise3d.depth,
-          shadowOpacity: 0.2,
-          shadowRadius: 12,
-          shadowOffset: { width: 0, height: 8 },
-        },
-        android: { elevation: 6 },
-        default: {},
-      }),
-    },
+    // ── Exercise summary card
     exerciseCard: {
       flexDirection: "row",
       alignItems: "center",
       gap: 12,
-      backgroundColor: exercise3d.face,
-      borderRadius: 18,
+      backgroundColor: theme.background.darker,
+      borderRadius: 16,
       padding: 11,
-      minHeight: 90,
-      borderWidth: 1,
-      borderColor: "rgba(186,244,255,0.24)",
+      minHeight: 80,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: theme.background.accent,
       overflow: "hidden",
-      transform: [{ translateY: 0 }],
-    },
-    exerciseCardPressed: {
-      opacity: 0.98,
-      transform: [{ translateY: 6 }, { scale: 0.995 }],
+      marginBottom: 10,
     },
     exerciseCardAccent: {
       position: "absolute",
       left: 0,
       top: 0,
       bottom: 0,
-      width: 5,
-      backgroundColor: exercise3d.accent,
+      width: 4,
+      backgroundColor: theme.primary.main,
     },
     exerciseGifWrap: {
-      width: 64,
-      height: 64,
-      borderRadius: 14,
-      backgroundColor: exercise3d.faceTop,
+      width: 60,
+      height: 60,
+      borderRadius: 12,
+      backgroundColor: theme.background.accent,
       overflow: "hidden",
       position: "relative",
-      borderWidth: 1,
-      borderColor: "rgba(240,253,255,0.24)",
-      ...Platform.select({
-        ios: {
-          shadowColor: exercise3d.depth,
-          shadowOpacity: 0.16,
-          shadowRadius: 8,
-          shadowOffset: { width: 0, height: 4 },
-        },
-        android: { elevation: 2 },
-        default: {},
-      }),
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: theme.foreground.gray + "20",
     },
     exerciseGif: {
       width: "100%",
@@ -1641,20 +1163,18 @@ const createStyles = (theme: Theme) => {
       position: "absolute",
       top: 4,
       left: 4,
-      minWidth: 20,
-      height: 20,
-      paddingHorizontal: 4,
-      borderRadius: 10,
-      backgroundColor: exercise3d.accent,
+      minWidth: 18,
+      height: 18,
+      paddingHorizontal: 3,
+      borderRadius: 9,
+      backgroundColor: theme.primary.main,
       alignItems: "center",
       justifyContent: "center",
-      borderWidth: 1,
-      borderColor: "rgba(240,253,255,0.78)",
     },
     exerciseIndexText: {
-      fontSize: 11,
+      fontSize: 10,
       fontFamily: FONTS.extraBold,
-      color: "#082F49",
+      color: theme.background.dark,
     },
     exerciseBody: {
       flex: 1,
@@ -1663,7 +1183,7 @@ const createStyles = (theme: Theme) => {
     exerciseName: {
       fontSize: 15,
       fontFamily: FONTS.bold,
-      color: exercise3d.text,
+      color: theme.foreground.white,
     },
     exerciseSummaryRow: {
       flexDirection: "row",
@@ -1674,22 +1194,22 @@ const createStyles = (theme: Theme) => {
       flexDirection: "row",
       alignItems: "center",
       gap: 3,
-      backgroundColor: exercise3d.pill,
-      borderRadius: 10,
+      backgroundColor: theme.background.accent,
+      borderRadius: 8,
       paddingHorizontal: 8,
       paddingVertical: 4,
-      borderWidth: 1,
-      borderColor: exercise3d.pillBorder,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: theme.foreground.gray + "20",
     },
     summaryPillStrong: {
       fontSize: 12,
       fontFamily: FONTS.extraBold,
-      color: exercise3d.text,
+      color: theme.foreground.white,
     },
     summaryPillSoft: {
       fontSize: 11,
       fontFamily: FONTS.medium,
-      color: exercise3d.muted,
+      color: theme.foreground.gray,
     },
     exerciseActions: {
       gap: 8,
@@ -1698,26 +1218,12 @@ const createStyles = (theme: Theme) => {
     iconBtn: {
       width: 32,
       height: 32,
-      borderRadius: 11,
+      borderRadius: 10,
       alignItems: "center",
       justifyContent: "center",
-      backgroundColor: exercise3d.iconBg,
-      borderWidth: 1,
-      borderColor: "rgba(240,253,255,0.55)",
-      ...Platform.select({
-        ios: {
-          shadowColor: "#000",
-          shadowOpacity: 0.12,
-          shadowRadius: 6,
-          shadowOffset: { width: 0, height: 3 },
-        },
-        android: { elevation: 2 },
-        default: {},
-      }),
-    },
-    iconBtnPressed: {
-      opacity: 0.72,
-      transform: [{ translateY: 2 }],
+      backgroundColor: theme.background.accent,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: theme.foreground.gray + "20",
     },
 
     // ── Editor sheet (modal)
@@ -1764,59 +1270,15 @@ const createStyles = (theme: Theme) => {
       paddingHorizontal: 18,
       paddingTop: 18,
       paddingBottom: 40,
-      gap: 16,
-    },
-    editor3dShell: {
-      borderRadius: 18,
-      paddingBottom: 7,
-      shadowColor: "#000",
-      shadowOpacity: 0.16,
-      shadowRadius: 10,
-      shadowOffset: { width: 0, height: 7 },
-      elevation: 5,
-    },
-    editor3dShellFlex: {
-      flex: 1,
-    },
-    editor3dFace: {
-      borderRadius: 18,
-      padding: 14,
-      gap: 10,
-      borderWidth: 1,
-      borderColor: "rgba(255,255,255,0.18)",
-    },
-    editorGifWrap: {
-      width: "100%",
-      height: 220,
-      borderRadius: 22,
-      backgroundColor: exercise3d.face,
-      alignItems: "center",
-      justifyContent: "center",
-      overflow: "hidden",
-      borderWidth: 1,
-      borderColor: "rgba(240,253,255,0.22)",
-      shadowColor: exercise3d.depth,
-      shadowOpacity: 0.18,
-      shadowRadius: 12,
-      shadowOffset: { width: 0, height: 7 },
-      elevation: 5,
-    },
-    editorGif: {
-      width: "100%",
-      height: "100%",
-    },
-    editorGifPlaceholder: {
-      alignItems: "center",
-      justifyContent: "center",
+      gap: 12,
     },
     editorBlock: {
-      flex: 1,
       backgroundColor: theme.background.darker,
-      borderRadius: 16,
+      borderRadius: 14,
       padding: 14,
-      gap: 8,
+      gap: 10,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: theme.foreground.gray + "15",
+      borderColor: theme.background.accent,
     },
     editorBlockLabel: {
       fontSize: 11,
@@ -1880,17 +1342,14 @@ const createStyles = (theme: Theme) => {
       justifyContent: "center",
       gap: 8,
       paddingVertical: 14,
-      paddingHorizontal: 14,
-      borderRadius: 18,
-      borderWidth: 1,
-      borderColor: "rgba(255,255,255,0.18)",
     },
     editorAccordionIcon: {
-      width: 30,
-      height: 30,
-      borderRadius: 12,
+      width: 28,
+      height: 28,
+      borderRadius: 10,
       alignItems: "center",
       justifyContent: "center",
+      backgroundColor: theme.primary.main + "15",
     },
     editorAccordionText: {
       fontSize: 13,
@@ -1899,15 +1358,30 @@ const createStyles = (theme: Theme) => {
       textTransform: "uppercase",
       letterSpacing: 0.6,
     },
+    editorGifWrap: {
+      width: "100%",
+      height: 200,
+      borderRadius: 16,
+      overflow: "hidden",
+    },
+    editorGif: {
+      width: "100%",
+      height: "100%",
+    },
+    editorGifPlaceholder: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+    },
 
-    // ── Per-set targets table (used inside editor)
+    // ── Per-set targets table
     setTargetsContainer: {
       backgroundColor: theme.background.darker,
       borderRadius: 14,
       padding: 12,
       gap: 6,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: theme.foreground.gray + "20",
+      borderColor: theme.background.accent,
     },
     setTargetRow: {
       flexDirection: "row",

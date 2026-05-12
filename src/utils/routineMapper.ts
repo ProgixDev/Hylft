@@ -16,7 +16,6 @@ export type ApiRoutine = {
   sub_category?: string | null;
   duration_days?: number | null;
   color_hex?: string | null;
-  wallpaper_url?: string | null;
 };
 
 export function mapRoutine(routine: ApiRoutine): Routine {

@@ -411,7 +411,7 @@
       "permissionDeniedMessage": "You can enable health tracking later in Settings."
     },
     "ready": {
-      "title": "AI is creating a personal plan for you",
+      "title": "Hylift is preparing your plan",
       "subtitle": "Let's start your fitness journey together",
       "memberCount": "1,000,000+",
       "memberCaption": "people train with HyliftAI",

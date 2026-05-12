@@ -27,8 +27,6 @@ const LANGUAGES: LanguageOption[] = [
   { code: "fr", localLabel: "Français", flag: "🇫🇷" },
 ];
 
-const SELECTED_LANGUAGE_COLOR = "#06B6D4";
-const SELECTED_LANGUAGE_BACKGROUND = "#ECFEFF";
 const PAGE_EXIT_FADE_MS = 450;
 
 export default function LanguageSelect() {
@@ -36,6 +34,8 @@ export default function LanguageSelect() {
   const { t, i18n } = useTranslation();
   const { theme } = useTheme();
   const { setLanguage } = useI18n();
+  const selectedColor = theme.primary.main;
+  const selectedBg = "#EEF2FF";
   const styles = createStyles(theme);
   const [selected, setSelected] = useState<"en" | "fr" | null>(null);
   const [isChangingLanguage, setIsChangingLanguage] = useState(false);
@@ -124,11 +124,11 @@ export default function LanguageSelect() {
             const animatedCardStyle = {
               borderColor: progress.interpolate({
                 inputRange: [0, 1],
-                outputRange: [theme.background.accent, SELECTED_LANGUAGE_COLOR],
+                outputRange: [theme.background.accent, selectedColor],
               }),
               backgroundColor: progress.interpolate({
                 inputRange: [0, 1],
-                outputRange: ["#F6F8FA", SELECTED_LANGUAGE_BACKGROUND],
+                outputRange: ["#F6F8FA", selectedBg],
               }),
               transform: [
                 {
@@ -142,13 +142,13 @@ export default function LanguageSelect() {
             const animatedLabelStyle = {
               color: progress.interpolate({
                 inputRange: [0, 1],
-                outputRange: ["#111827", SELECTED_LANGUAGE_COLOR],
+                outputRange: ["#111827", selectedColor],
               }),
             };
             const animatedRadioStyle = {
               borderColor: progress.interpolate({
                 inputRange: [0, 1],
-                outputRange: [theme.foreground.gray, SELECTED_LANGUAGE_COLOR],
+                outputRange: [theme.foreground.gray, selectedColor],
               }),
             };
             const animatedDotStyle = {
@@ -184,7 +184,7 @@ export default function LanguageSelect() {
                     <Animated.View
                       style={[
                         styles.radioDot,
-                        { backgroundColor: SELECTED_LANGUAGE_COLOR },
+                        { backgroundColor: selectedColor },
                         animatedDotStyle,
                       ]}
                     />

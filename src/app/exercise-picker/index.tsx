@@ -571,7 +571,7 @@ export default function ExercisePicker() {
                   <Ionicons
                     name="add-circle"
                     size={20}
-                    color={theme.background.dark}
+                    color="#0a2463"
                     style={{ marginRight: 8 }}
                   />
                   <Text style={styles.addSelectedText}>
@@ -850,7 +850,7 @@ const createStyles = (theme: Theme) =>
       alignItems: "center",
     },
     addSelectedButton: {
-      backgroundColor: theme.primary.main,
+      backgroundColor: "#ffffff",
       paddingVertical: 10,
       paddingHorizontal: 16,
       borderRadius: 18,
@@ -865,7 +865,7 @@ const createStyles = (theme: Theme) =>
     addSelectedText: {
       fontSize: 13,
       fontFamily: FONTS.bold,
-      color: theme.background.dark,
+      color: "#0a2463",
     },
     exerciseThumbnailPlaceholder: {
       flex: 1,

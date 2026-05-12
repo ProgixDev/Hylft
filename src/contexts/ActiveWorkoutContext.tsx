@@ -80,6 +80,8 @@ export interface GuidedPlayerState {
   restEndsAt?: number;
   /** Exercise id that started the active rest timer. */
   restExerciseId?: string;
+  /** Total seconds of the current rest period (for ring progress). */
+  restTotalSeconds?: number;
 }
 
 interface ActiveWorkoutContextType {
@@ -126,6 +128,7 @@ interface ActiveWorkoutContextType {
   togglePlayerSetCompleted: (exerciseId: string, setId: string) => void;
   startPlayerRest: (exerciseId: string, seconds?: number) => void;
   stopPlayerRest: () => void;
+  adjustPlayerRest: (deltaSeconds: number) => void;
   endGuidedRoutine: (save: boolean) => Promise<void>;
 }
 
@@ -571,11 +574,25 @@ export const ActiveWorkoutProvider: React.FC<ActiveWorkoutProviderProps> = ({
           ...prev,
           restEndsAt: Date.now() + seconds * 1000,
           restExerciseId: exerciseId,
+          restTotalSeconds: seconds,
         };
       });
     },
     [],
   );
+
+  const adjustPlayerRest = useCallback((deltaSeconds: number) => {
+    setGuidedPlayer((prev) => {
+      if (!prev?.restEndsAt) return prev;
+      const newEndsAt = Math.max(
+        Date.now() + 1000,
+        prev.restEndsAt + deltaSeconds * 1000,
+      );
+      const actualDelta = (newEndsAt - prev.restEndsAt) / 1000;
+      const newTotalSeconds = Math.max(1, (prev.restTotalSeconds ?? 60) + actualDelta);
+      return { ...prev, restEndsAt: newEndsAt, restTotalSeconds: newTotalSeconds };
+    });
+  }, []);
 
   const stopPlayerRest = useCallback(() => {
     setGuidedPlayer((prev) => {
@@ -729,6 +746,7 @@ export const ActiveWorkoutProvider: React.FC<ActiveWorkoutProviderProps> = ({
         togglePlayerSetCompleted,
         startPlayerRest,
         stopPlayerRest,
+        adjustPlayerRest,
         endGuidedRoutine,
       }}
     >

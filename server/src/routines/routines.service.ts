@@ -90,7 +90,6 @@ export class RoutinesService {
         target_muscles: dto.targetMuscles ?? [],
         exercises: dto.exercises,
         estimated_duration: dto.estimatedDuration ?? 0,
-        wallpaper_url: dto.wallpaperUrl ?? null,
         times_completed: 0,
       })
       .select()
@@ -107,7 +106,6 @@ export class RoutinesService {
     if (dto.targetMuscles !== undefined) updateData.target_muscles = dto.targetMuscles;
     if (dto.exercises !== undefined) updateData.exercises = dto.exercises;
     if (dto.estimatedDuration !== undefined) updateData.estimated_duration = dto.estimatedDuration;
-    if (dto.wallpaperUrl !== undefined) updateData.wallpaper_url = dto.wallpaperUrl;
 
     const { data, error } = await this.supabase
       .from('routines')

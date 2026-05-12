@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import ConfirmationModal from "../../components/ui/ConfirmationModal";
 import { useTranslation } from "react-i18next";
 import { Theme, ThemeType } from "../../constants/themes";
 import { useAuth } from "../../contexts/AuthContext";
@@ -327,6 +328,7 @@ export default function Settings() {
   const [emailNotifs, setEmailNotifs] = useState(false);
   const [privateAccount, setPrivateAccount] = useState(false);
   const [healthConnect, setHealthConnect] = useState(false);
+  const [logoutModalVisible, setLogoutModalVisible] = useState(false);
 
   // ── Load from storage ─────────────────────────────────────────────────────────
   useEffect(() => {
@@ -444,18 +446,12 @@ export default function Settings() {
     setTheme(t);
   };
 
-  const handleLogout = () => {
-    Alert.alert(t("settings.logOut"), t("settings.logOutConfirm"), [
-      { text: t("common.cancel"), style: "cancel" },
-      {
-        text: t("settings.logOut"),
-        style: "destructive",
-        onPress: async () => {
-          await signOut();
-          router.replace("/auth" as any);
-        },
-      },
-    ]);
+  const handleLogout = () => setLogoutModalVisible(true);
+
+  const confirmLogout = async () => {
+    setLogoutModalVisible(false);
+    await signOut();
+    router.replace("/auth" as any);
   };
 
   const handleDeleteAccount = () => {
@@ -858,6 +854,18 @@ export default function Settings() {
 
         <Text style={styles.version}>Hylift v1.0.0 · Built with ♥</Text>
       </ScrollView>
+
+      <ConfirmationModal
+        visible={logoutModalVisible}
+        variant="destructive"
+        icon="log-out-outline"
+        title={t("settings.logOut")}
+        message={t("settings.logOutConfirm")}
+        confirmLabel={t("settings.logOut")}
+        cancelLabel={t("common.cancel")}
+        onCancel={() => setLogoutModalVisible(false)}
+        onConfirm={confirmLogout}
+      />
     </View>
   );
 }

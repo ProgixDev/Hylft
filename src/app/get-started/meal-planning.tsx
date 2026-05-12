@@ -12,49 +12,23 @@ import {
 } from "react-native";
 import SignupProgress from "../../components/ui/SignupProgress";
 import { FONTS } from "../../constants/fonts";
+import { useTheme } from "../../contexts/ThemeContext";
+
+function getPrimaryDepth(primary: string): string {
+  if (primary.toUpperCase() === "#D4A44C") return "#8A6424";
+  if (primary.toUpperCase() === "#C48A6A") return "#8A5B43";
+  return "#071527";
+}
 
 const OPTIONS: {
   id: "never" | "rarely" | "occasionally" | "frequently" | "always";
   bars: number;
-  accent: string;
-  depth: string;
-  tint: string;
 }[] = [
-  {
-    id: "never",
-    bars: 1,
-    accent: "#64748B",
-    depth: "#475569",
-    tint: "#F1F5F9",
-  },
-  {
-    id: "rarely",
-    bars: 2,
-    accent: "#38BDF8",
-    depth: "#0284C7",
-    tint: "#E8F7FF",
-  },
-  {
-    id: "occasionally",
-    bars: 3,
-    accent: "#F97316",
-    depth: "#C2410C",
-    tint: "#FFF1E6",
-  },
-  {
-    id: "frequently",
-    bars: 4,
-    accent: "#8B5CF6",
-    depth: "#6D28D9",
-    tint: "#F3EEFF",
-  },
-  {
-    id: "always",
-    bars: 5,
-    accent: "#22C17A",
-    depth: "#168E5A",
-    tint: "#EAF8F1",
-  },
+  { id: "never", bars: 1 },
+  { id: "rarely", bars: 2 },
+  { id: "occasionally", bars: 3 },
+  { id: "frequently", bars: 4 },
+  { id: "always", bars: 5 },
 ];
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -70,6 +44,10 @@ function MealOptionCard({
   onPress: () => void;
   label: string;
 }) {
+  const { theme } = useTheme();
+  const primaryColor = theme.primary.main;
+  const depthColor = getPrimaryDepth(primaryColor);
+
   const scale = useRef(new Animated.Value(1)).current;
   const pressDepth = useRef(new Animated.Value(0)).current;
 
@@ -116,13 +94,13 @@ function MealOptionCard({
       android_ripple={{ color: "rgba(255,255,255,0.18)" }}
       style={[s.cardShell, { transform: [{ scale }] }]}
     >
-      <View style={[s.cardBase, { backgroundColor: option.depth }]}>
+      <View style={[s.cardBase, { backgroundColor: selected ? depthColor : "#D1D5DB" }]}>
         <Animated.View
           style={[
             s.cardFace,
             {
-              backgroundColor: selected ? option.accent : "#FFFFFF",
-              borderColor: selected ? option.accent : "#E8EDF0",
+              backgroundColor: selected ? primaryColor : "#FFFFFF",
+              borderColor: selected ? primaryColor : "#E5E7EB",
               transform: [{ translateY: pressDepth }],
             },
           ]}
@@ -144,8 +122,8 @@ function MealOptionCard({
                 s.progressTrack,
                 {
                   backgroundColor: selected
-                    ? "rgba(255,255,255,0.28)"
-                    : option.tint,
+                    ? "rgba(255,255,255,0.22)"
+                    : "#E5E7EB",
                 },
               ]}
             >
@@ -154,7 +132,7 @@ function MealOptionCard({
                   s.progressFill,
                   {
                     width: `${option.bars * 20}%`,
-                    backgroundColor: selected ? "#FFFFFF" : option.accent,
+                    backgroundColor: selected ? "#FFFFFF" : "#374151",
                   },
                 ]}
               />
@@ -171,10 +149,10 @@ function MealOptionCard({
                         backgroundColor: active
                           ? selected
                             ? "#FFFFFF"
-                            : option.accent
+                            : "#374151"
                           : selected
-                            ? "rgba(255,255,255,0.35)"
-                            : "#DDE3EA",
+                            ? "rgba(255,255,255,0.3)"
+                            : "#D1D5DB",
                       },
                     ]}
                   />

@@ -14,6 +14,13 @@ import {
 import ChipButton from "../../components/ui/ChipButton";
 import SignupProgress from "../../components/ui/SignupProgress";
 import { FONTS } from "../../constants/fonts";
+import { useTheme } from "../../contexts/ThemeContext";
+
+function getPrimaryDepth(primary: string): string {
+  if (primary.toUpperCase() === "#D4A44C") return "#8A6424";
+  if (primary.toUpperCase() === "#C48A6A") return "#8A5B43";
+  return "#071527";
+}
 
 const BG = "#FFFFFF";
 
@@ -28,17 +35,16 @@ interface WeekdayOption {
     | "sunday";
   shortKey: string;
   accent: string;
-  depth: string;
 }
 
 const WEEKDAYS: WeekdayOption[] = [
-  { id: "monday", shortKey: "mon", accent: "#3B82F6", depth: "#1D5FC4" },
-  { id: "tuesday", shortKey: "tue", accent: "#14B8A6", depth: "#0F766E" },
-  { id: "wednesday", shortKey: "wed", accent: "#8B5CF6", depth: "#6D28D9" },
-  { id: "thursday", shortKey: "thu", accent: "#F97316", depth: "#C2410C" },
-  { id: "friday", shortKey: "fri", accent: "#22C17A", depth: "#168E5A" },
-  { id: "saturday", shortKey: "sat", accent: "#EC4899", depth: "#BE185D" },
-  { id: "sunday", shortKey: "sun", accent: "#64748B", depth: "#475569" },
+  { id: "monday", shortKey: "mon", accent: "#3B82F6" },
+  { id: "tuesday", shortKey: "tue", accent: "#0F766E" },
+  { id: "wednesday", shortKey: "wed", accent: "#6D28D9" },
+  { id: "thursday", shortKey: "thu", accent: "#C2410C" },
+  { id: "friday", shortKey: "fri", accent: "#16A34A" },
+  { id: "saturday", shortKey: "sat", accent: "#9D174D" },
+  { id: "sunday", shortKey: "sun", accent: "#475569" },
 ];
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -56,6 +62,10 @@ function DayButton({
   shortLabel: string;
   label: string;
 }) {
+  const { theme } = useTheme();
+  const primaryColor = theme.primary.main;
+  const depthColor = getPrimaryDepth(primaryColor);
+
   const scale = useRef(new Animated.Value(1)).current;
   const pressDepth = useRef(new Animated.Value(0)).current;
 
@@ -105,15 +115,15 @@ function DayButton({
       <View
         style={[
           styles.dayBase,
-          { backgroundColor: selected ? day.depth : "#DDE3EA" },
+          { backgroundColor: selected ? depthColor : "#D1D5DB" },
         ]}
       >
         <Animated.View
           style={[
             styles.dayFace,
             {
-              backgroundColor: selected ? day.accent : "#FFFFFF",
-              borderColor: selected ? day.accent : "#E8EDF0",
+              backgroundColor: selected ? primaryColor : "#FFFFFF",
+              borderColor: selected ? primaryColor : "#E5E7EB",
               transform: [{ translateY: pressDepth }],
             },
           ]}

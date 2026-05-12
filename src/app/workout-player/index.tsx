@@ -17,6 +17,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import Svg, { Circle } from "react-native-svg";
 import ConfirmationModal from "../../components/ui/ConfirmationModal";
 import WorkoutCompletionView from "../../components/ui/WorkoutCompletionView";
 import { FONTS } from "../../constants/fonts";
@@ -49,6 +50,7 @@ export default function WorkoutPlayerScreen() {
     togglePlayerSetWarmup,
     togglePlayerSetCompleted,
     stopPlayerRest,
+    adjustPlayerRest,
   } = useActiveWorkout();
 
   // ── Lazy-hydrate missing gifUrls for each exercise ────────────────
@@ -186,12 +188,13 @@ export default function WorkoutPlayerScreen() {
           </View>
         </View>
 
-        {/* ── Rest banner ───────────────────────────────────────────── */}
+        {/* ── Rest timer modal ──────────────────────────────────────── */}
         {guidedPlayer.restEndsAt ? (
-          <RestBanner
-            theme={theme}
+          <RestTimerModal
             endsAt={guidedPlayer.restEndsAt}
+            totalSeconds={guidedPlayer.restTotalSeconds ?? 60}
             onSkip={stopPlayerRest}
+            onAdjust={adjustPlayerRest}
           />
         ) : null}
 
@@ -250,17 +253,25 @@ export default function WorkoutPlayerScreen() {
   );
 }
 
-// ─── Rest banner ──────────────────────────────────────────────────────
-function RestBanner({
-  theme,
+const REST_MODAL_BG = "#1254C5";
+const RING_SIZE = 240;
+const RING_STROKE = 14;
+const RING_R = (RING_SIZE - RING_STROKE) / 2;
+const RING_CIRCUMFERENCE = 2 * Math.PI * RING_R;
+
+// ─── Rest timer modal ─────────────────────────────────────────────────
+function RestTimerModal({
   endsAt,
+  totalSeconds,
   onSkip,
+  onAdjust,
 }: {
-  theme: Theme;
   endsAt: number;
+  totalSeconds: number;
   onSkip: () => void;
+  onAdjust: (delta: number) => void;
 }) {
-  const styles = createStyles(theme);
+  const { t } = useTranslation();
   const [remaining, setRemaining] = useState(() =>
     Math.max(0, Math.round((endsAt - Date.now()) / 1000)),
   );
@@ -278,24 +289,133 @@ function RestBanner({
     return () => clearInterval(id);
   }, [endsAt, onSkip]);
 
+  const progress = totalSeconds > 0 ? Math.min(1, remaining / totalSeconds) : 0;
+  const strokeDashoffset = RING_CIRCUMFERENCE * (1 - progress);
+  const minutes = Math.floor(remaining / 60);
+  const seconds = remaining % 60;
+
   return (
-    <View style={styles.restBanner}>
-      <Ionicons name="timer-outline" size={18} color={theme.primary.main} />
-      <Text style={styles.restBannerLabel}>Rest</Text>
-      <Text style={styles.restBannerValue}>{formatRest(remaining)}</Text>
-      <TouchableOpacity
-        onPress={onSkip}
-        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-      >
-        <Ionicons
-          name="play-skip-forward-outline"
-          size={18}
-          color={theme.foreground.gray}
-        />
-      </TouchableOpacity>
-    </View>
+    <Modal visible transparent animationType="fade">
+      <View style={restModalStyles.backdrop}>
+        <View style={restModalStyles.card}>
+          <Text style={restModalStyles.title}>{t("workoutPlayer.rest")}</Text>
+
+          <View style={restModalStyles.ringWrap}>
+            <Svg width={RING_SIZE} height={RING_SIZE} style={StyleSheet.absoluteFillObject}>
+              <Circle
+                cx={RING_SIZE / 2}
+                cy={RING_SIZE / 2}
+                r={RING_R}
+                stroke="rgba(255,255,255,0.18)"
+                strokeWidth={RING_STROKE}
+                fill="none"
+              />
+              <Circle
+                cx={RING_SIZE / 2}
+                cy={RING_SIZE / 2}
+                r={RING_R}
+                stroke="#FFFFFF"
+                strokeWidth={RING_STROKE}
+                fill="none"
+                strokeDasharray={[RING_CIRCUMFERENCE, RING_CIRCUMFERENCE]}
+                strokeDashoffset={strokeDashoffset}
+                strokeLinecap="round"
+                transform={`rotate(-90, ${RING_SIZE / 2}, ${RING_SIZE / 2})`}
+              />
+            </Svg>
+            <Text style={restModalStyles.timerText}>
+              {`${minutes}:${String(seconds).padStart(2, "0")}`}
+            </Text>
+          </View>
+
+          <View style={restModalStyles.adjustRow}>
+            <TouchableOpacity
+              style={restModalStyles.adjustBtn}
+              onPress={() => onAdjust(-15)}
+            >
+              <Text style={restModalStyles.adjustBtnText}>-15s</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={restModalStyles.adjustBtn}
+              onPress={() => onAdjust(15)}
+            >
+              <Text style={restModalStyles.adjustBtnText}>+15s</Text>
+            </TouchableOpacity>
+          </View>
+
+          <TouchableOpacity style={restModalStyles.skipBtn} onPress={onSkip}>
+            <Text style={restModalStyles.skipBtnText}>{t("workoutPlayer.skipRest")}</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
   );
 }
+
+const restModalStyles = StyleSheet.create({
+  backdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 24,
+  },
+  card: {
+    width: "100%",
+    maxWidth: 360,
+    backgroundColor: REST_MODAL_BG,
+    borderRadius: 28,
+    paddingVertical: 36,
+    paddingHorizontal: 24,
+    alignItems: "center",
+    gap: 28,
+  },
+  title: {
+    color: "#FFFFFF",
+    fontSize: 20,
+    fontFamily: FONTS.bold,
+    letterSpacing: 2,
+    textTransform: "uppercase",
+  },
+  ringWrap: {
+    width: RING_SIZE,
+    height: RING_SIZE,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  timerText: {
+    color: "#FFFFFF",
+    fontSize: 58,
+    fontFamily: FONTS.bold,
+  },
+  adjustRow: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  adjustBtn: {
+    backgroundColor: "rgba(255,255,255,0.15)",
+    paddingVertical: 12,
+    paddingHorizontal: 28,
+    borderRadius: 32,
+  },
+  adjustBtnText: {
+    color: "#FFFFFF",
+    fontSize: 17,
+    fontFamily: FONTS.bold,
+  },
+  skipBtn: {
+    paddingVertical: 11,
+    paddingHorizontal: 32,
+    borderRadius: 32,
+    borderWidth: 1.5,
+    borderColor: "rgba(255,255,255,0.35)",
+  },
+  skipBtnText: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontFamily: FONTS.semiBold,
+  },
+});
 
 // ─── Exercise card ────────────────────────────────────────────────────
 function ExerciseCard({
@@ -553,13 +673,6 @@ function ExerciseCard({
   );
 }
 
-function formatRest(seconds: number) {
-  if (seconds < 0) seconds = 0;
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  return `${m}:${String(s).padStart(2, "0")}`;
-}
-
 function formatDuration(seconds: number) {
   if (seconds < 0) seconds = 0;
   const h = Math.floor(seconds / 3600);
@@ -637,15 +750,16 @@ const createStyles = (theme: Theme) =>
     statsStrip: {
       flexDirection: "row",
       alignItems: "center",
+      justifyContent: "space-evenly",
       paddingHorizontal: 16,
       paddingVertical: 10,
       borderTopWidth: StyleSheet.hairlineWidth,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderColor: theme.foreground.gray + "30",
-      gap: 16,
     },
     statCol: {
       gap: 2,
+      alignItems: "center",
     },
     statLabel: {
       fontSize: 11,
@@ -656,29 +770,6 @@ const createStyles = (theme: Theme) =>
       fontSize: 15,
       fontFamily: FONTS.bold,
       color: theme.foreground.white,
-    },
-    // Rest banner
-    restBanner: {
-      flexDirection: "row",
-      alignItems: "center",
-      backgroundColor: theme.background.darker,
-      marginHorizontal: 12,
-      marginTop: 10,
-      paddingVertical: 8,
-      paddingHorizontal: 12,
-      borderRadius: 10,
-      gap: 10,
-    },
-    restBannerLabel: {
-      fontSize: 13,
-      fontFamily: FONTS.semiBold,
-      color: theme.foreground.white,
-    },
-    restBannerValue: {
-      flex: 1,
-      fontSize: 15,
-      fontFamily: FONTS.bold,
-      color: theme.primary.main,
     },
     // Scroll
     scrollContent: {

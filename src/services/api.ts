@@ -69,9 +69,6 @@ export const api = {
   deleteAvatar: () =>
     authFetch("/users/me/avatar", { method: "DELETE" }),
 
-  // ── Wallpapers ──────────────────────────────────────────
-  listWallpapers: () => authFetch("/wallpapers"),
-
   // ── Nutrition / Alimentation ────────────────────────────
   // Food search and detail lookup hit Open Food Facts directly from the
   // device — no auth needed, one less hop than going through our server.
