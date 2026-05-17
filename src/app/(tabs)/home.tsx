@@ -119,24 +119,24 @@ function WeekDayChip({
 const weekChipStyles = StyleSheet.create({
   shell: {
     flex: 1,
-    borderRadius: 13,
-    paddingVertical: 12,
+    borderRadius: 11,
+    paddingVertical: 8,
     alignItems: "center",
-    gap: 4,
+    gap: 2,
   },
   label: {
     fontFamily: FONTS.bold,
-    fontSize: 11,
+    fontSize: 10,
     textTransform: "capitalize",
   },
   date: {
     fontFamily: FONTS.extraBold,
-    fontSize: 15,
+    fontSize: 13,
   },
   todayDot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
+    width: 3,
+    height: 3,
+    borderRadius: 1.5,
     marginTop: 1,
   },
 });
@@ -296,18 +296,12 @@ export default function Home() {
   const [userRoutines, setUserRoutines] = useState<ApiRoutine[]>([]);
   const [carouselRoutineIds, setCarouselRoutineIds] = useState<string[]>([]);
   const sessionsScrollX = useSharedValue(0);
-  const hasAlignedSessionsScrollRef = useRef(false);
+  const sessionsScrollRef = useRef<ScrollView>(null);
   const sessionsScrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
       sessionsScrollX.value = event.contentOffset.x;
     },
   });
-  useEffect(() => {
-    if (!hasAlignedSessionsScrollRef.current && carouselRoutineIds.length > 1) {
-      hasAlignedSessionsScrollRef.current = true;
-      sessionsScrollX.value = COVERFLOW_ITEM_WIDTH;
-    }
-  }, [carouselRoutineIds.length, sessionsScrollX]);
   const [isRoutinePickerVisible, setIsRoutinePickerVisible] = useState(false);
   const [trainedDayKeys, setTrainedDayKeys] = useState<Set<string>>(
     () => new Set(),
@@ -471,6 +465,58 @@ export default function Home() {
         .map((id) => routineById.get(id))
         .filter((r): r is ApiRoutine => !!r),
     [carouselRoutineIds, routineById],
+  );
+
+  // Infinite carousel: triple the list so the user can scroll forever; we
+  // silently teleport back to the middle copy whenever momentum lands in an
+  // outer copy. Single-item lists don't loop.
+  const extendedCarouselRoutines = useMemo(() => {
+    if (carouselRoutines.length <= 1) return carouselRoutines;
+    return [...carouselRoutines, ...carouselRoutines, ...carouselRoutines];
+  }, [carouselRoutines]);
+
+  const initialSessionsOffset = useMemo(
+    () =>
+      carouselRoutines.length > 1
+        ? carouselRoutines.length * COVERFLOW_ITEM_WIDTH
+        : 0,
+    [carouselRoutines.length],
+  );
+
+  const hasInitializedSessionsScrollRef = useRef(false);
+  useEffect(() => {
+    hasInitializedSessionsScrollRef.current = false;
+  }, [carouselRoutines.length]);
+
+  const handleSessionsContentSizeChange = useCallback(() => {
+    if (hasInitializedSessionsScrollRef.current) return;
+    if (carouselRoutines.length <= 1) return;
+    hasInitializedSessionsScrollRef.current = true;
+    sessionsScrollRef.current?.scrollTo({
+      x: initialSessionsOffset,
+      animated: false,
+    });
+    sessionsScrollX.value = initialSessionsOffset;
+  }, [carouselRoutines.length, initialSessionsOffset, sessionsScrollX]);
+
+  const handleSessionsMomentumEnd = useCallback(
+    (offsetX: number) => {
+      const count = carouselRoutines.length;
+      if (count <= 1) return;
+      const setWidth = count * COVERFLOW_ITEM_WIDTH;
+      if (offsetX < setWidth) {
+        sessionsScrollRef.current?.scrollTo({
+          x: offsetX + setWidth,
+          animated: false,
+        });
+      } else if (offsetX >= 2 * setWidth) {
+        sessionsScrollRef.current?.scrollTo({
+          x: offsetX - setWidth,
+          animated: false,
+        });
+      }
+    },
+    [carouselRoutines.length],
   );
 
   const persistCarouselRoutineIds = useCallback(async (ids: string[]) => {
@@ -799,9 +845,6 @@ export default function Home() {
         {/* Weekly training overview */}
         <AnimatedSection delay={460} scale>
           <View style={styles.weekOverviewCard}>
-            <Text style={styles.weekOverviewTitle}>
-              {t("home.weekOverview", "SEANCES DE LA SEMAINE")}
-            </Text>
             <View style={styles.weekChipsRow}>
               {centeredDays.map((day) => (
                 <WeekDayChip
@@ -923,16 +966,18 @@ export default function Home() {
               </Pressable>
             ) : (
               <Reanimated.ScrollView
+                ref={sessionsScrollRef as unknown as React.Ref<ScrollView>}
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 snapToInterval={COVERFLOW_ITEM_WIDTH}
                 decelerationRate="fast"
                 onScroll={sessionsScrollHandler}
                 scrollEventThrottle={16}
-                contentOffset={{
-                  x: carouselRoutines.length > 1 ? COVERFLOW_ITEM_WIDTH : 0,
-                  y: 0,
-                }}
+                onMomentumScrollEnd={(e) =>
+                  handleSessionsMomentumEnd(e.nativeEvent.contentOffset.x)
+                }
+                onContentSizeChange={handleSessionsContentSizeChange}
+                contentOffset={{ x: initialSessionsOffset, y: 0 }}
                 style={{
                   marginHorizontal: -SESSIONS_CARD_HORIZONTAL_INSET,
                 }}
@@ -940,9 +985,9 @@ export default function Home() {
                   paddingHorizontal: COVERFLOW_SIDE_PADDING,
                 }}
               >
-                {carouselRoutines.map((routine, index) => (
+                {extendedCarouselRoutines.map((routine, index) => (
                   <SessionCoverflowCard
-                    key={routine.id}
+                    key={`${routine.id}-${index}`}
                     routine={routine}
                     index={index}
                     scrollX={sessionsScrollX}
@@ -1609,23 +1654,14 @@ function createStyles(theme: Theme) {
     },
     weekChipsRow: {
       flexDirection: "row",
-      gap: 5,
-      marginBottom: 10,
+      gap: 4,
+      marginBottom: 8,
     },
     weekOverviewCard: {
       marginHorizontal: 20,
-      backgroundColor: theme.background.darker,
-      borderRadius: 20,
-      padding: 18,
-      marginBottom: 14,
-    },
-    weekOverviewTitle: {
-      fontFamily: FONTS.extraBold,
-      fontSize: 16,
-      color: theme.foreground.white,
-      letterSpacing: 0.5,
-      textTransform: "uppercase",
-      marginBottom: 14,
+      borderRadius: 18,
+      padding: 12,
+      marginBottom: 12,
     },
     weekLegendRow: {
       flexDirection: "row",
@@ -1960,56 +1996,56 @@ function createStyles(theme: Theme) {
       flexDirection: "row",
       flexWrap: "wrap",
       marginHorizontal: 20,
-      gap: 10,
-      marginBottom: 20,
+      gap: 8,
+      marginBottom: 12,
     },
     healthTile: {
-      width: (SCREEN_WIDTH - 50) / 2,
-      borderRadius: 18,
+      width: (SCREEN_WIDTH - 48) / 2,
+      borderRadius: 16,
       overflow: "hidden",
     },
     healthTileImage: {
-      borderRadius: 18,
+      borderRadius: 16,
     },
     healthTileOverlay: {
-      padding: 10,
-      borderRadius: 18,
+      padding: 8,
+      borderRadius: 16,
     },
     healthTileTop: {
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
-      marginBottom: 8,
+      marginBottom: 4,
     },
     healthTileIcon: {
-      width: 30,
-      height: 30,
-      borderRadius: 10,
+      width: 26,
+      height: 26,
+      borderRadius: 9,
       backgroundColor: "rgba(255,255,255,0.25)",
       justifyContent: "center",
       alignItems: "center",
     },
     healthTilePercent: {
       fontFamily: FONTS.bold,
-      fontSize: 12,
+      fontSize: 11,
       color: "rgba(255,255,255,0.9)",
     },
     healthTileValue: {
       fontFamily: FONTS.extraBold,
-      fontSize: 20,
+      fontSize: 17,
       color: "#FFFFFF",
     },
     healthTileLabel: {
       fontFamily: FONTS.semiBold,
-      fontSize: 12,
+      fontSize: 11,
       color: "rgba(255,255,255,0.85)",
-      marginTop: 2,
+      marginTop: 1,
     },
     healthTileGoal: {
       fontFamily: FONTS.medium,
-      fontSize: 11,
+      fontSize: 10,
       color: "rgba(255,255,255,0.7)",
-      marginTop: 1,
+      marginTop: 0,
     },
     // ── Section Header Row (with More link) ───
     sectionHeaderRow: {

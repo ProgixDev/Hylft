@@ -1,11 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Alert,
+  Animated,
   BackHandler,
+  Easing,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -17,7 +19,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import Svg, { Circle } from "react-native-svg";
 import ConfirmationModal from "../../components/ui/ConfirmationModal";
 import WorkoutCompletionView from "../../components/ui/WorkoutCompletionView";
 import { FONTS } from "../../constants/fonts";
@@ -188,16 +189,6 @@ export default function WorkoutPlayerScreen() {
           </View>
         </View>
 
-        {/* ── Rest timer modal ──────────────────────────────────────── */}
-        {guidedPlayer.restEndsAt ? (
-          <RestTimerModal
-            endsAt={guidedPlayer.restEndsAt}
-            totalSeconds={guidedPlayer.restTotalSeconds ?? 60}
-            onSkip={stopPlayerRest}
-            onAdjust={adjustPlayerRest}
-          />
-        ) : null}
-
         <ScrollView
           style={{ flex: 1 }}
           contentContainerStyle={styles.scrollContent}
@@ -221,6 +212,16 @@ export default function WorkoutPlayerScreen() {
             />
           ))}
         </ScrollView>
+
+        {/* ── Floating rest timer bar ──────────────────────────────── */}
+        {guidedPlayer.restEndsAt ? (
+          <RestTimerBar
+            endsAt={guidedPlayer.restEndsAt}
+            totalSeconds={guidedPlayer.restTotalSeconds ?? 60}
+            onSkip={stopPlayerRest}
+            onAdjust={adjustPlayerRest}
+          />
+        ) : null}
 
         <ConfirmationModal
           visible={exitModalVisible}
@@ -253,14 +254,8 @@ export default function WorkoutPlayerScreen() {
   );
 }
 
-const REST_MODAL_BG = "#1254C5";
-const RING_SIZE = 240;
-const RING_STROKE = 14;
-const RING_R = (RING_SIZE - RING_STROKE) / 2;
-const RING_CIRCUMFERENCE = 2 * Math.PI * RING_R;
-
-// ─── Rest timer modal ─────────────────────────────────────────────────
-function RestTimerModal({
+// ─── Rest timer floating bar ──────────────────────────────────────────
+function RestTimerBar({
   endsAt,
   totalSeconds,
   onSkip,
@@ -276,6 +271,45 @@ function RestTimerModal({
     Math.max(0, Math.round((endsAt - Date.now()) / 1000)),
   );
 
+  // Entrance animation: slide up + fade in (native-driven for 60fps).
+  const enterAnim = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.timing(enterAnim, {
+      toValue: 1,
+      duration: 280,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [enterAnim]);
+
+  // Progress animation: drive scaleX from current remaining ratio down to 0,
+  // restarting whenever endsAt changes (e.g. user tapped +15s / -15s).
+  const progressAnim = useRef(
+    new Animated.Value(
+      totalSeconds > 0
+        ? Math.min(1, Math.max(0, (endsAt - Date.now()) / 1000 / totalSeconds))
+        : 0,
+    ),
+  ).current;
+  const [trackWidth, setTrackWidth] = useState(0);
+
+  useEffect(() => {
+    const msLeft = Math.max(0, endsAt - Date.now());
+    const startRatio =
+      totalSeconds > 0 ? Math.min(1, msLeft / 1000 / totalSeconds) : 0;
+    progressAnim.setValue(startRatio);
+    if (msLeft <= 0) return;
+    const animation = Animated.timing(progressAnim, {
+      toValue: 0,
+      duration: msLeft,
+      easing: Easing.linear,
+      useNativeDriver: true,
+    });
+    animation.start();
+    return () => animation.stop();
+  }, [endsAt, totalSeconds, progressAnim]);
+
+  // Timer label tick (text only — progress bar is animated independently).
   useEffect(() => {
     setRemaining(Math.max(0, Math.round((endsAt - Date.now()) / 1000)));
     const id = setInterval(() => {
@@ -285,135 +319,164 @@ function RestTimerModal({
         clearInterval(id);
         onSkip();
       }
-    }, 500);
+    }, 250);
     return () => clearInterval(id);
   }, [endsAt, onSkip]);
 
-  const progress = totalSeconds > 0 ? Math.min(1, remaining / totalSeconds) : 0;
-  const strokeDashoffset = RING_CIRCUMFERENCE * (1 - progress);
   const minutes = Math.floor(remaining / 60);
   const seconds = remaining % 60;
 
+  const translateY = enterAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [140, 0],
+  });
+
+  // scaleX is anchored to the center by default; offset with translateX so it
+  // grows/shrinks from the left edge of the track.
+  const fillTranslateX =
+    trackWidth > 0
+      ? progressAnim.interpolate({
+          inputRange: [0, 1],
+          outputRange: [-trackWidth / 2, 0],
+        })
+      : 0;
+
   return (
-    <Modal visible transparent animationType="fade">
-      <View style={restModalStyles.backdrop}>
-        <View style={restModalStyles.card}>
-          <Text style={restModalStyles.title}>{t("workoutPlayer.rest")}</Text>
+    <Animated.View
+      style={[
+        restBarStyles.container,
+        { opacity: enterAnim, transform: [{ translateY }] },
+      ]}
+      pointerEvents="box-none"
+    >
+      <View style={restBarStyles.card}>
+        <View style={restBarStyles.topRow}>
+          <Text style={restBarStyles.title}>{t("workoutPlayer.rest")}</Text>
+          <Text style={restBarStyles.timerText}>
+            {`${minutes}:${String(seconds).padStart(2, "0")}`}
+          </Text>
+          <TouchableOpacity
+            style={restBarStyles.skipBtn}
+            onPress={onSkip}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Ionicons name="close" size={18} color="#FFFFFF" />
+          </TouchableOpacity>
+        </View>
 
-          <View style={restModalStyles.ringWrap}>
-            <Svg width={RING_SIZE} height={RING_SIZE} style={StyleSheet.absoluteFillObject}>
-              <Circle
-                cx={RING_SIZE / 2}
-                cy={RING_SIZE / 2}
-                r={RING_R}
-                stroke="rgba(255,255,255,0.18)"
-                strokeWidth={RING_STROKE}
-                fill="none"
-              />
-              <Circle
-                cx={RING_SIZE / 2}
-                cy={RING_SIZE / 2}
-                r={RING_R}
-                stroke="#FFFFFF"
-                strokeWidth={RING_STROKE}
-                fill="none"
-                strokeDasharray={[RING_CIRCUMFERENCE, RING_CIRCUMFERENCE]}
-                strokeDashoffset={strokeDashoffset}
-                strokeLinecap="round"
-                transform={`rotate(-90, ${RING_SIZE / 2}, ${RING_SIZE / 2})`}
-              />
-            </Svg>
-            <Text style={restModalStyles.timerText}>
-              {`${minutes}:${String(seconds).padStart(2, "0")}`}
-            </Text>
-          </View>
+        <View
+          style={restBarStyles.progressTrack}
+          onLayout={(e) => setTrackWidth(e.nativeEvent.layout.width)}
+        >
+          <Animated.View
+            style={[
+              restBarStyles.progressFill,
+              {
+                transform: [
+                  { translateX: fillTranslateX },
+                  { scaleX: progressAnim },
+                ],
+              },
+            ]}
+          />
+        </View>
 
-          <View style={restModalStyles.adjustRow}>
-            <TouchableOpacity
-              style={restModalStyles.adjustBtn}
-              onPress={() => onAdjust(-15)}
-            >
-              <Text style={restModalStyles.adjustBtnText}>-15s</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={restModalStyles.adjustBtn}
-              onPress={() => onAdjust(15)}
-            >
-              <Text style={restModalStyles.adjustBtnText}>+15s</Text>
-            </TouchableOpacity>
-          </View>
-
-          <TouchableOpacity style={restModalStyles.skipBtn} onPress={onSkip}>
-            <Text style={restModalStyles.skipBtnText}>{t("workoutPlayer.skipRest")}</Text>
+        <View style={restBarStyles.adjustRow}>
+          <TouchableOpacity
+            style={restBarStyles.adjustBtn}
+            onPress={() => onAdjust(-15)}
+          >
+            <Text style={restBarStyles.adjustBtnText}>-15s</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={restBarStyles.adjustBtn}
+            onPress={() => onAdjust(15)}
+          >
+            <Text style={restBarStyles.adjustBtnText}>+15s</Text>
           </TouchableOpacity>
         </View>
       </View>
-    </Modal>
+    </Animated.View>
   );
 }
 
-const restModalStyles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.6)",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 24,
+const restBarStyles = StyleSheet.create({
+  container: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 16,
+    paddingHorizontal: 12,
   },
   card: {
-    width: "100%",
-    maxWidth: 360,
-    backgroundColor: REST_MODAL_BG,
-    borderRadius: 28,
-    paddingVertical: 36,
-    paddingHorizontal: 24,
+    backgroundColor: NAVY_BLUE,
+    borderRadius: 18,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 14,
+    gap: 12,
+    shadowColor: "#000",
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 8,
+  },
+  topRow: {
+    flexDirection: "row",
     alignItems: "center",
-    gap: 28,
+    gap: 12,
   },
   title: {
+    flex: 1,
     color: "#FFFFFF",
-    fontSize: 20,
+    fontSize: 13,
     fontFamily: FONTS.bold,
-    letterSpacing: 2,
+    letterSpacing: 1.5,
     textTransform: "uppercase",
-  },
-  ringWrap: {
-    width: RING_SIZE,
-    height: RING_SIZE,
-    alignItems: "center",
-    justifyContent: "center",
   },
   timerText: {
     color: "#FFFFFF",
-    fontSize: 58,
-    fontFamily: FONTS.bold,
-  },
-  adjustRow: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  adjustBtn: {
-    backgroundColor: "rgba(255,255,255,0.15)",
-    paddingVertical: 12,
-    paddingHorizontal: 28,
-    borderRadius: 32,
-  },
-  adjustBtnText: {
-    color: "#FFFFFF",
-    fontSize: 17,
+    fontSize: 22,
     fontFamily: FONTS.bold,
   },
   skipBtn: {
-    paddingVertical: 11,
-    paddingHorizontal: 32,
-    borderRadius: 32,
-    borderWidth: 1.5,
-    borderColor: "rgba(255,255,255,0.35)",
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "rgba(255,255,255,0.15)",
+    alignItems: "center",
+    justifyContent: "center",
   },
-  skipBtnText: {
+  progressTrack: {
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "rgba(255,255,255,0.18)",
+    overflow: "hidden",
+  },
+  progressFill: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: "100%",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 3,
+  },
+  adjustRow: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  adjustBtn: {
+    flex: 1,
+    backgroundColor: "rgba(255,255,255,0.15)",
+    paddingVertical: 10,
+    borderRadius: 12,
+    alignItems: "center",
+  },
+  adjustBtnText: {
     color: "#FFFFFF",
     fontSize: 15,
-    fontFamily: FONTS.semiBold,
+    fontFamily: FONTS.bold,
   },
 });
 

@@ -23,6 +23,7 @@ import Animated, {
 import AnimatedScreen from "../../components/ui/AnimatedScreen";
 import AnimatedSection from "../../components/ui/AnimatedSection";
 import RoutineCard from "../../components/ui/RoutineCard";
+import { RoutineCardSkeletonList } from "../../components/ui/RoutineCardSkeleton";
 import RoutineDetailModal from "../../components/ui/RoutineDetailModal";
 import { FONTS } from "../../constants/fonts";
 import { Theme } from "../../constants/themes";
@@ -68,6 +69,7 @@ export default function Workout() {
 
   const [workouts, setWorkouts] = useState<WorkoutData[]>([]);
   const [routines, setRoutines] = useState<Routine[]>([]);
+  const [routinesLoading, setRoutinesLoading] = useState(true);
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const [selectedRoutine, setSelectedRoutine] = useState<Routine | null>(null);
 
@@ -89,11 +91,14 @@ export default function Workout() {
 
   const loadData = useCallback(async () => {
     setWorkouts(getWorkoutsByUserId("1"));
+    setRoutinesLoading(true);
     try {
       const res = (await api.getRoutines()) as ApiRoutine[];
       setRoutines((res ?? []).map(mapRoutine));
     } catch (error) {
       console.warn("[Workout] load routines failed:", error);
+    } finally {
+      setRoutinesLoading(false);
     }
   }, []);
 
@@ -312,7 +317,13 @@ export default function Workout() {
         </AnimatedSection>
 
         <AnimatedSection delay={240} direction="left" offset={40}>
-          {routines.length === 0 ? (
+          {routinesLoading ? (
+            <RoutineCardSkeletonList
+              count={viewMode === "grid" ? 4 : 3}
+              compact={viewMode === "grid"}
+              layout={viewMode}
+            />
+          ) : routines.length === 0 ? (
             <Pressable
               onPress={handleCreateRoutine}
               style={({ pressed }) => [
