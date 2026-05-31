@@ -113,6 +113,13 @@
         {
           "cameraPermission": "Hylift uses the camera to scan profile QR codes."
         }
+      ],
+      [
+        "expo-navigation-bar",
+        {
+          "visibility": "hidden",
+          "behavior": "overlay-swipe"
+        }
       ]
     ],
     "extra": {

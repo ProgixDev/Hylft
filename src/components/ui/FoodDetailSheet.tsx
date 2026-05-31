@@ -5,7 +5,9 @@ import {
   ActivityIndicator,
   Dimensions,
   Image,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -180,7 +182,10 @@ const FoodDetailSheet: React.FC<FoodDetailSheetProps> = ({
       onRequestClose={onClose}
       statusBarTranslucent
     >
-      <View style={StyleSheet.absoluteFill}>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
         <Pressable style={styles.backdrop} onPress={onClose} />
 
         <View style={styles.sheet}>
@@ -191,6 +196,7 @@ const FoodDetailSheet: React.FC<FoodDetailSheetProps> = ({
             <ScrollView
               showsVerticalScrollIndicator={false}
               contentContainerStyle={styles.scrollContent}
+              keyboardShouldPersistTaps="handled"
             >
               {/* Hero image — small thumbnail loads first, hi-res 400px
                   layered on top once it arrives. Falls back to small if
@@ -414,7 +420,7 @@ const FoodDetailSheet: React.FC<FoodDetailSheetProps> = ({
               </Pressable>
             </View>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 };
@@ -455,15 +461,15 @@ const MacroBar: React.FC<MacroBarProps> = ({
 
 function createStyles(theme: Theme) {
   return StyleSheet.create({
+    container: {
+      ...StyleSheet.absoluteFillObject,
+      justifyContent: "flex-end",
+    },
     backdrop: {
       ...StyleSheet.absoluteFillObject,
       backgroundColor: "rgba(0,0,0,0.6)",
     },
     sheet: {
-      position: "absolute",
-      left: 0,
-      right: 0,
-      bottom: 0,
       maxHeight: SCREEN_HEIGHT * 0.92,
       backgroundColor: theme.background.dark,
       borderTopLeftRadius: 24,

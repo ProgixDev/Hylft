@@ -7,10 +7,11 @@ import {
 } from "@expo-google-fonts/zain";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Stack, useRouter, useSegments } from "expo-router";
+import * as NavigationBar from "expo-navigation-bar";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect } from "react";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, AppState, Platform, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import {
     SafeAreaProvider,
@@ -329,6 +330,29 @@ export default function RootLayout() {
       throw fontError;
     }
   }, [fontError]);
+
+  // Hide the Android system navigation bar for an immersive, full-screen
+  // experience. With edge-to-edge (SDK 54) the bar overlays content and
+  // reappears transiently on swipe ("sticky-immersive"); re-hide it whenever
+  // the app returns to the foreground.
+  useEffect(() => {
+    if (Platform.OS !== "android") return;
+
+    const hideNavigationBar = () => {
+      void NavigationBar.setVisibilityAsync("hidden");
+      void NavigationBar.setBehaviorAsync("overlay-swipe");
+    };
+
+    hideNavigationBar();
+
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state === "active") {
+        hideNavigationBar();
+      }
+    });
+
+    return () => subscription.remove();
+  }, []);
 
   useEffect(() => {
     if (fontsLoaded) {

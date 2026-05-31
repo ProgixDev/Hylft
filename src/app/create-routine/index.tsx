@@ -724,6 +724,7 @@ function ExerciseEditorSheet({
               </Text>
               <TextInput
                 style={styles.editorBigInput}
+                keyboardType="phone-pad"
                 value={exercise.reps}
                 onChangeText={(v) => onUpdate({ reps: v })}
                 placeholder="8-12"
@@ -737,7 +738,7 @@ function ExerciseEditorSheet({
               </Text>
               <TextInput
                 style={styles.editorBigInput}
-                keyboardType="numeric"
+                keyboardType="decimal-pad"
                 value={exercise.targetWeight ? String(exercise.targetWeight) : ""}
                 onChangeText={(v) =>
                   onUpdate({ targetWeight: parseFloat(v) || 0 })
@@ -826,7 +827,7 @@ function ExerciseEditorSheet({
                     </Text>
                     <TextInput
                       style={styles.setTargetInput}
-                      keyboardType="numeric"
+                      keyboardType="decimal-pad"
                       placeholder={String(exercise.targetWeight || 0)}
                       placeholderTextColor={theme.foreground.gray}
                       value={st.targetKg ? String(st.targetKg) : ""}
@@ -838,6 +839,7 @@ function ExerciseEditorSheet({
                     />
                     <TextInput
                       style={styles.setTargetInput}
+                      keyboardType="phone-pad"
                       placeholder={exercise.reps}
                       placeholderTextColor={theme.foreground.gray}
                       value={

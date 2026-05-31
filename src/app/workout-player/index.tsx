@@ -52,6 +52,7 @@ export default function WorkoutPlayerScreen() {
     togglePlayerSetCompleted,
     stopPlayerRest,
     adjustPlayerRest,
+    pauseWorkout,
   } = useActiveWorkout();
 
   // ── Lazy-hydrate missing gifUrls for each exercise ────────────────
@@ -83,8 +84,9 @@ export default function WorkoutPlayerScreen() {
 
   const handleEndConfirm = useCallback(async () => {
     setExitModalVisible(false);
+    pauseWorkout(); // stop the chronometer on the finish screen
     setCompletionVisible(true);
-  }, []);
+  }, [pauseWorkout]);
 
   const handleCompletionFinish = useCallback(async () => {
     setCompletionVisible(false);
@@ -674,7 +676,7 @@ function ExerciseCard({
               ]}
               value={set.reps}
               onChangeText={(v) => onSetChange(set.id, { reps: v })}
-              keyboardType="default"
+              keyboardType="number-pad"
               placeholder={exercise.targetReps || "0"}
               placeholderTextColor={theme.foreground.gray + "80"}
               selectTextOnFocus
