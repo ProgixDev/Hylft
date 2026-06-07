@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
@@ -37,6 +37,68 @@ import type {
 
 const VALID_MEAL_TYPES: MealType[] = ["breakfast", "lunch", "dinner", "snack"];
 const PAGE_SIZE = 20;
+
+// Live search: wait until the user has typed a real word, then debounce so we
+// don't fire a request on every keystroke.
+const SEARCH_MIN_CHARS = 2;
+const SEARCH_DEBOUNCE_MS = 350;
+
+// Quick autocomplete suggestions shown while typing. Curated common foods,
+// filtered by what the user has typed so far.
+const FOOD_SUGGESTIONS: Record<"fr" | "en", string[]> = {
+  fr: [
+    "poulet",
+    "riz",
+    "oeuf",
+    "banane",
+    "pomme",
+    "pain",
+    "lait",
+    "yaourt",
+    "fromage",
+    "saumon",
+    "thon",
+    "pâtes",
+    "avoine",
+    "amandes",
+    "chocolat",
+    "café",
+    "pizza",
+    "boeuf",
+    "pomme de terre",
+    "brocoli",
+    "tomate",
+    "avocat",
+    "beurre de cacahuète",
+    "protéine whey",
+  ],
+  en: [
+    "chicken",
+    "rice",
+    "egg",
+    "banana",
+    "apple",
+    "bread",
+    "milk",
+    "yogurt",
+    "cheese",
+    "salmon",
+    "tuna",
+    "pasta",
+    "oats",
+    "almonds",
+    "chocolate",
+    "coffee",
+    "pizza",
+    "beef",
+    "potato",
+    "broccoli",
+    "tomato",
+    "avocado",
+    "peanut butter",
+    "whey protein",
+  ],
+};
 
 const AVATAR_COLORS = [
   "#FF6B6B",
@@ -123,6 +185,9 @@ export default function FoodSearchScreen() {
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
   const [selectedFood, setSelectedFood] = useState<FoodItem | null>(null);
   const requestIdRef = useRef(0);
+  // Last query we actually kicked off a first-page search for — lets the
+  // debounce skip redundant searches (e.g. right after tapping a suggestion).
+  const lastQueryRef = useRef("");
 
   // Initial load: history (cached → server) + default search results.
   useEffect(() => {
@@ -143,7 +208,7 @@ export default function FoodSearchScreen() {
           /* offline / unauthenticated / route not yet deployed: keep cached */
         });
     })();
-    runSearch(DEFAULT_QUERY[lang][selectedMealType], 0);
+    doSearch(DEFAULT_QUERY[lang][selectedMealType]);
     return () => {
       cancelled = true;
     };
@@ -197,13 +262,50 @@ export default function FoodSearchScreen() {
     [lang],
   );
 
+  // Single entry point for first-page searches; records the query so the
+  // debounce below can avoid re-running the same one.
+  const doSearch = useCallback(
+    (q: string) => {
+      lastQueryRef.current = q.trim();
+      runSearch(q, 0);
+    },
+    [runSearch],
+  );
+
+  const trimmedQuery = query.trim();
+  const isTyping = trimmedQuery.length > 0;
+  const belowThreshold =
+    trimmedQuery.length > 0 && trimmedQuery.length < SEARCH_MIN_CHARS;
+
+  // Suggestions matching what's typed so far (prefix/substring match).
+  const suggestions = useMemo(() => {
+    if (!trimmedQuery) return [];
+    const q = trimmedQuery.toLowerCase();
+    return FOOD_SUGGESTIONS[lang]
+      .filter((s) => s.toLowerCase().includes(q))
+      .slice(0, 8);
+  }, [trimmedQuery, lang]);
+
+  // Real-time search: once the user has typed at least a word, debounce and
+  // search automatically. Below the threshold we show suggestions instead.
+  useEffect(() => {
+    if (trimmedQuery.length < SEARCH_MIN_CHARS) return;
+    if (trimmedQuery === lastQueryRef.current) return;
+    const handle = setTimeout(() => doSearch(trimmedQuery), SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(handle);
+  }, [trimmedQuery, doSearch]);
+
   const handleSearch = () => {
-    const trimmed = query.trim();
-    if (!trimmed) {
-      runSearch(DEFAULT_QUERY[lang][selectedMealType], 0);
+    if (!trimmedQuery) {
+      doSearch(DEFAULT_QUERY[lang][selectedMealType]);
       return;
     }
-    runSearch(trimmed, 0);
+    doSearch(trimmedQuery);
+  };
+
+  const handleSuggestionPress = (term: string) => {
+    setQuery(term);
+    doSearch(term);
   };
 
   const handleEndReached = () => {
@@ -424,21 +526,55 @@ export default function FoodSearchScreen() {
     );
   };
 
-  const ListHeader = showHistorySection ? (
-    <View style={styles.historyHeaderWrap}>
-      <Text style={styles.sectionTitle}>{isFr ? "Récents" : "Recent"}</Text>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.historyScrollContent}
-      >
-        {history.slice(0, 12).map(renderHistoryChip)}
-      </ScrollView>
-      <Text style={[styles.sectionTitle, { marginTop: 18 }]}>
+  const renderSuggestions = () => (
+    <View style={styles.suggestionsWrap}>
+      <Text style={styles.sectionTitle}>
         {isFr ? "Suggestions" : "Suggestions"}
       </Text>
+      <View style={styles.suggestionChips}>
+        {suggestions.map((s) => (
+          <Pressable
+            key={s}
+            style={({ pressed }) => [
+              styles.suggestionChip,
+              pressed && { opacity: 0.7 },
+            ]}
+            onPress={() => handleSuggestionPress(s)}
+          >
+            <Ionicons name="search" size={13} color={theme.primary.main} />
+            <Text style={styles.suggestionChipText} numberOfLines={1}>
+              {s}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
     </View>
-  ) : null;
+  );
+
+  const ListHeader = (
+    <View>
+      {showHistorySection && (
+        <View style={styles.historyHeaderWrap}>
+          <Text style={styles.sectionTitle}>
+            {isFr ? "Récents" : "Recent"}
+          </Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.historyScrollContent}
+          >
+            {history.slice(0, 12).map(renderHistoryChip)}
+          </ScrollView>
+        </View>
+      )}
+      {isTyping && suggestions.length > 0 && renderSuggestions()}
+      {showHistorySection && (
+        <Text style={[styles.sectionTitle, { marginTop: 18 }]}>
+          {isFr ? "Suggestions" : "Suggestions"}
+        </Text>
+      )}
+    </View>
+  );
 
   return (
     <View style={styles.container}>
@@ -502,8 +638,27 @@ export default function FoodSearchScreen() {
         </TutorialTarget>
       </View>
 
-      {isLoading && items.length === 0 ? (
-        <FoodCardSkeletonList count={6} />
+      {belowThreshold ? (
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{ paddingTop: 8, paddingBottom: 24 }}
+        >
+          {suggestions.length > 0 && renderSuggestions()}
+          <View style={styles.hintWrap}>
+            <Ionicons
+              name="search"
+              size={28}
+              color={theme.foreground.gray}
+            />
+            <Text style={styles.hintText}>
+              {isFr
+                ? "Continuez à taper pour rechercher…"
+                : "Keep typing to search…"}
+            </Text>
+          </View>
+        </ScrollView>
+      ) : isLoading && items.length === 0 ? (
+        <FoodCardSkeletonList count={7} />
       ) : items.length === 0 && !showHistorySection ? (
         <View style={styles.emptyState}>
           <Ionicons
@@ -641,6 +796,44 @@ function createStyles(theme: Theme) {
     historyHeaderWrap: {
       marginBottom: 4,
       paddingTop: 6,
+    },
+    suggestionsWrap: {
+      paddingTop: 8,
+      paddingBottom: 4,
+    },
+    suggestionChips: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 8,
+      paddingHorizontal: 16,
+    },
+    suggestionChip: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+      backgroundColor: theme.background.darker,
+      borderWidth: 1,
+      borderColor: theme.background.accent,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderRadius: 999,
+    },
+    suggestionChipText: {
+      fontFamily: FONTS.semiBold,
+      fontSize: 13,
+      color: theme.foreground.white,
+    },
+    hintWrap: {
+      alignItems: "center",
+      gap: 10,
+      paddingTop: 40,
+      paddingHorizontal: 24,
+    },
+    hintText: {
+      fontFamily: FONTS.regular,
+      fontSize: 13,
+      color: theme.foreground.gray,
+      textAlign: "center",
     },
     historyScrollContent: {
       gap: 12,

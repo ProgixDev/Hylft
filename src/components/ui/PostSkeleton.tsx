@@ -1,4 +1,5 @@
-import React, { useEffect } from "react";
+import { LinearGradient } from "expo-linear-gradient";
+import React, { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import Animated, {
   Easing,
@@ -10,6 +11,12 @@ import Animated, {
 } from "react-native-reanimated";
 import { useTheme } from "../../contexts/ThemeContext";
 
+/**
+ * A skeleton placeholder with a highlight band that sweeps left→right,
+ * instead of a flat opacity pulse. The band is a horizontal gradient
+ * (transparent → highlight → transparent) translated across the element's
+ * measured width, clipped to its rounded corners.
+ */
 export function Shimmer({
   style,
   baseColor,
@@ -19,25 +26,46 @@ export function Shimmer({
   baseColor: string;
   highlightColor: string;
 }) {
+  const [width, setWidth] = useState(0);
   const progress = useSharedValue(0);
 
   useEffect(() => {
     progress.value = withRepeat(
-      withTiming(1, { duration: 1200, easing: Easing.inOut(Easing.ease) }),
+      withTiming(1, { duration: 1100, easing: Easing.linear }),
       -1,
       false,
     );
   }, [progress]);
 
   const animated = useAnimatedStyle(() => ({
-    opacity: interpolate(progress.value, [0, 0.5, 1], [0.5, 1, 0.5]),
-    backgroundColor: progress.value > 0.5 ? highlightColor : baseColor,
+    transform: [
+      { translateX: interpolate(progress.value, [0, 1], [-width, width]) },
+    ],
   }));
 
   return (
-    <Animated.View
-      style={[{ backgroundColor: baseColor, borderRadius: 8 }, style, animated]}
-    />
+    <View
+      onLayout={(e) => {
+        const w = e.nativeEvent.layout.width;
+        if (w && Math.abs(w - width) > 1) setWidth(w);
+      }}
+      style={[
+        { backgroundColor: baseColor, borderRadius: 8, overflow: "hidden" },
+        style,
+      ]}
+    >
+      {width > 0 && (
+        <Animated.View style={[StyleSheet.absoluteFill, animated]}>
+          <LinearGradient
+            colors={["transparent", highlightColor, "transparent"]}
+            locations={[0, 0.5, 1]}
+            start={{ x: 0, y: 0.5 }}
+            end={{ x: 1, y: 0.5 }}
+            style={StyleSheet.absoluteFill}
+          />
+        </Animated.View>
+      )}
+    </View>
   );
 }
 

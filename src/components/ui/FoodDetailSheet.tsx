@@ -49,9 +49,21 @@ interface FoodDetailSheetProps {
   onAdd: (food: FoodItem, servings: number) => void;
 }
 
-const SERVING_MIN = 0.5;
-const SERVING_MAX = 10;
-const SERVING_STEP = 0.5;
+const QTY_MIN = 0.1;
+const QTY_MAX = 99;
+
+interface PortionUnit {
+  label: string;
+  grams: number; // grams represented by one unit of quantity
+}
+
+// Format a number with a French decimal comma when needed; trim a trailing
+// ".0" so whole numbers read cleanly (e.g. "37" not "37,0").
+const formatNum = (n: number, isFr: boolean, decimals = 1) => {
+  const rounded = Math.round(n * 10 ** decimals) / 10 ** decimals;
+  let s = Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(decimals);
+  return isFr ? s.replace(".", ",") : s;
+};
 
 const FoodDetailSheet: React.FC<FoodDetailSheetProps> = ({
   visible,
@@ -65,8 +77,11 @@ const FoodDetailSheet: React.FC<FoodDetailSheetProps> = ({
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
-  const [servings, setServings] = useState(1);
-  const [gramsInput, setGramsInput] = useState("100");
+  const [quantity, setQuantity] = useState(1);
+  const [quantityInput, setQuantityInput] = useState("1");
+  const [unitIndex, setUnitIndex] = useState(0);
+  const [showUnitPicker, setShowUnitPicker] = useState(false);
+  const [favorite, setFavorite] = useState(false);
   const [detail, setDetail] = useState<FoodItem | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [detailError, setDetailError] = useState(false);
@@ -105,7 +120,8 @@ const FoodDetailSheet: React.FC<FoodDetailSheetProps> = ({
           setDetail({
             ...res,
             name: res.name || food.name,
-            imageUrl: res.imageUrl || display.imageUrl,
+            brand: res.brand || food.brand,
+            imageUrl: res.imageUrl || food.imageUrl,
           });
         }
       })
@@ -121,57 +137,80 @@ const FoodDetailSheet: React.FC<FoodDetailSheetProps> = ({
     };
   }, [visible, food]);
 
-  // Reset the servings stepper and hi-res state each time the sheet opens.
+  // Reset the controls each time the sheet opens.
   useEffect(() => {
     if (visible) {
-      setServings(1);
-      setGramsInput("100");
+      setQuantity(1);
+      setQuantityInput("1");
+      setUnitIndex(0);
+      setShowUnitPicker(false);
+      setFavorite(false);
       setHiResFailed(false);
     }
   }, [visible]);
 
-  if (!food) return null;
-
   // Use fetched detail when available; fall back to the search-result food.
   const display = detail ?? food;
+
+  // Portion units offered in the "Taille de la portion" picker. A known
+  // serving size leads (and is selected first); 100 g and raw grams follow.
+  const units = useMemo<PortionUnit[]>(() => {
+    const list: PortionUnit[] = [];
+    if (display?.servingSize && display.servingSize > 0) {
+      const g = formatNum(display.servingSize, isFr, 0);
+      list.push({
+        label: isFr ? `portion (${g} g)` : `serving (${g} g)`,
+        grams: display.servingSize,
+      });
+    }
+    list.push({ label: isFr ? "100 g" : "100 g", grams: 100 });
+    list.push({ label: isFr ? "grammes" : "grams", grams: 1 });
+    return list;
+  }, [display?.servingSize, isFr]);
+
+  if (!food || !display) return null;
+
+  const unit = units[Math.min(unitIndex, units.length - 1)] ?? units[0];
+  const totalGrams = quantity * unit.grams;
+  const servings = totalGrams / 100; // ×100g multiplier the parent expects
+
   const calories = Math.round(display.calories * servings);
   const protein = display.protein * servings;
   const carbs = display.carbs * servings;
   const fat = display.fat * servings;
   const canAdd = !loadingDetail && !!detail;
 
-  // Macro proportions for the bar widths (by gram weight, not calories).
-  const macroTotal = Math.max(protein + carbs + fat, 0.0001);
-  const pPct = (protein / macroTotal) * 100;
-  const cPct = (carbs / macroTotal) * 100;
-  const fPct = (fat / macroTotal) * 100;
-
-  const updateServings = (next: number) => {
-    const clamped = Math.max(SERVING_MIN, Math.min(SERVING_MAX, +next.toFixed(2)));
-    setServings(clamped);
-    setGramsInput(String(Math.round(clamped * 100)));
-  };
-  const handleDecrement = () => updateServings(servings - SERVING_STEP);
-  const handleIncrement = () => updateServings(servings + SERVING_STEP);
-
-  const handleGramsChange = (text: string) => {
-    const cleaned = text.replace(/[^0-9]/g, "").slice(0, 5);
-    setGramsInput(cleaned);
-    const grams = parseInt(cleaned, 10);
-    if (!Number.isNaN(grams) && grams > 0) {
-      const next = Math.max(
-        SERVING_MIN,
-        Math.min(SERVING_MAX, +(grams / 100).toFixed(2))
-      );
-      setServings(next);
+  const handleQuantityChange = (text: string) => {
+    const cleaned = text.replace(",", ".").replace(/[^0-9.]/g, "");
+    // keep only the first decimal point
+    const parts = cleaned.split(".");
+    const normalized =
+      parts.length > 1 ? `${parts[0]}.${parts.slice(1).join("")}` : cleaned;
+    setQuantityInput(normalized);
+    const n = parseFloat(normalized);
+    if (!Number.isNaN(n) && n > 0) {
+      setQuantity(Math.min(QTY_MAX, n));
     }
   };
-  const handleGramsBlur = () => {
-    setGramsInput(String(Math.round(servings * 100)));
+  const handleQuantityBlur = () => {
+    const n = parseFloat(quantityInput);
+    if (Number.isNaN(n) || n < QTY_MIN) {
+      setQuantity(1);
+      setQuantityInput("1");
+    } else {
+      const clamped = Math.min(QTY_MAX, n);
+      setQuantity(clamped);
+      setQuantityInput(formatNum(clamped, isFr));
+    }
+  };
+
+  const selectUnit = (index: number) => {
+    setUnitIndex(index);
+    setShowUnitPicker(false);
   };
 
   const avatarColor = getAvatarColor(display.name || "?");
-  const addLabel = isFr ? `Ajouter à ${mealLabel}` : `Add to ${mealLabel}`;
+  const addLabel = isFr ? "Ajouter" : "Add";
   const addedLabel = isFr ? "Ajouté" : "Added";
 
   return (
@@ -189,273 +228,301 @@ const FoodDetailSheet: React.FC<FoodDetailSheetProps> = ({
         <Pressable style={styles.backdrop} onPress={onClose} />
 
         <View style={styles.sheet}>
-          <View style={styles.handleWrap}>
-            <View style={styles.handle} />
-          </View>
-
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={styles.scrollContent}
-              keyboardShouldPersistTaps="handled"
+          {/* Top app bar: close · meal name · favorite + overflow */}
+          <View style={styles.appBar}>
+            <Pressable
+              style={styles.appBarBtn}
+              onPress={onClose}
+              hitSlop={8}
             >
-              {/* Hero image — small thumbnail loads first, hi-res 400px
-                  layered on top once it arrives. Falls back to small if
-                  the upgraded URL 404s (e.g. non-OFF source). */}
-              <View style={styles.heroWrap}>
-                {display.imageUrl ? (
-                  <>
-                    {/* Blurred zoomed-in version as a background "frame"
-                        so the hero never looks empty when the real image
-                        is letterboxed. */}
-                    <Image
-                      source={{ uri: display.imageUrl }}
-                      style={[styles.hero, StyleSheet.absoluteFillObject]}
-                      resizeMode="cover"
-                      blurRadius={18}
-                    />
-                    <View style={styles.heroDim} pointerEvents="none" />
-                    <Image
-                      source={{
-                        uri: hiResFailed
-                          ? display.imageUrl
-                          : upgradeOFFImage(display.imageUrl, 400) ||
-                            display.imageUrl,
-                      }}
-                      style={styles.hero}
-                      resizeMode="contain"
-                      onError={() => setHiResFailed(true)}
-                    />
-                  </>
-                ) : (
-                  <View
-                    style={[
-                      styles.hero,
-                      { backgroundColor: avatarColor + "33" },
-                    ]}
-                  >
-                    <Text
-                      style={[styles.heroFallbackLetter, { color: avatarColor }]}
-                    >
-                      {(display.name || "?").charAt(0).toUpperCase()}
-                    </Text>
-                  </View>
-                )}
-                <LinearGradient
-                  colors={["transparent", "rgba(0,0,0,0.75)"]}
-                  style={styles.heroOverlay}
-                  pointerEvents="none"
-                />
-                <Pressable
-                  style={styles.heroClose}
-                  onPress={onClose}
-                  hitSlop={8}
-                >
-                  <Ionicons name="close" size={20} color="#fff" />
-                </Pressable>
-                <View style={styles.heroTextWrap} pointerEvents="none">
-                  <Text style={styles.heroName} numberOfLines={2}>
-                    {display.name}
-                  </Text>
-                  <Text style={styles.heroSub}>
-                    {isFr ? "pour 100g" : "per 100g"}
-                  </Text>
-                </View>
-              </View>
+              <Ionicons name="close" size={24} color={theme.foreground.white} />
+            </Pressable>
 
-              {loadingDetail && (
-                <View style={styles.loadingBlock}>
-                  <ActivityIndicator color={theme.primary.main} />
-                  <Text style={styles.loadingText}>
-                    {isFr
-                      ? "Chargement des informations nutritionnelles..."
-                      : "Loading nutrition info..."}
-                  </Text>
-                </View>
-              )}
+            <View style={styles.appBarTitleWrap}>
+              <Text style={styles.appBarTitle} numberOfLines={1}>
+                {mealLabel}
+              </Text>
+              <Ionicons
+                name="chevron-down"
+                size={16}
+                color={theme.foreground.white}
+              />
+            </View>
 
-              {detailError && !loadingDetail && (
-                <View style={styles.loadingBlock}>
-                  <Ionicons
-                    name="alert-circle"
-                    size={32}
-                    color={theme.foreground.gray}
-                  />
-                  <Text style={styles.loadingText}>
-                    {isFr
-                      ? "Impossible de charger les détails nutritionnels."
-                      : "Couldn't load nutrition details."}
-                  </Text>
-                </View>
-              )}
-
-              {!loadingDetail && !detailError && (
-                <>
-              {/* Calories */}
-              <View style={styles.calorieBlock}>
-                <Text style={styles.calorieValue}>{calories}</Text>
-                <Text style={styles.calorieUnit}>kcal</Text>
-              </View>
-
-              {/* Macros */}
-              <View style={styles.macroSection}>
-                <MacroBar
-                  label={isFr ? "Protéines" : "Protein"}
-                  value={protein}
-                  pct={pPct}
-                  color={theme.primary.main}
-                  styles={styles}
-                />
-                <MacroBar
-                  label={isFr ? "Glucides" : "Carbs"}
-                  value={carbs}
-                  pct={cPct}
-                  color={theme.primary.main}
-                  styles={styles}
-                />
-                <MacroBar
-                  label={isFr ? "Lipides" : "Fat"}
-                  value={fat}
-                  pct={fPct}
-                  color={theme.primary.main}
-                  styles={styles}
-                />
-              </View>
-
-              {/* Servings stepper */}
-              <View style={styles.stepperSection}>
-                <Text style={styles.stepperLabel}>
-                  {isFr ? "Portions" : "Servings"}
-                </Text>
-                <View style={styles.stepper}>
-                  <Pressable
-                    style={({ pressed }) => [
-                      styles.stepBtn,
-                      servings <= SERVING_MIN && styles.stepBtnDisabled,
-                      pressed && { opacity: 0.7 },
-                    ]}
-                    onPress={handleDecrement}
-                    disabled={servings <= SERVING_MIN}
-                    hitSlop={8}
-                  >
-                    <Ionicons
-                      name="remove"
-                      size={20}
-                      color={theme.foreground.white}
-                    />
-                  </Pressable>
-                  <Text style={styles.stepValue}>{servings.toFixed(1)}</Text>
-                  <Pressable
-                    style={({ pressed }) => [
-                      styles.stepBtn,
-                      servings >= SERVING_MAX && styles.stepBtnDisabled,
-                      pressed && { opacity: 0.7 },
-                    ]}
-                    onPress={handleIncrement}
-                    disabled={servings >= SERVING_MAX}
-                    hitSlop={8}
-                  >
-                    <Ionicons
-                      name="add"
-                      size={20}
-                      color={theme.foreground.white}
-                    />
-                  </Pressable>
-                </View>
-                <Text style={styles.stepperHint}>
-                  {`× 100g = ${Math.round(servings * 100)}g`}
-                </Text>
-              </View>
-
-              {/* Grams (poids) input */}
-              <View style={styles.gramsSection}>
-                <Text style={styles.stepperLabel}>
-                  {isFr ? "Poids" : "Weight"}
-                </Text>
-                <View style={styles.gramsInputWrap}>
-                  <TextInput
-                    style={styles.gramsInput}
-                    value={gramsInput}
-                    onChangeText={handleGramsChange}
-                    onBlur={handleGramsBlur}
-                    keyboardType="number-pad"
-                    maxLength={5}
-                    selectTextOnFocus
-                    placeholder="100"
-                    placeholderTextColor={theme.foreground.gray}
-                  />
-                  <Text style={styles.gramsUnit}>g</Text>
-                </View>
-              </View>
-                </>
-              )}
-            </ScrollView>
-
-            {/* Sticky CTA */}
-            <View style={styles.ctaWrap}>
+            <View style={styles.appBarActions}>
               <Pressable
-                style={({ pressed }) => [
-                  styles.cta,
-                  isAdded && styles.ctaDone,
-                  !canAdd && styles.ctaDisabled,
-                  pressed && canAdd && { opacity: 0.85 },
-                ]}
-                onPress={() => {
-                  if (!canAdd || !detail) return;
-                  onAdd(detail, servings);
-                }}
-                disabled={!canAdd}
+                style={styles.appBarBtn}
+                onPress={() => setFavorite((f) => !f)}
+                hitSlop={8}
               >
-                {loadingDetail ? (
-                  <ActivityIndicator color="#fff" size="small" />
-                ) : (
-                  <Ionicons
-                    name={isAdded ? "checkmark" : "add"}
-                    size={20}
-                    color="#fff"
-                  />
-                )}
-                <Text style={styles.ctaText}>
-                  {isAdded ? addedLabel : addLabel}
-                </Text>
+                <Ionicons
+                  name={favorite ? "star" : "star-outline"}
+                  size={22}
+                  color={favorite ? theme.primary.main : theme.foreground.white}
+                />
+              </Pressable>
+              <Pressable style={styles.appBarBtn} hitSlop={8}>
+                <Ionicons
+                  name="ellipsis-vertical"
+                  size={20}
+                  color={theme.foreground.white}
+                />
               </Pressable>
             </View>
+          </View>
+
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+          >
+            {/* Hero — product name + brand centered over a soft image/gradient */}
+            <View style={styles.heroWrap}>
+              {display.imageUrl ? (
+                <>
+                  <Image
+                    source={{ uri: display.imageUrl }}
+                    style={StyleSheet.absoluteFillObject}
+                    resizeMode="cover"
+                    blurRadius={30}
+                  />
+                  <View style={styles.heroDim} pointerEvents="none" />
+                  <Image
+                    source={{
+                      uri: hiResFailed
+                        ? display.imageUrl
+                        : upgradeOFFImage(display.imageUrl, 400) ||
+                          display.imageUrl,
+                    }}
+                    style={styles.heroThumb}
+                    resizeMode="contain"
+                    onError={() => setHiResFailed(true)}
+                  />
+                </>
+              ) : (
+                <View
+                  style={[
+                    StyleSheet.absoluteFillObject,
+                    { backgroundColor: avatarColor + "22" },
+                  ]}
+                />
+              )}
+              <LinearGradient
+                colors={["rgba(0,0,0,0.15)", "rgba(0,0,0,0.55)"]}
+                style={StyleSheet.absoluteFillObject}
+                pointerEvents="none"
+              />
+              <View style={styles.heroTextWrap} pointerEvents="none">
+                <Text style={styles.heroName} numberOfLines={2}>
+                  {display.name}
+                </Text>
+                {!!display.brand && (
+                  <Text style={styles.heroBrand} numberOfLines={1}>
+                    {display.brand}
+                  </Text>
+                )}
+              </View>
+            </View>
+
+            {loadingDetail && (
+              <View style={styles.loadingBlock}>
+                <ActivityIndicator color={theme.primary.main} />
+                <Text style={styles.loadingText}>
+                  {isFr
+                    ? "Chargement des informations nutritionnelles..."
+                    : "Loading nutrition info..."}
+                </Text>
+              </View>
+            )}
+
+            {detailError && !loadingDetail && (
+              <View style={styles.loadingBlock}>
+                <Ionicons
+                  name="alert-circle"
+                  size={32}
+                  color={theme.foreground.gray}
+                />
+                <Text style={styles.loadingText}>
+                  {isFr
+                    ? "Impossible de charger les détails nutritionnels."
+                    : "Couldn't load nutrition details."}
+                </Text>
+              </View>
+            )}
+
+            {!loadingDetail && !detailError && (
+              <>
+                {/* Macro summary row */}
+                <View style={styles.macroRow}>
+                  <MacroStat
+                    value={`${calories}`}
+                    unit="kcal"
+                    label={isFr ? "Calories" : "Calories"}
+                    styles={styles}
+                  />
+                  <MacroStat
+                    value={formatNum(carbs, isFr)}
+                    unit="g"
+                    label={isFr ? "Glucides" : "Carbs"}
+                    styles={styles}
+                  />
+                  <MacroStat
+                    value={formatNum(protein, isFr)}
+                    unit="g"
+                    label={isFr ? "Protéines" : "Protein"}
+                    styles={styles}
+                  />
+                  <MacroStat
+                    value={formatNum(fat, isFr)}
+                    unit="g"
+                    label={isFr ? "Lipides" : "Fat"}
+                    styles={styles}
+                  />
+                </View>
+
+                {/* Quantity + portion size */}
+                <View style={styles.portionRow}>
+                  <View style={styles.qtyBox}>
+                    <TextInput
+                      style={styles.qtyInput}
+                      value={quantityInput}
+                      onChangeText={handleQuantityChange}
+                      onBlur={handleQuantityBlur}
+                      keyboardType="decimal-pad"
+                      maxLength={5}
+                      selectTextOnFocus
+                      placeholder="1"
+                      placeholderTextColor={theme.foreground.gray}
+                    />
+                  </View>
+
+                  <Pressable
+                    style={styles.portionSelect}
+                    onPress={() => setShowUnitPicker(true)}
+                  >
+                    <View style={styles.portionSelectTextWrap}>
+                      <Text style={styles.portionSelectLabel}>
+                        {isFr ? "Taille de la portion" : "Serving size"}
+                      </Text>
+                      <Text style={styles.portionSelectValue} numberOfLines={1}>
+                        {unit.label}
+                      </Text>
+                    </View>
+                    <Ionicons
+                      name="chevron-down"
+                      size={20}
+                      color={theme.foreground.gray}
+                    />
+                  </Pressable>
+                </View>
+
+                <Text style={styles.totalHint}>
+                  {`${isFr ? "Total" : "Total"} : ${formatNum(totalGrams, isFr, 0)} g`}
+                </Text>
+              </>
+            )}
+          </ScrollView>
+
+          {/* Sticky CTA */}
+          <View style={styles.ctaWrap}>
+            <Pressable
+              style={({ pressed }) => [
+                styles.cta,
+                isAdded && styles.ctaDone,
+                !canAdd && styles.ctaDisabled,
+                pressed && canAdd && { opacity: 0.85 },
+              ]}
+              onPress={() => {
+                if (!canAdd || !detail) return;
+                onAdd(detail, servings);
+              }}
+              disabled={!canAdd}
+            >
+              {loadingDetail ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <Ionicons
+                  name={isAdded ? "checkmark-circle-outline" : "add-circle-outline"}
+                  size={22}
+                  color="#fff"
+                />
+              )}
+              <Text style={styles.ctaText}>
+                {isAdded ? addedLabel : addLabel}
+              </Text>
+            </Pressable>
+          </View>
         </View>
+
+        {/* Portion-size picker */}
+        <Modal
+          visible={showUnitPicker}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowUnitPicker(false)}
+        >
+          <Pressable
+            style={styles.pickerBackdrop}
+            onPress={() => setShowUnitPicker(false)}
+          >
+            <Pressable style={styles.pickerCard}>
+              <Text style={styles.pickerTitle}>
+                {isFr ? "Taille de la portion" : "Serving size"}
+              </Text>
+              {units.map((u, i) => {
+                const active = i === unitIndex;
+                return (
+                  <Pressable
+                    key={u.label}
+                    style={({ pressed }) => [
+                      styles.pickerOption,
+                      active && styles.pickerOptionActive,
+                      pressed && { opacity: 0.7 },
+                    ]}
+                    onPress={() => selectUnit(i)}
+                  >
+                    <Text
+                      style={[
+                        styles.pickerOptionText,
+                        active && styles.pickerOptionTextActive,
+                      ]}
+                    >
+                      {u.label}
+                    </Text>
+                    {active && (
+                      <Ionicons
+                        name="checkmark"
+                        size={18}
+                        color={theme.primary.main}
+                      />
+                    )}
+                  </Pressable>
+                );
+              })}
+            </Pressable>
+          </Pressable>
+        </Modal>
       </KeyboardAvoidingView>
     </Modal>
   );
 };
 
-interface MacroBarProps {
+interface MacroStatProps {
+  value: string;
+  unit: string;
   label: string;
-  value: number;
-  pct: number;
-  color: string;
   styles: ReturnType<typeof createStyles>;
 }
 
-const MacroBar: React.FC<MacroBarProps> = ({
-  label,
-  value,
-  pct,
-  color,
-  styles,
-}) => (
-  <View style={styles.macroRow}>
-    <View style={styles.macroHeader}>
-      <View style={styles.macroLabelWrap}>
-        <View style={[styles.macroDot, { backgroundColor: color }]} />
-        <Text style={styles.macroLabel}>{label}</Text>
-      </View>
-      <Text style={styles.macroValue}>{value.toFixed(1)} g</Text>
-    </View>
-    <View style={styles.macroTrack}>
-      <View
-        style={[
-          styles.macroFill,
-          { width: `${Math.max(2, Math.min(100, pct))}%`, backgroundColor: color },
-        ]}
-      />
-    </View>
+const MacroStat: React.FC<MacroStatProps> = ({ value, unit, label, styles }) => (
+  <View style={styles.macroStat}>
+    <Text style={styles.macroStatValue} numberOfLines={1}>
+      {value}
+      <Text style={styles.macroStatUnit}> {unit}</Text>
+    </Text>
+    <Text style={styles.macroStatLabel} numberOfLines={1}>
+      {label}
+    </Text>
   </View>
 );
 
@@ -470,226 +537,170 @@ function createStyles(theme: Theme) {
       backgroundColor: "rgba(0,0,0,0.6)",
     },
     sheet: {
-      maxHeight: SCREEN_HEIGHT * 0.92,
+      maxHeight: SCREEN_HEIGHT * 0.94,
       backgroundColor: theme.background.dark,
       borderTopLeftRadius: 24,
       borderTopRightRadius: 24,
       overflow: "hidden",
     },
-    handleWrap: {
-      alignItems: "center",
-      paddingTop: 8,
-      paddingBottom: 4,
-      backgroundColor: theme.background.dark,
-      zIndex: 2,
-    },
-    handle: {
-      width: 40,
-      height: 4,
-      borderRadius: 2,
-      backgroundColor: theme.foreground.gray + "55",
-    },
-    scrollContent: {
-      paddingBottom: 24,
-    },
-    heroWrap: {
-      width: "100%",
-      height: 220,
-      backgroundColor: theme.background.darker,
-      position: "relative",
-    },
-    hero: {
-      width: "100%",
-      height: "100%",
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    heroFallbackLetter: {
-      fontFamily: FONTS.bold,
-      fontSize: 96,
-      fontWeight: "700",
-    },
-    heroDim: {
-      ...StyleSheet.absoluteFillObject,
-      backgroundColor: "rgba(0,0,0,0.35)",
-    },
-    heroOverlay: {
-      position: "absolute",
-      left: 0,
-      right: 0,
-      bottom: 0,
-      height: 120,
-    },
-    heroClose: {
-      position: "absolute",
-      top: 12,
-      right: 12,
-      width: 36,
-      height: 36,
-      borderRadius: 18,
-      backgroundColor: "rgba(0,0,0,0.45)",
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    heroTextWrap: {
-      position: "absolute",
-      left: 16,
-      right: 16,
-      bottom: 12,
-    },
-    heroName: {
-      fontFamily: FONTS.bold,
-      fontSize: 22,
-      color: "#fff",
-      fontWeight: "700",
-      lineHeight: 26,
-    },
-    heroSub: {
-      fontFamily: FONTS.regular,
-      fontSize: 12,
-      color: "rgba(255,255,255,0.85)",
-      marginTop: 2,
-    },
-    calorieBlock: {
-      flexDirection: "row",
-      alignItems: "baseline",
-      justifyContent: "center",
-      gap: 6,
-      paddingTop: 18,
-      paddingBottom: 6,
-    },
-    calorieValue: {
-      fontFamily: FONTS.bold,
-      fontSize: 40,
-      color: theme.primary.main,
-      fontWeight: "800",
-    },
-    calorieUnit: {
-      fontFamily: FONTS.semiBold,
-      fontSize: 14,
-      color: theme.primary.main,
-    },
-    macroSection: {
-      paddingHorizontal: 20,
-      paddingTop: 14,
-      gap: 14,
-    },
-    macroRow: {
-      gap: 6,
-    },
-    macroHeader: {
+    appBar: {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
+      paddingHorizontal: 8,
+      height: 56,
+      backgroundColor: theme.background.dark,
+      zIndex: 2,
     },
-    macroLabelWrap: {
+    appBarBtn: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    appBarTitleWrap: {
+      flex: 1,
       flexDirection: "row",
       alignItems: "center",
-      gap: 8,
+      justifyContent: "center",
+      gap: 4,
     },
-    macroDot: {
-      width: 8,
-      height: 8,
-      borderRadius: 4,
+    appBarTitle: {
+      fontFamily: FONTS.bold,
+      fontSize: 18,
+      color: theme.foreground.white,
+      fontWeight: "700",
     },
-    macroLabel: {
+    appBarActions: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    scrollContent: {
+      paddingBottom: 16,
+    },
+    heroWrap: {
+      width: "100%",
+      height: 200,
+      backgroundColor: theme.background.darker,
+      position: "relative",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    heroThumb: {
+      width: "70%",
+      height: "70%",
+    },
+    heroDim: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: "rgba(0,0,0,0.30)",
+    },
+    heroTextWrap: {
+      ...StyleSheet.absoluteFillObject,
+      alignItems: "center",
+      justifyContent: "center",
+      paddingHorizontal: 24,
+    },
+    heroName: {
+      fontFamily: FONTS.bold,
+      fontSize: 26,
+      color: "#fff",
+      fontWeight: "800",
+      textAlign: "center",
+      lineHeight: 30,
+    },
+    heroBrand: {
+      fontFamily: FONTS.semiBold,
+      fontSize: 16,
+      color: "rgba(255,255,255,0.85)",
+      textAlign: "center",
+      marginTop: 6,
+    },
+    macroRow: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      justifyContent: "space-between",
+      paddingHorizontal: 16,
+      paddingVertical: 22,
+    },
+    macroStat: {
+      flex: 1,
+      alignItems: "center",
+      gap: 4,
+    },
+    macroStatValue: {
+      fontFamily: FONTS.bold,
+      fontSize: 18,
+      color: theme.foreground.white,
+      fontWeight: "800",
+    },
+    macroStatUnit: {
       fontFamily: FONTS.semiBold,
       fontSize: 13,
       color: theme.foreground.white,
+      fontWeight: "600",
     },
-    macroValue: {
-      fontFamily: FONTS.bold,
-      fontSize: 13,
-      color: theme.foreground.white,
-    },
-    macroTrack: {
-      height: 6,
-      borderRadius: 3,
-      backgroundColor: theme.background.accent,
-      overflow: "hidden",
-    },
-    macroFill: {
-      height: "100%",
-      borderRadius: 3,
-    },
-    stepperSection: {
-      paddingHorizontal: 20,
-      paddingTop: 22,
-      alignItems: "center",
-      gap: 10,
-    },
-    stepperLabel: {
+    macroStatLabel: {
       fontFamily: FONTS.regular,
       fontSize: 12,
       color: theme.foreground.gray,
-      textTransform: "uppercase",
-      letterSpacing: 0.6,
     },
-    stepper: {
+    portionRow: {
       flexDirection: "row",
-      alignItems: "center",
-      gap: 18,
-      backgroundColor: theme.background.darker,
-      borderWidth: 1,
-      borderColor: theme.background.accent,
-      borderRadius: 999,
-      paddingHorizontal: 8,
-      paddingVertical: 6,
+      alignItems: "stretch",
+      gap: 12,
+      paddingHorizontal: 16,
+      paddingTop: 4,
     },
-    stepBtn: {
-      width: 36,
-      height: 36,
-      borderRadius: 18,
-      backgroundColor: theme.background.accent,
+    qtyBox: {
+      width: 76,
+      borderWidth: 2,
+      borderColor: theme.primary.main,
+      borderRadius: 14,
       alignItems: "center",
       justifyContent: "center",
+      paddingVertical: 10,
     },
-    stepBtnDisabled: {
-      opacity: 0.4,
-    },
-    stepValue: {
+    qtyInput: {
       fontFamily: FONTS.bold,
-      fontSize: 20,
+      fontSize: 22,
       color: theme.foreground.white,
-      minWidth: 48,
       textAlign: "center",
+      padding: 0,
+      minWidth: 40,
     },
-    stepperHint: {
+    portionSelect: {
+      flex: 1,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      borderWidth: 1,
+      borderColor: theme.background.accent,
+      borderRadius: 14,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+    },
+    portionSelectTextWrap: {
+      flex: 1,
+      marginRight: 8,
+    },
+    portionSelectLabel: {
       fontFamily: FONTS.regular,
       fontSize: 11,
       color: theme.foreground.gray,
+      marginBottom: 2,
     },
-    gramsSection: {
-      paddingHorizontal: 20,
-      paddingTop: 18,
-      alignItems: "center",
-      gap: 10,
-    },
-    gramsInputWrap: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 6,
-      backgroundColor: theme.background.darker,
-      borderWidth: 1,
-      borderColor: theme.background.accent,
-      borderRadius: 12,
-      paddingHorizontal: 16,
-      paddingVertical: 8,
-      minWidth: 140,
-      justifyContent: "center",
-    },
-    gramsInput: {
-      fontFamily: FONTS.bold,
-      fontSize: 20,
-      color: theme.foreground.white,
-      minWidth: 60,
-      textAlign: "center",
-      padding: 0,
-    },
-    gramsUnit: {
+    portionSelectValue: {
       fontFamily: FONTS.semiBold,
-      fontSize: 14,
+      fontSize: 18,
+      color: theme.foreground.white,
+    },
+    totalHint: {
+      fontFamily: FONTS.regular,
+      fontSize: 12,
       color: theme.foreground.gray,
+      textAlign: "center",
+      paddingTop: 14,
     },
     ctaWrap: {
       paddingHorizontal: 16,
@@ -705,14 +716,20 @@ function createStyles(theme: Theme) {
       justifyContent: "center",
       gap: 8,
       backgroundColor: theme.primary.main,
-      paddingVertical: 14,
-      borderRadius: 14,
+      paddingVertical: 16,
+      borderRadius: 999,
     },
     ctaDone: {
       backgroundColor: "#34C759",
     },
     ctaDisabled: {
       opacity: 0.5,
+    },
+    ctaText: {
+      fontFamily: FONTS.bold,
+      fontSize: 16,
+      color: "#fff",
+      fontWeight: "700",
     },
     loadingBlock: {
       paddingVertical: 36,
@@ -726,11 +743,48 @@ function createStyles(theme: Theme) {
       color: theme.foreground.gray,
       textAlign: "center",
     },
-    ctaText: {
-      fontFamily: FONTS.bold,
-      fontSize: 15,
-      color: "#fff",
-      fontWeight: "700",
+    pickerBackdrop: {
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.6)",
+      alignItems: "center",
+      justifyContent: "center",
+      paddingHorizontal: 32,
+    },
+    pickerCard: {
+      width: "100%",
+      backgroundColor: theme.background.darker,
+      borderRadius: 18,
+      paddingVertical: 8,
+      paddingHorizontal: 8,
+    },
+    pickerTitle: {
+      fontFamily: FONTS.semiBold,
+      fontSize: 13,
+      color: theme.foreground.gray,
+      textTransform: "uppercase",
+      letterSpacing: 0.6,
+      paddingHorizontal: 12,
+      paddingTop: 10,
+      paddingBottom: 6,
+    },
+    pickerOption: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingVertical: 14,
+      paddingHorizontal: 12,
+      borderRadius: 12,
+    },
+    pickerOptionActive: {
+      backgroundColor: theme.background.accent,
+    },
+    pickerOptionText: {
+      fontFamily: FONTS.semiBold,
+      fontSize: 16,
+      color: theme.foreground.white,
+    },
+    pickerOptionTextActive: {
+      color: theme.primary.main,
     },
   });
 }

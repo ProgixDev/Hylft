@@ -93,25 +93,24 @@ function WeekDayChip({
       : state === "missed"
         ? CHIP_RED
         : CHIP_GRAY;
+  const iconName =
+    state === "trained"
+      ? "checkmark"
+      : state === "missed"
+        ? "close"
+        : "remove";
   return (
     <View
       style={[
         weekChipStyles.shell,
         { backgroundColor: palette.face },
-        isToday && { borderColor: palette.border, borderWidth: 2 },
+        isToday && { borderColor: palette.border, borderWidth: 1.5 },
       ]}
     >
       <Text style={[weekChipStyles.label, { color: palette.text }]}>
         {shortLabel}
       </Text>
-      <Text style={[weekChipStyles.date, { color: palette.text }]}>
-        {dayOfMonth}
-      </Text>
-      {isToday && (
-        <View
-          style={[weekChipStyles.todayDot, { backgroundColor: palette.border }]}
-        />
-      )}
+      <Ionicons name={iconName} size={13} color={palette.text} />
     </View>
   );
 }
@@ -119,25 +118,15 @@ function WeekDayChip({
 const weekChipStyles = StyleSheet.create({
   shell: {
     flex: 1,
-    borderRadius: 11,
-    paddingVertical: 8,
+    borderRadius: 8,
+    paddingVertical: 5,
     alignItems: "center",
-    gap: 2,
+    gap: 1,
   },
   label: {
     fontFamily: FONTS.bold,
     fontSize: 10,
     textTransform: "capitalize",
-  },
-  date: {
-    fontFamily: FONTS.extraBold,
-    fontSize: 13,
-  },
-  todayDot: {
-    width: 3,
-    height: 3,
-    borderRadius: 1.5,
-    marginTop: 1,
   },
 });
 
@@ -842,72 +831,13 @@ export default function Home() {
           })}
         </View>
 
-        {/* Weekly training overview */}
+        {/* Weekly sessions — compact overview + sessions carousel in one card */}
         <AnimatedSection delay={460} scale>
-          <View style={styles.weekOverviewCard}>
-            <View style={styles.weekChipsRow}>
-              {centeredDays.map((day) => (
-                <WeekDayChip
-                  key={day.key}
-                  shortLabel={day.shortLabel}
-                  dayOfMonth={day.dayOfMonth}
-                  isToday={day.isToday}
-                  state={day.state}
-                />
-              ))}
-            </View>
-            <View style={styles.weekLegendRow}>
-              <View style={styles.weekLegendItem}>
-                <View
-                  style={[
-                    styles.weekLegendDot,
-                    { backgroundColor: CHIP_GREEN.face },
-                  ]}
-                />
-                <Text style={styles.weekLegendText}>
-                  {t("home.legendTrained", "Séance")}
-                </Text>
-              </View>
-              <View style={styles.weekLegendItem}>
-                <View
-                  style={[
-                    styles.weekLegendDot,
-                    { backgroundColor: CHIP_RED.face },
-                  ]}
-                />
-                <Text style={styles.weekLegendText}>
-                  {t("home.legendMissed", "Manquée")}
-                </Text>
-              </View>
-              <View style={styles.weekLegendItem}>
-                <View
-                  style={[
-                    styles.weekLegendDot,
-                    { backgroundColor: CHIP_GRAY.face },
-                  ]}
-                />
-                <Text style={styles.weekLegendText}>
-                  {t("home.legendUpcoming", "À venir")}
-                </Text>
-              </View>
-            </View>
-          </View>
-        </AnimatedSection>
-
-        {/* My sessions carousel */}
-        <AnimatedSection delay={520} scale>
           <View style={styles.weekSessionsCard}>
             <View style={styles.weekSessionsHeader}>
-              <View style={styles.weekSessionsTitleBlock}>
-                <Text style={styles.weekSessionsTitle}>
-                  {t("home.mySessions", "MES SEANCES")}
-                </Text>
-                <Text style={styles.weekObjectiveText}>
-                  {t("home.sessionsCount", "{{count}} séance(s)", {
-                    count: carouselRoutines.length,
-                  })}
-                </Text>
-              </View>
+              <Text style={styles.weekSessionsTitle}>
+                {t("home.weeklySessions", "SÉANCES DE LA SEMAINE")}
+              </Text>
               <Pressable
                 style={({ pressed }) => [
                   styles.weekSettingsBtn,
@@ -922,10 +852,22 @@ export default function Home() {
               >
                 <Ionicons
                   name="settings-outline"
-                  size={19}
+                  size={18}
                   color={theme.primary.main}
                 />
               </Pressable>
+            </View>
+
+            <View style={styles.weekChipsRow}>
+              {centeredDays.map((day) => (
+                <WeekDayChip
+                  key={day.key}
+                  shortLabel={day.shortLabel}
+                  dayOfMonth={day.dayOfMonth}
+                  isToday={day.isToday}
+                  state={day.state}
+                />
+              ))}
             </View>
 
             {carouselRoutines.length === 0 ? (
@@ -1623,66 +1565,32 @@ function createStyles(theme: Theme) {
     // ── Week Sessions ─────────────────────────
     weekSessionsCard: {
       marginHorizontal: 20,
-      borderRadius: 20,
-      padding: 18,
+      borderRadius: 18,
+      paddingHorizontal: 18,
+      paddingTop: 14,
+      paddingBottom: 16,
       marginBottom: 24,
     },
     weekSessionsHeader: {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      marginBottom: 16,
+      marginBottom: 12,
       gap: 10,
     },
-    weekSessionsTitleBlock: {
-      flex: 1,
-      gap: 4,
-    },
     weekSessionsTitle: {
+      flex: 1,
       fontFamily: FONTS.extraBold,
-      fontSize: 16,
+      fontSize: 14,
       color: theme.foreground.white,
       letterSpacing: 0.5,
       textTransform: "uppercase",
-      lineHeight: 20,
-    },
-    weekObjectiveText: {
-      fontFamily: FONTS.semiBold,
-      fontSize: 11,
-      color: theme.foreground.gray,
-      textTransform: "uppercase",
+      lineHeight: 18,
     },
     weekChipsRow: {
       flexDirection: "row",
       gap: 4,
-      marginBottom: 8,
-    },
-    weekOverviewCard: {
-      marginHorizontal: 20,
-      borderRadius: 18,
-      padding: 12,
-      marginBottom: 12,
-    },
-    weekLegendRow: {
-      flexDirection: "row",
-      gap: 16,
-      marginTop: 4,
-      flexWrap: "wrap",
-    },
-    weekLegendItem: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 6,
-    },
-    weekLegendDot: {
-      width: 8,
-      height: 8,
-      borderRadius: 4,
-    },
-    weekLegendText: {
-      fontFamily: FONTS.medium,
-      fontSize: 11,
-      color: theme.foreground.gray,
+      marginBottom: 14,
     },
     chipLegendRow: {
       flexDirection: "row",
@@ -1706,8 +1614,8 @@ function createStyles(theme: Theme) {
     },
     // ── Next Workout Card ─────────────────────
     nextWorkoutCard: {
-      height: 174,
-      borderRadius: 16,
+      height: 150,
+      borderRadius: 14,
       overflow: "hidden",
       borderWidth: 2,
       borderColor: theme.primary.main + "40",

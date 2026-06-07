@@ -6,41 +6,41 @@ import { Shimmer } from "./PostSkeleton";
 export function FoodCardSkeleton() {
   const { theme } = useTheme();
   const isDark = theme.background.dark === "#0B0D0E";
-  const base = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)";
-  const highlight = isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.10)";
+  const base = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)";
+  const highlight = isDark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.10)";
 
   return (
     <View
       style={[
         styles.card,
-        {
-          backgroundColor: theme.background.darker,
-          borderColor: theme.background.accent,
-        },
+        { borderBottomColor: `${theme.foreground.gray}22` },
       ]}
     >
-      <Shimmer
-        style={styles.avatar}
-        baseColor={base}
-        highlightColor={highlight}
-      />
-      <View style={{ flex: 1, gap: 6 }}>
+      <Shimmer style={styles.image} baseColor={base} highlightColor={highlight} />
+
+      <View style={styles.info}>
         <Shimmer
-          style={{ height: 12, width: "75%", borderRadius: 6 }}
+          style={{ height: 14, width: "82%", borderRadius: 6 }}
           baseColor={base}
           highlightColor={highlight}
         />
         <Shimmer
-          style={{ height: 14, width: 90, borderRadius: 20 }}
+          style={{ height: 14, width: "54%", borderRadius: 6 }}
           baseColor={base}
           highlightColor={highlight}
         />
         <Shimmer
-          style={{ height: 10, width: "60%", borderRadius: 6 }}
+          style={{ height: 9, width: 64, borderRadius: 5, marginTop: 2 }}
           baseColor={base}
           highlightColor={highlight}
         />
+        <View style={styles.chipsRow}>
+          <Shimmer style={styles.chip} baseColor={base} highlightColor={highlight} />
+          <Shimmer style={styles.chip} baseColor={base} highlightColor={highlight} />
+          <Shimmer style={styles.chip} baseColor={base} highlightColor={highlight} />
+        </View>
       </View>
+
       <Shimmer
         style={styles.addBtn}
         baseColor={base}
@@ -62,22 +62,34 @@ export function FoodCardSkeletonList({ count = 6 }: { count?: number }) {
 
 const styles = StyleSheet.create({
   list: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 10,
+    paddingVertical: 4,
   },
   card: {
     flexDirection: "row",
     alignItems: "center",
-    borderWidth: 1,
-    borderRadius: 14,
-    padding: 12,
-    gap: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    gap: 14,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 14,
+  image: {
+    width: 86,
+    height: 86,
+    borderRadius: 7,
+  },
+  info: {
+    flex: 1,
+    gap: 7,
+  },
+  chipsRow: {
+    flexDirection: "row",
+    gap: 6,
+    marginTop: 3,
+  },
+  chip: {
+    height: 22,
+    width: 52,
+    borderRadius: 999,
   },
   addBtn: {
     width: 40,

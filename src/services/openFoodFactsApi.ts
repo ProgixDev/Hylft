@@ -56,6 +56,9 @@ interface OFFProduct {
   product_name?: string;
   product_name_fr?: string;
   product_name_en?: string;
+  brands?: string;
+  serving_quantity?: number | string;
+  serving_size?: string;
   nutriments?: OFFNutriments;
   image_small_url?: string;
   image_front_small_url?: string;
@@ -76,12 +79,36 @@ const FIELDS = [
   "product_name",
   "product_name_fr",
   "product_name_en",
+  "brands",
+  "serving_quantity",
+  "serving_size",
   "nutriments",
   "image_small_url",
   "image_front_small_url",
   "image_url",
   "image_front_url",
 ].join(",");
+
+// Pull the serving weight in grams from OFF. Prefer the numeric
+// `serving_quantity`; fall back to parsing the free-text `serving_size`
+// (e.g. "37 g", "1 portion (37g)").
+function pickServingSize(p: OFFProduct): number | undefined {
+  const q = Number(p.serving_quantity);
+  if (Number.isFinite(q) && q > 0) return q;
+  if (p.serving_size) {
+    const m = p.serving_size.match(/([\d.,]+)\s*g/i);
+    if (m) {
+      const n = Number(m[1].replace(",", "."));
+      if (Number.isFinite(n) && n > 0) return n;
+    }
+  }
+  return undefined;
+}
+
+function pickBrand(p: OFFProduct): string | undefined {
+  const first = (p.brands || "").split(",")[0]?.trim();
+  return first || undefined;
+}
 
 function safeNum(v: unknown): number {
   const n = Number(v);
@@ -146,6 +173,8 @@ function mapProduct(p: OFFProduct, lang: "fr" | "en", index: number): FoodItem |
     protein,
     carbs,
     fat,
+    brand: pickBrand(p),
+    servingSize: pickServingSize(p),
   };
 }
 

@@ -13,6 +13,8 @@ export interface FoodItem {
   protein: number;
   carbs: number;
   fat: number;
+  brand?: string;
+  servingSize?: number; // grams in one serving/portion, when known
 }
 
 export interface FoodSearchResponse {
