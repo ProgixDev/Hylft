@@ -96,12 +96,6 @@
         }
       ],
       [
-        "react-native-health-connect",
-        {
-          "requestPermissionsOnStart": false
-        }
-      ],
-      [
         "react-native-health",
         {
           "isClinicalDataEnabled": false
