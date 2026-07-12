@@ -10,7 +10,7 @@ const DEFAULT_DEV_BASE =
   Platform.OS === "android"
     ? "http://10.0.2.2:3000/api"
     : "http://localhost:3000/api";
-const DEFAULT_PROD_BASE = "https://hylft2-0.onrender.com/api";
+const DEFAULT_PROD_BASE = "https://hylft-server.onrender.com/api";
 
 const API_BASE =
   ENV_BASE && ENV_BASE.length > 0
