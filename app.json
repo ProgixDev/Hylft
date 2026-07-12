@@ -38,16 +38,6 @@
         "com.apple.developer.healthkit.background-delivery": true
       }
     },
-    "androidStatusBar": {
-      "translucent": true,
-      "backgroundColor": "#00000000",
-      "barStyle": "light-content"
-    },
-    "androidNavigationBar": {
-      "visible": "sticky-immersive",
-      "backgroundColor": "#00000000",
-      "barStyle": "dark-content"
-    },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
@@ -109,21 +99,23 @@
         }
       ],
       [
+        "expo-status-bar",
+        {
+          "style": "light"
+        }
+      ],
+      [
         "expo-navigation-bar",
         {
-          "visibility": "hidden",
-          "behavior": "overlay-swipe"
+          "hidden": true,
+          "style": "dark"
         }
       ]
     ],
     "extra": {
       "router": {
         "root": "./src/app"
-      },
-      "eas": {
-        "projectId": "b48102f2-259b-4b25-92ab-fef0895b608d"
       }
-    },
-    "owner": "mohameddev7"
+    }
   }
 }
