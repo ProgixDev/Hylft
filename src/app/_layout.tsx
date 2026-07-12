@@ -195,8 +195,6 @@ function AppContent() {
               ? "dark"
               : "light"
         }
-        translucent
-        backgroundColor="transparent"
       />
 
       <ProModal
@@ -339,8 +337,12 @@ export default function RootLayout() {
     if (Platform.OS !== "android") return;
 
     const hideNavigationBar = () => {
-      void NavigationBar.setVisibilityAsync("hidden");
-      void NavigationBar.setBehaviorAsync("overlay-swipe");
+      // With edge-to-edge (SDK 54+) `setBehaviorAsync` is gone (hidden bar
+      // already defaults to sticky overlay-swipe) and `setVisibilityAsync` is
+      // deprecated. Call defensively so a removed method can't crash startup.
+      if (typeof NavigationBar.setVisibilityAsync === "function") {
+        void NavigationBar.setVisibilityAsync("hidden");
+      }
     };
 
     hideNavigationBar();
