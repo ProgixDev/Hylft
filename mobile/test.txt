@@ -1,0 +1,9 @@
+Best option (for your app now)
+
+wger is the strongest fit: it has exercises, muscles, equipment, and media endpoints.
+Useful endpoints: /api/v2/exerciseinfo/, /api/v2/exercise/, /api/v2/exerciseimage/, /api/v2/muscle/, /api/v2/equipment/.
+From Context7/docs, exerciseinfo includes images, and muscle objects include image fields (e.g. image_url_main).
+Other options
+
+ExerciseDB has large exercise coverage and includes media fields like imageUrl/videoUrl, plus muscles/equipment metadata.
+API Ninjas has good text metadata, but it does not appear to provide exercise image assets directly.

@@ -1,0 +1,36 @@
+import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { AppController } from './app.controller';
+import { envValidationSchema } from './config/env.validation';
+import { AuthModule } from './auth/auth.module';
+import { ExercisesModule } from './exercises/exercises.module';
+import { HealthModule } from './health/health.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { NutritionModule } from './nutrition/nutrition.module';
+import { RoutinesModule } from './routines/routines.module';
+import { SocialModule } from './social/social.module';
+import { UsersModule } from './users/users.module';
+import { WallpapersModule } from './wallpapers/wallpapers.module';
+import { WeightEntriesModule } from './weight-entries/weight-entries.module';
+
+@Module({
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      validationSchema: envValidationSchema,
+      validationOptions: { abortEarly: false },
+    }),
+    AuthModule,
+    UsersModule,
+    NutritionModule,
+    HealthModule,
+    RoutinesModule,
+    SocialModule,
+    WeightEntriesModule,
+    NotificationsModule,
+    ExercisesModule,
+    WallpapersModule,
+  ],
+  controllers: [AppController],
+})
+export class AppModule {}

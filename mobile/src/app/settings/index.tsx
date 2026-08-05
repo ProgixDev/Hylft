@@ -1,0 +1,871 @@
+import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router";
+import React, { useEffect, useState } from "react";
+import {
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import ConfirmationModal from "../../components/ui/ConfirmationModal";
+import { useTranslation } from "react-i18next";
+import { Theme, ThemeType } from "../../constants/themes";
+import { useAuth } from "../../contexts/AuthContext";
+import { useHealth } from "../../contexts/HealthContext";
+import { useI18n } from "../../contexts/I18nContext";
+import { useTheme } from "../../contexts/ThemeContext";
+
+import { FONTS } from "../../constants/fonts";
+
+// ─── Storage keys ─────────────────────────────────────────────────────────────
+const KEYS = {
+  weightUnit: "@hylift_weight_unit",
+  distanceUnit: "@hylift_distance_unit",
+  weekStart: "@hylift_week_start",
+  pushNotifications: "@hylift_push_notif",
+  workoutReminders: "@hylift_workout_reminder",
+  emailNotifications: "@hylift_email_notif",
+  privateAccount: "@hylift_private_account",
+  healthConnect: "@hylift_health_connect",
+};
+
+// ─── Styles ───────────────────────────────────────────────────────────────────
+function createStyles(theme: Theme) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.background.dark,
+    },
+    // header
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.background.accent,
+    },
+    backBtn: {
+      padding: 4,
+      marginRight: 6,
+    },
+    headerTitle: {
+      fontSize: 17,
+      fontFamily: FONTS.bold,
+      color: theme.foreground.white,
+    },
+    // section
+    sectionHeader: {
+      paddingHorizontal: 16,
+      paddingTop: 18,
+      paddingBottom: 6,
+    },
+    sectionLabel: {
+      fontSize: 11,
+      fontFamily: FONTS.semiBold,
+      letterSpacing: 0.8,
+      textTransform: "uppercase",
+      color: theme.foreground.gray,
+    },
+    sectionBody: {
+      backgroundColor: theme.background.accent,
+      marginHorizontal: 16,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: `${theme.primary.main}22`,
+      borderBottomWidth: 3,
+      borderBottomColor: `${theme.primary.main}55`,
+      shadowColor: theme.primary.main,
+      shadowOffset: { width: 0, height: 10 },
+      shadowOpacity: 0.18,
+      shadowRadius: 18,
+      elevation: 8,
+      overflow: "visible",
+    },
+    accountCard: {
+      backgroundColor: theme.background.accent,
+      borderColor: theme.primary.main,
+      borderBottomColor: theme.primary.light,
+      shadowColor: theme.primary.main,
+    },
+    appearanceCard: {
+      backgroundColor: theme.background.accent,
+      borderColor: theme.primary.main,
+      borderBottomColor: theme.primary.light,
+      shadowColor: theme.primary.main,
+    },
+    preferencesCard: {
+      backgroundColor: theme.background.accent,
+      borderColor: theme.primary.main,
+      borderBottomColor: theme.primary.light,
+      shadowColor: theme.primary.main,
+    },
+    notificationsCard: {
+      backgroundColor: theme.background.accent,
+      borderColor: theme.primary.main,
+      borderBottomColor: theme.primary.light,
+      shadowColor: theme.primary.main,
+    },
+    connectedAppsCard: {
+      backgroundColor: theme.background.accent,
+      borderColor: theme.primary.main,
+      borderBottomColor: theme.primary.light,
+      shadowColor: theme.primary.main,
+    },
+    supportCard: {
+      backgroundColor: theme.background.accent,
+      borderColor: theme.primary.main,
+      borderBottomColor: theme.primary.light,
+      shadowColor: theme.primary.main,
+    },
+    // row
+    row: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+    },
+    rowBorder: {
+      borderBottomWidth: 1,
+      borderBottomColor: theme.background.darker,
+    },
+    rowIcon: {
+      width: 28,
+      height: 28,
+      borderRadius: 9,
+      alignItems: "center",
+      justifyContent: "center",
+      marginRight: 10,
+      borderWidth: 1,
+      borderColor: "rgba(255,255,255,0.45)",
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 3 },
+      shadowOpacity: 0.16,
+      shadowRadius: 5,
+      elevation: 3,
+    },
+    rowContent: {
+      flex: 1,
+    },
+    rowTitle: {
+      fontSize: 15,
+      fontFamily: "System",
+      fontWeight: "700",
+      color: theme.foreground.white,
+      letterSpacing: 0.1,
+    },
+    rowSubtitle: {
+      fontSize: 12,
+      fontFamily: "System",
+      fontWeight: "500",
+      color: theme.foreground.gray,
+      marginTop: 2,
+      lineHeight: 16,
+    },
+    rowRight: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+    },
+    rowValue: {
+      fontSize: 13,
+      fontFamily: "System",
+      fontWeight: "600",
+      color: theme.foreground.gray,
+    },
+    // segmented control
+    segmented: {
+      flexDirection: "row",
+      backgroundColor: theme.background.darker,
+      borderRadius: 10,
+      padding: 3,
+      gap: 2,
+      borderWidth: 1,
+      borderColor: theme.background.darker,
+    },
+    segBtn: {
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      borderRadius: 7,
+    },
+    segBtnActive: {
+      backgroundColor: theme.primary.main,
+      shadowColor: theme.primary.main,
+      shadowOffset: { width: 0, height: 3 },
+      shadowOpacity: 0.22,
+      shadowRadius: 6,
+      elevation: 3,
+    },
+    segBtnText: {
+      fontSize: 12,
+      fontFamily: "System",
+      fontWeight: "700",
+      color: theme.foreground.gray,
+    },
+    segBtnTextActive: {
+      color: theme.background.dark,
+    },
+    // danger
+    dangerSection: {
+      backgroundColor: theme.background.accent,
+      marginHorizontal: 16,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: "rgba(248,113,113,0.24)",
+      borderBottomWidth: 3,
+      borderBottomColor: "rgba(248,113,113,0.48)",
+      shadowColor: "#f87171",
+      shadowOffset: { width: 0, height: 10 },
+      shadowOpacity: 0.16,
+      shadowRadius: 18,
+      elevation: 8,
+      overflow: "visible",
+    },
+    dangerRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+    },
+    dangerText: {
+      fontSize: 15,
+      fontFamily: "System",
+      fontWeight: "700",
+      marginLeft: 10,
+    },
+    // version
+    version: {
+      textAlign: "center",
+      fontSize: 11,
+      color: theme.foreground.gray,
+      marginTop: 18,
+      marginBottom: 12,
+    },
+  });
+}
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+interface RowProps {
+  icon: keyof typeof Ionicons.glyphMap;
+  iconBg: string;
+  title: string;
+  subtitle?: string;
+  right?: React.ReactNode;
+  onPress?: () => void;
+  showBorder?: boolean;
+  showChevron?: boolean;
+  styles: ReturnType<typeof createStyles>;
+  theme: Theme;
+}
+
+function SettingsRow({
+  icon,
+  iconBg,
+  title,
+  subtitle,
+  right,
+  onPress,
+  showBorder = true,
+  showChevron = false,
+  styles,
+  theme,
+}: RowProps) {
+  const Wrapper = onPress ? TouchableOpacity : View;
+  return (
+    <Wrapper
+      style={[styles.row, showBorder && styles.rowBorder]}
+      {...(onPress ? { onPress, activeOpacity: 0.7 } : {})}
+    >
+      <View style={[styles.rowIcon, { backgroundColor: iconBg }]}>
+        <Ionicons name={icon} size={15} color="#FFFFFF" />
+      </View>
+      <View style={styles.rowContent}>
+        <Text style={styles.rowTitle}>{title}</Text>
+        {subtitle ? <Text style={styles.rowSubtitle}>{subtitle}</Text> : null}
+      </View>
+      {right ? (
+        <View style={styles.rowRight}>{right}</View>
+      ) : showChevron ? (
+        <Ionicons
+          name="chevron-forward"
+          size={16}
+          color={theme.foreground.gray}
+        />
+      ) : null}
+    </Wrapper>
+  );
+}
+
+// ─── Main screen ─────────────────────────────────────────────────────────────
+
+export default function Settings() {
+  const { t } = useTranslation();
+  const { signOut } = useAuth();
+  const { language, setLanguage } = useI18n();
+  const router = useRouter();
+  const { theme, themeType, setTheme } = useTheme();
+  const styles = createStyles(theme);
+  const {
+    isAvailable: healthAvailable,
+    isPermissionGranted: healthGranted,
+    initialize: healthInitialize,
+    requestPermissions: healthRequestPermissions,
+    refreshData: healthRefreshData,
+  } = useHealth();
+  const [healthBusy, setHealthBusy] = useState(false);
+
+  // ── Preferences state ────────────────────────────────────────────────────────
+  const [weightUnit, setWeightUnit] = useState<"kg" | "lbs">("kg");
+  const [distanceUnit, setDistanceUnit] = useState<"km" | "mi">("km");
+  const [weekStart, setWeekStart] = useState<"mon" | "sun">("mon");
+  const [pushNotifs, setPushNotifs] = useState(true);
+  const [workoutReminders, setWorkoutReminders] = useState(true);
+  const [emailNotifs, setEmailNotifs] = useState(false);
+  const [privateAccount, setPrivateAccount] = useState(false);
+  const [healthConnect, setHealthConnect] = useState(false);
+  const [logoutModalVisible, setLogoutModalVisible] = useState(false);
+
+  // ── Load from storage ─────────────────────────────────────────────────────────
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const [wu, du, ws, pn, wr, en, pa, hc] = await Promise.all([
+          AsyncStorage.getItem(KEYS.weightUnit),
+          AsyncStorage.getItem(KEYS.distanceUnit),
+          AsyncStorage.getItem(KEYS.weekStart),
+          AsyncStorage.getItem(KEYS.pushNotifications),
+          AsyncStorage.getItem(KEYS.workoutReminders),
+          AsyncStorage.getItem(KEYS.emailNotifications),
+          AsyncStorage.getItem(KEYS.privateAccount),
+          AsyncStorage.getItem(KEYS.healthConnect),
+        ]);
+        if (wu === "kg" || wu === "lbs") setWeightUnit(wu);
+        if (du === "km" || du === "mi") setDistanceUnit(du);
+        if (ws === "mon" || ws === "sun") setWeekStart(ws);
+        if (pn !== null) setPushNotifs(pn === "true");
+        if (wr !== null) setWorkoutReminders(wr === "true");
+        if (en !== null) setEmailNotifs(en === "true");
+        if (pa !== null) setPrivateAccount(pa === "true");
+        if (hc !== null) setHealthConnect(hc === "true");
+      } catch (_) {} // eslint-disable-line @typescript-eslint/no-unused-vars
+    };
+    load();
+  }, []);
+
+  // ── Persist helpers ───────────────────────────────────────────────────────────
+  const save = async (key: string, value: string) => {
+    try {
+      await AsyncStorage.setItem(key, value);
+    } catch (_) {} // eslint-disable-line @typescript-eslint/no-unused-vars
+  };
+
+  const togglePush = (v: boolean) => {
+    setPushNotifs(v);
+    save(KEYS.pushNotifications, String(v));
+  };
+  const toggleReminders = (v: boolean) => {
+    setWorkoutReminders(v);
+    save(KEYS.workoutReminders, String(v));
+  };
+  const toggleEmail = (v: boolean) => {
+    setEmailNotifs(v);
+    save(KEYS.emailNotifications, String(v));
+  };
+  const togglePrivate = (v: boolean) => {
+    setPrivateAccount(v);
+    save(KEYS.privateAccount, String(v));
+  };
+  const toggleHealth = async (v: boolean) => {
+    if (healthBusy) return;
+    if (v) {
+      setHealthBusy(true);
+      try {
+        const available = healthAvailable || (await healthInitialize());
+        if (!available) {
+          Alert.alert(
+            t("settings.healthConnect"),
+            t(
+              "settings.healthConnectUnavailable",
+              "Health Connect (Android) ou Apple Health (iOS) n'est pas disponible sur cet appareil.",
+            ),
+          );
+          setHealthConnect(false);
+          save(KEYS.healthConnect, "false");
+          return;
+        }
+        const granted =
+          healthGranted || (await healthRequestPermissions());
+        if (granted) {
+          await healthRefreshData();
+          setHealthConnect(true);
+          save(KEYS.healthConnect, "true");
+        } else {
+          setHealthConnect(false);
+          save(KEYS.healthConnect, "false");
+        }
+      } finally {
+        setHealthBusy(false);
+      }
+    } else {
+      // We can't programmatically revoke HC/HK permissions — guide the user.
+      setHealthConnect(false);
+      save(KEYS.healthConnect, "false");
+      Alert.alert(
+        t("settings.healthConnect"),
+        t(
+          "settings.healthConnectRevokeHint",
+          "Pour retirer l'accès, ouvrez les paramètres système de Health Connect / Santé.",
+        ),
+      );
+    }
+  };
+
+  // Keep the local toggle in sync with the actual permission state
+  useEffect(() => {
+    setHealthConnect(healthAvailable && healthGranted);
+  }, [healthAvailable, healthGranted]);
+  const changeWeightUnit = (v: "kg" | "lbs") => {
+    setWeightUnit(v);
+    save(KEYS.weightUnit, v);
+  };
+  const changeDistanceUnit = (v: "km" | "mi") => {
+    setDistanceUnit(v);
+    save(KEYS.distanceUnit, v);
+  };
+  const changeWeekStart = (v: "mon" | "sun") => {
+    setWeekStart(v);
+    save(KEYS.weekStart, v);
+  };
+
+  const handleTheme = (t: ThemeType) => {
+    setTheme(t);
+  };
+
+  const handleLogout = () => setLogoutModalVisible(true);
+
+  const confirmLogout = async () => {
+    setLogoutModalVisible(false);
+    await signOut();
+    router.replace("/auth" as any);
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      t("settings.deleteAccount"),
+      t("settings.deleteAccountConfirm"),
+      [
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("common.delete"),
+          style: "destructive",
+          onPress: () => {
+            // TODO: call delete account API
+          },
+        },
+      ],
+    );
+  };
+
+  // ─── Segmented helper ──────────────────────────────────────────────────────
+
+  function Seg<T extends string>({
+    options,
+    value,
+    onChange,
+  }: {
+    options: { label: string; value: T }[];
+    value: T;
+    onChange: (v: T) => void;
+  }) {
+    return (
+      <View style={styles.segmented}>
+        {options.map((o) => (
+          <TouchableOpacity
+            key={o.value}
+            style={[styles.segBtn, value === o.value && styles.segBtnActive]}
+            onPress={() => onChange(o.value)}
+            activeOpacity={0.8}
+          >
+            <Text
+              style={[
+                styles.segBtnText,
+                value === o.value && styles.segBtnTextActive,
+              ]}
+            >
+              {o.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    );
+  }
+
+  const switchThumb = theme.primary.main;
+  const switchTrackOn = theme.primary.light + "88";
+  const sectionIconBg = theme.primary.main;
+
+  // ─── JSX ──────────────────────────────────────────────────────────────────
+
+  return (
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+          <Ionicons
+            name="chevron-back"
+            size={26}
+            color={theme.foreground.white}
+          />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>{t("settings.title")}</Text>
+      </View>
+
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 24 }}
+      >
+        {/* ── ACCOUNT ────────────────────────────────────────── */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionLabel}>{t("settings.account")}</Text>
+        </View>
+        <View style={[styles.sectionBody, styles.accountCard]}>
+          <SettingsRow
+            icon="person-outline"
+            iconBg={sectionIconBg}
+            title={t("settings.editProfile")}
+            subtitle={t("settings.changeProfileSubtitle")}
+            showBorder
+            showChevron
+            onPress={() => router.push("/settings/edit-profile" as any)}
+            styles={styles}
+            theme={theme}
+          />
+          <SettingsRow
+            icon="lock-closed-outline"
+            iconBg={sectionIconBg}
+            title={t("settings.changePassword")}
+            subtitle={t("settings.changePasswordSubtitle")}
+            showBorder
+            showChevron
+            onPress={() => router.push("/settings/change-password" as any)}
+            styles={styles}
+            theme={theme}
+          />
+          <SettingsRow
+            icon="eye-off-outline"
+            iconBg={sectionIconBg}
+            title={t("settings.privateAccount")}
+            subtitle={t("settings.privateAccountSubtitle")}
+            showBorder={false}
+            right={
+              <Switch
+                value={privateAccount}
+                onValueChange={togglePrivate}
+                thumbColor={switchThumb}
+                trackColor={{ false: "#3a3a3a", true: switchTrackOn }}
+              />
+            }
+            styles={styles}
+            theme={theme}
+          />
+        </View>
+
+        {/* ── APPEARANCE ─────────────────────────────────────── */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionLabel}>{t("settings.appearance")}</Text>
+        </View>
+        <View style={[styles.sectionBody, styles.appearanceCard]}>
+          <SettingsRow
+            icon="color-palette-outline"
+            iconBg={sectionIconBg}
+            title={t("settings.theme")}
+            subtitle={themeType === "male" ? t("settings.themeMale") : t("settings.themeFemale")}
+            showBorder
+            right={
+              <Seg
+                options={[
+                  { label: t("settings.male"), value: "male" },
+                  { label: t("settings.female"), value: "female" },
+                ]}
+                value={themeType}
+                onChange={(v) => handleTheme(v as ThemeType)}
+              />
+            }
+            styles={styles}
+            theme={theme}
+          />
+          <SettingsRow
+            icon="language-outline"
+            iconBg={sectionIconBg}
+            title={t("settings.language")}
+            subtitle={t("settings.languageSubtitle")}
+            showBorder={false}
+            right={
+              <Seg
+                options={[
+                  { label: "English", value: "en" },
+                  { label: "Français", value: "fr" },
+                ]}
+                value={language}
+                onChange={(v) => setLanguage(v as "en" | "fr")}
+              />
+            }
+            styles={styles}
+            theme={theme}
+          />
+        </View>
+
+        {/* ── PREFERENCES ────────────────────────────────────── */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionLabel}>{t("settings.preferences")}</Text>
+        </View>
+        <View style={[styles.sectionBody, styles.preferencesCard]}>
+          <SettingsRow
+            icon="scale-outline"
+            iconBg={sectionIconBg}
+            title={t("settings.weightUnit")}
+            showBorder
+            right={
+              <Seg
+                options={[
+                  { label: "kg", value: "kg" },
+                  { label: "lbs", value: "lbs" },
+                ]}
+                value={weightUnit}
+                onChange={changeWeightUnit}
+              />
+            }
+            styles={styles}
+            theme={theme}
+          />
+          <SettingsRow
+            icon="navigate-outline"
+            iconBg={sectionIconBg}
+            title={t("settings.distanceUnit")}
+            showBorder
+            right={
+              <Seg
+                options={[
+                  { label: "km", value: "km" },
+                  { label: "mi", value: "mi" },
+                ]}
+                value={distanceUnit}
+                onChange={changeDistanceUnit}
+              />
+            }
+            styles={styles}
+            theme={theme}
+          />
+          <SettingsRow
+            icon="calendar-outline"
+            iconBg={sectionIconBg}
+            title={t("settings.firstDayOfWeek")}
+            showBorder={false}
+            right={
+              <Seg
+                options={[
+                  { label: "Mon", value: "mon" },
+                  { label: "Sun", value: "sun" },
+                ]}
+                value={weekStart}
+                onChange={changeWeekStart}
+              />
+            }
+            styles={styles}
+            theme={theme}
+          />
+        </View>
+
+        {/* ── NOTIFICATIONS ───────────────────────────────────── */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionLabel}>{t("settings.notifications")}</Text>
+        </View>
+        <View style={[styles.sectionBody, styles.notificationsCard]}>
+          <SettingsRow
+            icon="notifications-outline"
+            iconBg={sectionIconBg}
+            title={t("settings.pushNotifications")}
+            subtitle={t("settings.pushNotificationsSubtitle")}
+            showBorder
+            right={
+              <Switch
+                value={pushNotifs}
+                onValueChange={togglePush}
+                thumbColor={switchThumb}
+                trackColor={{ false: "#3a3a3a", true: switchTrackOn }}
+              />
+            }
+            styles={styles}
+            theme={theme}
+          />
+          <SettingsRow
+            icon="alarm-outline"
+            iconBg={sectionIconBg}
+            title={t("settings.workoutReminders")}
+            subtitle={t("settings.workoutRemindersSubtitle")}
+            showBorder
+            right={
+              <Switch
+                value={workoutReminders}
+                onValueChange={toggleReminders}
+                thumbColor={switchThumb}
+                trackColor={{ false: "#3a3a3a", true: switchTrackOn }}
+              />
+            }
+            styles={styles}
+            theme={theme}
+          />
+          <SettingsRow
+            icon="mail-outline"
+            iconBg={sectionIconBg}
+            title={t("settings.emailNotifications")}
+            subtitle={t("settings.emailNotificationsSubtitle")}
+            showBorder={false}
+            right={
+              <Switch
+                value={emailNotifs}
+                onValueChange={toggleEmail}
+                thumbColor={switchThumb}
+                trackColor={{ false: "#3a3a3a", true: switchTrackOn }}
+              />
+            }
+            styles={styles}
+            theme={theme}
+          />
+        </View>
+
+        {/* ── CONNECTED APPS ───────────────────────────────────── */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionLabel}>{t("settings.connectedApps")}</Text>
+        </View>
+        <View style={[styles.sectionBody, styles.connectedAppsCard]}>
+          <SettingsRow
+            icon="heart-outline"
+            iconBg={sectionIconBg}
+            title={t("settings.healthConnect")}
+            subtitle={t("settings.healthConnectSubtitle")}
+            showBorder={false}
+            right={
+              <Switch
+                value={healthConnect}
+                onValueChange={toggleHealth}
+                disabled={healthBusy}
+                thumbColor={switchThumb}
+                trackColor={{ false: "#3a3a3a", true: switchTrackOn }}
+              />
+            }
+            styles={styles}
+            theme={theme}
+          />
+        </View>
+
+        {/* ── SUPPORT ─────────────────────────────────────────── */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionLabel}>{t("settings.support")}</Text>
+        </View>
+        <View style={[styles.sectionBody, styles.supportCard]}>
+          <SettingsRow
+            icon="help-circle-outline"
+            iconBg={sectionIconBg}
+            title={t("settings.helpCenter")}
+            showBorder
+            showChevron
+            onPress={() => router.push("/settings/help-center" as any)}
+            styles={styles}
+            theme={theme}
+          />
+          <SettingsRow
+            icon="star-outline"
+            iconBg={sectionIconBg}
+            title={t("settings.rateHylift")}
+            subtitle={t("settings.rateHyliftSubtitle")}
+            showBorder
+            showChevron
+            onPress={() => {}}
+            styles={styles}
+            theme={theme}
+          />
+          <SettingsRow
+            icon="information-circle-outline"
+            iconBg={sectionIconBg}
+            title={t("settings.aboutHylift")}
+            subtitle={t("settings.version")}
+            showBorder
+            showChevron
+            onPress={() => router.push("/settings/about" as any)}
+            styles={styles}
+            theme={theme}
+          />
+          <SettingsRow
+            icon="document-text-outline"
+            iconBg={sectionIconBg}
+            title={t("settings.termsOfService")}
+            showBorder
+            showChevron
+            onPress={() => router.push("/settings/terms" as any)}
+            styles={styles}
+            theme={theme}
+          />
+          <SettingsRow
+            icon="shield-checkmark-outline"
+            iconBg={sectionIconBg}
+            title={t("settings.privacyPolicy")}
+            showBorder={false}
+            showChevron
+            onPress={() => router.push("/settings/privacy" as any)}
+            styles={styles}
+            theme={theme}
+          />
+        </View>
+
+        {/* ── DANGER ZONE ─────────────────────────────────────── */}
+        <View style={styles.sectionHeader}>
+          <Text style={[styles.sectionLabel, { color: "#f87171" }]}>
+            {t("settings.accountActions")}
+          </Text>
+        </View>
+        <View style={styles.dangerSection}>
+          <TouchableOpacity
+            style={[styles.dangerRow, styles.rowBorder]}
+            onPress={handleLogout}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="log-out-outline" size={20} color="#f87171" />
+            <Text style={[styles.dangerText, { color: "#f87171" }]}>
+              {t("settings.logOut")}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.dangerRow}
+            onPress={handleDeleteAccount}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="trash-outline" size={20} color="#ef4444" />
+            <Text style={[styles.dangerText, { color: "#ef4444" }]}>
+              {t("settings.deleteAccount")}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <Text style={styles.version}>Hylift v1.0.0 · Built with ♥</Text>
+      </ScrollView>
+
+      <ConfirmationModal
+        visible={logoutModalVisible}
+        variant="destructive"
+        icon="log-out-outline"
+        title={t("settings.logOut")}
+        message={t("settings.logOutConfirm")}
+        confirmLabel={t("settings.logOut")}
+        cancelLabel={t("common.cancel")}
+        onCancel={() => setLogoutModalVisible(false)}
+        onConfirm={confirmLogout}
+      />
+    </View>
+  );
+}

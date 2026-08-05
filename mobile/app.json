@@ -1,0 +1,121 @@
+{
+  "expo": {
+    "name": "hylift",
+    "slug": "hylift",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "splash": {
+      "image": "./assets/images/LogoBlue.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#E6F4FE",
+      "dark": {
+        "image": "./assets/images/LogoBlue.png",
+        "backgroundColor": "#0B0D0E"
+      }
+    },
+    "scheme": "hylift",
+    "userInterfaceStyle": "automatic",
+    "platforms": [
+      "ios",
+      "android"
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.hylift",
+      "infoPlist": {
+        "UIViewControllerBasedStatusBarAppearance": false,
+        "NSHealthShareUsageDescription": "Hylift needs access to your health data to track your calories burned, steps, and workouts.",
+        "NSHealthUpdateUsageDescription": "Hylift needs to save your workout and nutrition data to Apple Health.",
+        "NSCameraUsageDescription": "Hylift uses the camera to scan profile QR codes."
+      },
+      "entitlements": {
+        "com.apple.developer.healthkit": true,
+        "com.apple.developer.healthkit.background-delivery": true
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/images/Logo.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "config": {
+        "googleMaps": {
+          "apiKey": "YOUR_GOOGLE_MAPS_API_KEY"
+        }
+      },
+      "package": "com.progix.hylift",
+      "versionCode": 6,
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.health.READ_STEPS",
+        "android.permission.health.READ_DISTANCE",
+        "android.permission.health.READ_TOTAL_CALORIES_BURNED",
+        "android.permission.health.READ_ACTIVE_CALORIES_BURNED",
+        "android.permission.health.READ_EXERCISE",
+        "android.permission.health.READ_HEART_RATE",
+        "android.permission.health.WRITE_NUTRITION"
+      ]
+    },
+    "web": {
+      "output": "static",
+      "favicon": "./assets/images/icon.png"
+    },
+    "plugins": [
+      [
+        "expo-router",
+        {
+          "root": "./src/app"
+        }
+      ],
+      "expo-font",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 36,
+            "targetSdkVersion": 35,
+            "minSdkVersion": 26
+          }
+        }
+      ],
+      [
+        "react-native-health",
+        {
+          "isClinicalDataEnabled": false
+        }
+      ],
+      "expo-localization",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Hylift uses the camera to scan profile QR codes."
+        }
+      ],
+      [
+        "expo-status-bar",
+        {
+          "style": "light"
+        }
+      ],
+      [
+        "expo-navigation-bar",
+        {
+          "hidden": true,
+          "style": "dark"
+        }
+      ]
+    ],
+    "extra": {
+      "router": {
+        "root": "./src/app"
+      }
+    }
+  }
+}
