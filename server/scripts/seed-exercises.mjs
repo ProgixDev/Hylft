@@ -69,15 +69,29 @@ async function main() {
   let inserted = 0;
   for (let i = 0; i < rows.length; i += BATCH) {
     const slice = rows.slice(i, i + BATCH);
-    const { error } = await supabase
-      .from('exercises')
-      .upsert(slice, { onConflict: 'external_id' });
-    if (error) {
-      console.error(`Batch ${i / BATCH + 1} failed:`, error);
+    const batchNum = i / BATCH + 1;
+
+    let lastError;
+    for (let attempt = 1; attempt <= 4; attempt++) {
+      const { error } = await supabase
+        .from('exercises')
+        .upsert(slice, { onConflict: 'external_id' });
+      if (!error) {
+        lastError = null;
+        break;
+      }
+      lastError = error;
+      console.error(`Batch ${batchNum} attempt ${attempt} failed:`, error.message ?? error);
+      if (attempt < 4) await new Promise((r) => setTimeout(r, attempt * 1000));
+    }
+    if (lastError) {
+      console.error(`Batch ${batchNum} failed after retries:`, lastError);
       process.exit(1);
     }
+
     inserted += slice.length;
     console.log(`  upserted ${inserted}/${rows.length}`);
+    await new Promise((r) => setTimeout(r, 250));
   }
 
   const { count, error: cErr } = await supabase
