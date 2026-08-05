@@ -1,0 +1,31 @@
+/* globals.css */
+@import "tailwindcss";
+
+@theme {
+  --color-brand-green: #A4E600;
+  --color-brand-dark: #1B1F24;
+  --color-brand-gray: #BFC3C7;
+  --color-brand-light: #E6E6E6;
+  
+  --color-background: var(--color-brand-dark);
+  --color-foreground: var(--color-brand-light);
+}
+
+:root {
+  background-color: var(--color-brand-dark);
+  color: var(--color-brand-light);
+}
+
+/* Auto-scroll marquee animation */
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-scroll {
+  animation: scroll 30s linear infinite;
+}
