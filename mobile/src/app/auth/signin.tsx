@@ -105,6 +105,21 @@ function createStyles(theme: Theme) {
       fontSize: 14,
       fontFamily: FONTS.semiBold,
     },
+    inlineBanner: {
+      backgroundColor: "rgba(255, 170, 50, 0.12)",
+      borderLeftWidth: 3,
+      borderLeftColor: "#FFAA32",
+      borderRadius: 8,
+      paddingVertical: 12,
+      paddingHorizontal: 14,
+      marginBottom: 16,
+    },
+    inlineBannerText: {
+      color: "#FFAA32",
+      fontSize: 13,
+      fontFamily: FONTS.medium,
+      lineHeight: 19,
+    },
   });
 }
 
@@ -114,6 +129,7 @@ export default function SignIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [inlineError, setInlineError] = useState<string | null>(null);
   const router = useRouter();
 
   const styles = createStyles(theme);
@@ -121,6 +137,8 @@ export default function SignIn() {
   const { signIn, setOnboardingCompleted, hasCompletedGetStarted } = useAuth();
 
   const handleSignIn = async () => {
+    setInlineError(null);
+
     if (!email || !password) {
       Alert.alert(t("auth.error"), t("auth.fillAllFields"));
       return;
@@ -135,7 +153,12 @@ export default function SignIn() {
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : "Sign in failed";
-      Alert.alert(t("auth.error"), message);
+
+      if (message.toLowerCase().includes("email not confirmed")) {
+        setInlineError(t("auth.emailNotConfirmed"));
+      } else {
+        Alert.alert(t("auth.error"), message);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -200,6 +223,12 @@ export default function SignIn() {
           >
             <Text style={styles.forgotPasswordText}>{t("auth.forgotPassword")}</Text>
           </TouchableOpacity>
+
+          {inlineError && (
+            <View style={styles.inlineBanner}>
+              <Text style={styles.inlineBannerText}>{inlineError}</Text>
+            </View>
+          )}
 
           <View style={{ marginBottom: 18 }}>
             <ChipButton

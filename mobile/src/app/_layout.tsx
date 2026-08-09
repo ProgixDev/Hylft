@@ -213,7 +213,7 @@ function AppContent() {
               : isGetStartedRoute
               ? isPlanBuildingRoute
                 ? "#101011"
-                : "#FFFFFF"
+                : theme.background.dark
               : shellBackgroundColor,
             paddingTop: isFullBleedRoute ? 0 : insets.top,
             paddingBottom: isFullBleedRoute ? 0 : insets.bottom,

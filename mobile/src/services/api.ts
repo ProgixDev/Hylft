@@ -158,6 +158,8 @@ export const api = {
     return authFetch(`/health/workouts/history?${qs.toString()}`);
   },
   getWorkoutDetail: (id: string) => authFetch(`/health/workouts/${id}`),
+  getExercisePRs: (exerciseNames: string[]): Promise<Record<string, { bestWeight: number; bestReps: number }>> =>
+    authFetch(`/health/workouts/prs?exercises=${encodeURIComponent(exerciseNames.join(","))}`),
   addWorkout: (data: Record<string, unknown>) =>
     authFetch("/health/workouts", { method: "POST", body: JSON.stringify(data) }),
   deleteWorkout: (id: string) =>

@@ -584,13 +584,20 @@ export default function Settings() {
             icon="color-palette-outline"
             iconBg={sectionIconBg}
             title={t("settings.theme")}
-            subtitle={themeType === "male" ? t("settings.themeMale") : t("settings.themeFemale")}
+            subtitle={
+              themeType === "dark"
+                ? t("settings.themeDark")
+                : themeType === "female"
+                  ? t("settings.themeFemale")
+                  : t("settings.themeMale")
+            }
             showBorder
             right={
               <Seg
                 options={[
                   { label: t("settings.male"), value: "male" },
                   { label: t("settings.female"), value: "female" },
+                  { label: t("settings.dark"), value: "dark" },
                 ]}
                 value={themeType}
                 onChange={(v) => handleTheme(v as ThemeType)}

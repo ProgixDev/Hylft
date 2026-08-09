@@ -20,6 +20,7 @@ import {
   View,
 } from "react-native";
 import ConfirmationModal from "../../components/ui/ConfirmationModal";
+import RestTimerSheet from "../../components/ui/RestTimerSheet";
 import WorkoutCompletionView from "../../components/ui/WorkoutCompletionView";
 import { FONTS } from "../../constants/fonts";
 import { Theme } from "../../constants/themes";
@@ -29,6 +30,7 @@ import {
   useActiveWorkout,
 } from "../../contexts/ActiveWorkoutContext";
 import { useTheme } from "../../contexts/ThemeContext";
+import { api } from "../../services/api";
 import { findExerciseByNameExerciseDb } from "../../services/exerciseDbApi";
 import { translateExerciseName } from "../../utils/exerciseTranslator";
 
@@ -74,6 +76,80 @@ export default function WorkoutPlayerScreen() {
       cancelled = true;
     };
   }, [guidedPlayer?.exercises.length]);
+
+  // ── PR detection ──────────────────────────────────────────────────
+  const [exercisePRs, setExercisePRs] = useState<
+    Record<string, { bestWeight: number; bestReps: number }>
+  >({});
+  const [prSetIds, setPrSetIds] = useState<Set<string>>(new Set());
+  const [prToast, setPrToast] = useState<string | null>(null);
+  const prToastAnim = useRef(new Animated.Value(0)).current;
+
+  // Fetch all-time PRs for exercises in this routine
+  useEffect(() => {
+    if (!guidedPlayer) return;
+    let cancelled = false;
+    const names = guidedPlayer.exercises.map((ex) => ex.name);
+    api.getExercisePRs(names).then((prs) => {
+      if (!cancelled) setExercisePRs(prs);
+    }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [guidedPlayer?.routineId]);
+
+  // Show PR toast with auto-dismiss
+  const showPrToast = useCallback((exerciseName: string, type: "weight" | "reps") => {
+    const label = type === "weight"
+      ? t("workoutPlayer.newWeightPR", { exercise: translateExerciseName(exerciseName) })
+      : t("workoutPlayer.newRepsPR", { exercise: translateExerciseName(exerciseName) });
+    setPrToast(label);
+    prToastAnim.setValue(0);
+    Animated.sequence([
+      Animated.timing(prToastAnim, { toValue: 1, duration: 300, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+      Animated.delay(2500),
+      Animated.timing(prToastAnim, { toValue: 0, duration: 300, easing: Easing.in(Easing.cubic), useNativeDriver: true }),
+    ]).start(() => setPrToast(null));
+  }, [t, prToastAnim]);
+
+  // Wrap togglePlayerSetCompleted to detect PRs
+  const handleToggleComplete = useCallback((exerciseId: string, setId: string) => {
+    togglePlayerSetCompleted(exerciseId, setId);
+
+    if (!guidedPlayer) return;
+    const exercise = guidedPlayer.exercises.find((e) => e.id === exerciseId);
+    if (!exercise) return;
+    const set = exercise.sets.find((s) => s.id === setId);
+    if (!set || set.isWarmup) return;
+
+    // Only detect PR when completing (not un-completing)
+    if (set.isCompleted) return; // it's about to toggle to completed
+
+    const kg = parseFloat(set.kg) || 0;
+    const reps = parseInt(set.reps, 10) || 0;
+    const pr = exercisePRs[exercise.name];
+    if (!pr || (kg <= 0 && reps <= 0)) return;
+
+    let isPR = false;
+    if (kg > pr.bestWeight && kg > 0) {
+      isPR = true;
+      showPrToast(exercise.name, "weight");
+      // Update local PR so subsequent sets compare against new best
+      setExercisePRs((prev) => ({
+        ...prev,
+        [exercise.name]: { ...prev[exercise.name], bestWeight: kg },
+      }));
+    } else if (reps > pr.bestReps && reps > 0) {
+      isPR = true;
+      showPrToast(exercise.name, "reps");
+      setExercisePRs((prev) => ({
+        ...prev,
+        [exercise.name]: { ...prev[exercise.name], bestReps: reps },
+      }));
+    }
+
+    if (isPR) {
+      setPrSetIds((prev) => new Set(prev).add(setId));
+    }
+  }, [guidedPlayer, exercisePRs, togglePlayerSetCompleted, showPrToast]);
 
   const [exitModalVisible, setExitModalVisible] = useState(false);
   const [completionVisible, setCompletionVisible] = useState(false);
@@ -209,21 +285,43 @@ export default function WorkoutPlayerScreen() {
               onRemoveSet={(setId) => removePlayerSet(ex.id, setId)}
               onToggleWarmup={(setId) => togglePlayerSetWarmup(ex.id, setId)}
               onToggleComplete={(setId) =>
-                togglePlayerSetCompleted(ex.id, setId)
+                handleToggleComplete(ex.id, setId)
               }
+              prSetIds={prSetIds}
             />
           ))}
         </ScrollView>
 
-        {/* ── Floating rest timer bar ──────────────────────────────── */}
-        {guidedPlayer.restEndsAt ? (
-          <RestTimerBar
-            endsAt={guidedPlayer.restEndsAt}
-            totalSeconds={guidedPlayer.restTotalSeconds ?? 60}
-            onSkip={stopPlayerRest}
-            onAdjust={adjustPlayerRest}
-          />
-        ) : null}
+        {/* ── Rest timer bottom sheet ──────────────────────────────── */}
+        <RestTimerSheet
+          visible={!!guidedPlayer.restEndsAt}
+          endsAt={guidedPlayer.restEndsAt ?? 0}
+          totalSeconds={guidedPlayer.restTotalSeconds ?? 60}
+          onSkip={stopPlayerRest}
+          onAdjust={adjustPlayerRest}
+        />
+
+        {/* ── PR Toast ─────────────────────────────────────────────── */}
+        {prToast && (
+          <Animated.View
+            style={[
+              styles.prToast,
+              {
+                opacity: prToastAnim,
+                transform: [{
+                  translateY: prToastAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [-40, 0],
+                  }),
+                }],
+              },
+            ]}
+            pointerEvents="none"
+          >
+            <Text style={styles.prToastEmoji}>🏆</Text>
+            <Text style={styles.prToastText}>{prToast}</Text>
+          </Animated.View>
+        )}
 
         <ConfirmationModal
           visible={exitModalVisible}
@@ -256,231 +354,6 @@ export default function WorkoutPlayerScreen() {
   );
 }
 
-// ─── Rest timer floating bar ──────────────────────────────────────────
-function RestTimerBar({
-  endsAt,
-  totalSeconds,
-  onSkip,
-  onAdjust,
-}: {
-  endsAt: number;
-  totalSeconds: number;
-  onSkip: () => void;
-  onAdjust: (delta: number) => void;
-}) {
-  const { t } = useTranslation();
-  const [remaining, setRemaining] = useState(() =>
-    Math.max(0, Math.round((endsAt - Date.now()) / 1000)),
-  );
-
-  // Entrance animation: slide up + fade in (native-driven for 60fps).
-  const enterAnim = useRef(new Animated.Value(0)).current;
-  useEffect(() => {
-    Animated.timing(enterAnim, {
-      toValue: 1,
-      duration: 280,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: true,
-    }).start();
-  }, [enterAnim]);
-
-  // Progress animation: drive scaleX from current remaining ratio down to 0,
-  // restarting whenever endsAt changes (e.g. user tapped +15s / -15s).
-  const progressAnim = useRef(
-    new Animated.Value(
-      totalSeconds > 0
-        ? Math.min(1, Math.max(0, (endsAt - Date.now()) / 1000 / totalSeconds))
-        : 0,
-    ),
-  ).current;
-  const [trackWidth, setTrackWidth] = useState(0);
-
-  useEffect(() => {
-    const msLeft = Math.max(0, endsAt - Date.now());
-    const startRatio =
-      totalSeconds > 0 ? Math.min(1, msLeft / 1000 / totalSeconds) : 0;
-    progressAnim.setValue(startRatio);
-    if (msLeft <= 0) return;
-    const animation = Animated.timing(progressAnim, {
-      toValue: 0,
-      duration: msLeft,
-      easing: Easing.linear,
-      useNativeDriver: true,
-    });
-    animation.start();
-    return () => animation.stop();
-  }, [endsAt, totalSeconds, progressAnim]);
-
-  // Timer label tick (text only — progress bar is animated independently).
-  useEffect(() => {
-    setRemaining(Math.max(0, Math.round((endsAt - Date.now()) / 1000)));
-    const id = setInterval(() => {
-      const next = Math.max(0, Math.round((endsAt - Date.now()) / 1000));
-      setRemaining(next);
-      if (next <= 0) {
-        clearInterval(id);
-        onSkip();
-      }
-    }, 250);
-    return () => clearInterval(id);
-  }, [endsAt, onSkip]);
-
-  const minutes = Math.floor(remaining / 60);
-  const seconds = remaining % 60;
-
-  const translateY = enterAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [140, 0],
-  });
-
-  // scaleX is anchored to the center by default; offset with translateX so it
-  // grows/shrinks from the left edge of the track.
-  const fillTranslateX =
-    trackWidth > 0
-      ? progressAnim.interpolate({
-          inputRange: [0, 1],
-          outputRange: [-trackWidth / 2, 0],
-        })
-      : 0;
-
-  return (
-    <Animated.View
-      style={[
-        restBarStyles.container,
-        { opacity: enterAnim, transform: [{ translateY }] },
-      ]}
-      pointerEvents="box-none"
-    >
-      <View style={restBarStyles.card}>
-        <View style={restBarStyles.topRow}>
-          <Text style={restBarStyles.title}>{t("workoutPlayer.rest")}</Text>
-          <Text style={restBarStyles.timerText}>
-            {`${minutes}:${String(seconds).padStart(2, "0")}`}
-          </Text>
-          <TouchableOpacity
-            style={restBarStyles.skipBtn}
-            onPress={onSkip}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
-            <Ionicons name="close" size={18} color="#FFFFFF" />
-          </TouchableOpacity>
-        </View>
-
-        <View
-          style={restBarStyles.progressTrack}
-          onLayout={(e) => setTrackWidth(e.nativeEvent.layout.width)}
-        >
-          <Animated.View
-            style={[
-              restBarStyles.progressFill,
-              {
-                transform: [
-                  { translateX: fillTranslateX },
-                  { scaleX: progressAnim },
-                ],
-              },
-            ]}
-          />
-        </View>
-
-        <View style={restBarStyles.adjustRow}>
-          <TouchableOpacity
-            style={restBarStyles.adjustBtn}
-            onPress={() => onAdjust(-15)}
-          >
-            <Text style={restBarStyles.adjustBtnText}>-15s</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={restBarStyles.adjustBtn}
-            onPress={() => onAdjust(15)}
-          >
-            <Text style={restBarStyles.adjustBtnText}>+15s</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </Animated.View>
-  );
-}
-
-const restBarStyles = StyleSheet.create({
-  container: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 16,
-    paddingHorizontal: 12,
-  },
-  card: {
-    backgroundColor: NAVY_BLUE,
-    borderRadius: 18,
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 14,
-    gap: 12,
-    shadowColor: "#000",
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 8,
-  },
-  topRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  title: {
-    flex: 1,
-    color: "#FFFFFF",
-    fontSize: 13,
-    fontFamily: FONTS.bold,
-    letterSpacing: 1.5,
-    textTransform: "uppercase",
-  },
-  timerText: {
-    color: "#FFFFFF",
-    fontSize: 22,
-    fontFamily: FONTS.bold,
-  },
-  skipBtn: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: "rgba(255,255,255,0.15)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  progressTrack: {
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: "rgba(255,255,255,0.18)",
-    overflow: "hidden",
-  },
-  progressFill: {
-    position: "absolute",
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: "100%",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 3,
-  },
-  adjustRow: {
-    flexDirection: "row",
-    gap: 10,
-  },
-  adjustBtn: {
-    flex: 1,
-    backgroundColor: "rgba(255,255,255,0.15)",
-    paddingVertical: 10,
-    borderRadius: 12,
-    alignItems: "center",
-  },
-  adjustBtnText: {
-    color: "#FFFFFF",
-    fontSize: 15,
-    fontFamily: FONTS.bold,
-  },
-});
 
 // ─── Exercise card ────────────────────────────────────────────────────
 function ExerciseCard({
@@ -491,6 +364,7 @@ function ExerciseCard({
   onRemoveSet,
   onToggleWarmup,
   onToggleComplete,
+  prSetIds,
 }: {
   theme: Theme;
   exercise: GuidedPlayerExercise;
@@ -499,6 +373,7 @@ function ExerciseCard({
   onRemoveSet: (setId: string) => void;
   onToggleWarmup: (setId: string) => void;
   onToggleComplete: (setId: string) => void;
+  prSetIds: Set<string>;
 }) {
   const { t } = useTranslation();
   const styles = createStyles(theme);
@@ -629,10 +504,15 @@ function ExerciseCard({
           set.previousKg !== undefined && set.previousReps !== undefined
             ? `${set.previousKg}kg x ${set.previousReps}`
             : "—";
+        const isPR = prSetIds.has(set.id);
         return (
           <View
             key={set.id}
-            style={[styles.setRow, set.isCompleted && styles.setRowCompleted]}
+            style={[
+              styles.setRow,
+              set.isCompleted && styles.setRowCompleted,
+              isPR && styles.setRowPR,
+            ]}
           >
             <TouchableOpacity
               style={styles.colSet}
@@ -686,9 +566,15 @@ function ExerciseCard({
               onPress={() => onToggleComplete(set.id)}
             >
               <View
-                style={[styles.checkBox, set.isCompleted && styles.checkBoxOn]}
+                style={[
+                  styles.checkBox,
+                  set.isCompleted && styles.checkBoxOn,
+                  isPR && styles.checkBoxPR,
+                ]}
               >
-                {set.isCompleted ? (
+                {isPR ? (
+                  <Text style={{ fontSize: 12 }}>🏆</Text>
+                ) : set.isCompleted ? (
                   <Ionicons name="checkmark" size={14} color="#fff" />
                 ) : null}
               </View>
@@ -943,6 +829,11 @@ const createStyles = (theme: Theme) =>
       borderRadius: 14,
       paddingHorizontal: 6,
     },
+    setRowPR: {
+      backgroundColor: "#1B5E20",
+      borderRadius: 14,
+      paddingHorizontal: 6,
+    },
     setLabel: {
       fontSize: 14,
       fontFamily: FONTS.bold,
@@ -973,6 +864,9 @@ const createStyles = (theme: Theme) =>
     },
     checkBoxOn: {
       backgroundColor: NAVY_BLUE,
+    },
+    checkBoxPR: {
+      backgroundColor: "#2E7D32",
     },
     // Add set
     addSetBtn: {
@@ -1026,5 +920,33 @@ const createStyles = (theme: Theme) =>
       backgroundColor: theme.background.dark,
       alignItems: "center",
       justifyContent: "center",
+    },
+    // PR toast
+    prToast: {
+      position: "absolute",
+      top: 12,
+      left: 20,
+      right: 20,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+      backgroundColor: "#1B5E20",
+      borderRadius: 14,
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      shadowColor: "#000",
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      shadowOffset: { width: 0, height: 4 },
+      elevation: 8,
+    },
+    prToastEmoji: {
+      fontSize: 20,
+    },
+    prToastText: {
+      color: "#FFFFFF",
+      fontSize: 14,
+      fontFamily: FONTS.bold,
+      flex: 1,
     },
   });

@@ -791,7 +791,7 @@ function createStyles(theme: Theme) {
       width: 34,
       height: 34,
       borderRadius: 10,
-      backgroundColor: NAVY_CARD,
+      backgroundColor: theme.background.accent,
       borderWidth: 1,
       borderColor: "rgba(255,255,255,0.14)",
       alignItems: "center",
@@ -814,7 +814,7 @@ function createStyles(theme: Theme) {
     sectionLink: {
       fontFamily: FONTS.bold,
       fontSize: 13,
-      color: NAVY_CARD_LIGHT,
+      color: theme.primary.light,
     },
 
     summaryCard: {
@@ -834,12 +834,12 @@ function createStyles(theme: Theme) {
     summarySideValue: {
       fontFamily: FONTS.extraBold,
       fontSize: 22,
-      color: NAVY_CARD,
+      color: theme.foreground.white,
     },
     summarySideLabel: {
       fontFamily: FONTS.regular,
       fontSize: 12,
-      color: NAVY_CARD,
+      color: theme.foreground.gray,
       marginTop: 4,
     },
     summaryCenter: {
@@ -849,12 +849,12 @@ function createStyles(theme: Theme) {
     summaryCenterValue: {
       fontFamily: FONTS.extraBold,
       fontSize: 28,
-      color: NAVY_CARD,
+      color: theme.foreground.white,
     },
     summaryCenterLabel: {
       fontFamily: FONTS.regular,
       fontSize: 12,
-      color: NAVY_CARD,
+      color: theme.foreground.gray,
       marginTop: 2,
     },
 
@@ -870,14 +870,14 @@ function createStyles(theme: Theme) {
     macroBarLabel: {
       fontFamily: FONTS.semiBold,
       fontSize: 14,
-      color: NAVY_CARD,
+      color: theme.foreground.white,
       marginBottom: 6,
       textAlign: "center",
     },
     macroBarTrack: {
       height: 10,
       borderRadius: 6,
-      backgroundColor: "rgba(10,22,40,0.18)",
+      backgroundColor: theme.background.accent,
       overflow: "hidden",
     },
     macroBarFill: {
@@ -887,7 +887,7 @@ function createStyles(theme: Theme) {
     macroBarValue: {
       fontFamily: FONTS.regular,
       fontSize: 12,
-      color: NAVY_CARD,
+      color: theme.foreground.gray,
       marginTop: 6,
       textAlign: "center",
     },

@@ -98,7 +98,8 @@
     "createNewAccount": "Create New Account",
     "error": "Error",
     "fillAllFields": "Please fill in all fields",
-    "passwordResetComingSoon": "Password reset functionality coming soon!"
+    "passwordResetComingSoon": "Password reset functionality coming soon!",
+    "emailNotConfirmed": "Please confirm your email by clicking the activation link sent to your inbox before signing in."
   },
   "onboarding": {
     "s1": {
@@ -536,8 +537,10 @@
     "theme": "Theme",
     "themeMale": "Male (Green)",
     "themeFemale": "Female (Blue)",
+    "themeDark": "Dark mode",
     "male": "Male",
     "female": "Female",
+    "dark": "Dark",
     "preferences": "Preferences",
     "weightUnit": "Weight Unit",
     "distanceUnit": "Distance Unit",
@@ -1071,7 +1074,9 @@
     "removeSet": "Remove Set",
     "finish": "Finish",
     "noSets": "No sets logged yet",
-    "seeExercise": "See exercise"
+    "seeExercise": "See exercise",
+    "newWeightPR": "New weight PR — {{exercise}}!",
+    "newRepsPR": "New reps PR — {{exercise}}!"
   },
   "search": {
     "findPeople": "Search",

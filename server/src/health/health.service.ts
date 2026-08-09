@@ -170,6 +170,61 @@ export class HealthService {
     return data;
   }
 
+  /**
+   * Returns all-time best weight and best reps (at any weight) for each
+   * requested exercise name, across all workout_logs for this user.
+   */
+  async getExercisePRs(
+    userId: string,
+    exerciseNames: string[],
+  ): Promise<Record<string, { bestWeight: number; bestReps: number }>> {
+    if (!exerciseNames.length) return {};
+
+    const { data, error } = await this.supabase
+      .from('workout_logs')
+      .select('exercises')
+      .eq('user_id', userId)
+      .not('exercises', 'is', null);
+
+    if (error) throw error;
+
+    const lowerNames = new Set(exerciseNames.map((n) => n.toLowerCase()));
+    const prs: Record<string, { bestWeight: number; bestReps: number }> = {};
+
+    for (const name of exerciseNames) {
+      prs[name] = { bestWeight: 0, bestReps: 0 };
+    }
+
+    for (const row of data ?? []) {
+      const exercises = row.exercises as any[];
+      if (!Array.isArray(exercises)) continue;
+
+      for (const ex of exercises) {
+        const exName = (ex.name ?? '') as string;
+        if (!lowerNames.has(exName.toLowerCase())) continue;
+
+        // Find the matching original name key
+        const matchKey = exerciseNames.find(
+          (n) => n.toLowerCase() === exName.toLowerCase(),
+        );
+        if (!matchKey) continue;
+
+        const sets = ex.sets as any[];
+        if (!Array.isArray(sets)) continue;
+
+        for (const s of sets) {
+          if (s.is_warmup || !s.completed) continue;
+          const kg = parseFloat(s.kg) || 0;
+          const reps = parseInt(s.reps, 10) || 0;
+          if (kg > prs[matchKey].bestWeight) prs[matchKey].bestWeight = kg;
+          if (reps > prs[matchKey].bestReps) prs[matchKey].bestReps = reps;
+        }
+      }
+    }
+
+    return prs;
+  }
+
   async deleteWorkout(userId: string, workoutId: string) {
     const { error } = await this.supabase
       .from('workout_logs')

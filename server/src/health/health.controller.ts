@@ -82,6 +82,17 @@ export class HealthController {
     );
   }
 
+  @Get('workouts/prs')
+  getExercisePRs(
+    @CurrentUser() user: AuthUser,
+    @Query('exercises') exercises: string,
+  ) {
+    const names = exercises
+      ? exercises.split(',').map((n) => n.trim()).filter(Boolean)
+      : [];
+    return this.healthService.getExercisePRs(user.id, names);
+  }
+
   @Get('workouts/:id')
   getWorkoutDetail(
     @CurrentUser() user: AuthUser,

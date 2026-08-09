@@ -98,7 +98,8 @@
     "createNewAccount": "Créer un nouveau compte",
     "error": "Erreur",
     "fillAllFields": "Veuillez remplir tous les champs",
-    "passwordResetComingSoon": "La fonctionnalité de réinitialisation du mot de passe arrive bientôt !"
+    "passwordResetComingSoon": "La fonctionnalité de réinitialisation du mot de passe arrive bientôt !",
+    "emailNotConfirmed": "Veuillez confirmer votre adresse email en cliquant sur le lien d'activation envoyé à votre boîte mail avant de vous connecter."
   },
   "onboarding": {
     "s1": {
@@ -536,8 +537,10 @@
     "theme": "Thème",
     "themeMale": "Homme (Vert)",
     "themeFemale": "Femme (Bleu)",
+    "themeDark": "Mode sombre",
     "male": "Homme",
     "female": "Femme",
+    "dark": "Sombre",
     "preferences": "Préférences",
     "weightUnit": "Unité de poids",
     "distanceUnit": "Unité de distance",
@@ -1071,7 +1074,9 @@
     "removeSet": "Supprimer la série",
     "finish": "Terminer",
     "noSets": "Aucune série enregistrée",
-    "seeExercise": "Voir l'exercice"
+    "seeExercise": "Voir l'exercice",
+    "newWeightPR": "Nouveau record de poids — {{exercise}} !",
+    "newRepsPR": "Nouveau record de reps — {{exercise}} !"
   },
   "search": {
     "findPeople": "Rechercher",
