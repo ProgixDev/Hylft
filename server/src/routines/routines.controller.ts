@@ -69,6 +69,14 @@ export class RoutinesController {
     return this.routinesService.deleteRoutine(user.id, routineId);
   }
 
+  @Post('cover/sign-upload')
+  signCoverUpload(
+    @CurrentUser() user: AuthUser,
+    @Body() body: { ext?: string },
+  ) {
+    return this.routinesService.signCoverUpload(user.id, body?.ext);
+  }
+
   @Post(':id/completed')
   incrementCompleted(
     @CurrentUser() user: AuthUser,

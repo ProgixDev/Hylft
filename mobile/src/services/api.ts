@@ -136,6 +136,11 @@ export const api = {
     authFetch("/routines", { method: "POST", body: JSON.stringify(data) }),
   updateRoutine: (id: string, data: Record<string, unknown>) =>
     authFetch(`/routines/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+  signRoutineCoverUpload: (data: { ext?: string } = {}) =>
+    authFetch("/routines/cover/sign-upload", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
   deleteRoutine: (id: string) =>
     authFetch(`/routines/${id}`, { method: "DELETE" }),
   incrementRoutineCompleted: (id: string) =>

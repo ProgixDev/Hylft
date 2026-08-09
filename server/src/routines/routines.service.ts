@@ -1,19 +1,26 @@
 import {
   Injectable,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { randomUUID } from 'crypto';
 import { CreateRoutineDto } from './dto/create-routine.dto';
 import { UpdateRoutineDto } from './dto/update-routine.dto';
+
+const COVERS_BUCKET = 'covers';
+const ALLOWED_COVER_EXTS = ['jpg', 'jpeg', 'png', 'webp', 'heic'] as const;
 
 @Injectable()
 export class RoutinesService {
   private supabase: SupabaseClient;
+  private supabaseUrl: string;
 
   constructor(config: ConfigService) {
+    this.supabaseUrl = config.get<string>('SUPABASE_URL')!;
     this.supabase = createClient(
-      config.get<string>('SUPABASE_URL')!,
+      this.supabaseUrl,
       config.get<string>('SUPABASE_SERVICE_ROLE_KEY')!,
     );
   }
@@ -80,18 +87,21 @@ export class RoutinesService {
   async createRoutine(userId: string, dto: CreateRoutineDto) {
     const id = `routine-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 
+    const insertData: Record<string, any> = {
+      id,
+      user_id: userId,
+      name: dto.name,
+      description: dto.description ?? '',
+      target_muscles: dto.targetMuscles ?? [],
+      exercises: dto.exercises,
+      estimated_duration: dto.estimatedDuration ?? 0,
+      times_completed: 0,
+    };
+    if (dto.wallpaperUrl) insertData.wallpaper_url = dto.wallpaperUrl;
+
     const { data, error } = await this.supabase
       .from('routines')
-      .insert({
-        id,
-        user_id: userId,
-        name: dto.name,
-        description: dto.description ?? '',
-        target_muscles: dto.targetMuscles ?? [],
-        exercises: dto.exercises,
-        estimated_duration: dto.estimatedDuration ?? 0,
-        times_completed: 0,
-      })
+      .insert(insertData)
       .select()
       .single();
 
@@ -106,6 +116,7 @@ export class RoutinesService {
     if (dto.targetMuscles !== undefined) updateData.target_muscles = dto.targetMuscles;
     if (dto.exercises !== undefined) updateData.exercises = dto.exercises;
     if (dto.estimatedDuration !== undefined) updateData.estimated_duration = dto.estimatedDuration;
+    if (dto.wallpaperUrl !== undefined) updateData.wallpaper_url = dto.wallpaperUrl;
 
     const { data, error } = await this.supabase
       .from('routines')
@@ -129,6 +140,26 @@ export class RoutinesService {
 
     if (error) throw error;
     return { deleted: true };
+  }
+
+  async signCoverUpload(userId: string, ext?: string) {
+    const finalExt = (ext ?? 'jpg').toLowerCase();
+    if (!ALLOWED_COVER_EXTS.includes(finalExt as (typeof ALLOWED_COVER_EXTS)[number])) {
+      throw new BadRequestException('Unsupported image extension');
+    }
+    const storage_path = `user/${userId}/${Date.now()}-${randomUUID()}.${finalExt}`;
+    const { data, error } = await this.supabase.storage
+      .from(COVERS_BUCKET)
+      .createSignedUploadUrl(storage_path);
+    if (error) throw error;
+    const public_url = `${this.supabaseUrl}/storage/v1/object/public/${COVERS_BUCKET}/${storage_path}`;
+    return {
+      bucket: COVERS_BUCKET,
+      storage_path,
+      signed_url: data.signedUrl,
+      token: data.token,
+      public_url,
+    };
   }
 
   async incrementCompleted(userId: string, routineId: string) {

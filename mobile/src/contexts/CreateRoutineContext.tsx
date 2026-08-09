@@ -7,6 +7,7 @@ export interface RoutineDraft {
   description: string;
   targetMuscles: string[];
   exercises: RoutineExercise[];
+  coverImageUrl: string;
 }
 
 interface CreateRoutineContextType {
@@ -29,6 +30,7 @@ const DEFAULT_DRAFT: RoutineDraft = {
   description: "",
   targetMuscles: [],
   exercises: [],
+  coverImageUrl: "",
 };
 
 const CreateRoutineContext = createContext<

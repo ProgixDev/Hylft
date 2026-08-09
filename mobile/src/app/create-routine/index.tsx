@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
+import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -23,6 +24,7 @@ import { useCreateRoutine } from "../../contexts/CreateRoutineContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { RoutineExercise, SetTarget } from "../../data/mockData";
 import { api } from "../../services/api";
+import { supabase } from "../../services/supabase";
 import { FONTS } from "../../constants/fonts";
 
 const getDifficulties = (t: (key: string) => string) => [
@@ -60,6 +62,57 @@ export default function CreateRoutineScreen() {
   const editingExercise = editingExerciseId
     ? draft.exercises.find((e) => e.id === editingExerciseId) ?? null
     : null;
+
+  const [isUploadingCover, setIsUploadingCover] = useState(false);
+
+  const handlePickCover = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert(
+        t("common.permissionRequired", "Permission required"),
+        t("createRoutine.photoPermission", "Photo library access is needed."),
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [16, 9],
+      quality: 0.85,
+    });
+    if (result.canceled || !result.assets?.[0]) return;
+
+    const asset = result.assets[0];
+    const src = (asset.mimeType || asset.fileName || asset.uri || "").toLowerCase();
+    const ext = src.includes("png") ? "png" : src.includes("webp") ? "webp" : "jpg";
+    const mime = ext === "png" ? "image/png" : ext === "webp" ? "image/webp" : "image/jpeg";
+
+    setIsUploadingCover(true);
+    try {
+      const signed = await api.signRoutineCoverUpload({ ext });
+      if (!signed?.signed_url || !signed?.storage_path || !signed?.token) {
+        throw new Error("Failed to sign cover upload");
+      }
+      const res = await fetch(asset.uri);
+      const body = await res.arrayBuffer();
+      const { error } = await supabase.storage
+        .from(signed.bucket)
+        .uploadToSignedUrl(signed.storage_path, signed.token, body, {
+          contentType: mime,
+          upsert: true,
+        });
+      if (error) throw error;
+      updateDraft({ coverImageUrl: signed.public_url });
+    } catch (err: any) {
+      Alert.alert(
+        t("createRoutine.coverUploadFailed", "Upload failed"),
+        err?.message || t("createRoutine.tryAgain", "Please try again."),
+      );
+    } finally {
+      setIsUploadingCover(false);
+    }
+  };
 
   const scrollRef = useRef<ScrollView>(null);
   const prevExCount = useRef(draft.exercises.length);
@@ -100,13 +153,15 @@ export default function CreateRoutineScreen() {
 
     setIsSavingRoutine(true);
     try {
-      await api.createRoutine({
+      const payload: Record<string, unknown> = {
         name: draft.name.trim(),
         description: draft.description.trim(),
         targetMuscles: draft.targetMuscles,
         exercises: draft.exercises,
         estimatedDuration: Math.round(estimatedDuration),
-      });
+      };
+      if (draft.coverImageUrl) payload.wallpaperUrl = draft.coverImageUrl;
+      await api.createRoutine(payload);
     } catch (error: any) {
       setIsSavingRoutine(false);
       Alert.alert(
@@ -159,6 +214,48 @@ export default function CreateRoutineScreen() {
         contentContainerStyle={{ paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
       >
+        {/* Cover image */}
+        <View style={styles.section}>
+          <Text style={styles.label}>
+            {t("createRoutine.coverImage", "Cover image")}
+          </Text>
+          <Pressable
+            style={({ pressed }) => [
+              styles.coverPicker,
+              pressed && { opacity: 0.85 },
+            ]}
+            onPress={handlePickCover}
+            disabled={isUploadingCover}
+          >
+            {draft.coverImageUrl ? (
+              <>
+                <Image
+                  source={{ uri: draft.coverImageUrl }}
+                  style={styles.coverImage}
+                  contentFit="cover"
+                  transition={200}
+                />
+                <Pressable
+                  style={styles.coverRemoveBtn}
+                  onPress={() => updateDraft({ coverImageUrl: "" })}
+                  hitSlop={8}
+                >
+                  <Ionicons name="close-circle" size={24} color="#fff" />
+                </Pressable>
+              </>
+            ) : isUploadingCover ? (
+              <ActivityIndicator size="small" color={theme.primary.main} />
+            ) : (
+              <View style={styles.coverPlaceholder}>
+                <Ionicons name="image-outline" size={32} color={theme.foreground.gray} />
+                <Text style={styles.coverPlaceholderText}>
+                  {t("createRoutine.tapToAddCover", "Tap to add a cover image")}
+                </Text>
+              </View>
+            )}
+          </Pressable>
+        </View>
+
         {/* Routine name */}
         <View style={styles.section}>
           <Text style={styles.label}>
@@ -1041,6 +1138,41 @@ const createStyles = (theme: Theme) => {
     },
     discardBtnTextDestructive: {
       color: "#FFF1F2",
+    },
+
+    // ── Cover image picker
+    coverPicker: {
+      width: "100%",
+      height: 160,
+      borderRadius: 16,
+      backgroundColor: theme.background.darker,
+      borderWidth: 1,
+      borderColor: theme.background.accent,
+      borderStyle: "dashed",
+      overflow: "hidden",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    coverImage: {
+      width: "100%",
+      height: "100%",
+    },
+    coverRemoveBtn: {
+      position: "absolute",
+      top: 8,
+      right: 8,
+      backgroundColor: "rgba(0,0,0,0.5)",
+      borderRadius: 12,
+    },
+    coverPlaceholder: {
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+    },
+    coverPlaceholderText: {
+      fontSize: 13,
+      fontFamily: FONTS.medium,
+      color: theme.foreground.gray,
     },
 
     content: { flex: 1 },
