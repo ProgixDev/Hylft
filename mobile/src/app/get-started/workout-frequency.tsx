@@ -4,7 +4,6 @@ import React, { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
     Animated,
-    Platform,
     Pressable,
     ScrollView,
     StyleSheet,
@@ -16,13 +15,6 @@ import SignupProgress from "../../components/ui/SignupProgress";
 import { FONTS } from "../../constants/fonts";
 import { useTheme } from "../../contexts/ThemeContext";
 
-function getPrimaryDepth(primary: string): string {
-  if (primary.toUpperCase() === "#D4A44C") return "#8A6424";
-  if (primary.toUpperCase() === "#C48A6A") return "#8A5B43";
-  return "#071527";
-}
-
-const BG = "#FFFFFF";
 
 interface WeekdayOption {
   id:
@@ -64,43 +56,25 @@ function DayButton({
 }) {
   const { theme } = useTheme();
   const primaryColor = theme.primary.main;
-  const depthColor = getPrimaryDepth(primaryColor);
 
   const scale = useRef(new Animated.Value(1)).current;
-  const pressDepth = useRef(new Animated.Value(0)).current;
 
   const pressIn = () => {
-    Animated.parallel([
-      Animated.spring(scale, {
-        toValue: 0.99,
-        speed: 40,
-        bounciness: 0,
-        useNativeDriver: true,
-      }),
-      Animated.spring(pressDepth, {
-        toValue: 6,
-        speed: 40,
-        bounciness: 0,
-        useNativeDriver: true,
-      }),
-    ]).start();
+    Animated.spring(scale, {
+      toValue: 0.99,
+      speed: 40,
+      bounciness: 0,
+      useNativeDriver: true,
+    }).start();
   };
 
   const pressOut = () => {
-    Animated.parallel([
-      Animated.spring(scale, {
-        toValue: 1,
-        speed: 28,
-        bounciness: 6,
-        useNativeDriver: true,
-      }),
-      Animated.spring(pressDepth, {
-        toValue: 0,
-        speed: 26,
-        bounciness: 6,
-        useNativeDriver: true,
-      }),
-    ]).start();
+    Animated.spring(scale, {
+      toValue: 1,
+      speed: 28,
+      bounciness: 6,
+      useNativeDriver: true,
+    }).start();
   };
 
   return (
@@ -114,37 +88,29 @@ function DayButton({
     >
       <View
         style={[
-          styles.dayBase,
-          { backgroundColor: selected ? depthColor : "#D1D5DB" },
+          styles.dayFace,
+          {
+            backgroundColor: selected ? primaryColor + "18" : theme.background.darker,
+            borderColor: selected ? primaryColor : theme.background.accent,
+          },
         ]}
       >
-        <Animated.View
+        <Text
           style={[
-            styles.dayFace,
-            {
-              backgroundColor: selected ? primaryColor : "#FFFFFF",
-              borderColor: selected ? primaryColor : "#E5E7EB",
-              transform: [{ translateY: pressDepth }],
-            },
+            styles.dayShort,
+            { color: selected ? primaryColor : day.accent },
           ]}
         >
-          <Text
-            style={[
-              styles.dayShort,
-              { color: selected ? "#FFFFFF" : day.accent },
-            ]}
-          >
-            {shortLabel}
-          </Text>
-          <Text
-            style={[
-              styles.dayLabel,
-              { color: selected ? "#FFFFFF" : "#111827" },
-            ]}
-          >
-            {label}
-          </Text>
-        </Animated.View>
+          {shortLabel}
+        </Text>
+        <Text
+          style={[
+            styles.dayLabel,
+            { color: selected ? primaryColor : theme.foreground.white },
+          ]}
+        >
+          {label}
+        </Text>
       </View>
     </AnimatedPressable>
   );
@@ -155,6 +121,7 @@ export default function WorkoutFrequency() {
   const params = useLocalSearchParams<{ flow?: string }>();
   const isSignupFlow = params.flow === "signup";
   const { t } = useTranslation();
+  const { theme } = useTheme();
   const [selected, setSelected] = useState<string[]>([]);
 
   const handleSelect = (id: WeekdayOption["id"]) => {
@@ -182,7 +149,7 @@ export default function WorkoutFrequency() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.background.dark }]}>
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={styles.scrollContent}
@@ -190,7 +157,7 @@ export default function WorkoutFrequency() {
       >
         <SignupProgress current={9} total={13} />
 
-        <Text style={styles.title}>
+        <Text style={[styles.title, { color: theme.foreground.white }]}>
           {t("onboarding.workoutFrequency.title")}
         </Text>
 
@@ -230,7 +197,6 @@ export default function WorkoutFrequency() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: BG,
     paddingHorizontal: 20,
     paddingBottom: 16,
   },
@@ -240,7 +206,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 26,
     fontFamily: FONTS.extraBold,
-    color: "#111827",
     marginBottom: 20,
   },
   list: {
@@ -252,28 +217,12 @@ const styles = StyleSheet.create({
     width: "48%",
   },
   dayShell: {
-    borderRadius: 18,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#102018",
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.1,
-        shadowRadius: 14,
-      },
-      android: {
-        elevation: 4,
-      },
-    }),
-  },
-  dayBase: {
-    borderRadius: 18,
-    paddingBottom: 7,
-    overflow: "hidden",
+    borderRadius: 14,
   },
   dayFace: {
     alignItems: "center",
-    borderWidth: 1,
-    borderRadius: 18,
+    borderWidth: 1.5,
+    borderRadius: 14,
     paddingVertical: 18,
     paddingHorizontal: 10,
     gap: 6,

@@ -8,7 +8,6 @@ import {
   Easing,
   Image,
   ImageSourcePropType,
-  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -18,11 +17,6 @@ import SignupProgress from "../../components/ui/SignupProgress";
 import { FONTS } from "../../constants/fonts";
 import { useTheme } from "../../contexts/ThemeContext";
 
-function getPrimaryDepth(primary: string): string {
-  if (primary.toUpperCase() === "#D4A44C") return "#8A6424";
-  if (primary.toUpperCase() === "#C48A6A") return "#8A5B43";
-  return "#071527";
-}
 
 const GOALS: {
   id: "lose_weight" | "maintain" | "gain_weight" | "build_muscle";
@@ -70,10 +64,8 @@ function GoalCard({
 }) {
   const { theme } = useTheme();
   const primaryColor = theme.primary.main;
-  const depthColor = getPrimaryDepth(primaryColor);
 
   const scale = useRef(new Animated.Value(1)).current;
-  const pressDepth = useRef(new Animated.Value(0)).current;
   const entrance = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -88,13 +80,7 @@ function GoalCard({
 
   const handlePressIn = () => {
     Animated.spring(scale, {
-      toValue: 0.99,
-      useNativeDriver: true,
-      speed: 40,
-      bounciness: 0,
-    }).start();
-    Animated.spring(pressDepth, {
-      toValue: 7,
+      toValue: 0.96,
       useNativeDriver: true,
       speed: 40,
       bounciness: 0,
@@ -108,12 +94,6 @@ function GoalCard({
       speed: 30,
       bounciness: 6,
     }).start();
-    Animated.spring(pressDepth, {
-      toValue: 0,
-      useNativeDriver: true,
-      speed: 26,
-      bounciness: 6,
-    }).start();
   };
 
   return (
@@ -122,7 +102,6 @@ function GoalCard({
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
       hitSlop={8}
-      android_ripple={{ color: "rgba(255,255,255,0.18)" }}
       style={[
         styles.buttonShell,
         {
@@ -139,49 +118,46 @@ function GoalCard({
         },
       ]}
     >
-      <View style={[styles.buttonBase, { backgroundColor: isSelected ? depthColor : "#D1D5DB" }]}>
-        <Animated.View
-          style={[
-            styles.buttonFace,
-            {
-              backgroundColor: isSelected ? primaryColor : "#FFFFFF",
-              borderColor: isSelected ? primaryColor : "#E5E7EB",
-              transform: [{ translateY: pressDepth }],
-            },
-          ]}
-        >
-          <View style={styles.leftCluster}>
-            <View style={[styles.iconWrap, { backgroundColor: isSelected ? "rgba(255,255,255,0.08)" : g.iconBg, borderColor: isSelected ? "rgba(255,255,255,0.12)" : "#E5E7EB" }]}>
-              <Image source={g.image} style={styles.goalImage} />
-            </View>
-
-            <View style={styles.buttonCopy}>
-              <Text
-                style={[styles.buttonTitle, { color: isSelected ? "#FFFFFF" : "#111827" }]}
-                numberOfLines={2}
-                adjustsFontSizeToFit
-                minimumFontScale={0.82}
-              >
-                {t(`onboarding.goalFlow.options.${g.id}.label`)}
-              </Text>
-              {g.recommended && (
-                <View style={[styles.tag, { borderColor: isSelected ? "rgba(255,255,255,0.2)" : "#E5E7EB", backgroundColor: isSelected ? "rgba(255,255,255,0.07)" : "#F9FAFB" }]}>
-                  <Text style={[styles.tagText, { color: isSelected ? "rgba(255,255,255,0.75)" : "#6B7280" }]}>
-                    {t("onboarding.goalFlow.popular")}
-                  </Text>
-                </View>
-              )}
-            </View>
+      <View
+        style={[
+          styles.buttonFace,
+          {
+            backgroundColor: isSelected ? primaryColor + "18" : theme.background.darker,
+            borderColor: isSelected ? primaryColor : theme.background.accent,
+          },
+        ]}
+      >
+        <View style={styles.leftCluster}>
+          <View style={[styles.iconWrap, { backgroundColor: isSelected ? primaryColor + "20" : theme.background.accent }]}>
+            <Image source={g.image} style={styles.goalImage} />
           </View>
 
-          <View style={styles.arrowBadge}>
-            <Ionicons
-              name={isSelected ? "checkmark" : "chevron-forward"}
-              size={26}
-              color={isSelected ? "#FFFFFF" : "#9CA3AF"}
-            />
+          <View style={styles.buttonCopy}>
+            <Text
+              style={[styles.buttonTitle, { color: theme.foreground.white }]}
+              numberOfLines={2}
+              adjustsFontSizeToFit
+              minimumFontScale={0.82}
+            >
+              {t(`onboarding.goalFlow.options.${g.id}.label`)}
+            </Text>
+            {g.recommended && (
+              <View style={[styles.tag, { borderColor: primaryColor + "40", backgroundColor: primaryColor + "15" }]}>
+                <Text style={[styles.tagText, { color: primaryColor }]}>
+                  {t("onboarding.goalFlow.popular")}
+                </Text>
+              </View>
+            )}
           </View>
-        </Animated.View>
+        </View>
+
+        <View style={styles.arrowBadge}>
+          <Ionicons
+            name={isSelected ? "checkmark-circle" : "chevron-forward"}
+            size={isSelected ? 28 : 22}
+            color={isSelected ? primaryColor : theme.foreground.gray}
+          />
+        </View>
       </View>
     </AnimatedPressable>
   );
@@ -190,6 +166,7 @@ function GoalCard({
 export default function GoalScreen() {
   const router = useRouter();
   const { t } = useTranslation();
+  const { theme } = useTheme();
   const [selected, setSelected] = useState<string>("");
   const [isNavigating, setIsNavigating] = useState(false);
 
@@ -225,14 +202,14 @@ export default function GoalScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.background.dark }]}>
       <Animated.View
         style={{ flex: 1, opacity: fade, transform: [{ translateY: slide }] }}
       >
         <SignupProgress current={2} total={13} />
 
         <View style={styles.header}>
-          <Text style={styles.title}>{t("onboarding.goalFlow.title")}</Text>
+          <Text style={[styles.title, { color: theme.foreground.white }]}>{t("onboarding.goalFlow.title")}</Text>
         </View>
 
         <View style={styles.list}>
@@ -255,7 +232,6 @@ export default function GoalScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FBFCFA",
     paddingHorizontal: 20,
     paddingBottom: 16,
   },
@@ -265,39 +241,22 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 26,
     fontFamily: FONTS.extraBold,
-    color: "#111827",
     lineHeight: 32,
   },
   list: {
-    gap: 16,
+    gap: 12,
   },
   buttonShell: {
-    borderRadius: 24,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#102018",
-        shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.15,
-        shadowRadius: 16,
-      },
-      android: {
-        elevation: 5,
-      },
-    }),
-  },
-  buttonBase: {
-    borderRadius: 24,
-    paddingBottom: 10,
-    overflow: "hidden",
+    borderRadius: 16,
   },
   buttonFace: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    minHeight: 92,
-    borderRadius: 24,
-    borderWidth: 1,
-    paddingHorizontal: 18,
+    minHeight: 88,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    paddingHorizontal: 16,
     paddingVertical: 14,
   },
   leftCluster: {
@@ -308,42 +267,39 @@ const styles = StyleSheet.create({
     paddingRight: 14,
   },
   iconWrap: {
-    width: 64,
-    height: 64,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.55)",
+    width: 60,
+    height: 60,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
   },
   goalImage: {
-    width: 54,
-    height: 54,
+    width: 50,
+    height: 50,
     resizeMode: "contain",
   },
   buttonCopy: {
     flex: 1,
   },
   buttonTitle: {
-    fontSize: 23,
-    lineHeight: 28,
+    fontSize: 20,
+    lineHeight: 26,
     fontFamily: FONTS.extraBold,
   },
   tag: {
     alignSelf: "flex-start",
-    marginTop: 7,
+    marginTop: 6,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.55)",
     borderRadius: 100,
     paddingHorizontal: 9,
     paddingVertical: 3,
-    backgroundColor: "rgba(255,255,255,0.18)",
   },
   tagText: {
-    fontSize: 11,
+    fontSize: 10,
     fontFamily: FONTS.bold,
-    letterSpacing: 0.2,
+    letterSpacing: 0.6,
+    textTransform: "uppercase",
   },
   arrowBadge: {
     width: 34,

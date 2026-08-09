@@ -16,31 +16,33 @@ import {
 } from "react-native";
 import ChipButton from "../../components/ui/ChipButton";
 import { FONTS } from "../../constants/fonts";
+import { Theme } from "../../constants/themes";
+import { useTheme } from "../../contexts/ThemeContext";
 import en from "../../locales/en.json";
 import fr from "../../locales/fr.json";
 
 function ResultCard({
   children,
   style,
-  colors = ["#FFFFFF", "#F8FBFF"],
-  depthColor = "#D6E2F2",
+  theme,
 }: {
   children: React.ReactNode;
   style?: StyleProp<ViewStyle>;
-  colors?: readonly [string, string, ...string[]];
-  depthColor?: string;
+  theme: Theme;
 }) {
   return (
-    <View style={[s.cardShell, style]}>
-      <View style={[s.cardBase, { backgroundColor: depthColor }]}>
-        <LinearGradient
-          colors={colors}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={[s.cardFace, style]}
-        >
-          {children}
-        </LinearGradient>
+    <View style={s.cardShell}>
+      <View
+        style={[
+          s.cardFace,
+          {
+            backgroundColor: theme.background.darker,
+            borderColor: theme.background.accent,
+          },
+          style,
+        ]}
+      >
+        {children}
       </View>
     </View>
   );
@@ -49,6 +51,7 @@ function ResultCard({
 export default function ResultsScreen() {
   const router = useRouter();
   const { t, i18n } = useTranslation();
+  const { theme } = useTheme();
 
   if (!i18n.exists("onboarding.results.congratsTitle")) {
     i18n.addResourceBundle("en", "translation", en, true, true);
@@ -223,31 +226,35 @@ export default function ResultsScreen() {
     .join(", ");
 
   return (
-    <View style={s.root}>
-      <StatusBar style="dark" backgroundColor="transparent" translucent />
+    <View style={[s.root, { backgroundColor: theme.background.dark }]}>
+      <StatusBar style="light" backgroundColor="transparent" translucent />
       <ScrollView
         contentContainerStyle={s.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         <View style={s.header}>
           <Image
-            source={require("../../../assets/images/Logo.png")}
+            source={theme.logo}
             style={s.logo}
             resizeMode="contain"
           />
           <Text style={s.congratsTitle}>
             {t("onboarding.results.congratsTitle")}
           </Text>
-          <Text style={s.congratsSub}>
+          <Text style={[s.congratsSub, { color: theme.foreground.gray }]}>
             {t("onboarding.results.congratsSubtitle")}
           </Text>
         </View>
 
         {/* BMI CARD */}
-        <ResultCard>
-          <Text style={s.cardTitle}>{t("onboarding.results.bmiIndex")}</Text>
+        <ResultCard theme={theme}>
+          <Text style={[s.cardTitle, { color: theme.foreground.white }]}>
+            {t("onboarding.results.bmiIndex")}
+          </Text>
           <View style={s.bmiRow}>
-            <Text style={s.bmiValue}>{bmi > 0 ? bmi.toFixed(2) : "--.--"}</Text>
+            <Text style={[s.bmiValue, { color: theme.foreground.white }]}>
+              {bmi > 0 ? bmi.toFixed(2) : "--.--"}
+            </Text>
             <View
               style={[s.badge, { backgroundColor: `${bmiStatus.color}20` }]}
             >
@@ -275,23 +282,23 @@ export default function ResultsScreen() {
           </View>
 
           <View style={s.sliderLabels}>
-            <Text style={s.sliderLabel}>
+            <Text style={[s.sliderLabel, { color: theme.foreground.gray }]}>
               {t("onboarding.results.bmiStatus.underweight")}
             </Text>
-            <Text style={s.sliderLabel}>
+            <Text style={[s.sliderLabel, { color: theme.foreground.gray }]}>
               {t("onboarding.results.bmiStatus.normal")}
             </Text>
-            <Text style={s.sliderLabel}>
+            <Text style={[s.sliderLabel, { color: theme.foreground.gray }]}>
               {t("onboarding.results.bmiStatus.overweight")}
             </Text>
-            <Text style={s.sliderLabel}>
+            <Text style={[s.sliderLabel, { color: theme.foreground.gray }]}>
               {t("onboarding.results.bmiStatus.obese")}
             </Text>
           </View>
         </ResultCard>
 
         {/* FITNESS LEVEL CARD */}
-        <ResultCard>
+        <ResultCard theme={theme}>
           <View style={s.statRow}>
             <Ionicons
               name="triangle-outline"
@@ -300,10 +307,12 @@ export default function ResultsScreen() {
               style={s.icon}
             />
             <View>
-              <Text style={s.statLabel}>
+              <Text style={[s.statLabel, { color: theme.foreground.gray }]}>
                 {t("onboarding.results.fitnessLevel")}
               </Text>
-              <Text style={s.statValue}>{fitnessLevelLabel}</Text>
+              <Text style={[s.statValue, { color: theme.foreground.white }]}>
+                {fitnessLevelLabel}
+              </Text>
             </View>
           </View>
 
@@ -315,10 +324,12 @@ export default function ResultsScreen() {
               style={s.icon}
             />
             <View>
-              <Text style={s.statLabel}>
+              <Text style={[s.statLabel, { color: theme.foreground.gray }]}>
                 {t("onboarding.results.activityLevel")}
               </Text>
-              <Text style={s.statValue}>{activityLevelLabel}</Text>
+              <Text style={[s.statValue, { color: theme.foreground.white }]}>
+                {activityLevelLabel}
+              </Text>
             </View>
           </View>
 
@@ -330,69 +341,100 @@ export default function ResultsScreen() {
               style={s.icon}
             />
             <View>
-              <Text style={s.statLabel}>
+              <Text style={[s.statLabel, { color: theme.foreground.gray }]}>
                 {t("onboarding.results.targetAreas")}
               </Text>
-              <Text style={s.statValue}>{targetAreasLabel}</Text>
+              <Text style={[s.statValue, { color: theme.foreground.white }]}>
+                {targetAreasLabel}
+              </Text>
             </View>
           </View>
         </ResultCard>
 
         {/* NUTRITION PLAN */}
-        <Text style={s.sectionTitle}>
+        <Text style={[s.sectionTitle, { color: theme.foreground.white }]}>
           {t("onboarding.results.nutritionPlan")}
         </Text>
 
-        <ResultCard style={{ alignItems: "center" }}>
+        <ResultCard theme={theme} style={{ alignItems: "center" }}>
           <Text style={s.emoji}>🔥</Text>
-          <Text style={s.statLabel}>{t("onboarding.results.calorieGoal")}</Text>
-          <Text style={s.bigValue}>
+          <Text style={[s.statLabel, { color: theme.foreground.gray }]}>
+            {t("onboarding.results.calorieGoal")}
+          </Text>
+          <Text style={[s.bigValue, { color: theme.foreground.white }]}>
             {calories} <Text style={s.unit}>kcal</Text>
           </Text>
-          <Text style={s.perDay}>{t("onboarding.results.perDay")}</Text>
+          <Text style={[s.perDay, { color: theme.foreground.gray }]}>
+            {t("onboarding.results.perDay")}
+          </Text>
         </ResultCard>
 
         <ResultCard
+          theme={theme}
           style={{ flexDirection: "row", justifyContent: "space-around" }}
         >
           <View style={s.macroItem}>
             <Text style={s.emoji}>🥚</Text>
-            <Text style={s.statLabel}>{t("onboarding.results.protein")}</Text>
-            <Text style={s.macroValue}>{protein}g</Text>
-            <Text style={s.perDay}>{t("onboarding.results.perDay")}</Text>
+            <Text style={[s.statLabel, { color: theme.foreground.gray }]}>
+              {t("onboarding.results.protein")}
+            </Text>
+            <Text style={[s.macroValue, { color: theme.foreground.white }]}>
+              {protein}g
+            </Text>
+            <Text style={[s.perDay, { color: theme.foreground.gray }]}>
+              {t("onboarding.results.perDay")}
+            </Text>
           </View>
           <View style={s.macroItem}>
             <Text style={s.emoji}>🍚</Text>
-            <Text style={s.statLabel}>{t("onboarding.results.carbs")}</Text>
-            <Text style={s.macroValue}>{carbs}g</Text>
-            <Text style={s.perDay}>{t("onboarding.results.perDay")}</Text>
+            <Text style={[s.statLabel, { color: theme.foreground.gray }]}>
+              {t("onboarding.results.carbs")}
+            </Text>
+            <Text style={[s.macroValue, { color: theme.foreground.white }]}>
+              {carbs}g
+            </Text>
+            <Text style={[s.perDay, { color: theme.foreground.gray }]}>
+              {t("onboarding.results.perDay")}
+            </Text>
           </View>
           <View style={s.macroItem}>
             <Text style={s.emoji}>🧈</Text>
-            <Text style={s.statLabel}>{t("onboarding.results.fat")}</Text>
-            <Text style={s.macroValue}>{fat}g</Text>
-            <Text style={s.perDay}>{t("onboarding.results.perDay")}</Text>
+            <Text style={[s.statLabel, { color: theme.foreground.gray }]}>
+              {t("onboarding.results.fat")}
+            </Text>
+            <Text style={[s.macroValue, { color: theme.foreground.white }]}>
+              {fat}g
+            </Text>
+            <Text style={[s.perDay, { color: theme.foreground.gray }]}>
+              {t("onboarding.results.perDay")}
+            </Text>
           </View>
         </ResultCard>
 
-        <ResultCard style={{ alignItems: "center" }}>
+        <ResultCard theme={theme} style={{ alignItems: "center" }}>
           <Text style={s.emoji}>💧</Text>
-          <Text style={s.statLabel}>{t("onboarding.results.waterGoal")}</Text>
-          <Text style={s.bigValue}>
+          <Text style={[s.statLabel, { color: theme.foreground.gray }]}>
+            {t("onboarding.results.waterGoal")}
+          </Text>
+          <Text style={[s.bigValue, { color: theme.foreground.white }]}>
             {cups} <Text style={s.unit}>{t("onboarding.results.cups")}</Text>
           </Text>
-          <Text style={s.perDay}>{t("onboarding.results.perDay")}</Text>
+          <Text style={[s.perDay, { color: theme.foreground.gray }]}>
+            {t("onboarding.results.perDay")}
+          </Text>
         </ResultCard>
-        <ResultCard style={{ alignItems: "center" }}>
+        <ResultCard theme={theme} style={{ alignItems: "center" }}>
           <Text style={s.emoji}>💪</Text>
-          <Text style={s.statLabel}>
+          <Text style={[s.statLabel, { color: theme.foreground.gray }]}>
             {t("onboarding.results.workoutsCount", { count: weeklyGoal })}
           </Text>
-          <Text style={s.bigValue}>{t("onboarding.results.weeklyGoal")}</Text>
+          <Text style={[s.bigValue, { color: theme.foreground.white }]}>
+            {t("onboarding.results.weeklyGoal")}
+          </Text>
         </ResultCard>
       </ScrollView>
 
-      <View style={s.footer}>
+      <View style={[s.footer, { backgroundColor: theme.background.dark + "E6" }]}>
         <ChipButton
           threeD
           title={t("onboarding.results.getMyPlan")}
@@ -406,7 +448,6 @@ export default function ResultsScreen() {
 const s = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
   },
   scrollContent: {
     paddingHorizontal: 20,
@@ -428,7 +469,6 @@ const s = StyleSheet.create({
     marginBottom: 4,
   },
   congratsSub: {
-    color: "#6B7280",
     fontSize: 16,
     fontFamily: FONTS.medium,
   },
@@ -441,21 +481,12 @@ const s = StyleSheet.create({
     shadowRadius: 18,
     elevation: 5,
   },
-  cardBase: {
-    width: "100%",
-    borderRadius: 20,
-    paddingBottom: 8,
-    backgroundColor: "#D6E2F2",
-    overflow: "hidden",
-  },
   cardFace: {
     borderRadius: 20,
     padding: 20,
     borderWidth: 1,
-    borderColor: "#EAF0F8",
   },
   cardTitle: {
-    color: "#1F2937",
     fontFamily: FONTS.bold,
     fontSize: 14,
     marginBottom: 12,
@@ -466,7 +497,6 @@ const s = StyleSheet.create({
     marginBottom: 20,
   },
   bmiValue: {
-    color: "#111827",
     fontSize: 34,
     fontFamily: FONTS.extraBold,
     marginRight: 12,
@@ -520,7 +550,6 @@ const s = StyleSheet.create({
     justifyContent: "space-between",
   },
   sliderLabel: {
-    color: "#6B7280",
     fontSize: 11,
     fontFamily: FONTS.medium,
   },
@@ -533,20 +562,17 @@ const s = StyleSheet.create({
     width: 40,
   },
   statLabel: {
-    color: "#6B7280",
     fontSize: 13,
     fontFamily: FONTS.medium,
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
   statValue: {
-    color: "#111827",
     fontSize: 18,
     fontFamily: FONTS.bold,
     marginTop: 2,
   },
   sectionTitle: {
-    color: "#111827",
     fontSize: 18,
     fontFamily: FONTS.bold,
     marginTop: 10,
@@ -557,7 +583,6 @@ const s = StyleSheet.create({
     marginBottom: 10,
   },
   bigValue: {
-    color: "#111827",
     fontSize: 34,
     fontFamily: FONTS.extraBold,
     marginTop: 4,
@@ -567,7 +592,6 @@ const s = StyleSheet.create({
     fontFamily: FONTS.bold,
   },
   perDay: {
-    color: "#6B7280",
     fontSize: 13,
     fontFamily: FONTS.medium,
     marginTop: 6,
@@ -576,7 +600,6 @@ const s = StyleSheet.create({
     alignItems: "center",
   },
   macroValue: {
-    color: "#111827",
     fontSize: 24,
     fontFamily: FONTS.extraBold,
     marginTop: 4,
@@ -589,6 +612,5 @@ const s = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 16,
     paddingBottom: 34,
-    backgroundColor: "rgba(255,255,255,0.9)",
   },
 });

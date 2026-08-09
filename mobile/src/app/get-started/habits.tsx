@@ -6,7 +6,6 @@ import { useTranslation } from "react-i18next";
 import {
   Animated,
   Easing,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -18,13 +17,7 @@ import SignupProgress from "../../components/ui/SignupProgress";
 import { FONTS } from "../../constants/fonts";
 import { useTheme } from "../../contexts/ThemeContext";
 
-function getPrimaryDepth(primary: string): string {
-  if (primary.toUpperCase() === "#D4A44C") return "#8A6424";
-  if (primary.toUpperCase() === "#C48A6A") return "#8A5B43";
-  return "#071527";
-}
 
-const BG = "#FBFCFA";
 
 const HABITS: {
   id: string;
@@ -105,11 +98,9 @@ function HabitTile({
 }) {
   const { theme } = useTheme();
   const primaryColor = theme.primary.main;
-  const depthColor = getPrimaryDepth(primaryColor);
 
   const entrance = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(1)).current;
-  const pressDepth = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.spring(entrance, {
@@ -122,37 +113,21 @@ function HabitTile({
   }, [entrance, index]);
 
   const pressIn = () => {
-    Animated.parallel([
-      Animated.spring(scale, {
-        toValue: 0.99,
-        speed: 40,
-        bounciness: 0,
-        useNativeDriver: true,
-      }),
-      Animated.spring(pressDepth, {
-        toValue: 5,
-        speed: 40,
-        bounciness: 0,
-        useNativeDriver: true,
-      }),
-    ]).start();
+    Animated.spring(scale, {
+      toValue: 0.95,
+      speed: 40,
+      bounciness: 0,
+      useNativeDriver: true,
+    }).start();
   };
 
   const pressOut = () => {
-    Animated.parallel([
-      Animated.spring(scale, {
-        toValue: 1,
-        speed: 28,
-        bounciness: 6,
-        useNativeDriver: true,
-      }),
-      Animated.spring(pressDepth, {
-        toValue: 0,
-        speed: 26,
-        bounciness: 6,
-        useNativeDriver: true,
-      }),
-    ]).start();
+    Animated.spring(scale, {
+      toValue: 1,
+      speed: 28,
+      bounciness: 6,
+      useNativeDriver: true,
+    }).start();
   };
 
   return (
@@ -161,7 +136,6 @@ function HabitTile({
       onPressIn={pressIn}
       onPressOut={pressOut}
       hitSlop={4}
-      android_ripple={{ color: "rgba(255,255,255,0.18)" }}
       style={[
         styles.tileShell,
         {
@@ -178,56 +152,51 @@ function HabitTile({
         },
       ]}
     >
-      <View style={[styles.tileBase, { backgroundColor: selected ? depthColor : "#D1D5DB" }]}>
-        <Animated.View
+      <View
+        style={[
+          styles.tileFace,
+          {
+            backgroundColor: selected ? primaryColor + "18" : theme.background.darker,
+            borderColor: selected ? primaryColor : theme.background.accent,
+          },
+        ]}
+      >
+        <View
           style={[
-            styles.tileFace,
+            styles.tileIcon,
             {
-              backgroundColor: selected ? primaryColor : "#FFFFFF",
-              borderColor: selected ? primaryColor : "#E5E7EB",
-              transform: [{ translateY: pressDepth }],
+              backgroundColor: selected ? primaryColor + "25" : habit.accent + "18",
             },
           ]}
         >
-          <View
-            style={[
-              styles.tileIcon,
-              {
-                backgroundColor: selected
-                  ? "rgba(255,255,255,0.08)"
-                  : habit.tint,
-              },
-            ]}
-          >
-            <Ionicons
-              name={habit.icon}
-              size={24}
-              color={selected ? "#FFFFFF" : habit.accent}
-            />
-          </View>
-          <Text
-            style={[
-              styles.tileLabel,
-              { color: selected ? "#FFFFFF" : "#111827" },
-            ]}
-            numberOfLines={2}
-          >
-            {label}
-          </Text>
-          <View
-            style={[
-              styles.tileCheck,
-              {
-                backgroundColor: selected ? "rgba(255,255,255,0.1)" : "#F9FAFB",
-                borderColor: selected ? "rgba(255,255,255,0.2)" : "#E5E7EB",
-              },
-            ]}
-          >
-            {selected && (
-              <Ionicons name="checkmark" size={12} color="#FFFFFF" />
-            )}
-          </View>
-        </Animated.View>
+          <Ionicons
+            name={habit.icon}
+            size={24}
+            color={selected ? primaryColor : habit.accent}
+          />
+        </View>
+        <Text
+          style={[
+            styles.tileLabel,
+            { color: theme.foreground.white },
+          ]}
+          numberOfLines={2}
+        >
+          {label}
+        </Text>
+        <View
+          style={[
+            styles.tileCheck,
+            {
+              backgroundColor: selected ? primaryColor : theme.background.accent,
+              borderColor: selected ? primaryColor : theme.foreground.gray + "30",
+            },
+          ]}
+        >
+          {selected && (
+            <Ionicons name="checkmark" size={12} color="#FFFFFF" />
+          )}
+        </View>
       </View>
     </AnimatedPressable>
   );
@@ -236,6 +205,7 @@ function HabitTile({
 export default function HabitsScreen() {
   const router = useRouter();
   const { t } = useTranslation();
+  const { theme } = useTheme();
   const [selected, setSelected] = useState<string[]>([]);
 
   const fade = useRef(new Animated.Value(0)).current;
@@ -271,14 +241,14 @@ export default function HabitsScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.background.dark }]}>
       <Animated.View
         style={{ flex: 1, opacity: fade, transform: [{ translateY: slide }] }}
       >
         <SignupProgress current={3} total={13} />
 
         <View style={styles.header}>
-          <Text style={styles.title}>{t("onboarding.habits.title")}</Text>
+          <Text style={[styles.title, { color: theme.foreground.white }]}>{t("onboarding.habits.title")}</Text>
         </View>
 
         <ScrollView
@@ -317,7 +287,6 @@ export default function HabitsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: BG,
     paddingHorizontal: 20,
     paddingBottom: 16,
   },
@@ -327,53 +296,36 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 26,
     fontFamily: FONTS.extraBold,
-    color: "#111827",
     lineHeight: 32,
   },
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 12,
+    gap: 10,
     paddingBottom: 16,
   },
   tileShell: {
     width: "48%",
-    borderRadius: 18,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#102018",
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.1,
-        shadowRadius: 14,
-      },
-      android: {
-        elevation: 4,
-      },
-    }),
-  },
-  tileBase: {
-    borderRadius: 18,
-    paddingBottom: 7,
-    overflow: "hidden",
+    borderRadius: 14,
   },
   tileFace: {
-    minHeight: 118,
-    borderWidth: 1,
-    borderRadius: 18,
+    minHeight: 110,
+    borderWidth: 1.5,
+    borderRadius: 14,
     padding: 12,
     justifyContent: "space-between",
   },
   tileIcon: {
     width: 42,
     height: 42,
-    borderRadius: 13,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
   },
   tileLabel: {
-    fontSize: 15,
+    fontSize: 14,
     fontFamily: FONTS.bold,
-    lineHeight: 19,
+    lineHeight: 18,
     paddingRight: 18,
   },
   tileCheck: {
@@ -383,7 +335,7 @@ const styles = StyleSheet.create({
     width: 22,
     height: 22,
     borderRadius: 11,
-    borderWidth: 1,
+    borderWidth: 1.5,
     alignItems: "center",
     justifyContent: "center",
   },

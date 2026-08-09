@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { Animated, StyleSheet, View, Easing } from "react-native";
+import { useTheme } from "../../contexts/ThemeContext";
 
 interface Props {
   current: number;
@@ -7,6 +8,7 @@ interface Props {
 }
 
 export function SignupProgress({ current, total }: Props) {
+  const { theme } = useTheme();
   const pct = Math.max(0, Math.min(1, current / total));
   const anim = useRef(new Animated.Value(0)).current;
 
@@ -26,7 +28,7 @@ export function SignupProgress({ current, total }: Props) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.track}>
+      <View style={[styles.track, { backgroundColor: theme.background.accent, borderColor: theme.background.accent }]}>
         <Animated.View
           style={[
             styles.fill,
@@ -51,10 +53,8 @@ const styles = StyleSheet.create({
   track: {
     height: 13,
     borderRadius: 999,
-    backgroundColor: "#E5E7EB",
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(15,23,42,0.08)",
   },
   fill: {
     height: "100%",

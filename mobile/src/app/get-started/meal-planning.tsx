@@ -4,7 +4,6 @@ import React, { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Animated,
-  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -13,12 +12,6 @@ import {
 import SignupProgress from "../../components/ui/SignupProgress";
 import { FONTS } from "../../constants/fonts";
 import { useTheme } from "../../contexts/ThemeContext";
-
-function getPrimaryDepth(primary: string): string {
-  if (primary.toUpperCase() === "#D4A44C") return "#8A6424";
-  if (primary.toUpperCase() === "#C48A6A") return "#8A5B43";
-  return "#071527";
-}
 
 const OPTIONS: {
   id: "never" | "rarely" | "occasionally" | "frequently" | "always";
@@ -46,43 +39,25 @@ function MealOptionCard({
 }) {
   const { theme } = useTheme();
   const primaryColor = theme.primary.main;
-  const depthColor = getPrimaryDepth(primaryColor);
 
   const scale = useRef(new Animated.Value(1)).current;
-  const pressDepth = useRef(new Animated.Value(0)).current;
 
   const pressIn = () => {
-    Animated.parallel([
-      Animated.spring(scale, {
-        toValue: 0.99,
-        speed: 40,
-        bounciness: 0,
-        useNativeDriver: true,
-      }),
-      Animated.spring(pressDepth, {
-        toValue: 6,
-        speed: 40,
-        bounciness: 0,
-        useNativeDriver: true,
-      }),
-    ]).start();
+    Animated.spring(scale, {
+      toValue: 0.99,
+      speed: 40,
+      bounciness: 0,
+      useNativeDriver: true,
+    }).start();
   };
 
   const pressOut = () => {
-    Animated.parallel([
-      Animated.spring(scale, {
-        toValue: 1,
-        speed: 28,
-        bounciness: 6,
-        useNativeDriver: true,
-      }),
-      Animated.spring(pressDepth, {
-        toValue: 0,
-        speed: 26,
-        bounciness: 6,
-        useNativeDriver: true,
-      }),
-    ]).start();
+    Animated.spring(scale, {
+      toValue: 1,
+      speed: 28,
+      bounciness: 6,
+      useNativeDriver: true,
+    }).start();
   };
 
   return (
@@ -94,73 +69,70 @@ function MealOptionCard({
       android_ripple={{ color: "rgba(255,255,255,0.18)" }}
       style={[s.cardShell, { transform: [{ scale }] }]}
     >
-      <View style={[s.cardBase, { backgroundColor: selected ? depthColor : "#D1D5DB" }]}>
-        <Animated.View
-          style={[
-            s.cardFace,
-            {
-              backgroundColor: selected ? primaryColor : "#FFFFFF",
-              borderColor: selected ? primaryColor : "#E5E7EB",
-              transform: [{ translateY: pressDepth }],
-            },
-          ]}
-        >
-          <View style={s.cardCopy}>
-            <Text
-              style={[
-                s.cardTitle,
-                { color: selected ? "#FFFFFF" : "#111827" },
-              ]}
-            >
-              {label}
-            </Text>
-          </View>
+      <View
+        style={[
+          s.cardFace,
+          {
+            backgroundColor: selected ? primaryColor + "18" : theme.background.darker,
+            borderColor: selected ? primaryColor : theme.background.accent,
+          },
+        ]}
+      >
+        <View style={s.cardCopy}>
+          <Text
+            style={[
+              s.cardTitle,
+              { color: selected ? primaryColor : theme.foreground.white },
+            ]}
+          >
+            {label}
+          </Text>
+        </View>
 
-          <View style={s.progressWrap}>
+        <View style={s.progressWrap}>
+          <View
+            style={[
+              s.progressTrack,
+              {
+                backgroundColor: selected
+                  ? primaryColor + "38"
+                  : theme.background.accent,
+              },
+            ]}
+          >
             <View
               style={[
-                s.progressTrack,
+                s.progressFill,
                 {
-                  backgroundColor: selected
-                    ? "rgba(255,255,255,0.22)"
-                    : "#E5E7EB",
+                  width: `${option.bars * 20}%`,
+                  backgroundColor: selected ? primaryColor : theme.foreground.white,
                 },
               ]}
-            >
-              <View
-                style={[
-                  s.progressFill,
-                  {
-                    width: `${option.bars * 20}%`,
-                    backgroundColor: selected ? "#FFFFFF" : "#374151",
-                  },
-                ]}
-              />
-            </View>
-            <View style={s.progressDots}>
-              {Array.from({ length: 5 }).map((_, i) => {
-                const active = i < option.bars;
-                return (
-                  <View
-                    key={i}
-                    style={[
-                      s.progressDot,
-                      {
-                        backgroundColor: active
-                          ? selected
-                            ? "#FFFFFF"
-                            : "#374151"
-                          : selected
-                            ? "rgba(255,255,255,0.3)"
-                            : "#D1D5DB",
-                      },
-                    ]}
-                  />
-                );
-              })}
-            </View>
+            />
           </View>
-        </Animated.View>
+          <View style={s.progressDots}>
+            {Array.from({ length: 5 }).map((_, i) => {
+              const active = i < option.bars;
+              return (
+                <View
+                  key={i}
+                  style={[
+                    s.progressDot,
+                    {
+                      backgroundColor: active
+                        ? selected
+                          ? primaryColor
+                          : theme.foreground.white
+                        : selected
+                          ? primaryColor + "40"
+                          : theme.foreground.gray + "40",
+                    },
+                  ]}
+                />
+              );
+            })}
+          </View>
+        </View>
       </View>
     </AnimatedPressable>
   );
@@ -169,6 +141,7 @@ function MealOptionCard({
 export default function MealPlanningScreen() {
   const router = useRouter();
   const { t } = useTranslation();
+  const { theme } = useTheme();
   const [selected, setSelected] = useState<string>("");
   const [isNavigating, setIsNavigating] = useState(false);
 
@@ -184,12 +157,12 @@ export default function MealPlanningScreen() {
   };
 
   return (
-    <View style={s.container}>
+    <View style={[s.container, { backgroundColor: theme.background.dark }]}>
       <View style={{ flex: 1 }}>
         <SignupProgress current={4} total={13} />
 
         <View style={s.header}>
-          <Text style={s.title}>{t("onboarding.mealPlanning.title")}</Text>
+          <Text style={[s.title, { color: theme.foreground.white }]}>{t("onboarding.mealPlanning.title")}</Text>
         </View>
 
         <View style={s.list}>
@@ -214,7 +187,6 @@ export default function MealPlanningScreen() {
 const s = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FBFCFA",
     paddingHorizontal: 20,
     paddingBottom: 16,
   },
@@ -224,38 +196,21 @@ const s = StyleSheet.create({
   title: {
     fontSize: 26,
     fontFamily: FONTS.extraBold,
-    color: "#111827",
     lineHeight: 32,
   },
   list: {
     gap: 14,
   },
   cardShell: {
-    borderRadius: 20,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#102018",
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.11,
-        shadowRadius: 15,
-      },
-      android: {
-        elevation: 4,
-      },
-    }),
-  },
-  cardBase: {
-    borderRadius: 20,
-    paddingBottom: 8,
-    overflow: "hidden",
+    borderRadius: 16,
   },
   cardFace: {
     flexDirection: "row",
     alignItems: "center",
     gap: 18,
     minHeight: 78,
-    borderWidth: 1,
-    borderRadius: 20,
+    borderWidth: 1.5,
+    borderRadius: 16,
     paddingHorizontal: 18,
     paddingVertical: 16,
   },
