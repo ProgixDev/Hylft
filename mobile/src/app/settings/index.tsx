@@ -7,16 +7,17 @@ import {
   ScrollView,
   StyleSheet,
   Switch,
-  Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { Text } from "../../components/ui/ScaledText";
 import ConfirmationModal from "../../components/ui/ConfirmationModal";
 import { useTranslation } from "react-i18next";
 import { Theme, ThemeType } from "../../constants/themes";
 import { useAuth } from "../../contexts/AuthContext";
 import { useHealth } from "../../contexts/HealthContext";
 import { useI18n } from "../../contexts/I18nContext";
+import { FontScaleKey, useFontSize } from "../../contexts/FontSizeContext";
 import { useTheme } from "../../contexts/ThemeContext";
 
 import { FONTS } from "../../constants/fonts";
@@ -309,6 +310,7 @@ export default function Settings() {
   const { language, setLanguage } = useI18n();
   const router = useRouter();
   const { theme, themeType, setTheme } = useTheme();
+  const { scaleKey, setScaleKey } = useFontSize();
   const styles = createStyles(theme);
   const {
     isAvailable: healthAvailable,
@@ -611,7 +613,7 @@ export default function Settings() {
             iconBg={sectionIconBg}
             title={t("settings.language")}
             subtitle={t("settings.languageSubtitle")}
-            showBorder={false}
+            showBorder
             right={
               <Seg
                 options={[
@@ -620,6 +622,27 @@ export default function Settings() {
                 ]}
                 value={language}
                 onChange={(v) => setLanguage(v as "en" | "fr")}
+              />
+            }
+            styles={styles}
+            theme={theme}
+          />
+          <SettingsRow
+            icon="text-outline"
+            iconBg={sectionIconBg}
+            title={t("settings.fontSize")}
+            subtitle={t("settings.fontSizeSubtitle")}
+            showBorder={false}
+            right={
+              <Seg
+                options={[
+                  { label: "S", value: "S" as FontScaleKey },
+                  { label: "M", value: "M" as FontScaleKey },
+                  { label: "L", value: "L" as FontScaleKey },
+                  { label: "XL", value: "XL" as FontScaleKey },
+                ]}
+                value={scaleKey}
+                onChange={(v) => setScaleKey(v as FontScaleKey)}
               />
             }
             styles={styles}

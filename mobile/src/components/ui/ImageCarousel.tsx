@@ -5,10 +5,10 @@ import {
   NativeSyntheticEvent,
   ScrollView,
   StyleSheet,
-  Text,
   View,
   ViewStyle,
 } from "react-native";
+import { Text } from "./ScaledText";
 import { useTheme } from "../../contexts/ThemeContext";
 import LikeableImage from "./LikeableImage";
 

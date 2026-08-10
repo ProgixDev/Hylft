@@ -10,11 +10,11 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   TextInput,
   UIManager,
   View,
 } from "react-native";
+import { Text } from "../../components/ui/ScaledText";
 import Svg, { Circle } from "react-native-svg";
 import AnimatedScreen from "../../components/ui/AnimatedScreen";
 import { FONTS } from "../../constants/fonts";

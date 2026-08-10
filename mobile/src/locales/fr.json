@@ -154,7 +154,15 @@
     "weight": {
       "title": "Quel est votre poids actuel ?",
       "subtitle": "Nous suivrons votre progression à partir d'ici",
-      "unit": "kg"
+      "unit": "kg",
+      "bmi": {
+        "label": "IMC",
+        "underweight": "Maigreur",
+        "normal": "Normal",
+        "overweight": "Surpoids",
+        "obese": "Obésité",
+        "severelyObese": "Obésité sévère"
+      }
     },
     "targetWeight": {
       "title": "Quel est votre poids cible ?",
@@ -569,7 +577,9 @@
     "logOutConfirm": "Êtes-vous sûr de vouloir vous déconnecter ?",
     "deleteAccountConfirm": "Cela supprimera définitivement votre compte et toutes vos données. Cette action ne peut pas être annulée.",
     "language": "Langue",
-    "languageSubtitle": "Choisissez votre langue préférée"
+    "languageSubtitle": "Choisissez votre langue préférée",
+    "fontSize": "Taille de police",
+    "fontSizeSubtitle": "Ajuster la taille du texte pour la lisibilité"
   },
   "feed": {
     "title": "Fil",
@@ -1079,8 +1089,8 @@
     "finish": "Terminer",
     "noSets": "Aucune série enregistrée",
     "seeExercise": "Voir l'exercice",
-    "newWeightPR": "Nouveau record de poids — {{exercise}} !",
-    "newRepsPR": "Nouveau record de reps — {{exercise}} !"
+    "newWeightPR": "Nouveau record ! Tu as soulevé plus lourd au {{exercise}} !",
+    "newRepsPR": "Nouveau record ! Plus de reps au {{exercise}} !"
   },
   "search": {
     "findPeople": "Rechercher",

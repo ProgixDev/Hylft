@@ -1,5 +1,6 @@
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { Text } from "../../components/ui/ScaledText";
 import HudCorners from "./HudCorners";
 import BackgroundNumeral from "./BackgroundNumeral";
 import EyebrowChip from "../../components/onboarding/EyebrowChip";

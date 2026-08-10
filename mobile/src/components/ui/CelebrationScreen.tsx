@@ -7,9 +7,9 @@ import {
   Dimensions,
   Easing,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
+import { Text } from "./ScaledText";
 import { FONTS } from "../../constants/fonts";
 import { useTheme } from "../../contexts/ThemeContext";
 import ChipButton from "./ChipButton";

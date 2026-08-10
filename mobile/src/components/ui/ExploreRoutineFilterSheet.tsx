@@ -4,7 +4,8 @@ import BottomSheet, {
 } from "@gorhom/bottom-sheet";
 import React, { forwardRef, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { Text } from "./ScaledText";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
 import {

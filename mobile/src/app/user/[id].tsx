@@ -5,10 +5,10 @@ import { useTranslation } from "react-i18next";
 import {
   ScrollView,
   StyleSheet,
-  Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { Text } from "../../components/ui/ScaledText";
 import ProfileHeader from "../../components/profile/ProfileHeader";
 import { Shimmer } from "../../components/ui/PostSkeleton";
 import { useTheme } from "../../contexts/ThemeContext";

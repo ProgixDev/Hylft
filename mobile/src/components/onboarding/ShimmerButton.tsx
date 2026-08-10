@@ -2,10 +2,10 @@ import React, { useEffect } from "react";
 import {
   Pressable,
   StyleSheet,
-  Text,
   View,
   type ViewStyle,
 } from "react-native";
+import { Text } from "../ui/ScaledText";
 import Animated, {
   Easing,
   useAnimatedStyle,

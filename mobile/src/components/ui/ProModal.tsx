@@ -11,11 +11,11 @@ import {
     Platform,
     Pressable,
     StyleSheet,
-    Text,
     TouchableOpacity,
     useWindowDimensions,
     View,
 } from "react-native";
+import { Text } from "./ScaledText";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../../contexts/AuthContext";
 import {

@@ -4,10 +4,10 @@ import React, { useCallback, useState } from "react";
 import {
     ScrollView,
     StyleSheet,
-    Text,
     TouchableOpacity,
     View,
 } from "react-native";
+import { Text } from "../../components/ui/ScaledText";
 import WorkoutCard from "../../components/ui/WorkoutCard";
 import { Theme } from "../../constants/themes";
 import { useActiveWorkout } from "../../contexts/ActiveWorkoutContext";

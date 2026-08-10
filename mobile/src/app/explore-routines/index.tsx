@@ -10,11 +10,11 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import { Text } from "../../components/ui/ScaledText";
 import ExploreRoutineFilterSheet from "../../components/ui/ExploreRoutineFilterSheet";
 import { Theme } from "../../constants/themes";
 import { useActiveWorkout } from "../../contexts/ActiveWorkoutContext";

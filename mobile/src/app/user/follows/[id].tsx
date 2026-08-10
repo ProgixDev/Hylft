@@ -6,10 +6,10 @@ import {
   FlatList,
   Image,
   StyleSheet,
-  Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { Text } from "../../../components/ui/ScaledText";
 import { useTranslation } from "react-i18next";
 import { Theme } from "../../../constants/themes";
 import { useTheme } from "../../../contexts/ThemeContext";

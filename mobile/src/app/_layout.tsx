@@ -23,6 +23,7 @@ import { CreateRoutineProvider } from "../contexts/CreateRoutineContext";
 import { HealthProvider } from "../contexts/HealthContext";
 import { I18nProvider, useI18n } from "../contexts/I18nContext";
 import { NutritionProvider } from "../contexts/NutritionContext";
+import { FontSizeProvider, useFontSize } from "../contexts/FontSizeContext";
 import { ThemeProvider, useTheme } from "../contexts/ThemeContext";
 import { TutorialTargetProvider } from "../contexts/TutorialTargetContext";
 
@@ -44,6 +45,7 @@ function AppContent() {
   const { isLoading } = useI18n();
   const { user } = useAuth();
   const { theme, themeType } = useTheme();
+  useFontSize(); // Subscribe so AppContent re-renders on scale change
   const router = useRouter();
   const segments = useSegments();
   const insets = useSafeAreaInsets();
@@ -372,7 +374,8 @@ export default function RootLayout() {
     <View style={{ flex: 1 }}>
       <GestureHandlerRootView style={{ flex: 1 }}>
         <I18nProvider>
-          <ThemeProvider>
+          <FontSizeProvider>
+            <ThemeProvider>
             <AuthProvider>
               <HealthProvider>
                 <NutritionProvider>
@@ -390,7 +393,8 @@ export default function RootLayout() {
                 </NutritionProvider>
               </HealthProvider>
             </AuthProvider>
-          </ThemeProvider>
+            </ThemeProvider>
+          </FontSizeProvider>
         </I18nProvider>
       </GestureHandlerRootView>
     </View>

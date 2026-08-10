@@ -6,11 +6,11 @@ import {
   ActivityIndicator,
   FlatList,
   StyleSheet,
-  Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import { Text } from "../../components/ui/ScaledText";
 import { useTranslation } from "react-i18next";
 import ExerciseFilterSheet from "../../components/ui/ExerciseFilterSheet";
 import { Theme } from "../../constants/themes";

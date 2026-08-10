@@ -154,7 +154,15 @@
     "weight": {
       "title": "What's your current weight?",
       "subtitle": "We'll track your progress from here",
-      "unit": "kg"
+      "unit": "kg",
+      "bmi": {
+        "label": "BMI",
+        "underweight": "Underweight",
+        "normal": "Normal",
+        "overweight": "Overweight",
+        "obese": "Obese",
+        "severelyObese": "Severely Obese"
+      }
     },
     "targetWeight": {
       "title": "What's your target weight?",
@@ -569,7 +577,9 @@
     "logOutConfirm": "Are you sure you want to log out?",
     "deleteAccountConfirm": "This will permanently delete your account and all data. This action cannot be undone.",
     "language": "Language",
-    "languageSubtitle": "Choose your preferred language"
+    "languageSubtitle": "Choose your preferred language",
+    "fontSize": "Font Size",
+    "fontSizeSubtitle": "Adjust text size for readability"
   },
   "feed": {
     "title": "Feed",
@@ -1079,8 +1089,8 @@
     "finish": "Finish",
     "noSets": "No sets logged yet",
     "seeExercise": "See exercise",
-    "newWeightPR": "New weight PR — {{exercise}}!",
-    "newRepsPR": "New reps PR — {{exercise}}!"
+    "newWeightPR": "New personal record! You lifted heavier on {{exercise}}!",
+    "newRepsPR": "New personal record! More reps on {{exercise}}!"
   },
   "search": {
     "findPeople": "Search",

@@ -4,10 +4,10 @@ import {
   Dimensions,
   Easing,
   StyleSheet,
-  Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { Text } from "./ScaledText";
 import Svg, { Circle } from "react-native-svg";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";

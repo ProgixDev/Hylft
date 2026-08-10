@@ -18,9 +18,9 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View
 } from "react-native";
+import { Text } from "../../components/ui/ScaledText";
 import Reanimated, {
   Extrapolation,
   interpolate,
@@ -432,12 +432,11 @@ export default function Home() {
       const key = date.toISOString().slice(0, 10);
       const isFuture = key > todayKey;
       const isToday = key === todayKey;
-      const state: DayState =
-        isFuture || isToday
+      const state: DayState = trainedDayKeys.has(key)
+        ? "trained"
+        : isFuture || isToday
           ? "future"
-          : trainedDayKeys.has(key)
-            ? "trained"
-            : "missed";
+          : "missed";
       return {
         key,
         shortLabel: t(

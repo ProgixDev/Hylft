@@ -7,9 +7,9 @@ import {
   Image,
   Pressable,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
+import { Text } from "../ui/ScaledText";
 import { useTranslation } from "react-i18next";
 
 import { FONTS } from "../../constants/fonts";

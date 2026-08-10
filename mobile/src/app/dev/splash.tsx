@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { Text } from "../../components/ui/ScaledText";
 import SplashScreen from "../../components/ui/SplashScreen";
 import { FONTS } from "../../constants/fonts";
 

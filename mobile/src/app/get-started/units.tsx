@@ -5,10 +5,10 @@ import { useTranslation } from "react-i18next";
 import {
   ScrollView,
   StyleSheet,
-  Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { Text } from "../../components/ui/ScaledText";
 import { useTheme } from "../../contexts/ThemeContext";
 import { FONTS } from "../../constants/fonts";
 import ChipButton from "../../components/ui/ChipButton";

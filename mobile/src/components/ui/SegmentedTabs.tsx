@@ -1,6 +1,7 @@
 import { BlurView } from "expo-blur";
 import React, { useEffect } from "react";
-import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { Platform, Pressable, StyleSheet, View } from "react-native";
+import { Text } from "./ScaledText";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,

@@ -7,9 +7,9 @@ import {
   NativeScrollEvent,
   NativeSyntheticEvent,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
+import { Text } from "./ScaledText";
 import { FONTS } from "../../constants/fonts";
 import { useTheme } from "../../contexts/ThemeContext";
 
@@ -76,10 +76,11 @@ export default function RulerPicker({
       if (rounded !== prevValueRef.current) {
         prevValueRef.current = rounded;
         setDisplayValue(rounded);
+        onChange(rounded);
         Haptics.selectionAsync();
       }
     },
-    [min, max, step],
+    [min, max, step, onChange],
   );
 
   const handleScrollEnd = useCallback(

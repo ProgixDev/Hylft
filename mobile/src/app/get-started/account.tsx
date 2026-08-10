@@ -12,11 +12,11 @@ import {
     Pressable,
     ScrollView,
     StyleSheet,
-    Text,
     TextInput,
     TouchableOpacity,
     View,
 } from "react-native";
+import { Text } from "../../components/ui/ScaledText";
 import ChipButton from "../../components/ui/ChipButton";
 import { SignupProgress } from "../../components/ui/SignupProgress";
 import { FONTS } from "../../constants/fonts";

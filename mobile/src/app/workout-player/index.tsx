@@ -14,11 +14,11 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import { Text } from "../../components/ui/ScaledText";
 import ConfirmationModal from "../../components/ui/ConfirmationModal";
 import RestTimerSheet from "../../components/ui/RestTimerSheet";
 import WorkoutCompletionView from "../../components/ui/WorkoutCompletionView";
@@ -105,7 +105,7 @@ export default function WorkoutPlayerScreen() {
     prToastAnim.setValue(0);
     Animated.sequence([
       Animated.timing(prToastAnim, { toValue: 1, duration: 300, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-      Animated.delay(2500),
+      Animated.delay(3000),
       Animated.timing(prToastAnim, { toValue: 0, duration: 300, easing: Easing.in(Easing.cubic), useNativeDriver: true }),
     ]).start(() => setPrToast(null));
   }, [t, prToastAnim]);

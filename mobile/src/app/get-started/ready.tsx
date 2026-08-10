@@ -8,11 +8,11 @@ import {
   Dimensions,
   Easing,
   StyleSheet,
-  Text,
   View,
   type StyleProp,
   type ViewStyle,
 } from "react-native";
+import { Text } from "../../components/ui/ScaledText";
 import Svg, { Circle, G } from "react-native-svg";
 import { FONTS } from "../../constants/fonts";
 import { useAuth } from "../../contexts/AuthContext";

@@ -10,9 +10,9 @@ import {
   Pressable,
   Share,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
+import { Text } from "../ui/ScaledText";
 import QRCode from "react-native-qrcode-svg";
 import { FONTS } from "../../constants/fonts";
 import { Theme } from "../../constants/themes";

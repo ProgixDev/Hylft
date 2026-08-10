@@ -7,9 +7,9 @@ import {
   Image,
   Platform,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
+import { Text } from "./ScaledText";
 import { FONTS } from "../../constants/fonts";
 
 const { width: SW, height: SH } = Dimensions.get("window");

@@ -17,11 +17,11 @@ import {
   Modal,
   Pressable,
   StyleSheet,
-  Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import { Text } from "./ScaledText";
 import ConfirmationModal from "./ConfirmationModal";
 import WorkoutCompletionView from "./WorkoutCompletionView";
 import { Theme } from "../../constants/themes";
