@@ -6,6 +6,7 @@ import { View } from "react-native";
 import { CustomTabBar } from "../../components/layout/CustomTabBar";
 import ActiveWorkoutSheet from "../../components/ui/ActiveWorkoutSheet";
 import HealthConnectPromptModal from "../../components/ui/HealthConnectPromptModal";
+import MiniRestTimer from "../../components/ui/MiniRestTimer";
 import { MiniWorkoutPlayer } from "../../components/ui/MiniWorkoutPlayer";
 import { useActiveWorkout } from "../../contexts/ActiveWorkoutContext";
 
@@ -80,6 +81,9 @@ function TabsLayoutContent() {
       </View>
 
       <HealthConnectPromptModal />
+
+      {/* Floating rest timer pill — visible when navigating away during rest */}
+      {guidedPlayer && <MiniRestTimer />}
     </View>
   );
 }

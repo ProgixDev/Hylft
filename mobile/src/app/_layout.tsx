@@ -302,7 +302,6 @@ function AppContent() {
           name="get-started/account"
           options={{ animation: "slide_from_right" }}
         />
-        <Stack.Screen name="objective/index" />
         <Stack.Screen name="food-search" />
         <Stack.Screen
           name="workout-player/index"
