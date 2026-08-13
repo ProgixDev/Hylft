@@ -26,6 +26,19 @@ import { RoutineExercise, SetTarget } from "../../data/mockData";
 import { api } from "../../services/api";
 import { supabase } from "../../services/supabase";
 import { FONTS } from "../../constants/fonts";
+import { Asset } from "expo-asset";
+
+const PRESET_COVERS = [
+  require("../../../assets/previews/image.png"),
+  require("../../../assets/previews/image copy.png"),
+  require("../../../assets/previews/image copy 2.png"),
+  require("../../../assets/previews/image copy 3.png"),
+  require("../../../assets/images/AuthPage/PullUp.jpg"),
+  require("../../../assets/images/AuthPage/DeadLiftIGuess.jpg"),
+  require("../../../assets/images/AuthPage/HoldingTwoWeights.jpg"),
+  require("../../../assets/images/frameboy2.png"),
+  require("../../../assets/images/framegirl2.png"),
+];
 
 const getDifficulties = (t: (key: string) => string) => [
   { value: "beginner", label: t("createRoutine.beginner"), color: "#22c55e" },
@@ -64,6 +77,38 @@ export default function CreateRoutineScreen() {
     : null;
 
   const [isUploadingCover, setIsUploadingCover] = useState(false);
+
+  const handleSelectPreset = async (preset: number) => {
+    setIsUploadingCover(true);
+    try {
+      const asset = await Asset.fromModule(preset).downloadAsync();
+      const uri = asset.localUri ?? asset.uri;
+      const ext = (asset.name ?? "").toLowerCase().endsWith(".png") ? "png" : "jpg";
+      const mime = ext === "png" ? "image/png" : "image/jpeg";
+
+      const signed = await api.signRoutineCoverUpload({ ext });
+      if (!signed?.signed_url || !signed?.storage_path || !signed?.token) {
+        throw new Error("Failed to sign cover upload");
+      }
+      const res = await fetch(uri);
+      const body = await res.arrayBuffer();
+      const { error } = await supabase.storage
+        .from(signed.bucket)
+        .uploadToSignedUrl(signed.storage_path, signed.token, body, {
+          contentType: mime,
+          upsert: true,
+        });
+      if (error) throw error;
+      updateDraft({ coverImageUrl: signed.public_url });
+    } catch (err: any) {
+      Alert.alert(
+        t("createRoutine.coverUploadFailed", "Upload failed"),
+        err?.message || t("createRoutine.tryAgain", "Please try again."),
+      );
+    } finally {
+      setIsUploadingCover(false);
+    }
+  };
 
   const handlePickCover = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -219,41 +264,70 @@ export default function CreateRoutineScreen() {
           <Text style={styles.label}>
             {t("createRoutine.coverImage", "Cover image")}
           </Text>
-          <Pressable
-            style={({ pressed }) => [
-              styles.coverPicker,
-              pressed && { opacity: 0.85 },
-            ]}
-            onPress={handlePickCover}
-            disabled={isUploadingCover}
-          >
-            {draft.coverImageUrl ? (
-              <>
-                <Image
-                  source={{ uri: draft.coverImageUrl }}
-                  style={styles.coverImage}
-                  contentFit="cover"
-                  transition={200}
-                />
-                <Pressable
-                  style={styles.coverRemoveBtn}
-                  onPress={() => updateDraft({ coverImageUrl: "" })}
-                  hitSlop={8}
-                >
-                  <Ionicons name="close-circle" size={24} color="#fff" />
-                </Pressable>
-              </>
-            ) : isUploadingCover ? (
+
+          {/* Selected cover preview */}
+          {draft.coverImageUrl ? (
+            <View style={styles.coverPicker}>
+              <Image
+                source={{ uri: draft.coverImageUrl }}
+                style={styles.coverImage}
+                contentFit="cover"
+                transition={200}
+              />
+              <Pressable
+                style={styles.coverRemoveBtn}
+                onPress={() => updateDraft({ coverImageUrl: "" })}
+                hitSlop={8}
+              >
+                <Ionicons name="close-circle" size={24} color="#fff" />
+              </Pressable>
+            </View>
+          ) : isUploadingCover ? (
+            <View style={styles.coverPicker}>
               <ActivityIndicator size="small" color={theme.primary.main} />
-            ) : (
-              <View style={styles.coverPlaceholder}>
-                <Ionicons name="image-outline" size={32} color={theme.foreground.gray} />
-                <Text style={styles.coverPlaceholderText}>
-                  {t("createRoutine.tapToAddCover", "Tap to add a cover image")}
+            </View>
+          ) : null}
+
+          {/* Preset covers row */}
+          {!draft.coverImageUrl && !isUploadingCover && (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.presetRow}
+            >
+              {/* Upload from phone */}
+              <Pressable
+                style={({ pressed }) => [
+                  styles.presetCard,
+                  styles.presetUploadCard,
+                  pressed && { opacity: 0.85 },
+                ]}
+                onPress={handlePickCover}
+              >
+                <Ionicons name="cloud-upload-outline" size={22} color={theme.foreground.gray} />
+                <Text style={styles.presetUploadText}>
+                  {t("createRoutine.uploadPhoto", "Upload")}
                 </Text>
-              </View>
-            )}
-          </Pressable>
+              </Pressable>
+
+              {PRESET_COVERS.map((preset, i) => (
+                <Pressable
+                  key={i}
+                  style={({ pressed }) => [
+                    styles.presetCard,
+                    pressed && { opacity: 0.85 },
+                  ]}
+                  onPress={() => handleSelectPreset(preset)}
+                >
+                  <Image
+                    source={preset}
+                    style={styles.presetImage}
+                    contentFit="cover"
+                  />
+                </Pressable>
+              ))}
+            </ScrollView>
+          )}
         </View>
 
         {/* Routine name */}
@@ -1172,6 +1246,34 @@ const createStyles = (theme: Theme) => {
     coverPlaceholderText: {
       fontSize: 13,
       fontFamily: FONTS.medium,
+      color: theme.foreground.gray,
+    },
+    presetRow: {
+      gap: 10,
+      paddingVertical: 4,
+    },
+    presetCard: {
+      width: 90,
+      height: 120,
+      borderRadius: 12,
+      overflow: "hidden",
+      backgroundColor: theme.background.darker,
+      borderWidth: 1,
+      borderColor: theme.background.accent,
+    },
+    presetUploadCard: {
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 6,
+      borderStyle: "dashed",
+    },
+    presetImage: {
+      width: "100%",
+      height: "100%",
+    },
+    presetUploadText: {
+      fontSize: 11,
+      fontFamily: FONTS.semiBold,
       color: theme.foreground.gray,
     },
 
