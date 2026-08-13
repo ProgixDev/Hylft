@@ -73,8 +73,8 @@ function MealOptionCard({
         style={[
           s.cardFace,
           {
-            backgroundColor: selected ? primaryColor + "18" : theme.background.darker,
-            borderColor: selected ? primaryColor : theme.background.accent,
+            backgroundColor: selected ? primaryColor + "18" : '#FFFFFF',
+            borderColor: selected ? primaryColor : '#E5E7EB',
           },
         ]}
       >
@@ -82,56 +82,30 @@ function MealOptionCard({
           <Text
             style={[
               s.cardTitle,
-              { color: selected ? primaryColor : theme.foreground.white },
+              { color: selected ? primaryColor : "#102b4a" },
             ]}
           >
             {label}
           </Text>
         </View>
 
-        <View style={s.progressWrap}>
-          <View
-            style={[
-              s.progressTrack,
-              {
-                backgroundColor: selected
-                  ? primaryColor + "38"
-                  : theme.background.accent,
-              },
-            ]}
-          >
-            <View
-              style={[
-                s.progressFill,
-                {
-                  width: `${option.bars * 20}%`,
-                  backgroundColor: selected ? primaryColor : theme.foreground.white,
-                },
-              ]}
-            />
-          </View>
-          <View style={s.progressDots}>
-            {Array.from({ length: 5 }).map((_, i) => {
-              const active = i < option.bars;
-              return (
-                <View
-                  key={i}
-                  style={[
-                    s.progressDot,
-                    {
-                      backgroundColor: active
-                        ? selected
-                          ? primaryColor
-                          : theme.foreground.white
-                        : selected
-                          ? primaryColor + "40"
-                          : theme.foreground.gray + "40",
-                    },
-                  ]}
-                />
-              );
-            })}
-          </View>
+        <View style={s.dashRow}>
+          {Array.from({ length: 5 }).map((_, i) => {
+            const active = i < option.bars;
+            return (
+              <View
+                key={i}
+                style={[
+                  s.dash,
+                  {
+                    backgroundColor: active
+                      ? selected ? primaryColor : "#102b4a"
+                      : "#D1D5DB",
+                  },
+                ]}
+              />
+            );
+          })}
         </View>
       </View>
     </AnimatedPressable>
@@ -141,7 +115,6 @@ function MealOptionCard({
 export default function MealPlanningScreen() {
   const router = useRouter();
   const { t } = useTranslation();
-  const { theme } = useTheme();
   const [selected, setSelected] = useState<string>("");
   const [isNavigating, setIsNavigating] = useState(false);
 
@@ -157,12 +130,12 @@ export default function MealPlanningScreen() {
   };
 
   return (
-    <View style={[s.container, { backgroundColor: theme.background.dark }]}>
+    <View style={[s.container, { backgroundColor: '#F8F9FC' }]}>
       <View style={{ flex: 1 }}>
         <SignupProgress current={4} total={13} />
 
         <View style={s.header}>
-          <Text style={[s.title, { color: theme.foreground.white }]}>{t("onboarding.mealPlanning.title")}</Text>
+          <Text style={s.title}>{t("onboarding.mealPlanning.title")}</Text>
         </View>
 
         <View style={s.list}>
@@ -197,6 +170,7 @@ const s = StyleSheet.create({
     fontSize: 26,
     fontFamily: FONTS.extraBold,
     lineHeight: 32,
+    color: "#102b4a",
   },
   list: {
     gap: 14,
@@ -222,28 +196,15 @@ const s = StyleSheet.create({
     lineHeight: 23,
     fontFamily: FONTS.extraBold,
   },
-  progressWrap: {
-    width: 112,
-    gap: 8,
+  dashRow: {
+    flexDirection: "row",
+    gap: 4,
+    alignItems: "center",
     flexShrink: 0,
   },
-  progressTrack: {
-    height: 12,
-    borderRadius: 999,
-    overflow: "hidden",
-  },
-  progressFill: {
-    height: "100%",
-    borderRadius: 999,
-  },
-  progressDots: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  progressDot: {
-    width: 9,
-    height: 9,
-    borderRadius: 4.5,
+  dash: {
+    width: 18,
+    height: 5,
+    borderRadius: 3,
   },
 });

@@ -480,7 +480,7 @@ export default function Settings() {
     value,
     onChange,
   }: {
-    options: { label: string; value: T }[];
+    options: { label: string | React.ReactNode; value: T }[];
     value: T;
     onChange: (v: T) => void;
   }) {
@@ -493,14 +493,18 @@ export default function Settings() {
             onPress={() => onChange(o.value)}
             activeOpacity={0.8}
           >
-            <Text
-              style={[
-                styles.segBtnText,
-                value === o.value && styles.segBtnTextActive,
-              ]}
-            >
-              {o.label}
-            </Text>
+            {typeof o.label === "string" ? (
+              <Text
+                style={[
+                  styles.segBtnText,
+                  value === o.value && styles.segBtnTextActive,
+                ]}
+              >
+                {o.label}
+              </Text>
+            ) : (
+              o.label
+            )}
           </TouchableOpacity>
         ))}
       </View>
@@ -617,8 +621,8 @@ export default function Settings() {
             right={
               <Seg
                 options={[
-                  { label: "English", value: "en" },
-                  { label: "Français", value: "fr" },
+                  { label: <Text style={{ fontSize: 20 }}>🇬🇧</Text>, value: "en" },
+                  { label: <Text style={{ fontSize: 20 }}>🇫🇷</Text>, value: "fr" },
                 ]}
                 value={language}
                 onChange={(v) => setLanguage(v as "en" | "fr")}

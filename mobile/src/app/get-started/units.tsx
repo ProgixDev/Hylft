@@ -137,7 +137,7 @@ export default function UnitsSelection() {
 const s = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#F8F9FC",
     paddingHorizontal: 20,
     paddingBottom: 16,
   },
@@ -147,7 +147,7 @@ const s = StyleSheet.create({
   title: {
     fontSize: 26,
     fontFamily: FONTS.extraBold,
-    color: "#111827",
+    color: "#102b4a",
     marginTop: 6,
     marginBottom: 20,
   },
@@ -160,7 +160,7 @@ const s = StyleSheet.create({
   optionTitle: {
     fontSize: 15,
     fontFamily: FONTS.semiBold,
-    color: "#111827",
+    color: "#102b4a",
     marginBottom: 2,
   },
   optionsRow: {

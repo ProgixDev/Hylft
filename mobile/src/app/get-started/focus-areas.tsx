@@ -15,9 +15,9 @@ import { FONTS } from "../../constants/fonts";
 import ChipButton from "../../components/ui/ChipButton";
 import SignupProgress from "../../components/ui/SignupProgress";
 
-const BG = "#FFFFFF";
-const SURFACE = "#F6F8FA";
-const BORDER = "#DDE3EA";
+const BG = "#F8F9FC";
+const SURFACE = "#FFFFFF";
+const BORDER = "#E5E7EB";
 
 interface MuscleGroup {
   id: string;
@@ -104,7 +104,7 @@ export default function FocusAreas() {
                     style={[
                       s.chipLabel,
                       {
-                        color: isSelected ? theme.primary.main : "#111827",
+                        color: isSelected ? theme.primary.main : "#102b4a",
                       },
                     ]}
                   >
@@ -140,7 +140,7 @@ export default function FocusAreas() {
             />
             <Text style={s.previewText}>
               {t("onboarding.focusAreas.previewPrefix")}{" "}
-              <Text style={{ color: "#111827", fontFamily: FONTS.semiBold }}>
+              <Text style={{ color: "#102b4a", fontFamily: FONTS.semiBold }}>
                 {selected
                   .map((id) => t(`onboarding.focusAreas.muscles.${id}`))
                   .join(", ")}
@@ -177,7 +177,7 @@ const s = StyleSheet.create({
   title: {
     fontSize: 26,
     fontFamily: FONTS.extraBold,
-    color: "#111827",
+    color: "#102b4a",
     marginBottom: 20,
   },
   grid: {

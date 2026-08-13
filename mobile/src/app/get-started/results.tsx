@@ -16,7 +16,6 @@ import {
 import { Text } from "../../components/ui/ScaledText";
 import ChipButton from "../../components/ui/ChipButton";
 import { FONTS } from "../../constants/fonts";
-import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
 import en from "../../locales/en.json";
 import fr from "../../locales/fr.json";
@@ -24,26 +23,23 @@ import fr from "../../locales/fr.json";
 function ResultCard({
   children,
   style,
-  theme,
+  shellStyle,
 }: {
   children: React.ReactNode;
   style?: StyleProp<ViewStyle>;
-  theme: Theme;
+  shellStyle?: StyleProp<ViewStyle>;
 }) {
   return (
-    <View style={s.cardShell}>
-      <View
-        style={[
-          s.cardFace,
-          {
-            backgroundColor: theme.background.darker,
-            borderColor: theme.background.accent,
-          },
-          style,
-        ]}
-      >
-        {children}
-      </View>
+    <View style={[s.cardShell, shellStyle]}>
+      <View style={[s.cardFace, style]}>{children}</View>
+    </View>
+  );
+}
+
+function IconCircle({ name }: { name: keyof typeof Ionicons.glyphMap }) {
+  return (
+    <View style={[s.iconCircle, { backgroundColor: "#E8EAF0" }]}>
+      <Ionicons name={name} size={22} color="#102b4a" />
     </View>
   );
 }
@@ -106,13 +102,11 @@ export default function ResultsScreen() {
         if (ageStr) age = parseInt(ageStr, 10);
         if (genderStr) gender = genderStr.toLowerCase();
 
-        // BMI Calculation
         let cm = h < 1 ? 175 : h;
         let meter = cm / 100;
         let currentBmi = w / (meter * meter);
         setBmi(currentBmi);
 
-        // Display states mapping
         if (expLvl) setFitnessLevel(expLvl);
         if (actLvl) {
           setActivityLevel(actLvl);
@@ -143,12 +137,10 @@ export default function ResultsScreen() {
           if (!isNaN(n)) setWeeklyGoal(n);
         }
 
-        // BMR Calculation (Mifflin-St Jeor)
         let bmr =
           10 * w + 6.25 * cm - 5 * age + (gender === "female" ? -161 : 5);
 
-        // Activity Multiplier
-        let activityMultiplier = 1.375; // Default light
+        let activityMultiplier = 1.375;
         if (actLvl) {
           const l = actLvl.toLowerCase();
           if (l.includes("sedentary")) activityMultiplier = 1.2;
@@ -158,10 +150,8 @@ export default function ResultsScreen() {
           else if (l.includes("extreme")) activityMultiplier = 1.9;
         }
 
-        // TDEE (Total Daily Energy Expenditure)
         let tdee = bmr * activityMultiplier;
 
-        // Adjust calories based on goal
         let targetCalories = tdee;
         if (weightGoal === "lose_weight") {
           targetCalories -= 500;
@@ -174,24 +164,16 @@ export default function ResultsScreen() {
 
         targetCalories = Math.round(targetCalories);
 
-        // Macros ratio: roughly 30% Protein, 25% Fat, 45% Carbs
-        // Protein: ~2g per kg is also a good standard. We'll use calories percentages:
         let proteinCalories = targetCalories * 0.3;
         let fatCalories = targetCalories * 0.25;
         let carbsCalories = targetCalories * 0.45;
 
-        let dailyProtein = Math.round(proteinCalories / 4);
-        let dailyFat = Math.round(fatCalories / 9);
-        let dailyCarbs = Math.round(carbsCalories / 4);
-
         setCalories(targetCalories);
-        setProtein(dailyProtein);
-        setFat(dailyFat);
-        setCarbs(dailyCarbs);
+        setProtein(Math.round(proteinCalories / 4));
+        setFat(Math.round(fatCalories / 9));
+        setCarbs(Math.round(carbsCalories / 4));
 
-        // Hydration: ~35ml per kg of bodyweight
         let dailyWaterMl = w * 35;
-        // 1 cup = 240 ml
         setCups(parseFloat((dailyWaterMl / 240).toFixed(1)));
       } catch (err) {
         console.error(err);
@@ -226,33 +208,30 @@ export default function ResultsScreen() {
     .join(", ");
 
   return (
-    <View style={[s.root, { backgroundColor: theme.background.dark }]}>
-      <StatusBar style="light" backgroundColor="transparent" translucent />
+    <View style={s.root}>
+      <StatusBar style="dark" backgroundColor="transparent" />
       <ScrollView
         contentContainerStyle={s.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        {/* Header */}
         <View style={s.header}>
-          <Image
-            source={theme.logo}
-            style={s.logo}
-            resizeMode="contain"
-          />
+          <Image source={theme.logo} style={s.logo} resizeMode="contain" />
           <Text style={s.congratsTitle}>
             {t("onboarding.results.congratsTitle")}
           </Text>
-          <Text style={[s.congratsSub, { color: theme.foreground.gray }]}>
+          <Text style={s.congratsSub}>
             {t("onboarding.results.congratsSubtitle")}
           </Text>
         </View>
 
-        {/* BMI CARD */}
-        <ResultCard theme={theme}>
-          <Text style={[s.cardTitle, { color: theme.foreground.white }]}>
+        {/* BMI Card */}
+        <ResultCard>
+          <Text style={s.cardLabel}>
             {t("onboarding.results.bmiIndex")}
           </Text>
           <View style={s.bmiRow}>
-            <Text style={[s.bmiValue, { color: theme.foreground.white }]}>
+            <Text style={s.bmiValue}>
               {bmi > 0 ? bmi.toFixed(2) : "--.--"}
             </Text>
             <View
@@ -282,165 +261,158 @@ export default function ResultsScreen() {
           </View>
 
           <View style={s.sliderLabels}>
-            <Text style={[s.sliderLabel, { color: theme.foreground.gray }]}>
+            <Text style={s.sliderLabel}>
               {t("onboarding.results.bmiStatus.underweight")}
             </Text>
-            <Text style={[s.sliderLabel, { color: theme.foreground.gray }]}>
+            <Text style={s.sliderLabel}>
               {t("onboarding.results.bmiStatus.normal")}
             </Text>
-            <Text style={[s.sliderLabel, { color: theme.foreground.gray }]}>
+            <Text style={s.sliderLabel}>
               {t("onboarding.results.bmiStatus.overweight")}
             </Text>
-            <Text style={[s.sliderLabel, { color: theme.foreground.gray }]}>
+            <Text style={s.sliderLabel}>
               {t("onboarding.results.bmiStatus.obese")}
             </Text>
           </View>
         </ResultCard>
 
-        {/* FITNESS LEVEL CARD */}
-        <ResultCard theme={theme}>
+        {/* Stats Card */}
+        <ResultCard>
           <View style={s.statRow}>
-            <Ionicons
-              name="triangle-outline"
-              size={28}
-              color="#259CFF"
-              style={s.icon}
-            />
-            <View>
-              <Text style={[s.statLabel, { color: theme.foreground.gray }]}>
+            <IconCircle name="triangle-outline" />
+            <View style={s.statText}>
+              <Text style={s.cardLabel}>
                 {t("onboarding.results.fitnessLevel")}
               </Text>
-              <Text style={[s.statValue, { color: theme.foreground.white }]}>
-                {fitnessLevelLabel}
-              </Text>
+              <Text style={s.statValue}>{fitnessLevelLabel}</Text>
             </View>
           </View>
+
+          <View style={s.divider} />
 
           <View style={s.statRow}>
-            <Ionicons
-              name="stats-chart"
-              size={26}
-              color="#4F46E5"
-              style={s.icon}
-            />
-            <View>
-              <Text style={[s.statLabel, { color: theme.foreground.gray }]}>
+            <IconCircle name="bar-chart-outline" />
+            <View style={s.statText}>
+              <Text style={s.cardLabel}>
                 {t("onboarding.results.activityLevel")}
               </Text>
-              <Text style={[s.statValue, { color: theme.foreground.white }]}>
-                {activityLevelLabel}
-              </Text>
+              <Text style={s.statValue}>{activityLevelLabel}</Text>
             </View>
           </View>
 
-          <View style={[s.statRow, { marginBottom: 0 }]}>
-            <Ionicons
-              name="locate-outline"
-              size={28}
-              color="#38BDF8"
-              style={s.icon}
-            />
-            <View>
-              <Text style={[s.statLabel, { color: theme.foreground.gray }]}>
+          <View style={s.divider} />
+
+          <View style={s.statRow}>
+            <IconCircle name="locate-outline" />
+            <View style={s.statText}>
+              <Text style={s.cardLabel}>
                 {t("onboarding.results.targetAreas")}
               </Text>
-              <Text style={[s.statValue, { color: theme.foreground.white }]}>
-                {targetAreasLabel}
-              </Text>
+              <Text style={s.statValue}>{targetAreasLabel}</Text>
             </View>
           </View>
         </ResultCard>
 
-        {/* NUTRITION PLAN */}
-        <Text style={[s.sectionTitle, { color: theme.foreground.white }]}>
+        {/* Nutrition Plan */}
+        <Text style={s.sectionTitle}>
           {t("onboarding.results.nutritionPlan")}
         </Text>
 
-        <ResultCard theme={theme} style={{ alignItems: "center" }}>
-          <Text style={s.emoji}>🔥</Text>
-          <Text style={[s.statLabel, { color: theme.foreground.gray }]}>
-            {t("onboarding.results.calorieGoal")}
-          </Text>
-          <Text style={[s.bigValue, { color: theme.foreground.white }]}>
-            {calories} <Text style={s.unit}>kcal</Text>
-          </Text>
-          <Text style={[s.perDay, { color: theme.foreground.gray }]}>
-            {t("onboarding.results.perDay")}
-          </Text>
-        </ResultCard>
+        {/* Calorie Card — dark */}
+        <View style={s.calorieCard}>
+          <View style={s.calorieHeader}>
+            <View style={s.calorieIcon}>
+              <Ionicons name="flame" size={20} color="#FFF" />
+            </View>
+            <Text style={s.calorieLabel}>
+              {t("onboarding.results.calorieGoal")}
+            </Text>
+          </View>
+          <View style={s.calorieValueRow}>
+            <Text style={s.calorieValue}>{calories}</Text>
+            <Text style={s.calorieUnit}>
+              kcal / {t("onboarding.results.perDay").replace("par ", "")}
+            </Text>
+          </View>
+        </View>
 
-        <ResultCard
-          theme={theme}
-          style={{ flexDirection: "row", justifyContent: "space-around" }}
-        >
+        {/* Macros Card */}
+        <ResultCard style={s.macrosRow}>
           <View style={s.macroItem}>
-            <Text style={s.emoji}>🥚</Text>
-            <Text style={[s.statLabel, { color: theme.foreground.gray }]}>
+            <Text style={s.cardLabel}>
               {t("onboarding.results.protein")}
             </Text>
-            <Text style={[s.macroValue, { color: theme.foreground.white }]}>
-              {protein}g
-            </Text>
-            <Text style={[s.perDay, { color: theme.foreground.gray }]}>
+            <Text style={s.macroValue}>{protein}g</Text>
+            <Text style={s.macroPerDay}>
               {t("onboarding.results.perDay")}
             </Text>
           </View>
+          <View style={s.macroDivider} />
           <View style={s.macroItem}>
-            <Text style={s.emoji}>🍚</Text>
-            <Text style={[s.statLabel, { color: theme.foreground.gray }]}>
+            <Text style={s.cardLabel}>
               {t("onboarding.results.carbs")}
             </Text>
-            <Text style={[s.macroValue, { color: theme.foreground.white }]}>
-              {carbs}g
-            </Text>
-            <Text style={[s.perDay, { color: theme.foreground.gray }]}>
+            <Text style={s.macroValue}>{carbs}g</Text>
+            <Text style={s.macroPerDay}>
               {t("onboarding.results.perDay")}
             </Text>
           </View>
+          <View style={s.macroDivider} />
           <View style={s.macroItem}>
-            <Text style={s.emoji}>🧈</Text>
-            <Text style={[s.statLabel, { color: theme.foreground.gray }]}>
+            <Text style={s.cardLabel}>
               {t("onboarding.results.fat")}
             </Text>
-            <Text style={[s.macroValue, { color: theme.foreground.white }]}>
-              {fat}g
-            </Text>
-            <Text style={[s.perDay, { color: theme.foreground.gray }]}>
+            <Text style={s.macroValue}>{fat}g</Text>
+            <Text style={s.macroPerDay}>
               {t("onboarding.results.perDay")}
             </Text>
           </View>
         </ResultCard>
 
-        <ResultCard theme={theme} style={{ alignItems: "center" }}>
-          <Text style={s.emoji}>💧</Text>
-          <Text style={[s.statLabel, { color: theme.foreground.gray }]}>
-            {t("onboarding.results.waterGoal")}
-          </Text>
-          <Text style={[s.bigValue, { color: theme.foreground.white }]}>
-            {cups} <Text style={s.unit}>{t("onboarding.results.cups")}</Text>
-          </Text>
-          <Text style={[s.perDay, { color: theme.foreground.gray }]}>
-            {t("onboarding.results.perDay")}
-          </Text>
-        </ResultCard>
-        <ResultCard theme={theme} style={{ alignItems: "center" }}>
-          <Text style={s.emoji}>💪</Text>
-          <Text style={[s.statLabel, { color: theme.foreground.gray }]}>
-            {t("onboarding.results.workoutsCount", { count: weeklyGoal })}
-          </Text>
-          <Text style={[s.bigValue, { color: theme.foreground.white }]}>
-            {t("onboarding.results.weeklyGoal")}
-          </Text>
-        </ResultCard>
-      </ScrollView>
+        {/* Water + Weekly Goal — side by side, equal height */}
+        <View style={s.bottomRow}>
+          <ResultCard shellStyle={s.bottomCardShell} style={s.bottomCard}>
+            <View style={[s.iconCircle, { backgroundColor: "#E8EAF0", alignSelf: "flex-start" }]}>
+              <Ionicons name="water-outline" size={20} color="#102b4a" />
+            </View>
+            <Text style={[s.cardLabel, { marginTop: 8 }]}>
+              {t("onboarding.results.waterGoal")}
+            </Text>
+            <View style={s.bottomValueRow}>
+              <Text style={s.bottomValue}>{cups}</Text>
+              <Text style={s.bottomUnit}>
+                {t("onboarding.results.cups")}
+              </Text>
+            </View>
+          </ResultCard>
 
-      <View style={[s.footer, { backgroundColor: theme.background.dark + "E6" }]}>
-        <ChipButton
-          threeD
-          title={t("onboarding.results.getMyPlan")}
-          onPress={() => router.push("/get-started/account")}
-        />
-      </View>
+          <ResultCard shellStyle={s.bottomCardShell} style={s.bottomCard}>
+            <View style={[s.iconCircle, { backgroundColor: "#E8EAF0", alignSelf: "flex-start" }]}>
+              <Ionicons name="construct-outline" size={20} color="#102b4a" />
+            </View>
+            <Text style={[s.cardLabel, { marginTop: 8 }]}>
+              {t("onboarding.results.weeklyGoalLabel")}
+            </Text>
+            <View style={s.bottomValueRow}>
+              <Text style={s.bottomValue}>{weeklyGoal}</Text>
+              <Text style={s.bottomUnit}>
+                {t("onboarding.results.workoutsUnit")}
+              </Text>
+            </View>
+          </ResultCard>
+        </View>
+
+        <View style={s.buttonWrap}>
+          <ChipButton
+            threeD
+            title={t("onboarding.results.getMyPlan")}
+            onPress={() => router.push("/get-started/account")}
+            variant="primary"
+            size="lg"
+            fullWidth
+          />
+        </View>
+      </ScrollView>
     </View>
   );
 }
@@ -448,13 +420,14 @@ export default function ResultsScreen() {
 const s = StyleSheet.create({
   root: {
     flex: 1,
+    backgroundColor: "#F8F9FC",
   },
   scrollContent: {
     paddingHorizontal: 20,
-    paddingBottom: 130,
+    paddingBottom: 32,
   },
   header: {
-    marginBottom: 24,
+    marginBottom: 20,
     alignItems: "center",
   },
   logo: {
@@ -463,7 +436,7 @@ const s = StyleSheet.create({
     marginBottom: 14,
   },
   congratsTitle: {
-    color: "#259CFF",
+    color: "#102b4a",
     fontSize: 28,
     fontFamily: FONTS.extraBold,
     marginBottom: 4,
@@ -471,45 +444,48 @@ const s = StyleSheet.create({
   congratsSub: {
     fontSize: 16,
     fontFamily: FONTS.medium,
+    color: "#6B7280",
   },
   cardShell: {
-    borderRadius: 20,
-    marginBottom: 16,
-    shadowColor: "#0F2445",
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.11,
-    shadowRadius: 18,
-    elevation: 5,
+    borderRadius: 18,
+    marginBottom: 14,
   },
   cardFace: {
-    borderRadius: 20,
-    padding: 20,
+    borderRadius: 18,
+    padding: 18,
+    backgroundColor: "#FFFFFF",
     borderWidth: 1,
+    borderColor: "#E5E7EB",
   },
-  cardTitle: {
+  cardLabel: {
     fontFamily: FONTS.bold,
-    fontSize: 14,
-    marginBottom: 12,
+    fontSize: 11,
+    color: "#6B7280",
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
   },
   bmiRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 20,
+    marginTop: 6,
+    marginBottom: 18,
   },
   bmiValue: {
     fontSize: 34,
     fontFamily: FONTS.extraBold,
+    color: "#102b4a",
     marginRight: 12,
   },
   badge: {
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 8,
+    borderRadius: 100,
   },
   badgeText: {
     fontFamily: FONTS.bold,
-    fontSize: 12,
+    fontSize: 11,
     textTransform: "uppercase",
+    letterSpacing: 0.3,
   },
   sliderContainer: {
     height: 30,
@@ -552,65 +528,148 @@ const s = StyleSheet.create({
   sliderLabel: {
     fontSize: 11,
     fontFamily: FONTS.medium,
+    color: "#6B7280",
   },
+  // Stats card
   statRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 20,
+    gap: 14,
+    paddingVertical: 4,
   },
-  icon: {
-    width: 40,
-  },
-  statLabel: {
-    fontSize: 13,
-    fontFamily: FONTS.medium,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
+  statText: {
+    flex: 1,
   },
   statValue: {
-    fontSize: 18,
+    fontSize: 17,
     fontFamily: FONTS.bold,
+    color: "#102b4a",
     marginTop: 2,
   },
+  divider: {
+    height: 1,
+    backgroundColor: "#F0F0F0",
+    marginVertical: 12,
+  },
+  iconCircle: {
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  // Section
   sectionTitle: {
-    fontSize: 18,
-    fontFamily: FONTS.bold,
-    marginTop: 10,
-    marginBottom: 16,
-  },
-  emoji: {
-    fontSize: 32,
-    marginBottom: 10,
-  },
-  bigValue: {
-    fontSize: 34,
+    fontSize: 20,
     fontFamily: FONTS.extraBold,
+    color: "#102b4a",
+    marginTop: 8,
+    marginBottom: 14,
+  },
+  // Calorie card — dark
+  calorieCard: {
+    backgroundColor: "#102b4a",
+    borderRadius: 18,
+    padding: 20,
+    marginBottom: 14,
+  },
+  calorieHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 6,
+  },
+  calorieIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: "rgba(255,255,255,0.15)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  calorieLabel: {
+    fontFamily: FONTS.bold,
+    fontSize: 11,
+    color: "rgba(255,255,255,0.7)",
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
+  },
+  calorieValueRow: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    gap: 8,
     marginTop: 4,
   },
-  unit: {
-    fontSize: 22,
-    fontFamily: FONTS.bold,
+  calorieValue: {
+    fontSize: 40,
+    fontFamily: FONTS.extraBold,
+    color: "#FFFFFF",
   },
-  perDay: {
-    fontSize: 13,
+  calorieUnit: {
+    fontSize: 16,
     fontFamily: FONTS.medium,
-    marginTop: 6,
+    color: "rgba(255,255,255,0.6)",
+  },
+  // Macros
+  macrosRow: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "flex-start",
   },
   macroItem: {
     alignItems: "center",
+    flex: 1,
   },
   macroValue: {
     fontSize: 24,
     fontFamily: FONTS.extraBold,
+    color: "#102b4a",
+    marginTop: 6,
+  },
+  macroPerDay: {
+    fontSize: 11,
+    fontFamily: FONTS.medium,
+    color: "#9CA3AF",
+    marginTop: 2,
+  },
+  macroDivider: {
+    width: 1,
+    height: 60,
+    backgroundColor: "#F0F0F0",
+    alignSelf: "center",
+  },
+  // Bottom row
+  bottomRow: {
+    flexDirection: "row",
+    gap: 12,
+    alignItems: "stretch",
+  },
+  bottomCardShell: {
+    flex: 1,
+    marginBottom: 14,
+  },
+  bottomCard: {
+    flex: 1,
+    alignItems: "flex-start",
+  },
+  buttonWrap: {
+    marginTop: 4,
+    marginBottom: 8,
+  },
+  bottomValueRow: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    gap: 4,
     marginTop: 4,
   },
-  footer: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 34,
+  bottomValue: {
+    fontSize: 28,
+    fontFamily: FONTS.extraBold,
+    color: "#102b4a",
+  },
+  bottomUnit: {
+    fontSize: 13,
+    fontFamily: FONTS.medium,
+    color: "#6B7280",
   },
 });

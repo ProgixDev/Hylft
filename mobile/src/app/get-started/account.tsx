@@ -4,10 +4,10 @@ import { useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-    Alert,
     Animated,
     Easing,
     KeyboardAvoidingView,
+    Modal,
     Platform,
     Pressable,
     ScrollView,
@@ -29,6 +29,98 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { supabase } from "../../services/supabase";
 
+/* ── Custom modal ── */
+type ModalConfig = {
+  visible: boolean;
+  icon: keyof typeof Ionicons.glyphMap;
+  title: string;
+  message: string;
+  onDismiss: () => void;
+};
+
+function AppDialog({ config }: { config: ModalConfig }) {
+  return (
+    <Modal
+      visible={config.visible}
+      transparent
+      animationType="fade"
+      statusBarTranslucent
+      onRequestClose={config.onDismiss}
+    >
+      <View style={d.backdrop}>
+        <View style={d.card}>
+          <View style={d.iconWrap}>
+            <Ionicons name={config.icon} size={32} color="#102b4a" />
+          </View>
+          <Text style={d.title}>{config.title}</Text>
+          <Text style={d.message}>{config.message}</Text>
+          <TouchableOpacity
+            style={d.btn}
+            onPress={config.onDismiss}
+            activeOpacity={0.85}
+          >
+            <Text style={d.btnText}>OK</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+const d = StyleSheet.create({
+  backdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 32,
+  },
+  card: {
+    width: "100%",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 24,
+    padding: 28,
+    alignItems: "center",
+  },
+  iconWrap: {
+    width: 72,
+    height: 72,
+    borderRadius: 20,
+    backgroundColor: "#EEF0F5",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 18,
+  },
+  title: {
+    fontSize: 20,
+    fontFamily: FONTS.extraBold,
+    color: "#102b4a",
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  message: {
+    fontSize: 14,
+    fontFamily: FONTS.medium,
+    color: "#6B7280",
+    textAlign: "center",
+    lineHeight: 21,
+    marginBottom: 24,
+  },
+  btn: {
+    width: "100%",
+    backgroundColor: "#102b4a",
+    borderRadius: 100,
+    paddingVertical: 14,
+    alignItems: "center",
+  },
+  btnText: {
+    fontSize: 15,
+    fontFamily: FONTS.bold,
+    color: "#FFFFFF",
+  },
+});
+
+/* ── Screen ── */
 export default function AccountScreen() {
   const router = useRouter();
   const { t, i18n } = useTranslation();
@@ -43,6 +135,13 @@ export default function AccountScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [modal, setModal] = useState<ModalConfig>({
+    visible: false,
+    icon: "mail-outline",
+    title: "",
+    message: "",
+    onDismiss: () => {},
+  });
 
   const fade = useRef(new Animated.Value(0)).current;
   const slide = useRef(new Animated.Value(24)).current;
@@ -85,6 +184,16 @@ export default function AccountScreen() {
     return value === key ? (isFr ? frText : enText) : value;
   };
 
+  const showModal = (
+    icon: keyof typeof Ionicons.glyphMap,
+    title: string,
+    message: string,
+    onDismiss: () => void,
+  ) => setModal({ visible: true, icon, title, message, onDismiss });
+
+  const dismissModal = () =>
+    setModal((prev) => ({ ...prev, visible: false }));
+
   const handleSubmit = async () => {
     if (!canSubmit) return;
     setLoading(true);
@@ -113,19 +222,23 @@ export default function AccountScreen() {
         data: { session },
       } = await supabase.auth.getSession();
       if (!session) {
-        Alert.alert(
+        showModal(
+          "mail-outline",
           withFallback(
             "onboarding.account.verifyEmailTitle",
             "Check your email",
-            "Verifiez votre email",
+            "Vérifiez votre email",
           ),
           withFallback(
             "onboarding.account.verifyEmailMessage",
             "Your account was created. Verify your email, then sign in to continue.",
-            "Votre compte a ete cree. Verifiez votre email, puis connectez-vous pour continuer.",
+            "Votre compte a été créé. Vérifiez votre email, puis connectez-vous pour continuer.",
           ),
+          () => {
+            dismissModal();
+            router.replace("/auth/signin");
+          },
         );
-        router.replace("/auth/signin");
         return;
       }
       router.replace("/(tabs)/home");
@@ -138,13 +251,15 @@ export default function AccountScreen() {
               "Sign up failed",
               "Échec de l'inscription",
             );
-      Alert.alert(
+      showModal(
+        "alert-circle-outline",
         withFallback(
           "onboarding.account.signUpError",
           "Sign up error",
           "Erreur d'inscription",
         ),
         message,
+        dismissModal,
       );
     } finally {
       setLoading(false);
@@ -156,6 +271,8 @@ export default function AccountScreen() {
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
+      <AppDialog config={modal} />
+
       <Animated.View
         style={{
           flex: 1,
@@ -309,14 +426,14 @@ function createStyles(theme: Theme) {
   return StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: "#FFFFFF",
+      backgroundColor: "#F8F9FC",
       paddingHorizontal: 20,
       paddingBottom: 16,
     },
     title: {
       fontSize: 24,
       fontFamily: FONTS.bold,
-      color: "#111827",
+      color: "#102b4a",
       marginBottom: 20,
     },
     field: {
@@ -325,18 +442,18 @@ function createStyles(theme: Theme) {
     label: {
       fontSize: 13,
       fontFamily: FONTS.semiBold,
-      color: "#111827",
+      color: "#102b4a",
       marginBottom: 8,
     },
     input: {
-      backgroundColor: "#F6F8FA",
+      backgroundColor: "#FFFFFF",
       borderRadius: 12,
       paddingHorizontal: 14,
       paddingVertical: 14,
       fontSize: 15,
-      color: "#111827",
+      color: "#102b4a",
       borderWidth: 1,
-      borderColor: "#DDE3EA",
+      borderColor: "#E5E7EB",
       fontFamily: FONTS.medium,
     },
     passwordRow: {

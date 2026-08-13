@@ -1,9 +1,9 @@
 export const FONTS = {
-  regular: "Zain_400Regular",
-  medium: "Zain_400Regular",
-  semiBold: "Zain_700Bold",
-  bold: "Zain_700Bold",
-  extraBold: "Zain_800ExtraBold",
+  regular: "Inter_400Regular",
+  medium: "Inter_500Medium",
+  semiBold: "Inter_600SemiBold",
+  bold: "Inter_700Bold",
+  extraBold: "Inter_800ExtraBold",
 } as const;
 
 export const FONT_SIZES = {

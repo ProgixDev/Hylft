@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 import { Text } from "../../components/ui/ScaledText";
 import BmiGauge from "../../components/ui/BmiGauge";
 import ChipButton from "../../components/ui/ChipButton";
@@ -39,17 +39,17 @@ export default function WeightScreen() {
   };
 
   return (
-    <View
-      style={[s.container, { backgroundColor: theme.background.dark }]}
-    >
-      <View style={{ flex: 1 }}>
+    <View style={s.container}>
+      <ScrollView
+        contentContainerStyle={s.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         <SignupProgress current={isSignupFlow ? 9 : 7} total={13} />
 
-        <Text style={[s.title, { color: theme.foreground.white }]}>
-          {t("onboarding.weight.title")}
-        </Text>
+        <Text style={s.title}>{t("onboarding.weight.title")}</Text>
 
-        <View style={s.pickerContainer}>
+        {/* Ruler picker card */}
+        <View style={s.card}>
           <RulerPicker
             min={30}
             max={200}
@@ -58,19 +58,26 @@ export default function WeightScreen() {
             unit="kg"
             onChange={setValue}
           />
-
-          {bmi !== null && <BmiGauge bmi={bmi} theme={theme} />}
         </View>
-      </View>
 
-      <ChipButton
-        threeD
-        title={t("common.next")}
-        onPress={handleContinue}
-        variant="primary"
-        size="lg"
-        fullWidth
-      />
+        {/* BMI card */}
+        {bmi !== null && (
+          <View style={s.card}>
+            <BmiGauge bmi={bmi} theme={theme} />
+          </View>
+        )}
+
+        <View style={s.buttonWrap}>
+          <ChipButton
+            threeD
+            title={t("common.next")}
+            onPress={handleContinue}
+            variant="primary"
+            size="lg"
+            fullWidth
+          />
+        </View>
+      </ScrollView>
     </View>
   );
 }
@@ -78,17 +85,28 @@ export default function WeightScreen() {
 const s = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 20,
-    paddingBottom: 16,
+    backgroundColor: "#F8F9FC",
+  },
+  scrollContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 32,
   },
   title: {
     fontSize: 26,
     fontFamily: FONTS.extraBold,
-    marginBottom: 18,
+    marginBottom: 20,
+    color: "#102b4a",
   },
-  pickerContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+  card: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 24,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  buttonWrap: {
+    marginTop: 8,
   },
 });

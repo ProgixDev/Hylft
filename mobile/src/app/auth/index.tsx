@@ -1,15 +1,15 @@
-import { AntDesign, MaterialIcons } from "@expo/vector-icons";
+import { AntDesign, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Linking from "expo-linking";
 import { useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  Alert,
   Animated,
   Dimensions,
   Image,
   ImageSourcePropType,
+  Modal,
   PanResponder,
   Platform,
   Pressable,
@@ -284,6 +284,7 @@ export default function AuthLanding() {
   const isCarouselAnimating = useRef(false);
   const isCarouselDragging = useRef(false);
 
+  const [errorModal, setErrorModal] = useState({ visible: false, message: "" });
   const styles = createStyles();
   const carouselSlides = i18n.language?.startsWith("fr")
     ? FR_CAROUSEL_SLIDES
@@ -420,7 +421,7 @@ export default function AuthLanding() {
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : "Google sign in failed";
-      Alert.alert("Error", message);
+      setErrorModal({ visible: true, message });
     }
   };
 
@@ -428,6 +429,31 @@ export default function AuthLanding() {
 
   return (
     <LinearGradient colors={AUTH_GRADIENT} style={styles.container}>
+      <Modal
+        visible={errorModal.visible}
+        transparent
+        animationType="fade"
+        statusBarTranslucent
+        onRequestClose={() => setErrorModal({ visible: false, message: "" })}
+      >
+        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.45)", alignItems: "center", justifyContent: "center", paddingHorizontal: 32 }}>
+          <View style={{ width: "100%", backgroundColor: "#FFFFFF", borderRadius: 24, padding: 28, alignItems: "center" }}>
+            <View style={{ width: 72, height: 72, borderRadius: 20, backgroundColor: "#EEF0F5", alignItems: "center", justifyContent: "center", marginBottom: 18 }}>
+              <Ionicons name="alert-circle-outline" size={32} color="#102b4a" />
+            </View>
+            <Text style={{ fontSize: 20, fontFamily: FONTS.extraBold, color: "#102b4a", textAlign: "center", marginBottom: 8 }}>Error</Text>
+            <Text style={{ fontSize: 14, fontFamily: FONTS.medium, color: "#6B7280", textAlign: "center", lineHeight: 21, marginBottom: 24 }}>{errorModal.message}</Text>
+            <TouchableOpacity
+              style={{ width: "100%", backgroundColor: "#102b4a", borderRadius: 100, paddingVertical: 14, alignItems: "center" }}
+              onPress={() => setErrorModal({ visible: false, message: "" })}
+              activeOpacity={0.85}
+            >
+              <Text style={{ fontSize: 15, fontFamily: FONTS.bold, color: "#FFFFFF" }}>OK</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       <View style={styles.colorVeil} pointerEvents="none" />
       <View style={styles.diagonalBeam} pointerEvents="none" />
       {/* Carousel — white card, rounded bottom, floats above panel */}

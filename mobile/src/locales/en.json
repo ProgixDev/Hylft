@@ -158,10 +158,15 @@
       "bmi": {
         "label": "BMI",
         "underweight": "Underweight",
+        "underweightDesc": "BMI below reference range. Consider consulting a nutritionist.",
         "normal": "Normal",
+        "normalDesc": "BMI in the reference range for your height. Current weight is appropriate.",
         "overweight": "Overweight",
+        "overweightDesc": "BMI slightly above normal. Small lifestyle adjustments can help.",
         "obese": "Obese",
-        "severelyObese": "Severely Obese"
+        "obeseDesc": "BMI above healthy range. A diet and exercise plan is recommended.",
+        "severelyObese": "Severely Obese",
+        "severelyObeseDesc": "BMI well above healthy range. Medical guidance is advised."
       }
     },
     "targetWeight": {
@@ -451,6 +456,8 @@
       "perDay": "per day",
       "workoutsCount": "{{count}} WORKOUTS",
       "weeklyGoal": "Weekly goal",
+      "weeklyGoalLabel": "WEEKLY GOAL",
+      "workoutsUnit": "workouts",
       "getMyPlan": "GET MY PLAN"
     },
     "account": {
@@ -501,7 +508,7 @@
     "finishWorkout": "Finish Workout",
     "pause": "Pause",
     "resume": "Resume",
-    "getStarted": "Get Started",
+    "getStarted": "Sign Up",
     "addExerciseToStart": "Add an exercise to start your workout",
     "addExercise": "Add Exercise",
     "saveWorkout": "Save Workout",

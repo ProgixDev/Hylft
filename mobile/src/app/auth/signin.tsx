@@ -1,9 +1,10 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-  Alert,
   Image,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   StyleSheet,
   TextInput,
@@ -19,11 +20,102 @@ import { useAuth } from "../../contexts/AuthContext";
 import { FONTS } from "../../constants/fonts";
 import ChipButton from "../../components/ui/ChipButton";
 
+/* ── Custom modal ── */
+type ModalConfig = {
+  visible: boolean;
+  icon: keyof typeof Ionicons.glyphMap;
+  title: string;
+  message: string;
+  onDismiss: () => void;
+};
+
+function AppDialog({ config }: { config: ModalConfig }) {
+  return (
+    <Modal
+      visible={config.visible}
+      transparent
+      animationType="fade"
+      statusBarTranslucent
+      onRequestClose={config.onDismiss}
+    >
+      <View style={md.backdrop}>
+        <View style={md.card}>
+          <View style={md.iconWrap}>
+            <Ionicons name={config.icon} size={32} color="#102b4a" />
+          </View>
+          <Text style={md.title}>{config.title}</Text>
+          <Text style={md.message}>{config.message}</Text>
+          <TouchableOpacity
+            style={md.btn}
+            onPress={config.onDismiss}
+            activeOpacity={0.85}
+          >
+            <Text style={md.btnText}>OK</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+const md = StyleSheet.create({
+  backdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 32,
+  },
+  card: {
+    width: "100%",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 24,
+    padding: 28,
+    alignItems: "center",
+  },
+  iconWrap: {
+    width: 72,
+    height: 72,
+    borderRadius: 20,
+    backgroundColor: "#EEF0F5",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 18,
+  },
+  title: {
+    fontSize: 20,
+    fontFamily: FONTS.extraBold,
+    color: "#102b4a",
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  message: {
+    fontSize: 14,
+    fontFamily: FONTS.medium,
+    color: "#6B7280",
+    textAlign: "center",
+    lineHeight: 21,
+    marginBottom: 24,
+  },
+  btn: {
+    width: "100%",
+    backgroundColor: "#102b4a",
+    borderRadius: 100,
+    paddingVertical: 14,
+    alignItems: "center",
+  },
+  btnText: {
+    fontSize: 15,
+    fontFamily: FONTS.bold,
+    color: "#FFFFFF",
+  },
+});
+
 function createStyles(theme: Theme) {
   return StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: theme.background.dark,
+      backgroundColor: "#F8F9FC",
       justifyContent: "center",
     },
     logoContainer: {
@@ -40,13 +132,13 @@ function createStyles(theme: Theme) {
     title: {
       fontSize: 26,
       fontFamily: FONTS.bold,
-      color: theme.foreground.white,
+      color: "#102b4a",
       textAlign: "center",
       marginBottom: 6,
     },
     subtitle: {
       fontSize: 14,
-      color: theme.foreground.gray,
+      color: "#6B7280",
       textAlign: "center",
       marginBottom: 28,
     },
@@ -59,18 +151,19 @@ function createStyles(theme: Theme) {
     inputLabel: {
       fontSize: 14,
       fontFamily: FONTS.semiBold,
-      color: theme.foreground.white,
+      color: "#102b4a",
       marginBottom: 6,
     },
     input: {
-      backgroundColor: theme.background.darker,
-      borderRadius: 10,
+      backgroundColor: "#FFFFFF",
+      borderRadius: 12,
       paddingHorizontal: 14,
-      paddingVertical: 12,
+      paddingVertical: 14,
       fontSize: 14,
-      color: theme.foreground.white,
+      color: "#102b4a",
       borderWidth: 1,
-      borderColor: theme.background.accent,
+      borderColor: "#E5E7EB",
+      fontFamily: FONTS.medium,
     },
     forgotPasswordButton: {
       alignSelf: "flex-end",
@@ -89,10 +182,10 @@ function createStyles(theme: Theme) {
     divider: {
       flex: 1,
       height: 1,
-      backgroundColor: theme.background.accent,
+      backgroundColor: "#E5E7EB",
     },
     dividerText: {
-      color: theme.foreground.gray,
+      color: "#6B7280",
       fontSize: 13,
       marginHorizontal: 12,
     },
@@ -106,16 +199,16 @@ function createStyles(theme: Theme) {
       fontFamily: FONTS.semiBold,
     },
     inlineBanner: {
-      backgroundColor: "rgba(255, 170, 50, 0.12)",
+      backgroundColor: "#FFF7ED",
       borderLeftWidth: 3,
-      borderLeftColor: "#FFAA32",
+      borderLeftColor: "#F59E0B",
       borderRadius: 8,
       paddingVertical: 12,
       paddingHorizontal: 14,
       marginBottom: 16,
     },
     inlineBannerText: {
-      color: "#FFAA32",
+      color: "#B45309",
       fontSize: 13,
       fontFamily: FONTS.medium,
       lineHeight: 19,
@@ -130,17 +223,41 @@ export default function SignIn() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [inlineError, setInlineError] = useState<string | null>(null);
+  const [modal, setModal] = useState<ModalConfig>({
+    visible: false,
+    icon: "alert-circle-outline",
+    title: "",
+    message: "",
+    onDismiss: () => {},
+  });
   const router = useRouter();
 
   const styles = createStyles(theme);
 
   const { signIn, setOnboardingCompleted, hasCompletedGetStarted } = useAuth();
 
+  const showModal = (
+    icon: keyof typeof Ionicons.glyphMap,
+    title: string,
+    message: string,
+    onDismiss?: () => void,
+  ) =>
+    setModal({
+      visible: true,
+      icon,
+      title,
+      message,
+      onDismiss: onDismiss ?? dismissModal,
+    });
+
+  const dismissModal = () =>
+    setModal((prev) => ({ ...prev, visible: false }));
+
   const handleSignIn = async () => {
     setInlineError(null);
 
     if (!email || !password) {
-      Alert.alert(t("auth.error"), t("auth.fillAllFields"));
+      showModal("alert-circle-outline", t("auth.error"), t("auth.fillAllFields"));
       return;
     }
 
@@ -157,7 +274,7 @@ export default function SignIn() {
       if (message.toLowerCase().includes("email not confirmed")) {
         setInlineError(t("auth.emailNotConfirmed"));
       } else {
-        Alert.alert(t("auth.error"), message);
+        showModal("alert-circle-outline", t("auth.error"), message);
       }
     } finally {
       setIsLoading(false);
@@ -169,7 +286,7 @@ export default function SignIn() {
   };
 
   const handleForgotPassword = () => {
-    Alert.alert(t("auth.forgotPassword"), t("auth.passwordResetComingSoon"));
+    showModal("mail-outline", t("auth.forgotPassword"), t("auth.passwordResetComingSoon"));
   };
 
   return (
@@ -177,6 +294,8 @@ export default function SignIn() {
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
+      <AppDialog config={modal} />
+
       {/* Logo */}
       <View style={styles.logoContainer}>
         <Image source={theme.logo} style={styles.logo} resizeMode="contain" />
@@ -194,7 +313,7 @@ export default function SignIn() {
             <TextInput
               style={styles.input}
               placeholder={t("auth.enterEmail")}
-              placeholderTextColor={theme.foreground.gray}
+              placeholderTextColor="#9CA3AF"
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
@@ -208,7 +327,7 @@ export default function SignIn() {
             <TextInput
               style={styles.input}
               placeholder={t("auth.enterPassword")}
-              placeholderTextColor={theme.foreground.gray}
+              placeholderTextColor="#9CA3AF"
               value={password}
               onChangeText={setPassword}
               secureTextEntry

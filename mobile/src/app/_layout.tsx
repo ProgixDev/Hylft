@@ -1,10 +1,11 @@
 import {
-    Zain_300Light,
-    Zain_400Regular,
-    Zain_700Bold,
-    Zain_800ExtraBold,
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
+    Inter_800ExtraBold,
     useFonts,
-} from "@expo-google-fonts/zain";
+} from "@expo-google-fonts/inter";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Stack, useRouter, useSegments } from "expo-router";
 import * as NavigationBar from "expo-navigation-bar";
@@ -318,10 +319,11 @@ function AppContent() {
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
-    Zain_300Light,
-    Zain_400Regular,
-    Zain_700Bold,
-    Zain_800ExtraBold,
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
+    Inter_800ExtraBold,
   });
 
   useEffect(() => {

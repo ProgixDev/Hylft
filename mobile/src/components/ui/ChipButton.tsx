@@ -37,7 +37,7 @@ const SIZE_CONFIG = {
   lg: { height: 56, paddingHorizontal: 32, fontSize: 16 },
 } as const;
 
-const DEFAULT_BORDER_RADIUS = 10;
+const DEFAULT_BORDER_RADIUS = 999;
 
 export default function ChipButton({
   title,
@@ -131,7 +131,7 @@ export default function ChipButton({
                   minHeight: 44,
                   paddingHorizontal: config.paddingHorizontal,
                   borderRadius: radius,
-                  transform: [{ translateY: pressed && !isDisabled ? 8 : 0 }],
+                  transform: [{ translateY: 0 }],
                 },
               ]}
             >
@@ -176,6 +176,7 @@ const GOOGLE_BLUE = "#1A73E8";
 function getPrimaryDepthColor(primary: string) {
   if (primary.toUpperCase() === "#D4A44C") return "#8A6424";
   if (primary.toUpperCase() === "#C48A6A") return "#8A5B43";
+  if (primary.toUpperCase() === "#102B4A") return "#061829";
   return "#071527";
 }
 
@@ -194,7 +195,7 @@ function createStyles(theme: Theme) {
       transform: [{ scale: 0.99 }],
     },
     threeDBase: {
-      paddingBottom: 9,
+      paddingBottom: 0,
       overflow: "hidden",
     },
     primary: {

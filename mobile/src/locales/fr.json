@@ -158,10 +158,15 @@
       "bmi": {
         "label": "IMC",
         "underweight": "Maigreur",
+        "underweightDesc": "IMC en dessous de la zone de référence. Consultez un nutritionniste.",
         "normal": "Normal",
+        "normalDesc": "IMC dans la zone de référence pour votre taille. Le poids actuel est adapté.",
         "overweight": "Surpoids",
+        "overweightDesc": "IMC légèrement au-dessus de la normale. Des ajustements peuvent aider.",
         "obese": "Obésité",
-        "severelyObese": "Obésité sévère"
+        "obeseDesc": "IMC au-dessus de la plage saine. Un programme alimentaire est recommandé.",
+        "severelyObese": "Obésité sévère",
+        "severelyObeseDesc": "IMC bien au-dessus de la plage saine. Un suivi médical est conseillé."
       }
     },
     "targetWeight": {
@@ -447,11 +452,13 @@
       "carbs": "Glucides",
       "fat": "Lipides",
       "waterGoal": "VOTRE OBJECTIF D'EAU",
-      "cups": "verres",
+      "cups": "verres / jour",
       "perDay": "par jour",
       "workoutsCount": "{{count}} ENTRAINEMENTS",
       "weeklyGoal": "Objectif hebdomadaire",
-      "getMyPlan": "OBTENIR MON PLAN"
+      "weeklyGoalLabel": "OBJECTIF HEBDO",
+      "workoutsUnit": "séances",
+      "getMyPlan": "Obtenir mon plan"
     },
     "account": {
       "title": "Une dernière étape",
@@ -501,7 +508,7 @@
     "finishWorkout": "Finir l'entraînement",
     "pause": "Pause",
     "resume": "Reprendre",
-    "getStarted": "Commencer",
+    "getStarted": "S'inscrire",
     "addExerciseToStart": "Ajoutez un exercice pour commencer votre entraînement",
     "addExercise": "Ajouter un exercice",
     "saveWorkout": "Enregistrer l'entraînement",

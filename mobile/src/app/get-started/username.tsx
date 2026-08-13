@@ -19,7 +19,7 @@ import { FONTS } from "../../constants/fonts";
 import { useTheme } from "../../contexts/ThemeContext";
 import { supabase } from "../../services/supabase";
 
-const BG = "#FFFFFF";
+const BG = "#F8F9FC";
 const TOTAL_STEPS = 13;
 
 const escapeLikePattern = (value: string) =>
@@ -194,8 +194,8 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 26,
-    fontFamily: FONTS.bold,
-    color: "#111827",
+    fontFamily: FONTS.extraBold,
+    color: "#102b4a",
     marginBottom: 28,
   },
   inputWrap: {
@@ -204,12 +204,12 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 13,
     fontFamily: FONTS.semiBold,
-    color: "#111827",
+    color: "#6B7280",
     marginBottom: 8,
   },
   inputBox: {
     alignItems: "center",
-    backgroundColor: "#F6F8FA",
+    backgroundColor: "#FFFFFF",
     borderRadius: 12,
     borderWidth: 1,
     flexDirection: "row",
@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 15,
-    color: "#111827",
+    color: "#102b4a",
     fontFamily: FONTS.medium,
     paddingVertical: 14,
   },

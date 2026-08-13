@@ -18,8 +18,8 @@ export interface Theme {
 
 export const maleTheme: Theme = {
   primary: {
-    main: "#0A1628",
-    light: "#1A2F50",
+    main: "#102b4a",
+    light: "#1A3D65",
   },
   background: {
     dark: "#FFFFFF",

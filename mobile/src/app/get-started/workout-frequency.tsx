@@ -3,11 +3,11 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-    Animated,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    View,
+  Animated,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
 } from "react-native";
 import { Text } from "../../components/ui/ScaledText";
 import ChipButton from "../../components/ui/ChipButton";
@@ -15,6 +15,10 @@ import SignupProgress from "../../components/ui/SignupProgress";
 import { FONTS } from "../../constants/fonts";
 import { useTheme } from "../../contexts/ThemeContext";
 
+const BG_SCREEN = "#F8F9FC";
+const BG_CARD = "#FFFFFF";
+const TEXT_TITLE = "#102b4a";
+const TEXT_BODY = "#6B7280";
 
 interface WeekdayOption {
   id:
@@ -26,22 +30,21 @@ interface WeekdayOption {
     | "saturday"
     | "sunday";
   shortKey: string;
-  accent: string;
 }
 
 const WEEKDAYS: WeekdayOption[] = [
-  { id: "monday", shortKey: "mon", accent: "#3B82F6" },
-  { id: "tuesday", shortKey: "tue", accent: "#0F766E" },
-  { id: "wednesday", shortKey: "wed", accent: "#6D28D9" },
-  { id: "thursday", shortKey: "thu", accent: "#C2410C" },
-  { id: "friday", shortKey: "fri", accent: "#16A34A" },
-  { id: "saturday", shortKey: "sat", accent: "#9D174D" },
-  { id: "sunday", shortKey: "sun", accent: "#475569" },
+  { id: "monday", shortKey: "mon" },
+  { id: "tuesday", shortKey: "tue" },
+  { id: "wednesday", shortKey: "wed" },
+  { id: "thursday", shortKey: "thu" },
+  { id: "friday", shortKey: "fri" },
+  { id: "saturday", shortKey: "sat" },
+  { id: "sunday", shortKey: "sun" },
 ];
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-function DayButton({
+function DayRow({
   day,
   selected,
   onPress,
@@ -54,9 +57,6 @@ function DayButton({
   shortLabel: string;
   label: string;
 }) {
-  const { theme } = useTheme();
-  const primaryColor = theme.primary.main;
-
   const scale = useRef(new Animated.Value(1)).current;
 
   const pressIn = () => {
@@ -77,40 +77,28 @@ function DayButton({
     }).start();
   };
 
+  const { theme } = useTheme();
+
   return (
     <AnimatedPressable
       onPress={onPress}
       onPressIn={pressIn}
       onPressOut={pressOut}
       hitSlop={4}
-      android_ripple={{ color: "rgba(255,255,255,0.16)" }}
-      style={[styles.dayShell, { transform: [{ scale }] }]}
+      android_ripple={{ color: "rgba(16,43,74,0.08)" }}
+      style={[styles.rowShell, { transform: [{ scale }] }]}
     >
       <View
         style={[
-          styles.dayFace,
-          {
-            backgroundColor: selected ? primaryColor + "18" : theme.background.darker,
-            borderColor: selected ? primaryColor : theme.background.accent,
-          },
+          styles.rowFace,
+          selected && { borderColor: theme.primary.main, backgroundColor: BG_CARD },
         ]}
       >
-        <Text
-          style={[
-            styles.dayShort,
-            { color: selected ? primaryColor : day.accent },
-          ]}
-        >
-          {shortLabel}
-        </Text>
-        <Text
-          style={[
-            styles.dayLabel,
-            { color: selected ? primaryColor : theme.foreground.white },
-          ]}
-        >
+        <Text style={styles.rowShort}>{shortLabel}</Text>
+        <Text style={[styles.rowLabel, selected && { color: theme.primary.main }]}>
           {label}
         </Text>
+        {selected && <View style={[styles.dot, { backgroundColor: theme.primary.main }]} />}
       </View>
     </AnimatedPressable>
   );
@@ -121,7 +109,6 @@ export default function WorkoutFrequency() {
   const params = useLocalSearchParams<{ flow?: string }>();
   const isSignupFlow = params.flow === "signup";
   const { t } = useTranslation();
-  const { theme } = useTheme();
   const [selected, setSelected] = useState<string[]>([]);
 
   const handleSelect = (id: WeekdayOption["id"]) => {
@@ -149,7 +136,7 @@ export default function WorkoutFrequency() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.background.dark }]}>
+    <View style={[styles.container, { backgroundColor: BG_SCREEN }]}>
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={styles.scrollContent}
@@ -157,7 +144,7 @@ export default function WorkoutFrequency() {
       >
         <SignupProgress current={9} total={13} />
 
-        <Text style={[styles.title, { color: theme.foreground.white }]}>
+        <Text style={[styles.title, { color: TEXT_TITLE }]}>
           {t("onboarding.workoutFrequency.title")}
         </Text>
 
@@ -165,17 +152,16 @@ export default function WorkoutFrequency() {
           {WEEKDAYS.map((day) => {
             const isSelected = selected.includes(day.id);
             return (
-              <View key={day.id} style={styles.dayCardWrap}>
-                <DayButton
-                  day={day}
-                  selected={isSelected}
-                  onPress={() => handleSelect(day.id)}
-                  shortLabel={t(
-                    `onboarding.workoutFrequency.shortDays.${day.shortKey}`,
-                  )}
-                  label={t(`onboarding.workoutFrequency.days.${day.id}`)}
-                />
-              </View>
+              <DayRow
+                key={day.id}
+                day={day}
+                selected={isSelected}
+                onPress={() => handleSelect(day.id)}
+                shortLabel={t(
+                  `onboarding.workoutFrequency.shortDays.${day.shortKey}`,
+                )}
+                label={t(`onboarding.workoutFrequency.days.${day.id}`)}
+              />
             );
           })}
         </View>
@@ -206,38 +192,43 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 26,
     fontFamily: FONTS.extraBold,
-    marginBottom: 20,
+    marginBottom: 24,
   },
   list: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 12,
+    gap: 0,
   },
-  dayCardWrap: {
-    width: "48%",
-  },
-  dayShell: {
+  rowShell: {
     borderRadius: 14,
+    marginBottom: 10,
   },
-  dayFace: {
+  rowFace: {
+    flexDirection: "row",
     alignItems: "center",
+    minHeight: 60,
     borderWidth: 1.5,
     borderRadius: 14,
-    paddingVertical: 18,
-    paddingHorizontal: 10,
-    gap: 6,
-    minHeight: 86,
-    justifyContent: "center",
+    borderColor: "#E5E7EB",
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    backgroundColor: BG_CARD,
   },
-  dayShort: {
-    fontSize: 12,
-    fontFamily: FONTS.extraBold,
+  rowShort: {
+    width: 40,
+    fontSize: 11,
+    fontFamily: FONTS.semiBold,
+    color: TEXT_BODY,
+    letterSpacing: 0.6,
     textTransform: "uppercase",
   },
-  dayLabel: {
-    fontSize: 16,
-    lineHeight: 20,
+  rowLabel: {
+    flex: 1,
+    fontSize: 17,
     fontFamily: FONTS.bold,
-    textAlign: "center",
+    color: TEXT_TITLE,
+  },
+  dot: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
   },
 });

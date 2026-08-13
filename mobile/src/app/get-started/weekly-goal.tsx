@@ -15,8 +15,8 @@ import SignupProgress from "../../components/ui/SignupProgress";
 import { FONTS } from "../../constants/fonts";
 import { useTheme } from "../../contexts/ThemeContext";
 
-const BORDER = "#DDE3EA";
-const SURFACE = "#F6F8FA";
+const BORDER = "#E5E7EB";
+const SURFACE = "#FFFFFF";
 
 type GoalOption = {
   id: string;
@@ -213,7 +213,7 @@ export default function WeeklyGoalScreen() {
                       <Text
                         style={[
                           s.cardTitle,
-                          { color: isSelected ? primary : "#111827" },
+                          { color: isSelected ? primary : "#102b4a" },
                         ]}
                       >
                         {o.label}
@@ -271,7 +271,7 @@ export default function WeeklyGoalScreen() {
 const s = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#F8F9FC",
     paddingHorizontal: 20,
     paddingBottom: 16,
   },
@@ -281,7 +281,7 @@ const s = StyleSheet.create({
   title: {
     fontSize: 26,
     fontFamily: FONTS.extraBold,
-    color: "#111827",
+    color: "#102b4a",
     lineHeight: 32,
   },
   list: {

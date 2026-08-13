@@ -1,9 +1,10 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-  Alert,
   Image,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   ScrollView,
   StyleSheet,
@@ -21,11 +22,102 @@ import { FONTS } from "../../constants/fonts";
 import ChipButton from "../../components/ui/ChipButton";
 import { supabase } from "../../services/supabase";
 
+/* ── Custom modal ── */
+type ModalConfig = {
+  visible: boolean;
+  icon: keyof typeof Ionicons.glyphMap;
+  title: string;
+  message: string;
+  onDismiss: () => void;
+};
+
+function AppDialog({ config }: { config: ModalConfig }) {
+  return (
+    <Modal
+      visible={config.visible}
+      transparent
+      animationType="fade"
+      statusBarTranslucent
+      onRequestClose={config.onDismiss}
+    >
+      <View style={md.backdrop}>
+        <View style={md.card}>
+          <View style={md.iconWrap}>
+            <Ionicons name={config.icon} size={32} color="#102b4a" />
+          </View>
+          <Text style={md.title}>{config.title}</Text>
+          <Text style={md.message}>{config.message}</Text>
+          <TouchableOpacity
+            style={md.btn}
+            onPress={config.onDismiss}
+            activeOpacity={0.85}
+          >
+            <Text style={md.btnText}>OK</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+const md = StyleSheet.create({
+  backdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 32,
+  },
+  card: {
+    width: "100%",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 24,
+    padding: 28,
+    alignItems: "center",
+  },
+  iconWrap: {
+    width: 72,
+    height: 72,
+    borderRadius: 20,
+    backgroundColor: "#EEF0F5",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 18,
+  },
+  title: {
+    fontSize: 20,
+    fontFamily: FONTS.extraBold,
+    color: "#102b4a",
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  message: {
+    fontSize: 14,
+    fontFamily: FONTS.medium,
+    color: "#6B7280",
+    textAlign: "center",
+    lineHeight: 21,
+    marginBottom: 24,
+  },
+  btn: {
+    width: "100%",
+    backgroundColor: "#102b4a",
+    borderRadius: 100,
+    paddingVertical: 14,
+    alignItems: "center",
+  },
+  btnText: {
+    fontSize: 15,
+    fontFamily: FONTS.bold,
+    color: "#FFFFFF",
+  },
+});
+
 function createStyles(theme: Theme) {
   return StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: theme.background.dark,
+      backgroundColor: "#F8F9FC",
     },
     scrollContent: {
       flexGrow: 1,
@@ -45,13 +137,13 @@ function createStyles(theme: Theme) {
     title: {
       fontSize: 26,
       fontFamily: FONTS.bold,
-      color: theme.foreground.white,
+      color: "#102b4a",
       textAlign: "center",
       marginBottom: 6,
     },
     subtitle: {
       fontSize: 14,
-      color: theme.foreground.gray,
+      color: "#6B7280",
       textAlign: "center",
       marginBottom: 22,
     },
@@ -64,18 +156,19 @@ function createStyles(theme: Theme) {
     inputLabel: {
       fontSize: 14,
       fontFamily: FONTS.semiBold,
-      color: theme.foreground.white,
+      color: "#102b4a",
       marginBottom: 6,
     },
     input: {
-      backgroundColor: theme.background.darker,
-      borderRadius: 10,
+      backgroundColor: "#FFFFFF",
+      borderRadius: 12,
       paddingHorizontal: 14,
-      paddingVertical: 12,
+      paddingVertical: 14,
       fontSize: 14,
-      color: theme.foreground.white,
+      color: "#102b4a",
       borderWidth: 1,
-      borderColor: theme.background.accent,
+      borderColor: "#E5E7EB",
+      fontFamily: FONTS.medium,
     },
     dividerContainer: {
       flexDirection: "row",
@@ -85,10 +178,10 @@ function createStyles(theme: Theme) {
     divider: {
       flex: 1,
       height: 1,
-      backgroundColor: theme.background.accent,
+      backgroundColor: "#E5E7EB",
     },
     dividerText: {
-      color: theme.foreground.gray,
+      color: "#6B7280",
       fontSize: 13,
       marginHorizontal: 12,
     },
@@ -112,35 +205,59 @@ export default function SignUp() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [modal, setModal] = useState<ModalConfig>({
+    visible: false,
+    icon: "alert-circle-outline",
+    title: "",
+    message: "",
+    onDismiss: () => {},
+  });
   const router = useRouter();
 
   const styles = createStyles(theme);
 
-  const validateEmail = (email: string) => {
+  const showModal = (
+    icon: keyof typeof Ionicons.glyphMap,
+    title: string,
+    message: string,
+    onDismiss?: () => void,
+  ) =>
+    setModal({
+      visible: true,
+      icon,
+      title,
+      message,
+      onDismiss: onDismiss ?? dismissModal,
+    });
+
+  const dismissModal = () =>
+    setModal((prev) => ({ ...prev, visible: false }));
+
+  const validateEmail = (em: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+    return emailRegex.test(em);
   };
 
   const { signUp, setOnboardingCompleted, setGetStartedCompleted } = useAuth();
 
   const handleSignUp = async () => {
     if (!username || !email || !password || !confirmPassword) {
-      Alert.alert(t("auth.error"), t("auth.fillAllFields"));
+      showModal("alert-circle-outline", t("auth.error"), t("auth.fillAllFields"));
       return;
     }
 
     if (!validateEmail(email)) {
-      Alert.alert(t("auth.error"), t("signup.validEmail"));
+      showModal("alert-circle-outline", t("auth.error"), t("signup.validEmail"));
       return;
     }
 
     if (password.length < 6) {
-      Alert.alert(t("auth.error"), t("signup.passwordLength"));
+      showModal("alert-circle-outline", t("auth.error"), t("signup.passwordLength"));
       return;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert(t("auth.error"), t("signup.passwordsDoNotMatch"));
+      showModal("alert-circle-outline", t("auth.error"), t("signup.passwordsDoNotMatch"));
       return;
     }
 
@@ -160,18 +277,22 @@ export default function SignUp() {
         data: { session },
       } = await supabase.auth.getSession();
       if (!session) {
-        Alert.alert(
+        showModal(
+          "mail-outline",
           "Check your email",
           "Your account was created. Verify your email, then sign in to continue.",
+          () => {
+            dismissModal();
+            router.replace("/auth/signin");
+          },
         );
-        router.replace("/auth/signin");
         return;
       }
       router.replace("/(tabs)/home");
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : "Sign up failed";
-      Alert.alert(t("auth.error"), message);
+      showModal("alert-circle-outline", t("auth.error"), message);
     } finally {
       setIsLoading(false);
     }
@@ -186,6 +307,8 @@ export default function SignUp() {
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
+      <AppDialog config={modal} />
+
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -207,7 +330,7 @@ export default function SignUp() {
               <TextInput
                 style={styles.input}
                 placeholder={t("signup.chooseUsername")}
-                placeholderTextColor={theme.foreground.gray}
+                placeholderTextColor="#9CA3AF"
                 value={username}
                 onChangeText={setUsername}
                 autoCapitalize="none"
@@ -220,7 +343,7 @@ export default function SignUp() {
               <TextInput
                 style={styles.input}
                 placeholder={t("auth.enterEmail")}
-                placeholderTextColor={theme.foreground.gray}
+                placeholderTextColor="#9CA3AF"
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
@@ -234,7 +357,7 @@ export default function SignUp() {
               <TextInput
                 style={styles.input}
                 placeholder={t("signup.createPassword")}
-                placeholderTextColor={theme.foreground.gray}
+                placeholderTextColor="#9CA3AF"
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
@@ -248,7 +371,7 @@ export default function SignUp() {
               <TextInput
                 style={styles.input}
                 placeholder={t("signup.confirmYourPassword")}
-                placeholderTextColor={theme.foreground.gray}
+                placeholderTextColor="#9CA3AF"
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
                 secureTextEntry

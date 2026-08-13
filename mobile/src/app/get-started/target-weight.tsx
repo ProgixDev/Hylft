@@ -74,13 +74,8 @@ export default function TargetWeightScreen() {
                 </Text>
                 <Text style={s.journeyPointValue}>{currentWeight} kg</Text>
               </View>
-              <View
-                style={[
-                  s.journeyArrow,
-                  { backgroundColor: theme.primary.main + "20" },
-                ]}
-              >
-                <Text style={[s.journeyArrowText, { color: theme.primary.main }]}>
+              <View style={s.journeyArrow}>
+                <Text style={s.journeyArrowText}>
                   {isLosing ? "▼" : "▲"} {diff.toFixed(1)} kg
                 </Text>
               </View>
@@ -88,14 +83,12 @@ export default function TargetWeightScreen() {
                 <Text style={s.journeyPointLabel}>
                   {t("onboarding.targetWeight.target", "Objectif")}
                 </Text>
-                <Text style={[s.journeyPointValue, { color: theme.primary.main }]}>
-                  {value} kg
-                </Text>
+                <Text style={s.journeyPointValue}>{value} kg</Text>
               </View>
             </View>
             <View style={s.journeyStats}>
               <View style={s.journeyStat}>
-                <Text style={[s.journeyStatValue, { color: theme.primary.main }]}>
+                <Text style={s.journeyStatValue}>
                   {caloriesToBurn >= 1000
                     ? `${(caloriesToBurn / 1000).toFixed(0)}k`
                     : caloriesToBurn}
@@ -108,9 +101,7 @@ export default function TargetWeightScreen() {
               </View>
               <View style={s.journeyStatDivider} />
               <View style={s.journeyStat}>
-                <Text style={[s.journeyStatValue, { color: theme.primary.main }]}>
-                  ~{weeks}
-                </Text>
+                <Text style={s.journeyStatValue}>~{weeks}</Text>
                 <Text style={s.journeyStatLabel}>
                   {t("onboarding.targetWeight.weeks", "semaines")}
                 </Text>
@@ -119,7 +110,7 @@ export default function TargetWeightScreen() {
           </View>
         </View>
 
-        <View style={s.pickerContainer}>
+        <View style={s.pickerCard}>
           <RulerPicker
             min={30}
             max={200}
@@ -149,23 +140,21 @@ export default function TargetWeightScreen() {
 const s = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
-    paddingHorizontal: 20,
+    backgroundColor: "#F8F9FC",
+    paddingHorizontal: 16,
     paddingBottom: 16,
   },
   title: {
     fontSize: 26,
     fontFamily: FONTS.extraBold,
-    color: "#111827",
+    color: "#102b4a",
     marginBottom: 18,
   },
   journeyCard: {
-    borderRadius: 12,
+    borderRadius: 16,
     overflow: "hidden",
-    backgroundColor: "#F6F8FA",
+    backgroundColor: "#102b4a",
     marginBottom: 20,
-    borderWidth: 1,
-    borderColor: "#DDE3EA",
   },
   journeyBgImage: {
     position: "absolute",
@@ -189,27 +178,29 @@ const s = StyleSheet.create({
   journeyPointLabel: {
     fontSize: 11,
     fontFamily: FONTS.medium,
-    color: "#64748B",
+    color: "rgba(255,255,255,0.65)",
     marginBottom: 2,
   },
   journeyPointValue: {
     fontSize: 20,
     fontFamily: FONTS.extraBold,
-    color: "#111827",
+    color: "#FFFFFF",
   },
   journeyArrow: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 10,
+    backgroundColor: "rgba(255,255,255,0.18)",
   },
   journeyArrowText: {
     fontSize: 12,
     fontFamily: FONTS.bold,
+    color: "#FFFFFF",
   },
   journeyStats: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "rgba(255,255,255,0.1)",
     borderRadius: 10,
     padding: 12,
   },
@@ -220,22 +211,27 @@ const s = StyleSheet.create({
   journeyStatDivider: {
     width: 1,
     height: 28,
-    backgroundColor: "#DDE3EA",
+    backgroundColor: "rgba(255,255,255,0.2)",
   },
   journeyStatValue: {
     fontSize: 18,
     fontFamily: FONTS.extraBold,
+    color: "#FFFFFF",
   },
   journeyStatLabel: {
     fontSize: 10,
     fontFamily: FONTS.medium,
-    color: "#64748B",
+    color: "rgba(255,255,255,0.65)",
     marginTop: 2,
   },
-  pickerContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+  pickerCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    paddingHorizontal: 0,
+    paddingVertical: 20,
+    marginBottom: 4,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
   },
   skipButton: {
     paddingVertical: 10,

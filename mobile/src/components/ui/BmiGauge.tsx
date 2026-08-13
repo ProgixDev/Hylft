@@ -18,14 +18,14 @@ const CX = W / 2;
 const CY = H - 8;
 const R = 108;
 const ARC_W = 14;
-const GAP = (1.8 * Math.PI) / 180; // 1.8° between segments
+const GAP = (1.8 * Math.PI) / 180;
 
 const SEGMENTS = [
-  { min: 14, max: 18.5, color: "#60A5FA", key: "underweight" },
-  { min: 18.5, max: 25, color: "#34D399", key: "normal" },
-  { min: 25, max: 30, color: "#FBBF24", key: "overweight" },
-  { min: 30, max: 40, color: "#FB923C", key: "obese" },
-  { min: 40, max: 44, color: "#F87171", key: "severelyObese" },
+  { min: 14, max: 18.5, color: "#60A5FA", key: "underweight", range: "< 18,5" },
+  { min: 18.5, max: 25, color: "#34D399", key: "normal", range: "18,5 – 25" },
+  { min: 25, max: 30, color: "#FBBF24", key: "overweight", range: "25 – 30" },
+  { min: 30, max: 40, color: "#FB923C", key: "obese", range: "30 – 35" },
+  { min: 40, max: 44, color: "#F87171", key: "severelyObese", range: "> 35" },
 ] as const;
 
 type Segment = (typeof SEGMENTS)[number];
@@ -60,13 +60,25 @@ export default function BmiGauge({ bmi, theme }: Props) {
 
   return (
     <View style={s.wrap}>
+      {/* Header row: IMC | value | badge */}
+      <View style={s.header}>
+        <Text style={s.imcLabel}>{t("onboarding.weight.bmi.label")}</Text>
+        <View style={s.headerCenter}>
+          <Text style={s.bmiValue}>{bmi.toFixed(1)}</Text>
+          <View style={[s.badge, { backgroundColor: cat.color + "22" }]}>
+            <Text style={[s.badgeText, { color: cat.color }]}>
+              {t(`onboarding.weight.bmi.${cat.key}`)}
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Arc gauge */}
+      <View style={s.gaugeWrap}>
       <Svg width={W} height={H}>
-        {/* Colored arc segments */}
         {SEGMENTS.map((seg, i) => {
           const a1 = bmiToAngle(seg.min) - (i > 0 ? GAP / 2 : 0);
-          const a2 =
-            bmiToAngle(seg.max) +
-            (i < SEGMENTS.length - 1 ? GAP / 2 : 0);
+          const a2 = bmiToAngle(seg.max) + (i < SEGMENTS.length - 1 ? GAP / 2 : 0);
           const p1 = pt(a1, R);
           const p2 = pt(a2, R);
           return (
@@ -80,34 +92,36 @@ export default function BmiGauge({ bmi, theme }: Props) {
             />
           );
         })}
-
-        {/* Needle line */}
         <Line
           x1={CX}
           y1={CY}
           x2={tip.x}
           y2={tip.y}
-          stroke={theme.foreground.white}
+          stroke="#102b4a"
           strokeWidth={2.5}
           strokeLinecap="round"
         />
-
-        {/* Center dot ring */}
-        <Circle cx={CX} cy={CY} r={7} fill={theme.foreground.white} />
+        <Circle cx={CX} cy={CY} r={7} fill="#102b4a" />
         <Circle cx={CX} cy={CY} r={3} fill={cat.color} />
       </Svg>
+      </View>
 
-      {/* Labels */}
-      <Text style={[s.imcLabel, { color: theme.foreground.gray }]}>
-        {t("onboarding.weight.bmi.label")}
+      {/* Description */}
+      <Text style={s.desc}>
+        {t(`onboarding.weight.bmi.${cat.key}Desc`)}
       </Text>
-      <Text style={[s.bmiValue, { color: theme.foreground.white }]}>
-        {bmi.toFixed(1)}
-      </Text>
-      <View style={[s.badge, { backgroundColor: cat.color + "1A" }]}>
-        <Text style={[s.badgeText, { color: cat.color }]}>
-          {t(`onboarding.weight.bmi.${cat.key}`)}
-        </Text>
+
+      {/* Legend */}
+      <View style={s.legend}>
+        {SEGMENTS.map((seg) => (
+          <View key={seg.key} style={s.legendItem}>
+            <View style={[s.legendDot, { backgroundColor: seg.color }]} />
+            <Text style={s.legendText}>
+              {t(`onboarding.weight.bmi.${seg.key}`)}{" "}
+              <Text style={s.legendRange}>{seg.range}</Text>
+            </Text>
+          </View>
+        ))}
       </View>
     </View>
   );
@@ -115,31 +129,83 @@ export default function BmiGauge({ bmi, theme }: Props) {
 
 const s = StyleSheet.create({
   wrap: {
+    alignItems: "stretch",
+    paddingHorizontal: 4,
+  },
+  gaugeWrap: {
     alignItems: "center",
-    marginTop: 16,
+    marginBottom: 12,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 4,
   },
   imcLabel: {
     fontSize: 11,
     fontFamily: FONTS.bold,
     letterSpacing: 1.2,
     textTransform: "uppercase",
-    marginTop: 2,
+    color: "#9CA3AF",
+    marginRight: 10,
+  },
+  headerCenter: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
   },
   bmiValue: {
-    fontSize: 22,
+    fontSize: 28,
     fontFamily: FONTS.extraBold,
-    marginTop: -1,
+    color: "#102b4a",
   },
   badge: {
-    marginTop: 6,
-    paddingHorizontal: 14,
-    paddingVertical: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
     borderRadius: 100,
   },
   badgeText: {
-    fontSize: 12,
+    fontSize: 11,
     fontFamily: FONTS.bold,
     letterSpacing: 0.4,
     textTransform: "uppercase",
+  },
+  desc: {
+    fontSize: 12,
+    fontFamily: FONTS.medium,
+    color: "#6B7280",
+    lineHeight: 18,
+    textAlign: "center",
+    marginTop: 2,
+    marginBottom: 14,
+  },
+  legend: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    rowGap: 8,
+    justifyContent: "center",
+  },
+  legendItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    width: "45%",
+  },
+  legendDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    flexShrink: 0,
+  },
+  legendText: {
+    fontSize: 11,
+    fontFamily: FONTS.semiBold,
+    color: "#374151",
+  },
+  legendRange: {
+    fontFamily: FONTS.regular,
+    color: "#9CA3AF",
   },
 });

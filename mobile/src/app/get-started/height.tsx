@@ -25,7 +25,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 const TICK_HEIGHT = 14;
-const RULER_HEIGHT = SCREEN_HEIGHT * 0.7;
+const RULER_HEIGHT = SCREEN_HEIGHT * 0.55;
 const MIN = 100;
 const MAX = 250;
 const DEFAULT_HEIGHT_CM = 175;
@@ -96,8 +96,6 @@ export default function HeightScreen() {
     }
   };
 
-  const fillPercent = ((value - MIN) / (MAX - MIN)) * 100;
-
   const renderTick = useCallback(({ item }: { item: number }) => {
     const isFifth = item % 10 === 0;
     const isMid = item % 5 === 0 && !isFifth;
@@ -125,59 +123,47 @@ export default function HeightScreen() {
 
         <Text style={s.title}>{t("onboarding.height.title")}</Text>
 
-        <View style={s.mainArea}>
-          <View style={s.leftSection}>
-            <Text style={[s.bigValue, { color: theme.primary.main }]}>
-              {value}
-            </Text>
-            <Text style={s.unitLabel}>cm</Text>
-
-            <View style={s.heightBarContainer}>
-              <View style={s.heightBarBg}>
-                <View
-                  style={[
-                    s.heightBarFill,
-                    {
-                      height: `${fillPercent}%`,
-                      backgroundColor: theme.primary.main,
-                    },
-                  ]}
-                />
-              </View>
+        <View style={s.card}>
+          <View style={s.mainArea}>
+            {/* Left: current value */}
+            <View style={s.leftSection}>
+              <Text style={[s.bigValue, { color: "#102b4a" }]}>{value}</Text>
+              <Text style={s.unitLabel}>cm</Text>
             </View>
-          </View>
 
-          <View style={s.rulerSection}>
-            <View
-              style={[
-                s.centerIndicator,
-                { backgroundColor: theme.primary.main },
-              ]}
-            />
-            <FlatList
-              ref={flatListRef}
-              data={ticks}
-              renderItem={renderTick}
-              keyExtractor={(item) => item.toString()}
-              initialScrollIndex={defaultIndex}
-              showsVerticalScrollIndicator={false}
-              decelerationRate="normal"
-              contentContainerStyle={{
-                paddingVertical: RULER_HEIGHT / 2 - TICK_HEIGHT / 2,
-              }}
-              snapToInterval={TICK_HEIGHT}
-              snapToAlignment="start"
-              onScroll={handleScroll}
-              scrollEventThrottle={32}
-              onMomentumScrollEnd={handleScrollEnd}
-              onScrollEndDrag={handleScrollEnd}
-              getItemLayout={(_, index) => ({
-                length: TICK_HEIGHT,
-                offset: TICK_HEIGHT * index,
-                index,
-              })}
-              style={{ height: RULER_HEIGHT }}
-            />
+            {/* Right: vertical ruler */}
+            <View style={s.rulerSection}>
+              <View
+                style={[
+                  s.centerIndicator,
+                  { backgroundColor: theme.primary.main },
+                ]}
+              />
+              <FlatList
+                ref={flatListRef}
+                data={ticks}
+                renderItem={renderTick}
+                keyExtractor={(item) => item.toString()}
+                initialScrollIndex={defaultIndex}
+                showsVerticalScrollIndicator={false}
+                decelerationRate="normal"
+                contentContainerStyle={{
+                  paddingVertical: RULER_HEIGHT / 2 - TICK_HEIGHT / 2,
+                }}
+                snapToInterval={TICK_HEIGHT}
+                snapToAlignment="start"
+                onScroll={handleScroll}
+                scrollEventThrottle={32}
+                onMomentumScrollEnd={handleScrollEnd}
+                onScrollEndDrag={handleScrollEnd}
+                getItemLayout={(_, index) => ({
+                  length: TICK_HEIGHT,
+                  offset: TICK_HEIGHT * index,
+                  index,
+                })}
+                style={{ height: RULER_HEIGHT }}
+              />
+            </View>
           </View>
         </View>
       </View>
@@ -197,26 +183,31 @@ export default function HeightScreen() {
 const s = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
-    paddingHorizontal: 20,
+    backgroundColor: "#F8F9FC",
+    paddingHorizontal: 16,
     paddingBottom: 16,
   },
   title: {
     fontSize: 26,
     fontFamily: FONTS.extraBold,
-    color: "#111827",
-    marginBottom: 18,
+    color: "#102b4a",
+    marginBottom: 16,
+  },
+  card: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
   },
   mainArea: {
-    flex: 1,
     flexDirection: "row",
     alignItems: "center",
+    paddingLeft: 24,
   },
   leftSection: {
     flex: 1,
-    alignItems: "center",
     justifyContent: "center",
-    paddingRight: 10,
   },
   bigValue: {
     fontSize: 72,
@@ -226,26 +217,10 @@ const s = StyleSheet.create({
   unitLabel: {
     fontSize: 20,
     fontFamily: FONTS.bold,
-    color: "#64748B",
-    marginBottom: 24,
-  },
-  heightBarContainer: {
-    height: 140,
-  },
-  heightBarBg: {
-    width: 28,
-    height: "100%",
-    borderRadius: 14,
-    backgroundColor: "#DDE3EA",
-    overflow: "hidden",
-    justifyContent: "flex-end",
-  },
-  heightBarFill: {
-    width: "100%",
-    borderRadius: 14,
+    color: "#6B7280",
   },
   rulerSection: {
-    width: 100,
+    width: 110,
     position: "relative",
   },
   centerIndicator: {
@@ -267,13 +242,13 @@ const s = StyleSheet.create({
   tickLabel: {
     fontSize: 11,
     fontFamily: FONTS.bold,
-    color: "#64748B",
-    marginRight: 8,
-    width: 30,
+    color: "#6B7280",
+    marginRight: 6,
+    width: 28,
     textAlign: "right",
   },
   tickLabelSpace: {
-    width: 38,
+    width: 34,
   },
   tickLine: {
     backgroundColor: "#64748B",
@@ -281,15 +256,16 @@ const s = StyleSheet.create({
   tickMajor: {
     width: 30,
     height: 2,
-    backgroundColor: "#111827",
+    backgroundColor: "#374151",
   },
   tickMedium: {
     width: 18,
     height: 1.5,
+    backgroundColor: "#9CA3AF",
   },
   tickMinor: {
     width: 10,
     height: 1,
-    backgroundColor: "#DDE3EA",
+    backgroundColor: "#D1D5DB",
   },
 });

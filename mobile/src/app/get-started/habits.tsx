@@ -156,47 +156,24 @@ function HabitTile({
         style={[
           styles.tileFace,
           {
-            backgroundColor: selected ? primaryColor + "18" : theme.background.darker,
-            borderColor: selected ? primaryColor : theme.background.accent,
+            backgroundColor: selected ? primaryColor + "18" : "#FFFFFF",
+            borderColor: selected ? primaryColor : "#E5E7EB",
           },
         ]}
       >
-        <View
-          style={[
-            styles.tileIcon,
-            {
-              backgroundColor: selected ? primaryColor + "25" : habit.accent + "18",
-            },
-          ]}
-        >
+        <View style={[styles.tileIcon, { backgroundColor: "#E5E7EB" }]}>
           <Ionicons
             name={habit.icon}
             size={24}
-            color={selected ? primaryColor : habit.accent}
+            color={selected ? primaryColor : "#6B7280"}
           />
         </View>
-        <Text
-          style={[
-            styles.tileLabel,
-            { color: theme.foreground.white },
-          ]}
-          numberOfLines={2}
-        >
+        <Text style={styles.tileLabel} numberOfLines={2}>
           {label}
         </Text>
-        <View
-          style={[
-            styles.tileCheck,
-            {
-              backgroundColor: selected ? primaryColor : theme.background.accent,
-              borderColor: selected ? primaryColor : theme.foreground.gray + "30",
-            },
-          ]}
-        >
-          {selected && (
-            <Ionicons name="checkmark" size={12} color="#FFFFFF" />
-          )}
-        </View>
+        {selected && (
+          <View style={[styles.tileCheck, { backgroundColor: primaryColor }]} />
+        )}
       </View>
     </AnimatedPressable>
   );
@@ -205,7 +182,6 @@ function HabitTile({
 export default function HabitsScreen() {
   const router = useRouter();
   const { t } = useTranslation();
-  const { theme } = useTheme();
   const [selected, setSelected] = useState<string[]>([]);
 
   const fade = useRef(new Animated.Value(0)).current;
@@ -241,14 +217,14 @@ export default function HabitsScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.background.dark }]}>
+    <View style={[styles.container, { backgroundColor: "#F8F9FC" }]}>
       <Animated.View
         style={{ flex: 1, opacity: fade, transform: [{ translateY: slide }] }}
       >
         <SignupProgress current={3} total={13} />
 
         <View style={styles.header}>
-          <Text style={[styles.title, { color: theme.foreground.white }]}>{t("onboarding.habits.title")}</Text>
+          <Text style={styles.title}>{t("onboarding.habits.title")}</Text>
         </View>
 
         <ScrollView
@@ -297,6 +273,7 @@ const styles = StyleSheet.create({
     fontSize: 26,
     fontFamily: FONTS.extraBold,
     lineHeight: 32,
+    color: "#102b4a",
   },
   grid: {
     flexDirection: "row",
@@ -327,16 +304,14 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.bold,
     lineHeight: 18,
     paddingRight: 18,
+    color: "#102b4a",
   },
   tileCheck: {
     position: "absolute",
     top: 10,
     right: 10,
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    borderWidth: 1.5,
-    alignItems: "center",
-    justifyContent: "center",
+    width: 20,
+    height: 20,
+    borderRadius: 10,
   },
 });

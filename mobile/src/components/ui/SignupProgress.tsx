@@ -1,6 +1,10 @@
 import React, { useEffect, useRef } from "react";
 import { Animated, StyleSheet, View, Easing } from "react-native";
-import { useTheme } from "../../contexts/ThemeContext";
+import { Text } from "./ScaledText";
+import { useTranslation } from "react-i18next";
+import { FONTS } from "../../constants/fonts";
+
+const MAIN = "#102b4a";
 
 interface Props {
   current: number;
@@ -8,7 +12,7 @@ interface Props {
 }
 
 export function SignupProgress({ current, total }: Props) {
-  const { theme } = useTheme();
+  const { t } = useTranslation();
   const pct = Math.max(0, Math.min(1, current / total));
   const anim = useRef(new Animated.Value(0)).current;
 
@@ -26,43 +30,44 @@ export function SignupProgress({ current, total }: Props) {
     outputRange: ["0%", "100%"],
   });
 
+  const stepLabel = t("onboarding.stepOf", {
+    current: String(current).padStart(2, "0"),
+    total,
+  });
+
   return (
     <View style={styles.container}>
-      <View style={[styles.track, { backgroundColor: theme.background.accent, borderColor: theme.background.accent }]}>
-        <Animated.View
-          style={[
-            styles.fill,
-            {
-              backgroundColor: "#20F0B2",
-              width,
-              shadowColor: "#20F0B2",
-            },
-          ]}
-        />
+      <View style={styles.track}>
+        <Animated.View style={[styles.fill, { width }]} />
       </View>
+      <Text style={styles.label}>{stepLabel}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 24,
-    marginTop: 8,
-    paddingHorizontal: 2,
+    marginTop: 16,
+    marginBottom: 20,
   },
   track: {
-    height: 13,
-    borderRadius: 999,
+    height: 7,
+    borderRadius: 100,
+    backgroundColor: "#E5E7EB",
     overflow: "hidden",
-    borderWidth: 1,
   },
   fill: {
     height: "100%",
-    borderRadius: 999,
-    shadowOpacity: 0.65,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 0 },
-    elevation: 4,
+    borderRadius: 100,
+    backgroundColor: MAIN,
+  },
+  label: {
+    marginTop: 10,
+    fontSize: 11,
+    fontFamily: FONTS.semiBold,
+    color: "#9CA3AF",
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
   },
 });
 

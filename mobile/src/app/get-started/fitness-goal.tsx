@@ -15,7 +15,7 @@ import { FONTS } from "../../constants/fonts";
 import ChipButton from "../../components/ui/ChipButton";
 import SignupProgress from "../../components/ui/SignupProgress";
 
-const BG = "#FFFFFF";
+const BG = "#F8F9FC";
 const SURFACE = "#F6F8FA";
 const BORDER = "#DDE3EA";
 
@@ -108,7 +108,7 @@ export default function FitnessGoal() {
                           {
                             color: isSelected
                               ? theme.primary.main
-                              : "#111827",
+                              : "#102b4a",
                           },
                         ]}
                       >
@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 26,
     fontFamily: FONTS.extraBold,
-    color: "#111827",
+    color: "#102b4a",
     marginBottom: 20,
   },
   grid: {

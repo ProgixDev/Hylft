@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
@@ -6,8 +5,6 @@ import { useTranslation } from "react-i18next";
 import {
   Animated,
   Easing,
-  Image,
-  ImageSourcePropType,
   Pressable,
   StyleSheet,
   View,
@@ -20,31 +17,12 @@ import { useTheme } from "../../contexts/ThemeContext";
 
 const GOALS: {
   id: "lose_weight" | "maintain" | "gain_weight" | "build_muscle";
-  image: ImageSourcePropType;
-  iconBg: string;
   recommended?: boolean;
 }[] = [
-  {
-    id: "lose_weight",
-    image: require("../../../assets/weight__loss.gif"),
-    iconBg: "#FEF9EE",
-    recommended: true,
-  },
-  {
-    id: "maintain",
-    image: require("../../../assets/maintain_weight.gif"),
-    iconBg: "#EFF6FF",
-  },
-  {
-    id: "gain_weight",
-    image: require("../../../assets/weight_gain.gif"),
-    iconBg: "#F5F3FF",
-  },
-  {
-    id: "build_muscle",
-    image: require("../../../assets/muscle_gain.gif"),
-    iconBg: "#F0FDF4",
-  },
+  { id: "lose_weight", recommended: true },
+  { id: "maintain" },
+  { id: "gain_weight" },
+  { id: "build_muscle" },
 ];
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -122,42 +100,28 @@ function GoalCard({
         style={[
           styles.buttonFace,
           {
-            backgroundColor: isSelected ? primaryColor + "18" : theme.background.darker,
-            borderColor: isSelected ? primaryColor : theme.background.accent,
+            backgroundColor: "#FFFFFF",
+            borderColor: isSelected ? primaryColor : "#E5E7EB",
+            borderWidth: isSelected ? 2 : 1,
           },
         ]}
       >
-        <View style={styles.leftCluster}>
-          <View style={[styles.iconWrap, { backgroundColor: isSelected ? primaryColor + "20" : theme.background.accent }]}>
-            <Image source={g.image} style={styles.goalImage} />
-          </View>
-
-          <View style={styles.buttonCopy}>
-            <Text
-              style={[styles.buttonTitle, { color: theme.foreground.white }]}
-              numberOfLines={2}
-              adjustsFontSizeToFit
-              minimumFontScale={0.82}
-            >
-              {t(`onboarding.goalFlow.options.${g.id}.label`)}
-            </Text>
-            {g.recommended && (
-              <View style={[styles.tag, { borderColor: primaryColor + "40", backgroundColor: primaryColor + "15" }]}>
-                <Text style={[styles.tagText, { color: primaryColor }]}>
-                  {t("onboarding.goalFlow.popular")}
-                </Text>
-              </View>
-            )}
-          </View>
+        <View style={styles.buttonCopy}>
+          <Text style={styles.buttonTitle}>
+            {t(`onboarding.goalFlow.options.${g.id}.label`)}
+          </Text>
+          {g.recommended && (
+            <View style={styles.tag}>
+              <Text style={styles.tagText}>
+                {t("onboarding.goalFlow.popular")}
+              </Text>
+            </View>
+          )}
         </View>
 
-        <View style={styles.arrowBadge}>
-          <Ionicons
-            name={isSelected ? "checkmark-circle" : "chevron-forward"}
-            size={isSelected ? 28 : 22}
-            color={isSelected ? primaryColor : theme.foreground.gray}
-          />
-        </View>
+        {isSelected && (
+          <View style={[styles.selectedDot, { backgroundColor: primaryColor }]} />
+        )}
       </View>
     </AnimatedPressable>
   );
@@ -166,7 +130,6 @@ function GoalCard({
 export default function GoalScreen() {
   const router = useRouter();
   const { t } = useTranslation();
-  const { theme } = useTheme();
   const [selected, setSelected] = useState<string>("");
   const [isNavigating, setIsNavigating] = useState(false);
 
@@ -202,14 +165,14 @@ export default function GoalScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.background.dark }]}>
+    <View style={[styles.container, { backgroundColor: "#F8F9FC" }]}>
       <Animated.View
         style={{ flex: 1, opacity: fade, transform: [{ translateY: slide }] }}
       >
         <SignupProgress current={2} total={13} />
 
         <View style={styles.header}>
-          <Text style={[styles.title, { color: theme.foreground.white }]}>{t("onboarding.goalFlow.title")}</Text>
+          <Text style={styles.title}>{t("onboarding.goalFlow.title")}</Text>
         </View>
 
         <View style={styles.list}>
@@ -242,6 +205,7 @@ const styles = StyleSheet.create({
     fontSize: 26,
     fontFamily: FONTS.extraBold,
     lineHeight: 32,
+    color: "#102b4a",
   },
   list: {
     gap: 12,
@@ -253,60 +217,40 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    minHeight: 88,
+    minHeight: 72,
     borderRadius: 16,
-    borderWidth: 1.5,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-  },
-  leftCluster: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 14,
-    paddingRight: 14,
-  },
-  iconWrap: {
-    width: 60,
-    height: 60,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
-  },
-  goalImage: {
-    width: 50,
-    height: 50,
-    resizeMode: "contain",
+    paddingHorizontal: 18,
+    paddingVertical: 16,
   },
   buttonCopy: {
     flex: 1,
   },
   buttonTitle: {
-    fontSize: 20,
-    lineHeight: 26,
-    fontFamily: FONTS.extraBold,
+    fontSize: 18,
+    lineHeight: 24,
+    fontFamily: FONTS.bold,
+    color: "#102b4a",
   },
   tag: {
     alignSelf: "flex-start",
     marginTop: 6,
-    borderWidth: 1,
     borderRadius: 100,
-    paddingHorizontal: 9,
+    paddingHorizontal: 10,
     paddingVertical: 3,
+    backgroundColor: "#E5E7EB",
   },
   tagText: {
     fontSize: 10,
     fontFamily: FONTS.bold,
     letterSpacing: 0.6,
     textTransform: "uppercase",
+    color: "#6B7280",
   },
-  arrowBadge: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    alignItems: "center",
-    justifyContent: "center",
+  selectedDot: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
     flexShrink: 0,
+    marginLeft: 12,
   },
 });

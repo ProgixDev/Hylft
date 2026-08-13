@@ -128,7 +128,7 @@ export default function LanguageSelect() {
               }),
               backgroundColor: progress.interpolate({
                 inputRange: [0, 1],
-                outputRange: ["#F6F8FA", selectedBg],
+                outputRange: ["#FFFFFF", selectedBg],
               }),
               transform: [
                 {
@@ -142,7 +142,7 @@ export default function LanguageSelect() {
             const animatedLabelStyle = {
               color: progress.interpolate({
                 inputRange: [0, 1],
-                outputRange: ["#111827", selectedColor],
+                outputRange: ["#102b4a", selectedColor],
               }),
             };
             const animatedRadioStyle = {
@@ -174,7 +174,9 @@ export default function LanguageSelect() {
                   disabled={isChangingLanguage || isContinuing}
                   activeOpacity={0.72}
                 >
-                  <Text style={styles.flag}>{lang.flag}</Text>
+                  <View style={styles.langCode}>
+                    <Text style={styles.langCodeText}>{lang.code.toUpperCase()}</Text>
+                  </View>
                   <View style={styles.langTextContainer}>
                     <Animated.Text style={[styles.langLabel, animatedLabelStyle]}>
                       {lang.localLabel}
@@ -204,7 +206,6 @@ export default function LanguageSelect() {
         size="lg"
         fullWidth
         disabled={!selected || isContinuing}
-        borderRadius={16}
       />
     </Animated.View>
   );
@@ -214,7 +215,7 @@ function createStyles(theme: Theme) {
   return StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: "#FFFFFF",
+      backgroundColor: "#F8F9FC",
       paddingHorizontal: 20,
       paddingBottom: 16,
     },
@@ -231,9 +232,9 @@ function createStyles(theme: Theme) {
       flex: 1,
     },
     title: {
-      fontSize: 24,
-      fontFamily: FONTS.bold,
-      color: "#111827",
+      fontSize: 26,
+      fontFamily: FONTS.extraBold,
+      color: "#102b4a",
       marginBottom: 22,
     },
     list: {
@@ -250,15 +251,27 @@ function createStyles(theme: Theme) {
       padding: 14,
       gap: 12,
     },
-    flag: {
-      fontSize: 26,
+    langCode: {
+      width: 40,
+      height: 40,
+      borderRadius: 10,
+      backgroundColor: "#E5E7EB",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    langCodeText: {
+      fontSize: 13,
+      fontFamily: FONTS.bold,
+      color: "#374151",
+      letterSpacing: 0.5,
     },
     langTextContainer: {
       flex: 1,
     },
     langLabel: {
-      fontSize: 15,
-      fontFamily: FONTS.semiBold,
+      fontSize: 17,
+      fontFamily: FONTS.bold,
+      color: "#102b4a",
     },
     radio: {
       width: 20,

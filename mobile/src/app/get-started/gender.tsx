@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -6,8 +7,9 @@ import {
   Animated,
   Easing,
   Image,
+  Platform,
+  Pressable,
   StyleSheet,
-  TouchableOpacity,
   View,
 } from "react-native";
 import { Text } from "../../components/ui/ScaledText";
@@ -15,7 +17,7 @@ import SignupProgress from "../../components/ui/SignupProgress";
 import { FONTS } from "../../constants/fonts";
 import { useTheme } from "../../contexts/ThemeContext";
 
-const BG = "#FFFFFF";
+const BG = "#F8F9FC";
 
 export default function GenderSelection() {
   const router = useRouter();
@@ -28,6 +30,8 @@ export default function GenderSelection() {
 
   const fade = useRef(new Animated.Value(0)).current;
   const slide = useRef(new Animated.Value(24)).current;
+  const maleScale = useRef(new Animated.Value(1)).current;
+  const femaleScale = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     Animated.parallel([
@@ -50,6 +54,21 @@ export default function GenderSelection() {
     if (isNavigating) return;
     setSelectedGender(gender);
     setIsNavigating(true);
+
+    const scale = gender === "male" ? maleScale : femaleScale;
+    Animated.sequence([
+      Animated.timing(scale, {
+        toValue: 0.96,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scale, {
+        toValue: 1,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
     setTheme(gender);
     try {
       await AsyncStorage.setItem("@hylift_gender", gender);
@@ -62,8 +81,26 @@ export default function GenderSelection() {
     }
   };
 
+  const pressIn = (scale: Animated.Value) => {
+    Animated.spring(scale, {
+      toValue: 0.97,
+      speed: 30,
+      bounciness: 4,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const pressOut = (scale: Animated.Value) => {
+    Animated.spring(scale, {
+      toValue: 1,
+      speed: 20,
+      bounciness: 6,
+      useNativeDriver: true,
+    }).start();
+  };
+
   return (
-    <View style={styles.container}>
+    <View style={s.container}>
       <Animated.View
         style={{
           flex: 1,
@@ -73,77 +110,79 @@ export default function GenderSelection() {
       >
         <SignupProgress current={isSignupFlow ? 6 : 1} total={13} />
 
-        <Text style={styles.title}>{t("onboarding.gender.title")}</Text>
+        <Text style={s.title}>{t("onboarding.gender.title")}</Text>
 
-        <View style={styles.optionsContainer}>
-          <View>
-            <TouchableOpacity
-              style={[
-                styles.genderCard,
-                selectedGender === "male" && {
-                  borderColor: theme.primary.main,
-                  borderWidth: 1.5,
-                },
-              ]}
+        <View style={s.cards}>
+          {/* Male */}
+          <Animated.View
+            style={[
+              s.cardWrap,
+              { transform: [{ scale: maleScale }] },
+              selectedGender === "male" && {
+                borderColor: theme.primary.main,
+                borderWidth: 2.5,
+              },
+            ]}
+          >
+            <Pressable
+              style={s.cardInner}
               onPress={() => void handleSelectGender("male")}
-              activeOpacity={0.72}
+              onPressIn={() => pressIn(maleScale)}
+              onPressOut={() => pressOut(maleScale)}
             >
               <Image
                 source={require("../../../assets/images/frameboy2.png")}
-                style={styles.genderImage}
+                style={s.img}
                 resizeMode="cover"
               />
-              {selectedGender === "male" && (
-                <View
-                  style={[
-                    styles.selectedOverlay,
-                    { backgroundColor: theme.primary.main + "14" },
-                  ]}
-                />
-              )}
-              <Text style={styles.genderText}>
-                {t("onboarding.gender.male")}
-              </Text>
-            </TouchableOpacity>
-          </View>
+              <LinearGradient
+                colors={["transparent", "rgba(0,0,0,0.55)"]}
+                style={s.gradient}
+              />
+              <View style={s.labelRow}>
+                <Text style={s.label}>{t("onboarding.gender.male")}</Text>
+              </View>
+            </Pressable>
+          </Animated.View>
 
-          <View>
-            <TouchableOpacity
-              style={[
-                styles.genderCard,
-                selectedGender === "female" && {
-                  borderColor: theme.primary.main,
-                  borderWidth: 1.5,
-                },
-              ]}
+          {/* Female */}
+          <Animated.View
+            style={[
+              s.cardWrap,
+              { transform: [{ scale: femaleScale }] },
+              selectedGender === "female" && {
+                borderColor: theme.primary.main,
+                borderWidth: 2.5,
+              },
+            ]}
+          >
+            <Pressable
+              style={s.cardInner}
               onPress={() => void handleSelectGender("female")}
-              activeOpacity={0.72}
+              onPressIn={() => pressIn(femaleScale)}
+              onPressOut={() => pressOut(femaleScale)}
             >
               <Image
                 source={require("../../../assets/images/framegirl2.png")}
-                style={[styles.genderImage, { top: 0 }]}
+                style={s.img}
                 resizeMode="cover"
               />
-              {selectedGender === "female" && (
-                <View
-                  style={[
-                    styles.selectedOverlay,
-                    { backgroundColor: theme.primary.main + "14" },
-                  ]}
-                />
-              )}
-              <Text style={styles.genderText}>
-                {t("onboarding.gender.female")}
-              </Text>
-            </TouchableOpacity>
-          </View>
+              <LinearGradient
+                colors={["transparent", "rgba(0,0,0,0.55)"]}
+                style={s.gradient}
+              />
+              <View style={s.labelRow}>
+                <Text style={s.label}>{t("onboarding.gender.female")}</Text>
+              </View>
+            </Pressable>
+          </Animated.View>
         </View>
       </Animated.View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const s = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: BG,
@@ -152,39 +191,61 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 26,
-    fontFamily: FONTS.bold,
-    color: "#111827",
+    fontFamily: FONTS.extraBold,
+    color: "#102b4a",
     marginTop: 6,
-    marginBottom: 28,
+    marginBottom: 20,
   },
-  optionsContainer: {
-    gap: 12,
+  cards: {
+    flex: 1,
+    gap: 14,
+    paddingBottom: 16,
   },
-  genderCard: {
-    borderRadius: 12,
+  cardWrap: {
+    flex: 1,
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: "#DDE3EA",
-    backgroundColor: "#F6F8FA",
-    height: 196,
+    borderColor: "transparent",
     overflow: "hidden",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
   },
-  genderImage: {
+  cardInner: {
+    flex: 1,
+  },
+  img: {
     width: "100%",
     height: "100%",
     position: "absolute",
   },
-  selectedOverlay: {
+  gradient: {
     position: "absolute",
-    width: "100%",
-    height: "100%",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: "50%",
   },
-  genderText: {
-    fontSize: 17,
-    fontFamily: FONTS.bold,
-    color: "#ffffff",
+  labelRow: {
     position: "absolute",
-    bottom: 16,
-    left: 16,
-    zIndex: 1,
+    bottom: 18,
+    left: 18,
+    right: 18,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  label: {
+    fontSize: 20,
+    fontFamily: FONTS.extraBold,
+    color: "#FFFFFF",
+    letterSpacing: 0.3,
   },
 });
