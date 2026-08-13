@@ -33,7 +33,7 @@ interface AuthContextType {
     password: string,
     username: string,
   ) => Promise<User | null>;
-  signIn: (email: string, password: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<User | null>;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
   hasCompletedOnboarding: () => Promise<boolean>;
@@ -169,13 +169,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return data.user ?? null;
   };
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string): Promise<User | null> => {
     const { data, error } = await supabase.auth.signInWithPassword({
       email: email.trim().toLowerCase(),
       password,
     });
     if (error) throw error;
     if (data.session) setSession(data.session);
+    return data.user ?? null;
   };
 
   const signInWithGoogle = async (): Promise<void> => {
@@ -238,14 +239,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const { data, error } = await supabase
       .from("user_profiles")
-      .select("onboarding_completed")
+      .select("onboarding_completed, username")
       .eq("id", id)
       .maybeSingle();
     if (error) {
       console.error("[Auth] Failed to read onboarding status", error);
       return false;
     }
-    const completed = data?.onboarding_completed === true;
+    // Profile with onboarding_completed flag, OR profile with a username
+    // (covers legacy accounts and cases where the flag write failed)
+    const completed =
+      data?.onboarding_completed === true ||
+      (data?.username != null && data.username.trim().length > 0);
     if (completed) {
       await AsyncStorage.setItem(getStartedCompletedKey(id), "true");
     }
@@ -380,7 +385,7 @@ export const useAuth = () => {
     userProfile: null,
     isLoading: true,
     signUp: async () => null,
-    signIn: async () => {},
+    signIn: async () => null,
     signInWithGoogle: async () => {},
     signOut: async () => {},
     hasCompletedOnboarding: async () => false,

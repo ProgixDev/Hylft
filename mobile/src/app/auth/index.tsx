@@ -1,7 +1,7 @@
 import { AntDesign, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Linking from "expo-linking";
-import { useRouter } from "expo-router";
+import { usePathname, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -278,6 +278,7 @@ const authButtonStyles = StyleSheet.create({
 export default function AuthLanding() {
   const { t, i18n } = useTranslation();
   const router = useRouter();
+  const pathname = usePathname();
   const insets = useSafeAreaInsets();
   const [currentIndex, setCurrentIndex] = useState(0);
   const translateAnim = useRef(new Animated.Value(-SCREEN_WIDTH)).current;
@@ -404,14 +405,18 @@ export default function AuthLanding() {
   }, []);
 
   useEffect(() => {
+    // Only auto-navigate when this screen is active (e.g. Google OAuth
+    // redirect). If user logged in from /auth/signin, that screen
+    // handles post-login routing — don't race it.
     if (!user || hasNavigated.current) return;
+    if (pathname !== "/auth") return;
     hasNavigated.current = true;
     void (async () => {
       await setOnboardingCompleted();
       const doneGetStarted = await hasCompletedGetStarted(user.id);
       router.replace(doneGetStarted ? "/(tabs)/home" : "/get-started/username");
     })();
-  }, [hasCompletedGetStarted, router, setOnboardingCompleted, user]);
+  }, [hasCompletedGetStarted, pathname, router, setOnboardingCompleted, user]);
 
   const handleEmailSignUp = () => router.navigate("/get-started/username");
 

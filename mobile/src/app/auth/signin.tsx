@@ -165,6 +165,16 @@ function createStyles(theme: Theme) {
       borderColor: "#E5E7EB",
       fontFamily: FONTS.medium,
     },
+    passwordRow: {
+      position: "relative",
+      justifyContent: "center",
+    },
+    eyeBtn: {
+      position: "absolute",
+      right: 14,
+      height: "100%",
+      justifyContent: "center",
+    },
     forgotPasswordButton: {
       alignSelf: "flex-end",
       marginBottom: 22,
@@ -222,6 +232,7 @@ export default function SignIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [inlineError, setInlineError] = useState<string | null>(null);
   const [modal, setModal] = useState<ModalConfig>({
     visible: false,
@@ -263,9 +274,9 @@ export default function SignIn() {
 
     setIsLoading(true);
     try {
-      await signIn(email, password);
+      const signedInUser = await signIn(email, password);
       await setOnboardingCompleted();
-      const doneGetStarted = await hasCompletedGetStarted();
+      const doneGetStarted = await hasCompletedGetStarted(signedInUser?.id);
       router.replace(doneGetStarted ? "/(tabs)/home" : "/get-started/username");
     } catch (error: unknown) {
       const message =
@@ -324,16 +335,29 @@ export default function SignIn() {
 
           <View style={styles.inputContainer}>
             <Text style={styles.inputLabel}>{t("auth.password")}</Text>
-            <TextInput
-              style={styles.input}
-              placeholder={t("auth.enterPassword")}
-              placeholderTextColor="#9CA3AF"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
+            <View style={styles.passwordRow}>
+              <TextInput
+                style={[styles.input, { paddingRight: 46 }]}
+                placeholder={t("auth.enterPassword")}
+                placeholderTextColor="#9CA3AF"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+              <TouchableOpacity
+                style={styles.eyeBtn}
+                onPress={() => setShowPassword((v) => !v)}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name={showPassword ? "eye-off-outline" : "eye-outline"}
+                  size={20}
+                  color="#9CA3AF"
+                />
+              </TouchableOpacity>
+            </View>
           </View>
 
           <TouchableOpacity

@@ -69,8 +69,8 @@ const DAY_SHORT_KEYS = [
   "sun",
 ] as const;
 
-const CHIP_GREEN = { face: "#16A34A", text: "#F0FDF4", border: "#86EFAC" };
-const CHIP_RED = { face: "#DC2626", text: "#FEF2F2", border: "#FCA5A5" };
+const CHIP_GREEN = { face: "#1B7A40", text: "#E8F5EC", border: "#5A9E6F" };
+const CHIP_RED = { face: "#A33030", text: "#F5EAEA", border: "#B56B6B" };
 const CHIP_GRAY = { face: "#374151", text: "#D1D5DB", border: "#6B7280" };
 
 type DayState = "trained" | "missed" | "future";
