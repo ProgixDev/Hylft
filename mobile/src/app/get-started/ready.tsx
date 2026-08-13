@@ -13,10 +13,10 @@ import {
   type ViewStyle,
 } from "react-native";
 import { Text } from "../../components/ui/ScaledText";
-import Svg, { Circle, G } from "react-native-svg";
+import Svg, { Circle, Defs, G, LinearGradient, Stop } from "react-native-svg";
 import { FONTS } from "../../constants/fonts";
 import { useAuth } from "../../contexts/AuthContext";
-import { supabase } from "../../services/supabase";
+import { useTheme } from "../../contexts/ThemeContext";
 
 const EXERCISES = [
   require("../../../assets/exercise-previews/01qpYSe.gif"),
@@ -35,90 +35,24 @@ const EXERCISES = [
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const PLAN_DURATION = 12000;
-const EXERCISE_REVEAL_START = 68;
-const EXERCISE_REVEAL_END = 76;
-const RING_SIZE = 132;
+
+/* ── Ring layout ── */
+const RING_SIZE = 150;
 const CENTER = RING_SIZE / 2;
+const R = 62;
+const C = 2 * Math.PI * R;
+const STROKE_W = 9;
 
-const R_INNER = 36;
-const C_INNER = 2 * Math.PI * R_INNER;
-const R_MIDDLE = 47;
-const C_MIDDLE = 2 * Math.PI * R_MIDDLE;
-const R_OUTER = 58;
-const C_OUTER = 2 * Math.PI * R_OUTER;
-
-const LOGO = require("../../../assets/images/Logo.png");
-
-const AVATAR_SIZE = 44;
-const AVATAR_GAP = 12;
-const AVATAR_STEP = AVATAR_SIZE + AVATAR_GAP;
-
-const EXERCISE_SIZE = 44;
-const EXERCISE_GAP = 12;
-const EXERCISE_STEP = EXERCISE_SIZE + EXERCISE_GAP;
-const EXERCISE_LOOP_DISTANCE = EXERCISES.length * EXERCISE_STEP;
+/* ── Exercise card marquee ── */
+const CARD_W = 90;
+const CARD_H = 90;
+const CARD_GAP = 10;
+const CARD_STEP = CARD_W + CARD_GAP;
 
 const EXERCISES_1 = EXERCISES;
 const EXERCISES_2 = [...EXERCISES].reverse();
 const EXERCISES_3 = EXERCISES.slice(4).concat(EXERCISES.slice(0, 4));
-
-const AvatarMarquee = React.memo(function AvatarMarquee({
-  sources,
-  reverse = false,
-  duration,
-  style,
-}: {
-  sources: string[];
-  reverse?: boolean;
-  duration: number;
-  style?: StyleProp<ViewStyle>;
-}) {
-  const loopDistance = sources.length * AVATAR_STEP;
-
-  const translateX = useRef(
-    new Animated.Value(reverse ? -loopDistance : 0),
-  ).current;
-  const row = useMemo(() => [...sources, ...sources], [sources]);
-
-  useEffect(() => {
-    if (sources.length === 0) return;
-    translateX.setValue(reverse ? -loopDistance : 0);
-    const animation = Animated.loop(
-      Animated.timing(translateX, {
-        toValue: reverse ? 0 : -loopDistance,
-        duration,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      }),
-    );
-
-    animation.start();
-    return () => animation.stop();
-  }, [duration, reverse, translateX, loopDistance, sources.length]);
-
-  if (sources.length === 0) return null;
-
-  return (
-    <View style={[styles.marqueeWindow, style]}>
-      <Animated.View
-        style={[
-          styles.avatarTrack,
-          { width: loopDistance * 2, transform: [{ translateX }] },
-        ]}
-      >
-        {row.map((source, index) => (
-          <View key={`${source}-${index}`} style={styles.avatarShell}>
-            <Image
-              source={{ uri: source }}
-              style={styles.avatar}
-              contentFit="cover"
-            />
-          </View>
-        ))}
-      </Animated.View>
-    </View>
-  );
-});
+const LOOP_DISTANCE = EXERCISES.length * CARD_STEP;
 
 const ExerciseMarquee = React.memo(function ExerciseMarquee({
   sources,
@@ -132,35 +66,37 @@ const ExerciseMarquee = React.memo(function ExerciseMarquee({
   style?: StyleProp<ViewStyle>;
 }) {
   const translateX = useRef(
-    new Animated.Value(reverse ? -EXERCISE_LOOP_DISTANCE : 0),
+    new Animated.Value(reverse ? -LOOP_DISTANCE : 0),
   ).current;
   const row = useMemo(() => [...sources, ...sources], [sources]);
 
   useEffect(() => {
-    translateX.setValue(reverse ? -EXERCISE_LOOP_DISTANCE : 0);
+    translateX.setValue(reverse ? -LOOP_DISTANCE : 0);
     const animation = Animated.loop(
       Animated.timing(translateX, {
-        toValue: reverse ? 0 : -EXERCISE_LOOP_DISTANCE,
+        toValue: reverse ? 0 : -LOOP_DISTANCE,
         duration,
         easing: Easing.linear,
         useNativeDriver: true,
       }),
     );
-
     animation.start();
     return () => animation.stop();
   }, [duration, reverse, translateX]);
 
   return (
-    <View style={[styles.marqueeWindow, style]}>
+    <View style={[s.marqueeWindow, style]}>
       <Animated.View
-        style={[styles.exerciseTrack, { transform: [{ translateX }] }]}
+        style={[
+          s.cardTrack,
+          { width: LOOP_DISTANCE * 2, transform: [{ translateX }] },
+        ]}
       >
         {row.map((source, index) => (
-          <View key={`${source}-${index}`} style={styles.exerciseShell}>
+          <View key={`${index}`} style={s.card}>
             <Image
               source={source}
-              style={styles.exerciseImage}
+              style={s.cardImage}
               contentFit="contain"
               autoplay={false}
             />
@@ -174,6 +110,7 @@ const ExerciseMarquee = React.memo(function ExerciseMarquee({
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 function PercentText({ progress }: { progress: Animated.Value }) {
+  const { t } = useTranslation();
   const [percent, setPercent] = useState(0);
 
   useEffect(() => {
@@ -183,57 +120,23 @@ function PercentText({ progress }: { progress: Animated.Value }) {
     return () => progress.removeListener(listener);
   }, [progress]);
 
-  return <Text style={styles.percent}>{percent}%</Text>;
+  return (
+    <View style={s.percentWrap}>
+      <Text style={s.percent}>{percent}%</Text>
+      <Text style={s.percentLabel}>
+        {t("onboarding.ready.percentLabel", "POUR CENT")}
+      </Text>
+    </View>
+  );
 }
 
 export default function Ready() {
   const router = useRouter();
   const { user } = useAuth();
+  const { theme } = useTheme();
   const { t } = useTranslation();
   const progress = useRef(new Animated.Value(0)).current;
   const pulse = useRef(new Animated.Value(0)).current;
-
-  // For remote avatars
-  const [avatars, setAvatars] = useState<string[]>([]);
-
-  useEffect(() => {
-    const fileNames = [
-      "1.jpg",
-      "2.jpg",
-      "3.jpg",
-      "4.jpg",
-      "5.jpg",
-      "6.jpg",
-      "7.jpg",
-      "8.avif",
-      "9.avif",
-    ];
-    const urls = fileNames.map(
-      (name) =>
-        supabase.storage.from("mock_profiles_onboarding").getPublicUrl(name)
-          .data.publicUrl,
-    );
-    setAvatars(urls);
-  }, []);
-
-  const avatars1 = useMemo(
-    () => (avatars.length > 0 ? avatars : []),
-    [avatars],
-  );
-  const avatars2 = useMemo(
-    () => (avatars.length > 0 ? [...avatars].reverse() : []),
-    [avatars],
-  );
-  const avatars3 = useMemo(
-    () =>
-      avatars.length > 0 ? avatars.slice(4).concat(avatars.slice(0, 4)) : [],
-    [avatars],
-  );
-  const avatars4 = useMemo(
-    () =>
-      avatars.length > 0 ? avatars.slice(7).concat(avatars.slice(0, 7)) : [],
-    [avatars],
-  );
 
   useEffect(() => {
     Animated.timing(progress, {
@@ -265,17 +168,9 @@ export default function Ready() {
     ).start();
   }, [progress, pulse, router, user]);
 
-  const dashInner = progress.interpolate({
+  const dashOffset = progress.interpolate({
     inputRange: [0, 100],
-    outputRange: [C_INNER, 0],
-  });
-  const dashMiddle = progress.interpolate({
-    inputRange: [0, 100],
-    outputRange: [C_MIDDLE, 0],
-  });
-  const dashOuter = progress.interpolate({
-    inputRange: [0, 100],
-    outputRange: [C_OUTER, 0],
+    outputRange: [C, 0],
   });
 
   const ringScale = pulse.interpolate({
@@ -283,91 +178,51 @@ export default function Ready() {
     outputRange: [1, 1.04],
   });
 
-  const state1Opacity = progress.interpolate({
-    inputRange: [0, EXERCISE_REVEAL_START, EXERCISE_REVEAL_END],
-    outputRange: [1, 1, 0],
-  });
-
-  const state2Opacity = progress.interpolate({
-    inputRange: [EXERCISE_REVEAL_START, EXERCISE_REVEAL_END, 100],
-    outputRange: [0, 1, 1],
-  });
-
   return (
-    <View style={styles.root}>
-      <StatusBar style="light" translucent backgroundColor="transparent" />
+    <View style={s.root}>
+      <StatusBar style="dark" translucent backgroundColor="transparent" />
 
-      <View style={styles.logoContainer}>
-        <Image source={LOGO} style={styles.logo} contentFit="contain" />
+      {/* Logo */}
+      <View style={s.logoContainer}>
+        <Image
+          source={theme.logo}
+          style={s.logo}
+          contentFit="contain"
+        />
       </View>
 
-      <View style={styles.content}>
+      {/* Progress ring */}
+      <View style={s.content}>
         <Animated.View
-          style={[
-            styles.ringWrap,
-            {
-              transform: [{ scale: ringScale }],
-            },
-          ]}
+          style={[s.ringWrap, { transform: [{ scale: ringScale }] }]}
         >
           <Svg width={RING_SIZE} height={RING_SIZE}>
+            <Defs>
+              <LinearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+                <Stop offset="0" stopColor="#102b4a" />
+                <Stop offset="1" stopColor="#10B981" />
+              </LinearGradient>
+            </Defs>
+            {/* Track */}
             <Circle
               cx={CENTER}
               cy={CENTER}
-              r={R_OUTER}
-              stroke="#1A245B"
-              strokeWidth={6}
+              r={R}
+              stroke="#E5E7EB"
+              strokeWidth={STROKE_W}
               fill="none"
             />
-            <Circle
-              cx={CENTER}
-              cy={CENTER}
-              r={R_MIDDLE}
-              stroke="#1C2456"
-              strokeWidth={6}
-              fill="none"
-            />
-            <Circle
-              cx={CENTER}
-              cy={CENTER}
-              r={R_INNER}
-              stroke="#141A3E"
-              strokeWidth={6}
-              fill="none"
-            />
-
+            {/* Fill */}
             <G rotation="-90" originX={CENTER} originY={CENTER}>
               <AnimatedCircle
                 cx={CENTER}
                 cy={CENTER}
-                r={R_INNER}
-                stroke="#FF4B57"
-                strokeWidth={6}
+                r={R}
+                stroke="url(#ringGrad)"
+                strokeWidth={STROKE_W}
                 strokeLinecap="round"
-                strokeDasharray={C_INNER}
-                strokeDashoffset={dashInner}
-                fill="none"
-              />
-              <AnimatedCircle
-                cx={CENTER}
-                cy={CENTER}
-                r={R_MIDDLE}
-                stroke="#FFDD50"
-                strokeWidth={6}
-                strokeLinecap="round"
-                strokeDasharray={C_MIDDLE}
-                strokeDashoffset={dashMiddle}
-                fill="none"
-              />
-              <AnimatedCircle
-                cx={CENTER}
-                cy={CENTER}
-                r={R_OUTER}
-                stroke="#259CFF"
-                strokeWidth={6}
-                strokeLinecap="round"
-                strokeDasharray={C_OUTER}
-                strokeDashoffset={dashOuter}
+                strokeDasharray={C}
+                strokeDashoffset={dashOffset}
                 fill="none"
               />
             </G>
@@ -375,103 +230,48 @@ export default function Ready() {
           <PercentText progress={progress} />
         </Animated.View>
 
-        <Text style={styles.title}>{t("onboarding.ready.title")}</Text>
+        <Text style={s.title}>{t("onboarding.ready.title")}</Text>
+        <Text style={s.subtitle}>
+          {t("onboarding.ready.subtitle", "Encore quelques secondes")}
+        </Text>
       </View>
 
-      <View style={styles.community}>
-        <View style={styles.statsContainer}>
-          <Animated.View
-            style={[styles.statOverlay, { opacity: state1Opacity }]}
-          >
-            <Text style={styles.count}>
-              {t("onboarding.ready.memberCount", "200,000+")}
-            </Text>
-            <Text style={styles.caption}>
-              {t("onboarding.ready.memberCaption", "Members crushing it")}
-            </Text>
-          </Animated.View>
-          <Animated.View
-            style={[styles.statOverlay, { opacity: state2Opacity }]}
-            pointerEvents="none"
-          >
-            <Text style={[styles.count, { color: "#259CFF" }]}>
-              {t("onboarding.ready.exerciseCount", "1,300+")}
-            </Text>
-            <Text style={styles.caption}>
-              {t(
-                "onboarding.ready.exerciseCaption",
-                "More than 1300 exercises on our platform",
-              )}
-            </Text>
-          </Animated.View>
-        </View>
+      {/* Stats + exercise grid */}
+      <View style={s.bottom}>
+        <Text style={s.count}>
+          {t("onboarding.ready.exerciseCount", "1 300+")}
+        </Text>
+        <Text style={s.caption}>
+          {t(
+            "onboarding.ready.exerciseCaption",
+            "exercices disponibles sur la plateforme",
+          )}
+        </Text>
 
-        <View style={styles.gridContainer}>
-          <Animated.View
-            style={[styles.avatarGrid, { opacity: state1Opacity }]}
-          >
-            <AvatarMarquee sources={avatars1} duration={26000} />
-            <AvatarMarquee
-              sources={avatars2}
-              reverse
-              duration={30000}
-              style={styles.rowOffset}
-            />
-            <AvatarMarquee sources={avatars3} duration={34000} />
-            <AvatarMarquee
-              sources={avatars4}
-              reverse
-              duration={24000}
-              style={styles.rowOffset}
-            />
-          </Animated.View>
-
-          <Animated.View
-            style={[
-              styles.avatarGrid,
-              styles.exerciseOverlay,
-              { opacity: state2Opacity },
-            ]}
-            pointerEvents="none"
-          >
-            <ExerciseMarquee sources={EXERCISES_1} duration={22000} />
-            <ExerciseMarquee
-              sources={EXERCISES_2}
-              reverse
-              duration={24000}
-              style={styles.rowOffset}
-            />
-            <ExerciseMarquee sources={EXERCISES_3} duration={25000} />
-          </Animated.View>
+        <View style={s.gridContainer}>
+          <ExerciseMarquee sources={EXERCISES_1} duration={22000} />
+          <ExerciseMarquee
+            sources={EXERCISES_2}
+            reverse
+            duration={24000}
+            style={s.rowOffset}
+          />
+          <ExerciseMarquee sources={EXERCISES_3} duration={25000} />
         </View>
       </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const s = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: "#101011",
+    backgroundColor: "#F8F9FC",
     overflow: "hidden",
-    paddingHorizontal: 20,
-  },
-  topProgressTrack: {
-    height: 5,
-    borderRadius: 999,
-    backgroundColor: "#26282D",
-    marginTop: 10,
-    overflow: "hidden",
-  },
-  topProgressFill: {
-    height: "100%",
-    borderRadius: 999,
-    backgroundColor: "#259CFF",
   },
   logoContainer: {
-    paddingTop: 60,
+    paddingTop: 56,
     alignItems: "center",
-    justifyContent: "center",
   },
   logo: {
     width: 120,
@@ -481,120 +281,93 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingBottom: 46,
+    paddingBottom: 20,
   },
   ringWrap: {
     width: RING_SIZE,
     height: RING_SIZE,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 22,
+    marginBottom: 24,
+  },
+  percentWrap: {
+    position: "absolute",
+    alignItems: "center",
   },
   percent: {
-    position: "absolute",
-    color: "#FFFFFF",
-    fontSize: 20,
-    lineHeight: 24,
+    color: "#102b4a",
+    fontSize: 32,
+    lineHeight: 36,
     fontFamily: FONTS.extraBold,
   },
+  percentLabel: {
+    color: "#9CA3AF",
+    fontSize: 9,
+    fontFamily: FONTS.bold,
+    letterSpacing: 1.2,
+    textTransform: "uppercase",
+    marginTop: 2,
+  },
   title: {
-    color: "#FFFFFF",
-    fontSize: 23,
+    color: "#102b4a",
+    fontSize: 22,
     lineHeight: 28,
     fontFamily: FONTS.extraBold,
     textAlign: "center",
-    maxWidth: 260,
+    maxWidth: 280,
   },
-  community: {
-    minHeight: 260,
-    alignItems: "center",
-    justifyContent: "flex-end",
-    paddingBottom: 10,
+  subtitle: {
+    color: "#9CA3AF",
+    fontSize: 14,
+    fontFamily: FONTS.medium,
+    textAlign: "center",
+    marginTop: 6,
   },
-  statsContainer: {
-    width: "100%",
-    height: 80,
+  bottom: {
     alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 8,
-  },
-  statOverlay: {
-    position: "absolute",
-    alignItems: "center",
-    justifyContent: "center",
+    paddingBottom: 16,
   },
   count: {
-    color: "#259CFF",
-    fontSize: 45,
-    lineHeight: 52,
+    color: "#102b4a",
+    fontSize: 40,
+    lineHeight: 46,
     fontFamily: FONTS.extraBold,
     textAlign: "center",
   },
   caption: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    lineHeight: 21,
-    fontFamily: FONTS.bold,
+    color: "#6B7280",
+    fontSize: 14,
+    fontFamily: FONTS.medium,
     textAlign: "center",
-    marginBottom: 0,
-  },
-  avatarGrid: {
-    width: SCREEN_WIDTH + AVATAR_STEP * 2,
-    marginHorizontal: -AVATAR_STEP,
+    marginBottom: 16,
   },
   gridContainer: {
-    width: SCREEN_WIDTH + AVATAR_STEP * 2,
-    height: 250,
-  },
-  exerciseOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
+    width: SCREEN_WIDTH + CARD_STEP * 2,
+    marginHorizontal: -CARD_STEP,
   },
   marqueeWindow: {
-    height: AVATAR_SIZE + 8,
+    height: CARD_H + 8,
     overflow: "hidden",
-    marginBottom: 6,
+    marginBottom: 8,
   },
   rowOffset: {
-    marginLeft: -26,
+    marginLeft: -CARD_W / 2,
   },
-  fadeRow: {
-    opacity: 0.55,
-  },
-  avatarTrack: {
+  cardTrack: {
     flexDirection: "row",
   },
-  avatarShell: {
-    width: AVATAR_SIZE,
-    height: AVATAR_SIZE,
-    borderRadius: AVATAR_SIZE / 2,
+  card: {
+    width: CARD_W,
+    height: CARD_H,
+    borderRadius: 12,
     overflow: "hidden",
-    marginRight: AVATAR_GAP,
-    backgroundColor: "#1F2228",
+    marginRight: CARD_GAP,
+    backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.12)",
+    borderColor: "#E5E7EB",
   },
-  avatar: {
+  cardImage: {
     width: "100%",
     height: "100%",
-  },
-  exerciseTrack: {
-    flexDirection: "row",
-    width: EXERCISE_LOOP_DISTANCE * 2,
-  },
-  exerciseShell: {
-    width: EXERCISE_SIZE,
-    height: EXERCISE_SIZE,
-    borderRadius: 8,
-    overflow: "hidden",
-    marginRight: EXERCISE_GAP,
-    backgroundColor: "#161D3A",
-  },
-  exerciseImage: {
-    width: "100%",
-    height: "100%",
-    opacity: 0.85,
   },
 });

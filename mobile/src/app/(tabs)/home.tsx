@@ -18,8 +18,15 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  View
+  View,
 } from "react-native";
+import DraggableFlatList, {
+  NestableScrollContainer,
+  NestableDraggableFlatList,
+  ScaleDecorator,
+  type RenderItemParams,
+} from "react-native-draggable-flatlist";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Text } from "../../components/ui/ScaledText";
 import Reanimated, {
   Extrapolation,
@@ -1260,44 +1267,101 @@ export default function Home() {
                 </Text>
               </View>
             ) : (
-              <ScrollView style={{ maxHeight: 360 }}>
-                {userRoutines.map((routine) => {
-                  const checked = carouselRoutineIds.includes(routine.id);
-                  return (
-                    <Pressable
-                      key={routine.id}
-                      style={({ pressed }) => [
-                        styles.routinePickerRow,
-                        checked && styles.routinePickerRowChecked,
-                        pressed && { opacity: 0.85 },
-                      ]}
-                      onPress={() => toggleCarouselRoutine(routine.id)}
-                    >
-                      <View style={{ flex: 1 }}>
-                        <Text
-                          style={styles.routinePickerRowText}
-                          numberOfLines={1}
-                        >
-                          {routine.name}
-                        </Text>
-                        <Text
-                          style={styles.routinePickerRowMeta}
-                          numberOfLines={1}
-                        >
-                          {`${routine.exercises?.length ?? 0} ${t("home.exercises")}`}
-                        </Text>
-                      </View>
-                      <Ionicons
-                        name={checked ? "checkbox" : "square-outline"}
-                        size={22}
-                        color={
-                          checked ? theme.primary.main : theme.foreground.gray
-                        }
-                      />
-                    </Pressable>
-                  );
-                })}
-              </ScrollView>
+              <GestureHandlerRootView style={{ maxHeight: 400 }}>
+                <NestableScrollContainer style={{ maxHeight: 400 }}>
+                  {/* ── Selected (draggable) ── */}
+                  {carouselRoutineIds
+                    .map((id) => userRoutines.find((r) => r.id === id))
+                    .filter((r): r is ApiRoutine => !!r).length > 0 && (
+                    <NestableDraggableFlatList
+                      data={carouselRoutineIds
+                        .map((id) => userRoutines.find((r) => r.id === id))
+                        .filter((r): r is ApiRoutine => !!r)}
+                      keyExtractor={(item) => item.id}
+                      onDragEnd={({ data }) => {
+                        void persistCarouselRoutineIds(data.map((r) => r.id));
+                      }}
+                      renderItem={({
+                        item: routine,
+                        drag,
+                        isActive,
+                      }: RenderItemParams<ApiRoutine>) => (
+                        <ScaleDecorator>
+                          <Pressable
+                            style={[
+                              styles.routinePickerRow,
+                              styles.routinePickerRowChecked,
+                              isActive && { opacity: 0.9, transform: [{ scale: 1.02 }] },
+                            ]}
+                            onPress={() => toggleCarouselRoutine(routine.id)}
+                            onLongPress={drag}
+                            delayLongPress={150}
+                          >
+                            <Ionicons
+                              name="reorder-three"
+                              size={20}
+                              color={theme.foreground.gray}
+                            />
+                            <View style={{ flex: 1 }}>
+                              <Text
+                                style={styles.routinePickerRowText}
+                                numberOfLines={1}
+                              >
+                                {routine.name}
+                              </Text>
+                              <Text
+                                style={styles.routinePickerRowMeta}
+                                numberOfLines={1}
+                              >
+                                {`${routine.exercises?.length ?? 0} ${t("home.exercises")}`}
+                              </Text>
+                            </View>
+                            <Ionicons
+                              name="checkbox"
+                              size={22}
+                              color={theme.primary.main}
+                            />
+                          </Pressable>
+                        </ScaleDecorator>
+                      )}
+                    />
+                  )}
+
+                  {/* ── Unselected ── */}
+                  {userRoutines
+                    .filter((r) => !carouselRoutineIds.includes(r.id))
+                    .map((routine) => (
+                      <Pressable
+                        key={routine.id}
+                        style={({ pressed }) => [
+                          styles.routinePickerRow,
+                          pressed && { opacity: 0.85 },
+                        ]}
+                        onPress={() => toggleCarouselRoutine(routine.id)}
+                      >
+                        <View style={{ flex: 1 }}>
+                          <Text
+                            style={styles.routinePickerRowText}
+                            numberOfLines={1}
+                          >
+                            {routine.name}
+                          </Text>
+                          <Text
+                            style={styles.routinePickerRowMeta}
+                            numberOfLines={1}
+                          >
+                            {`${routine.exercises?.length ?? 0} ${t("home.exercises")}`}
+                          </Text>
+                        </View>
+                        <Ionicons
+                          name="square-outline"
+                          size={22}
+                          color={theme.foreground.gray}
+                        />
+                      </Pressable>
+                    ))}
+                </NestableScrollContainer>
+              </GestureHandlerRootView>
             )}
             <Pressable
               style={({ pressed }) => [

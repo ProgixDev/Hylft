@@ -426,11 +426,12 @@
     },
     "ready": {
       "title": "Hylift is preparing your plan",
-      "subtitle": "Let's start your fitness journey together",
+      "subtitle": "Just a few seconds",
+      "percentLabel": "PERCENT",
       "memberCount": "1,000,000+",
       "memberCaption": "people train with HyliftAI",
       "exerciseCount": "1,300+",
-      "exerciseCaption": "More than 1300 exercises on our platform"
+      "exerciseCaption": "exercises available on the platform"
     },
     "results": {
       "congratsTitle": "Congratulations!",

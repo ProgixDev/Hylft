@@ -425,12 +425,13 @@
       "permissionDeniedMessage": "Vous pouvez activer le suivi de santé plus tard dans les Paramètres."
     },
     "ready": {
-      "title": "Hylift vous prépare un plan",
-      "subtitle": "Commençons votre parcours fitness ensemble",
+      "title": "Hylift prépare votre plan",
+      "subtitle": "Encore quelques secondes",
+      "percentLabel": "POUR CENT",
       "memberCount": "1 000 000+",
       "memberCaption": "personnes s'entraînent avec HyliftAI",
       "exerciseCount": "1 300+",
-      "exerciseCaption": "Plus de 1300 exercices sur notre plateforme"
+      "exerciseCaption": "exercices disponibles sur la plateforme"
     },
     "results": {
       "congratsTitle": "Felicitations !",
