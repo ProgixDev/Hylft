@@ -198,7 +198,7 @@ export default function Ready() {
         >
           <Svg width={RING_SIZE} height={RING_SIZE}>
             <Defs>
-              <LinearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+              <LinearGradient id="ringGrad" x1="0.5" y1="1" x2="0.5" y2="0">
                 <Stop offset="0" stopColor="#102b4a" />
                 <Stop offset="1" stopColor="#10B981" />
               </LinearGradient>

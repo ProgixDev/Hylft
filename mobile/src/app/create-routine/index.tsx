@@ -29,6 +29,9 @@ import { FONTS } from "../../constants/fonts";
 import { Asset } from "expo-asset";
 
 const PRESET_COVERS = [
+  require("../../../assets/previews/1.png"),
+  require("../../../assets/previews/2.png"),
+  require("../../../assets/previews/3.png"),
   require("../../../assets/previews/image.png"),
   require("../../../assets/previews/image copy.png"),
   require("../../../assets/previews/image copy 2.png"),

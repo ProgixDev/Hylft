@@ -18,6 +18,7 @@ export default function TargetWeightScreen() {
   const { t } = useTranslation();
   const [value, setValue] = useState(75);
   const [currentWeight, setCurrentWeight] = useState(75);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     AsyncStorage.getItem("@hylift_weight").then((stored) => {
@@ -28,6 +29,7 @@ export default function TargetWeightScreen() {
           setValue(parsed);
         }
       }
+      setLoaded(true);
     });
   }, []);
 
@@ -110,16 +112,18 @@ export default function TargetWeightScreen() {
           </View>
         </View>
 
-        <View style={s.pickerCard}>
-          <RulerPicker
-            min={30}
-            max={200}
-            step={0.5}
-            defaultValue={currentWeight}
-            unit="kg"
-            onChange={setValue}
-          />
-        </View>
+        {loaded && (
+          <View style={s.pickerCard}>
+            <RulerPicker
+              min={30}
+              max={200}
+              step={0.5}
+              defaultValue={currentWeight}
+              unit="kg"
+              onChange={setValue}
+            />
+          </View>
+        )}
       </View>
 
       <ChipButton

@@ -639,7 +639,7 @@ function createStyles(theme: Theme) {
     quickStartCard: {
       marginHorizontal: 20,
       height: 200,
-      borderRadius: 22,
+      borderRadius: 16,
       overflow: "hidden",
       marginBottom: 20,
     },
@@ -693,7 +693,7 @@ function createStyles(theme: Theme) {
       justifyContent: "center",
       gap: 6,
       backgroundColor: "#fff",
-      borderRadius: 24,
+      borderRadius: 14,
       paddingVertical: 10,
       paddingHorizontal: 28,
       alignSelf: "flex-start",
@@ -815,7 +815,7 @@ function createStyles(theme: Theme) {
     routineCard: {
       width: ROUTINE_CARD_W,
       height: 220,
-      borderRadius: 20,
+      borderRadius: 16,
       overflow: "hidden",
       marginRight: 14,
       backgroundColor: theme.background.accent,
@@ -933,7 +933,7 @@ function createStyles(theme: Theme) {
     // Create Routine
     createCard: {
       marginHorizontal: 20,
-      borderRadius: 20,
+      borderRadius: 16,
       overflow: "hidden",
       marginBottom: 20,
     },
@@ -962,7 +962,7 @@ function createStyles(theme: Theme) {
     },
     createBtn: {
       backgroundColor: "#fff",
-      borderRadius: 22,
+      borderRadius: 14,
       paddingVertical: 8,
       paddingHorizontal: 24,
       alignSelf: "flex-start",
@@ -977,7 +977,7 @@ function createStyles(theme: Theme) {
     exploreCard: {
       marginHorizontal: 20,
       height: 140,
-      borderRadius: 20,
+      borderRadius: 16,
       overflow: "hidden",
       marginBottom: 10,
     },

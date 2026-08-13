@@ -1434,7 +1434,7 @@ function createStyles(theme: Theme) {
       backgroundColor: "#F5A623",
       paddingHorizontal: 12,
       paddingVertical: 6,
-      borderRadius: 20,
+      borderRadius: 14,
     },
     proBadgeText: {
       fontFamily: FONTS.bold,
@@ -1447,7 +1447,7 @@ function createStyles(theme: Theme) {
     calorieCard: {
       marginHorizontal: 20,
       backgroundColor: theme.background.darker,
-      borderRadius: 20,
+      borderRadius: 16,
       padding: 18,
       marginBottom: 14,
     },
@@ -1583,7 +1583,7 @@ function createStyles(theme: Theme) {
     chartCard: {
       marginHorizontal: 20,
       backgroundColor: theme.background.darker,
-      borderRadius: 20,
+      borderRadius: 16,
       padding: 18,
       marginBottom: 24,
     },
@@ -1726,7 +1726,7 @@ function createStyles(theme: Theme) {
       backgroundColor: "rgba(255,255,255,0.12)",
       borderWidth: 1,
       borderColor: "rgba(255,255,255,0.4)",
-      borderRadius: 20,
+      borderRadius: 14,
       paddingHorizontal: 12,
       paddingVertical: 10,
     },
@@ -1738,7 +1738,7 @@ function createStyles(theme: Theme) {
     },
     startWorkoutBtn: {
       backgroundColor: theme.primary.main,
-      borderRadius: 20,
+      borderRadius: 14,
       paddingHorizontal: 20,
       paddingVertical: 10,
       alignItems: "center",
@@ -1761,7 +1761,7 @@ function createStyles(theme: Theme) {
     },
     nextWorkoutBtn: {
       backgroundColor: theme.primary.main,
-      borderRadius: 20,
+      borderRadius: 14,
       paddingHorizontal: 20,
       paddingVertical: 10,
       marginLeft: 10,
@@ -1798,7 +1798,7 @@ function createStyles(theme: Theme) {
     challengeCard: {
       width: CHALLENGE_CARD_WIDTH,
       height: 340,
-      borderRadius: 20,
+      borderRadius: 16,
       overflow: "hidden",
       marginRight: 14,
       backgroundColor: "#1565C0",
@@ -1848,7 +1848,7 @@ function createStyles(theme: Theme) {
     },
     challengeStartBtn: {
       backgroundColor: "#fff",
-      borderRadius: 28,
+      borderRadius: 14,
       paddingVertical: 12,
       alignItems: "center",
     },
@@ -1868,7 +1868,7 @@ function createStyles(theme: Theme) {
     chip: {
       paddingHorizontal: 20,
       paddingVertical: 9,
-      borderRadius: 22,
+      borderRadius: 14,
       borderWidth: 1.5,
       borderColor: theme.background.accent,
       backgroundColor: theme.background.dark,
@@ -1954,7 +1954,7 @@ function createStyles(theme: Theme) {
     },
     goButton: {
       backgroundColor: "#fff",
-      borderRadius: 24,
+      borderRadius: 14,
       paddingHorizontal: 28,
       paddingVertical: 10,
       alignSelf: "flex-start",
@@ -2199,7 +2199,7 @@ function createStyles(theme: Theme) {
     routinePickerModal: {
       width: "88%",
       backgroundColor: theme.background.darker,
-      borderRadius: 20,
+      borderRadius: 16,
       padding: 22,
       gap: 12,
     },
@@ -2273,7 +2273,7 @@ function createStyles(theme: Theme) {
     },
     restDayBtn: {
       backgroundColor: "rgba(103,232,249,0.15)",
-      borderRadius: 20,
+      borderRadius: 14,
       paddingHorizontal: 16,
       paddingVertical: 10,
       borderWidth: 1,
@@ -2313,7 +2313,7 @@ function createStyles(theme: Theme) {
     },
     restModal: {
       width: "100%",
-      borderRadius: 28,
+      borderRadius: 16,
       overflow: "hidden",
       padding: 28,
       alignItems: "center",
@@ -2369,7 +2369,7 @@ function createStyles(theme: Theme) {
     restModalBtn: {
       marginTop: 8,
       backgroundColor: "#0E7490",
-      borderRadius: 22,
+      borderRadius: 14,
       paddingHorizontal: 36,
       paddingVertical: 14,
       borderWidth: 1,
