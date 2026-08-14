@@ -78,14 +78,14 @@ const d = StyleSheet.create({
   card: {
     width: "100%",
     backgroundColor: "#FFFFFF",
-    borderRadius: 24,
+    borderRadius: 8,
     padding: 28,
     alignItems: "center",
   },
   iconWrap: {
     width: 72,
     height: 72,
-    borderRadius: 20,
+    borderRadius: 16,
     backgroundColor: "#EEF0F5",
     alignItems: "center",
     justifyContent: "center",
@@ -109,7 +109,7 @@ const d = StyleSheet.create({
   btn: {
     width: "100%",
     backgroundColor: "#102b4a",
-    borderRadius: 100,
+    borderRadius: 8,
     paddingVertical: 14,
     alignItems: "center",
   },
@@ -447,7 +447,7 @@ function createStyles(theme: Theme) {
     },
     input: {
       backgroundColor: "#FFFFFF",
-      borderRadius: 12,
+      borderRadius: 8,
       paddingHorizontal: 14,
       paddingVertical: 14,
       fontSize: 15,

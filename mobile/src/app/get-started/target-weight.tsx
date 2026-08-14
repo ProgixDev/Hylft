@@ -155,7 +155,7 @@ const s = StyleSheet.create({
     marginBottom: 18,
   },
   journeyCard: {
-    borderRadius: 16,
+    borderRadius: 8,
     overflow: "hidden",
     backgroundColor: "#102b4a",
     marginBottom: 20,
@@ -230,7 +230,7 @@ const s = StyleSheet.create({
   },
   pickerCard: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 20,
+    borderRadius: 8,
     paddingHorizontal: 0,
     paddingVertical: 20,
     marginBottom: 4,

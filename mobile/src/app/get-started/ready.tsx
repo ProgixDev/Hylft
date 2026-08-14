@@ -359,7 +359,7 @@ const s = StyleSheet.create({
   card: {
     width: CARD_W,
     height: CARD_H,
-    borderRadius: 12,
+    borderRadius: 8,
     overflow: "hidden",
     marginRight: CARD_GAP,
     backgroundColor: "#FFFFFF",

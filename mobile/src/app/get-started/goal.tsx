@@ -211,14 +211,14 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   buttonShell: {
-    borderRadius: 16,
+    borderRadius: 8,
   },
   buttonFace: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     minHeight: 72,
-    borderRadius: 16,
+    borderRadius: 8,
     paddingHorizontal: 18,
     paddingVertical: 16,
   },

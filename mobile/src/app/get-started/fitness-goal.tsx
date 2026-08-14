@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
   },
   goalCard: {
     borderWidth: 1,
-    borderRadius: 12,
+    borderRadius: 8,
     padding: 14,
   },
   goalCardContent: {
@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
   checkBadge: {
     width: 24,
     height: 24,
-    borderRadius: 12,
+    borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,

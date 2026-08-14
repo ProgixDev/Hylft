@@ -219,7 +219,7 @@ const s = StyleSheet.create({
   },
   card: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 20,
+    borderRadius: 8,
     paddingTop: 24,
     paddingBottom: 16,
     paddingHorizontal: 20,
@@ -258,7 +258,7 @@ const s = StyleSheet.create({
     height: ITEM_HEIGHT,
     marginTop: -ITEM_HEIGHT / 2,
     backgroundColor: "#F3F4F8",
-    borderRadius: 12,
+    borderRadius: 8,
     zIndex: 0,
   },
   yearItem: {

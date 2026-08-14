@@ -171,7 +171,7 @@ const s = StyleSheet.create({
     flex: 1,
     paddingVertical: 14,
     paddingHorizontal: 16,
-    borderRadius: 12,
+    borderRadius: 8,
     borderWidth: 1,
     alignItems: "center",
   },

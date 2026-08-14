@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
     gap: 0,
   },
   rowShell: {
-    borderRadius: 14,
+    borderRadius: 8,
     marginBottom: 10,
   },
   rowFace: {
@@ -206,7 +206,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     minHeight: 60,
     borderWidth: 1.5,
-    borderRadius: 14,
+    borderRadius: 8,
     borderColor: "#E5E7EB",
     paddingHorizontal: 16,
     paddingVertical: 14,

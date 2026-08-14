@@ -242,7 +242,7 @@ function createStyles(theme: Theme) {
     },
     langCard: {
       borderWidth: 1,
-      borderRadius: 12,
+      borderRadius: 8,
       overflow: "hidden",
     },
     langCardContent: {

@@ -176,7 +176,7 @@ const s = StyleSheet.create({
     gap: 14,
   },
   cardShell: {
-    borderRadius: 16,
+    borderRadius: 8,
   },
   cardFace: {
     flexDirection: "row",
@@ -184,7 +184,7 @@ const s = StyleSheet.create({
     gap: 18,
     minHeight: 78,
     borderWidth: 1.5,
-    borderRadius: 16,
+    borderRadius: 8,
     paddingHorizontal: 18,
     paddingVertical: 16,
   },

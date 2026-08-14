@@ -447,11 +447,11 @@ const s = StyleSheet.create({
     color: "#6B7280",
   },
   cardShell: {
-    borderRadius: 18,
+    borderRadius: 8,
     marginBottom: 14,
   },
   cardFace: {
-    borderRadius: 18,
+    borderRadius: 8,
     padding: 18,
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
@@ -554,7 +554,7 @@ const s = StyleSheet.create({
   iconCircle: {
     width: 42,
     height: 42,
-    borderRadius: 12,
+    borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -569,7 +569,7 @@ const s = StyleSheet.create({
   // Calorie card — dark
   calorieCard: {
     backgroundColor: "#102b4a",
-    borderRadius: 18,
+    borderRadius: 8,
     padding: 20,
     marginBottom: 14,
   },
@@ -582,7 +582,7 @@ const s = StyleSheet.create({
   calorieIcon: {
     width: 38,
     height: 38,
-    borderRadius: 12,
+    borderRadius: 8,
     backgroundColor: "rgba(255,255,255,0.15)",
     alignItems: "center",
     justifyContent: "center",
