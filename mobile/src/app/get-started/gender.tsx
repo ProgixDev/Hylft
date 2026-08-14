@@ -203,7 +203,7 @@ const s = StyleSheet.create({
   },
   cardWrap: {
     flex: 1,
-    borderRadius: 20,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: "transparent",
     overflow: "hidden",
