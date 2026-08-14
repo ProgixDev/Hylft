@@ -37,7 +37,7 @@ const SIZE_CONFIG = {
   lg: { height: 56, paddingHorizontal: 32, fontSize: 16 },
 } as const;
 
-const DEFAULT_BORDER_RADIUS = 999;
+const DEFAULT_BORDER_RADIUS = 8;
 
 export default function ChipButton({
   title,

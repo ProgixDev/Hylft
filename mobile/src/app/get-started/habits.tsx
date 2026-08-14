@@ -89,12 +89,14 @@ function HabitTile({
   selected,
   onPress,
   label,
+  fullWidth,
 }: {
   habit: (typeof HABITS)[number];
   index: number;
   selected: boolean;
   onPress: () => void;
   label: string;
+  fullWidth?: boolean;
 }) {
   const { theme } = useTheme();
   const primaryColor = theme.primary.main;
@@ -138,6 +140,7 @@ function HabitTile({
       hitSlop={4}
       style={[
         styles.tileShell,
+        fullWidth && { width: "100%", maxWidth: "100%" },
         {
           opacity: entrance,
           transform: [
@@ -155,6 +158,7 @@ function HabitTile({
       <View
         style={[
           styles.tileFace,
+          fullWidth && styles.tileFaceRow,
           {
             backgroundColor: selected ? primaryColor + "18" : "#FFFFFF",
             borderColor: selected ? primaryColor : "#E5E7EB",
@@ -168,7 +172,10 @@ function HabitTile({
             color={selected ? primaryColor : "#6B7280"}
           />
         </View>
-        <Text style={styles.tileLabel} numberOfLines={2}>
+        <Text
+          style={[styles.tileLabel, fullWidth && { paddingRight: 0 }]}
+          numberOfLines={2}
+        >
           {label}
         </Text>
         {selected && (
@@ -233,6 +240,7 @@ export default function HabitsScreen() {
         >
           {HABITS.map((h, index) => {
             const isSelected = selected.includes(h.id);
+            const isLastOdd = HABITS.length % 2 !== 0 && index === HABITS.length - 1;
             return (
               <HabitTile
                 key={h.id}
@@ -241,6 +249,7 @@ export default function HabitsScreen() {
                 selected={isSelected}
                 onPress={() => toggle(h.id)}
                 label={t(`onboarding.habits.options.${h.id}`)}
+                fullWidth={isLastOdd}
               />
             );
           })}
@@ -283,19 +292,27 @@ const styles = StyleSheet.create({
   },
   tileShell: {
     width: "48%",
-    borderRadius: 14,
+    maxWidth: "48%",
+    borderRadius: 8,
   },
   tileFace: {
     minHeight: 110,
     borderWidth: 1.5,
-    borderRadius: 14,
+    borderRadius: 8,
     padding: 12,
     justifyContent: "space-between",
+  },
+  tileFaceRow: {
+    minHeight: 56,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    justifyContent: "flex-start",
   },
   tileIcon: {
     width: 42,
     height: 42,
-    borderRadius: 12,
+    borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
   },
