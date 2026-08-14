@@ -1,4 +1,5 @@
 import { AntDesign, Ionicons, MaterialIcons } from "@expo/vector-icons";
+import Svg, { Path } from "react-native-svg";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Linking from "expo-linking";
 import { usePathname, useRouter } from "expo-router";
@@ -28,27 +29,52 @@ const CAROUSEL_HEIGHT = SCREEN_HEIGHT * 0.62;
 const PANEL_OVERLAP = 30;
 const CAROUSEL_CORNER_RADIUS = 40;
 
-const EN_CAROUSEL_SLIDES: { type: "image"; source: ImageSourcePropType }[] = [
-  { type: "image", source: require("../../../assets/images/poster1.png") },
+type CarouselSlide = {
+  type: "image";
+  source: ImageSourcePropType;
+  overlay?: string;
+};
+
+const EN_CAROUSEL_SLIDES: CarouselSlide[] = [
+  {
+    type: "image",
+    source: require("../../../assets/images/AuthPage/HoldingTwoWeights.jpg"),
+    overlay: "rgba(0, 0, 0, 0.54)",
+  },
   { type: "image", source: require("../../../assets/images/poster2.png") },
   { type: "image", source: require("../../../assets/images/poster3.png") },
 ];
 
-const FR_CAROUSEL_SLIDES: { type: "image"; source: ImageSourcePropType }[] = [
-  { type: "image", source: require("../../../assets/images/poster1_fr.png") },
+const FR_CAROUSEL_SLIDES: CarouselSlide[] = [
+  {
+    type: "image",
+    source: require("../../../assets/images/AuthPage/HoldingTwoWeights.jpg"),
+    overlay: "rgba(0, 0, 0, 0.54)",
+  },
   { type: "image", source: require("../../../assets/images/poster2_fr.png") },
   { type: "image", source: require("../../../assets/images/poster3_fr.png") },
 ];
 
-const AUTH_GRADIENT = ["#06101F", "#0E2B57", "#364152"] as const;
+const AUTH_GRADIENT = ["#0F1F44", "#0F1F44", "#0F1F44"] as const;
 const GOOGLE_BLUE = "#1A73E8";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
+function GoogleIcon({ size = 20 }: { size?: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 48 48">
+      <Path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
+      <Path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
+      <Path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
+      <Path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
+    </Svg>
+  );
+}
+
 type Auth3DButtonProps = {
   title: string;
   onPress: () => void;
-  icon: React.ReactNode;
+  icon?: React.ReactNode;
   iconPosition?: "left" | "right";
   faceColor: string;
   depthColor: string;
@@ -122,7 +148,7 @@ function Auth3DButton({
             },
           ]}
         >
-          {iconPosition === "left" && (
+          {icon && iconPosition === "left" && (
             <View style={authButtonStyles.iconLeft}>{icon}</View>
           )}
           <Text
@@ -133,7 +159,7 @@ function Auth3DButton({
           >
             {title}
           </Text>
-          {iconPosition === "right" && (
+          {icon && iconPosition === "right" && (
             <View style={authButtonStyles.iconRight}>{icon}</View>
           )}
         </Animated.View>
@@ -148,23 +174,17 @@ function createStyles() {
       flex: 1,
     },
     colorVeil: {
-      ...StyleSheet.absoluteFillObject,
-      backgroundColor: "rgba(125,175,255,0.08)",
+      display: "none",
     },
     diagonalBeam: {
-      position: "absolute",
-      left: -SCREEN_WIDTH * 0.2,
-      right: -SCREEN_WIDTH * 0.2,
-      bottom: SCREEN_HEIGHT * 0.23,
-      height: 76,
-      backgroundColor: "rgba(86,148,255,0.18)",
-      transform: [{ rotate: "-8deg" }],
+      display: "none",
     },
     carouselSection: {
       position: "relative",
       height: CAROUSEL_HEIGHT,
       backgroundColor: "#FFFFFF",
       borderBottomLeftRadius: CAROUSEL_CORNER_RADIUS,
+      borderBottomRightRadius: CAROUSEL_CORNER_RADIUS,
       marginBottom: -PANEL_OVERLAP,
       zIndex: 1,
       elevation: 8,
@@ -185,40 +205,71 @@ function createStyles() {
       flex: 1,
       zIndex: 20,
       elevation: 20,
-      paddingHorizontal: 28,
-      paddingTop: 46,
+      paddingHorizontal: 24,
+      paddingTop: PANEL_OVERLAP + 12,
+      justifyContent: "center",
+      alignItems: "center",
     },
     dotsRow: {
       flexDirection: "row",
       justifyContent: "center",
-      gap: 6,
-      marginBottom: 16,
+      gap: 8,
+      marginBottom: 14,
     },
     title: {
-      fontSize: 24,
-      lineHeight: 31,
-      fontFamily: FONTS.extraBold,
-      color: "#FFFFFF",
+      fontSize: 16,
+      lineHeight: 22,
+      fontFamily: FONTS.semiBold,
+      color: "rgba(255, 255, 255, 0.85)",
       textAlign: "center",
-      marginBottom: 22,
+      marginBottom: 20,
     },
-    buttonGap: {
-      marginBottom: 13,
+    googleBtn: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 12,
+      backgroundColor: "#FFFFFF",
+      borderRadius: 100,
+      height: 54,
+      width: "100%",
+      marginBottom: 12,
+    },
+    googleBtnText: {
+      fontSize: 16,
+      fontFamily: FONTS.bold,
+      color: "#111827",
+    },
+    signUpBtn: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: "#2563EB",
+      borderRadius: 100,
+      height: 54,
+      width: "100%",
+      marginBottom: 20,
+    },
+    signUpBtnText: {
+      fontSize: 16,
+      fontFamily: FONTS.bold,
+      color: "#FFFFFF",
     },
     signInContainer: {
       flexDirection: "row",
       justifyContent: "center",
       alignItems: "center",
-      marginTop: 12,
+      paddingVertical: 6,
     },
     signInText: {
-      color: "rgba(255,255,255,0.78)",
-      fontSize: 13,
+      color: "rgba(255, 255, 255, 0.65)",
+      fontSize: 14,
+      fontFamily: FONTS.medium,
     },
     signInLink: {
-      color: "#9EC5FF",
-      fontSize: 13,
-      fontFamily: FONTS.semiBold,
+      color: "#FFFFFF",
+      fontSize: 14,
+      fontFamily: FONTS.bold,
     },
   });
 }
@@ -226,7 +277,7 @@ function createStyles() {
 const authButtonStyles = StyleSheet.create({
   buttonShell: {
     width: "100%",
-    borderRadius: 20,
+    borderRadius: 100,
     ...Platform.select({
       ios: {
         shadowColor: "#06100D",
@@ -240,19 +291,18 @@ const authButtonStyles = StyleSheet.create({
     }),
   },
   buttonBase: {
-    borderRadius: 20,
-    paddingBottom: 9,
+    borderRadius: 100,
+    paddingBottom: 6,
     overflow: "hidden",
   },
   buttonFace: {
     minHeight: 58,
-    borderRadius: 20,
+    borderRadius: 100,
     paddingHorizontal: 18,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.4)",
+    borderWidth: 0,
   },
   iconLeft: {
     width: 30,
@@ -449,7 +499,7 @@ export default function AuthLanding() {
             <Text style={{ fontSize: 20, fontFamily: FONTS.extraBold, color: "#102b4a", textAlign: "center", marginBottom: 8 }}>Error</Text>
             <Text style={{ fontSize: 14, fontFamily: FONTS.medium, color: "#6B7280", textAlign: "center", lineHeight: 21, marginBottom: 24 }}>{errorModal.message}</Text>
             <TouchableOpacity
-              style={{ width: "100%", backgroundColor: "#102b4a", borderRadius: 100, paddingVertical: 14, alignItems: "center" }}
+              style={{ width: "100%", backgroundColor: "#102b4a", borderRadius: 12, paddingVertical: 14, alignItems: "center" }}
               onPress={() => setErrorModal({ visible: false, message: "" })}
               activeOpacity={0.85}
             >
@@ -471,27 +521,30 @@ export default function AuthLanding() {
             height: "100%",
           }}
         >
-          <Image
-            source={carouselSlides[prevIndex].source}
-            style={styles.posterImage}
-            resizeMode="cover"
-          />
-          <Image
-            source={carouselSlides[currentIndex].source}
-            style={styles.posterImage}
-            resizeMode="cover"
-          />
-          <Image
-            source={carouselSlides[nextIndex].source}
-            style={styles.posterImage}
-            resizeMode="cover"
-          />
+          {[prevIndex, currentIndex, nextIndex].map((slideIndex, i) => (
+            <View key={i} style={{ width: SCREEN_WIDTH, height: "100%", position: "relative" }}>
+              <Image
+                source={carouselSlides[slideIndex].source}
+                style={styles.posterImage}
+                resizeMode="cover"
+              />
+              {carouselSlides[slideIndex].overlay ? (
+                <View
+                  style={[
+                    StyleSheet.absoluteFill,
+                    { backgroundColor: carouselSlides[slideIndex].overlay },
+                  ]}
+                  pointerEvents="none"
+                />
+              ) : null}
+            </View>
+          ))}
         </Animated.View>
       </View>
 
       {/* Bottom panel — content sits above carousel overlap */}
-      <View style={[styles.bottomPanel, { paddingBottom: insets.bottom + 12 }]}>
-        {/* Dots synced with icon index */}
+      <View style={[styles.bottomPanel, { paddingBottom: Math.max(insets.bottom + 12, 20) }]}>
+        {/* DotsSynced with icon index */}
         <View style={styles.dotsRow}>
           {carouselSlides.map((_, i) => (
             <View
@@ -509,39 +562,35 @@ export default function AuthLanding() {
 
         <Text style={styles.title}>{t("auth.signUpToGetStarted")}</Text>
 
-        <View style={styles.buttonGap}>
-          <Auth3DButton
-            title={t("auth.continueWithGoogle")}
-            onPress={handleGoogleSignUp}
-            icon={
-              <AntDesign name="google" size={20} color={GOOGLE_BLUE} />
-            }
-            faceColor="#F5F8FC"
-            depthColor="#9AA8BA"
-            textColor="#111827"
-          />
-        </View>
+        {/* Google button */}
+        <TouchableOpacity
+          style={styles.googleBtn}
+          onPress={handleGoogleSignUp}
+          activeOpacity={0.88}
+        >
+          <GoogleIcon size={22} />
+          <Text style={styles.googleBtnText}>{t("auth.continueWithGoogle")}</Text>
+        </TouchableOpacity>
 
-        <View style={styles.buttonGap}>
-          <Auth3DButton
-            title={t("auth.continueWithEmail")}
-            onPress={handleEmailSignUp}
-            icon={
-              <MaterialIcons name="keyboard-arrow-right" size={28} color="#FFFFFF" />
-            }
-            iconPosition="right"
-            faceColor="#2563EB"
-            depthColor="#143B8F"
-            textColor="#FFFFFF"
-          />
-        </View>
+        {/* Sign up button */}
+        <TouchableOpacity
+          style={styles.signUpBtn}
+          onPress={handleEmailSignUp}
+          activeOpacity={0.88}
+        >
+          <Text style={styles.signUpBtnText}>{t("auth.continueWithEmail")}</Text>
+          <Ionicons name="arrow-forward" size={18} color="#FFFFFF" style={{ marginLeft: 8 }} />
+        </TouchableOpacity>
 
-        <View style={styles.signInContainer}>
-          <Text style={styles.signInText}>{t("auth.alreadyHaveAccount")}</Text>
-          <TouchableOpacity onPress={handleSignIn} activeOpacity={0.7}>
-            <Text style={styles.signInLink}>{t("auth.logIn")}</Text>
-          </TouchableOpacity>
-        </View>
+        {/* Sign in link */}
+        <TouchableOpacity
+          style={styles.signInContainer}
+          onPress={handleSignIn}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.signInText}>{t("auth.alreadyHaveAccount")} </Text>
+          <Text style={styles.signInLink}>{t("auth.logIn")}</Text>
+        </TouchableOpacity>
       </View>
     </LinearGradient>
   );

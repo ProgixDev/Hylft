@@ -100,7 +100,7 @@ const md = StyleSheet.create({
   btn: {
     width: "100%",
     backgroundColor: "#102b4a",
-    borderRadius: 100,
+    borderRadius: 12,
     paddingVertical: 14,
     alignItems: "center",
   },
