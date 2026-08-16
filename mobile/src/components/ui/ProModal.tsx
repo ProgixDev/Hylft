@@ -18,19 +18,12 @@ import {
 import { Text } from "./ScaledText";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../../contexts/AuthContext";
+import { PurchasesPackage, PACKAGE_TYPE } from "react-native-purchases";
 import {
-    closeGooglePlayBilling,
-    finalizeGooglePlayPurchase,
-    getGooglePlayBillingUnavailableMessage,
-    GOOGLE_PLAY_PRODUCT_IDS,
-    isGooglePlayBillingAvailable,
-    loadGooglePlaySubscriptions,
-    markProEntitled,
-    requestGooglePlaySubscription,
-    subscribeToGooglePlayPurchaseEvents,
-    type GooglePlaySubscriptionProduct,
+    loadOfferings,
+    purchasePackage,
     type ProPlan,
-} from "../../services/googlePlayBilling";
+} from "../../services/revenueCatBilling";
 
 interface ProModalProps {
   visible: boolean;
@@ -52,7 +45,7 @@ export default function ProModal({ visible, onClose }: ProModalProps) {
     minutes: number;
   } | null>(null);
   const [billingProducts, setBillingProducts] = useState<
-    Partial<Record<ProPlan, GooglePlaySubscriptionProduct>>
+    Partial<Record<ProPlan, PurchasesPackage>>
   >({});
   const [isBillingLoading, setIsBillingLoading] = useState(false);
   const [isPurchasing, setIsPurchasing] = useState(false);
@@ -109,7 +102,7 @@ export default function ProModal({ visible, onClose }: ProModalProps) {
   }, [visible, fadeAnim]);
 
   useEffect(() => {
-    if (!visible || !isGooglePlayBillingAvailable()) return;
+    if (!visible) return;
 
     let active = true;
 
@@ -118,30 +111,30 @@ export default function ProModal({ visible, onClose }: ProModalProps) {
         setIsBillingLoading(true);
         setBillingMessage(null);
 
-        const subscriptions = await loadGooglePlaySubscriptions();
+        const packages = await loadOfferings();
         if (!active) return;
 
         const nextProducts: Partial<
-          Record<ProPlan, GooglePlaySubscriptionProduct>
+          Record<ProPlan, PurchasesPackage>
         > = {};
-        for (const product of subscriptions) {
-          if (product.productId === GOOGLE_PLAY_PRODUCT_IDS.monthly) {
-            nextProducts.monthly = product;
+        for (const pkg of packages) {
+          if (pkg.packageType === PACKAGE_TYPE.MONTHLY) {
+            nextProducts.monthly = pkg;
           }
 
-          if (product.productId === GOOGLE_PLAY_PRODUCT_IDS.yearly) {
-            nextProducts.yearly = product;
+          if (pkg.packageType === PACKAGE_TYPE.ANNUAL) {
+            nextProducts.yearly = pkg;
           }
         }
 
         setBillingProducts(nextProducts);
       } catch (error) {
         if (!active) return;
-        console.error("[ProModal] Failed to load Google Play products", error);
+        console.error("[ProModal] Failed to load products", error);
         setBillingMessage(
           t(
-            "proModal.googlePlayUnavailable",
-            "Google Play purchases could not be loaded right now.",
+            "proModal.billingUnavailable",
+            "Purchases could not be loaded right now.",
           ),
         );
       } finally {
@@ -153,78 +146,10 @@ export default function ProModal({ visible, onClose }: ProModalProps) {
 
     return () => {
       active = false;
-      void closeGooglePlayBilling();
     };
   }, [t, visible]);
 
-  useEffect(() => {
-    if (!visible || !isGooglePlayBillingAvailable()) return;
 
-    let active = true;
-    let purchaseSubscription: { remove: () => void } | null = null;
-    let errorSubscription: { remove: () => void } | null = null;
-
-    const attachListeners = async () => {
-      const subscriptions = await subscribeToGooglePlayPurchaseEvents(
-        async (purchase) => {
-          try {
-            await finalizeGooglePlayPurchase(purchase);
-            if (user?.id) {
-              await markProEntitled(user.id);
-            }
-            onClose();
-            Alert.alert(
-              t("common.done", "Done"),
-              t(
-                "proModal.purchaseSuccess",
-                "Your Google Play subscription is active.",
-              ),
-            );
-          } catch (error) {
-            console.error("[ProModal] Failed to finish purchase", error);
-            Alert.alert(
-              t("common.error", "Error"),
-              t(
-                "proModal.purchaseFailed",
-                "We could not complete the purchase.",
-              ),
-            );
-          } finally {
-            setIsPurchasing(false);
-          }
-        },
-        (error) => {
-          console.error("[ProModal] Google Play purchase error", error);
-          setIsPurchasing(false);
-          Alert.alert(
-            t("common.error", "Error"),
-            error.message ||
-              t(
-                "proModal.purchaseFailed",
-                "We could not start the purchase flow.",
-              ),
-          );
-        },
-      );
-
-      if (!active) {
-        subscriptions.purchaseSubscription.remove();
-        subscriptions.errorSubscription.remove();
-        return;
-      }
-
-      purchaseSubscription = subscriptions.purchaseSubscription;
-      errorSubscription = subscriptions.errorSubscription;
-    };
-
-    void attachListeners();
-
-    return () => {
-      active = false;
-      purchaseSubscription?.remove();
-      errorSubscription?.remove();
-    };
-  }, [onClose, t, user?.id, visible]);
 
   const features = [
     t("proModal.feature1", "AI plans adapted to your goal, level and schedule"),
@@ -235,33 +160,39 @@ export default function ProModal({ visible, onClose }: ProModalProps) {
   ];
 
   const getPlanPrice = (plan: ProPlan, fallback: string) =>
-    billingProducts[plan]?.localizedPrice ??
-    billingProducts[plan]?.price ??
-    fallback;
+    billingProducts[plan]?.product.priceString ?? fallback;
 
   const handlePurchasePress = async () => {
     if (!user?.id) return;
 
-    if (!isGooglePlayBillingAvailable()) {
-      Alert.alert("Google Play", getGooglePlayBillingUnavailableMessage());
+    const pkg = billingProducts[selectedPlan];
+    if (!pkg) {
+      Alert.alert(t("common.error", "Error"), "Package not found.");
       return;
     }
 
     try {
       setIsPurchasing(true);
       setBillingMessage(null);
-      await requestGooglePlaySubscription(selectedPlan);
-    } catch (error) {
-      console.error("[ProModal] Google Play purchase failed", error);
+      const isPro = await purchasePackage(pkg);
+      if (isPro) {
+         onClose();
+         Alert.alert(
+           t("common.done", "Done"),
+           t("proModal.purchaseSuccess", "Your subscription is active.")
+         );
+      }
+    } catch (error: any) {
+      console.error("[ProModal] Purchase failed", error);
       Alert.alert(
         t("common.error", "Error"),
-        error instanceof Error
-          ? error.message
-          : t(
-              "proModal.purchaseFailed",
-              "We could not start the purchase flow.",
-            ),
+        error.message ||
+          t(
+            "proModal.purchaseFailed",
+            "We could not start the purchase flow.",
+          ),
       );
+    } finally {
       setIsPurchasing(false);
     }
   };
@@ -518,7 +449,7 @@ export default function ProModal({ visible, onClose }: ProModalProps) {
                   styles.purchaseButton,
                   (pressed || isPurchasing || isBillingLoading) &&
                     styles.purchaseButtonPressed,
-                  (!isGooglePlayBillingAvailable() || isPurchasing) &&
+                  (isPurchasing) &&
                     styles.purchaseButtonDisabled,
                 ]}
                 onPress={handlePurchasePress}
@@ -553,7 +484,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#0D0D0D",
   },
   backgroundGradient: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   headerRow: {
     flexDirection: "row",

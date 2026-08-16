@@ -66,7 +66,7 @@
     "react-native-gifted-charts": "^1.4.76",
     "react-native-health": "^1.19.0",
     "react-native-health-connect": "^3.5.3",
-    "react-native-iap": "^15.2.0",
+    "react-native-purchases": "^10.7.1",
     "react-native-qrcode-svg": "^6.3.21",
     "react-native-reanimated": "4.3.1",
     "react-native-safe-area-context": "~5.7.0",

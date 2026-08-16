@@ -50,7 +50,7 @@ import { useNutrition } from "../../contexts/NutritionContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useGenderedImages } from "../../hooks/useGenderedImages";
 import { api } from "../../services/api";
-import { hasProEntitlement } from "../../services/googlePlayBilling";
+import { hasProEntitlement } from "../../services/revenueCatBilling";
 import { ApiRoutine, mapRoutine } from "../../utils/routineMapper";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -1419,6 +1419,15 @@ function createStyles(theme: Theme) {
       alignItems: "center",
       gap: 12,
     },
+    routineCard: {
+      width: 170,
+      height: 230,
+      borderRadius: 14,
+      marginRight: 14,
+      backgroundColor: theme.background.accent,
+      alignItems: "center",
+      justifyContent: "center",
+    },
     darkModeBtn: {
       width: 36,
       height: 36,
@@ -1444,10 +1453,17 @@ function createStyles(theme: Theme) {
     },
 
     // ── Calorie Summary Card ──────────────────
+    dailyQuoteCard: {
+      marginHorizontal: 20,
+      backgroundColor: theme.background.darker,
+      borderRadius: 14,
+      padding: 24,
+      marginBottom: 14,
+    },
     calorieCard: {
       marginHorizontal: 20,
       backgroundColor: theme.background.darker,
-      borderRadius: 16,
+      borderRadius: 14,
       padding: 18,
       marginBottom: 14,
     },
@@ -1461,6 +1477,13 @@ function createStyles(theme: Theme) {
       fontFamily: FONTS.bold,
       fontSize: 17,
       color: theme.foreground.white,
+    },
+    sectionCard: {
+      backgroundColor: theme.background.darker,
+      marginHorizontal: 20,
+      marginBottom: 20,
+      borderRadius: 14,
+      padding: 20,
     },
     calorieGoalBadge: {
       flexDirection: "row",
@@ -1580,6 +1603,13 @@ function createStyles(theme: Theme) {
     },
 
     // ── Chart Card ────────────────────────────
+    waterCard: {
+      marginHorizontal: 20,
+      backgroundColor: theme.background.darker,
+      borderRadius: 14,
+      padding: 18,
+      marginBottom: 24,
+    },
     chartCard: {
       marginHorizontal: 20,
       backgroundColor: theme.background.darker,
@@ -1653,6 +1683,22 @@ function createStyles(theme: Theme) {
       textTransform: "uppercase",
       lineHeight: 18,
     },
+    categoryCard: {
+      flex: 1,
+      height: 100,
+      borderRadius: 14,
+    },
+    categoryCardContent: {
+      flex: 1,
+      justifyContent: "space-between",
+      padding: 14,
+      borderRadius: 14,
+      position: "relative",
+    },
+    categoryCardBg: {
+      ...StyleSheet.absoluteFill,
+      borderRadius: 14,
+    },
     weekChipsRow: {
       flexDirection: "row",
       gap: 4,
@@ -1679,6 +1725,14 @@ function createStyles(theme: Theme) {
       color: theme.foreground.gray,
     },
     // ── Next Workout Card ─────────────────────
+    healthBlock: {
+      flex: 1,
+      minHeight: 110,
+      borderRadius: 14,
+      overflow: "hidden",
+      borderWidth: 2,
+      borderColor: theme.primary.main + "40",
+    },
     nextWorkoutCard: {
       height: 150,
       borderRadius: 14,
@@ -1921,6 +1975,12 @@ function createStyles(theme: Theme) {
     },
 
     // ── Custom Workout Card ───────────────────
+    activityLevelCard: {
+      marginHorizontal: 20,
+      marginBottom: 20,
+      borderRadius: 14,
+      overflow: "hidden",
+    },
     customWorkoutCard: {
       marginHorizontal: 20,
       borderRadius: 18,
@@ -2074,6 +2134,13 @@ function createStyles(theme: Theme) {
       paddingRight: 6,
       paddingBottom: 20,
     },
+    heroCard: {
+      width: SCREEN_WIDTH - 40,
+      marginRight: 12,
+      borderRadius: 14,
+      overflow: "hidden",
+      backgroundColor: theme.background.accent,
+    },
     stretchCard: {
       width: SCREEN_WIDTH * 0.42,
       height: 180,
@@ -2223,6 +2290,14 @@ function createStyles(theme: Theme) {
       fontSize: 13,
       color: theme.foreground.gray,
       textAlign: "center",
+    },
+    recentRoutineCard: {
+      flexDirection: "row",
+      backgroundColor: theme.background.darker,
+      marginHorizontal: 20,
+      marginBottom: 24,
+      borderRadius: 14,
+      padding: 14,
     },
     routinePickerRow: {
       flexDirection: "row",

@@ -10,6 +10,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
+import { LogBox } from "react-native";
 import React, { useEffect } from "react";
 import { ActivityIndicator, Platform, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -34,7 +35,7 @@ import {
   APP_TUTORIAL_PENDING_KEY,
   userTutorialStorageKey,
 } from "../constants/tutorial";
-import { hasProEntitlement } from "../services/googlePlayBilling";
+import { hasProEntitlement, initRevenueCat } from "../services/revenueCatBilling";
 import { clearPreloadCache, preloadAppData } from "../services/preloadCache";
 
 SplashScreen.preventAutoHideAsync().catch(() => {
@@ -316,7 +317,14 @@ function AppContent() {
   );
 }
 
+// Ignore RevenueCat dev logs to prevent Red Screen
+LogBox.ignoreLogs(["[RevenueCat]"]);
+
 export default function RootLayout() {
+  useEffect(() => {
+    initRevenueCat();
+  }, []);
+
   const [fontsLoaded, fontError] = useFonts({
     Inter_400Regular,
     Inter_500Medium,
