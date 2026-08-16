@@ -167,12 +167,6 @@ export default function AccountScreen() {
   }, [fade, slide]);
 
   const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const canSubmit =
-    isEmailValid &&
-    password.length >= 6 &&
-    agreed &&
-    !loading &&
-    username.length >= 2;
 
   const withFallback = (
     key: string,
@@ -195,7 +189,36 @@ export default function AccountScreen() {
     setModal((prev) => ({ ...prev, visible: false }));
 
   const handleSubmit = async () => {
-    if (!canSubmit) return;
+    if (!isEmailValid) {
+      showModal(
+        "alert-circle-outline",
+        withFallback("onboarding.account.invalidEmailTitle", "Invalid Email", "Email Invalide"),
+        withFallback("onboarding.account.invalidEmailMessage", "Please write your email properly.", "Veuillez écrire votre adresse email correctement."),
+        dismissModal
+      );
+      return;
+    }
+
+    if (password.length < 6) {
+      showModal(
+        "alert-circle-outline",
+        withFallback("onboarding.account.invalidPasswordTitle", "Password Too Short", "Mot de Passe Trop Court"),
+        withFallback("onboarding.account.invalidPasswordMessage", "Your password must be at least 6 characters.", "Votre mot de passe doit comporter au moins 6 caractères."),
+        dismissModal
+      );
+      return;
+    }
+
+    if (!agreed) {
+      showModal(
+        "alert-circle-outline",
+        withFallback("onboarding.account.termsTitle", "Terms Required", "Conditions Requises"),
+        withFallback("onboarding.account.termsMessage", "Please accept the Terms of Service and Privacy Policy to continue.", "Veuillez accepter les conditions d'utilisation et la politique de confidentialité pour continuer."),
+        dismissModal
+      );
+      return;
+    }
+
     setLoading(true);
     try {
       const createdUser = await signUp(email, password, username);
@@ -415,7 +438,7 @@ export default function AccountScreen() {
         variant="primary"
         size="lg"
         fullWidth
-        disabled={!canSubmit}
+        disabled={loading}
         loading={loading}
       />
     </KeyboardAvoidingView>

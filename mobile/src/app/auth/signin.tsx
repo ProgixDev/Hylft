@@ -282,10 +282,17 @@ export default function SignIn() {
       const message =
         error instanceof Error ? error.message : "Sign in failed";
 
-      if (message.toLowerCase().includes("email not confirmed")) {
-        setInlineError(t("auth.emailNotConfirmed"));
+      let displayMessage = message;
+      if (message.toLowerCase().includes("invalid login credentials")) {
+        displayMessage = t("auth.invalidLoginCredentials");
+      } else if (message.toLowerCase().includes("email not confirmed")) {
+        displayMessage = t("auth.emailNotConfirmed");
+      }
+
+      if (displayMessage === t("auth.emailNotConfirmed")) {
+        setInlineError(displayMessage);
       } else {
-        showModal("alert-circle-outline", t("auth.error"), message);
+        showModal("alert-circle-outline", t("auth.error"), displayMessage);
       }
     } finally {
       setIsLoading(false);

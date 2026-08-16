@@ -99,7 +99,9 @@
     "error": "Erreur",
     "fillAllFields": "Veuillez remplir tous les champs",
     "passwordResetComingSoon": "La fonctionnalité de réinitialisation du mot de passe arrive bientôt !",
-    "emailNotConfirmed": "Veuillez confirmer votre adresse email en cliquant sur le lien d'activation envoyé à votre boîte mail avant de vous connecter."
+    "emailNotConfirmed": "Veuillez confirmer votre adresse email en cliquant sur le lien d'activation envoyé à votre boîte mail avant de vous connecter.",
+    "invalidLoginCredentials": "Mot de passe ou adresse e-mail incorrects",
+    "userAlreadyRegistered": "Un compte existe déjà avec cette adresse e-mail"
   },
   "onboarding": {
     "s1": {

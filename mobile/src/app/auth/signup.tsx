@@ -292,7 +292,13 @@ export default function SignUp() {
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : "Sign up failed";
-      showModal("alert-circle-outline", t("auth.error"), message);
+
+      let displayMessage = message;
+      if (message.toLowerCase().includes("user already registered")) {
+        displayMessage = t("auth.userAlreadyRegistered");
+      }
+
+      showModal("alert-circle-outline", t("auth.error"), displayMessage);
     } finally {
       setIsLoading(false);
     }

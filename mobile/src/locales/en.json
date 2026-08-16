@@ -99,7 +99,9 @@
     "error": "Error",
     "fillAllFields": "Please fill in all fields",
     "passwordResetComingSoon": "Password reset functionality coming soon!",
-    "emailNotConfirmed": "Please confirm your email by clicking the activation link sent to your inbox before signing in."
+    "emailNotConfirmed": "Please confirm your email by clicking the activation link sent to your inbox before signing in.",
+    "invalidLoginCredentials": "Invalid login credentials",
+    "userAlreadyRegistered": "User already registered"
   },
   "onboarding": {
     "s1": {
