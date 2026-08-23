@@ -512,7 +512,7 @@ function createStyles(theme: Theme) {
     addBtn: {
       width: 40,
       height: 40,
-      borderRadius: 14,
+      borderRadius: 12,
       alignItems: "center",
       justifyContent: "center",
       backgroundColor: theme.background.darker,
@@ -522,7 +522,7 @@ function createStyles(theme: Theme) {
     statsStrip: {
       marginHorizontal: 20,
       marginBottom: 16,
-      borderRadius: 18,
+      borderRadius: 12,
       overflow: "hidden",
       ...surfaceShadow,
     },
@@ -570,7 +570,7 @@ function createStyles(theme: Theme) {
       marginBottom: 24,
       paddingVertical: 26,
       paddingHorizontal: 20,
-      borderRadius: 18,
+      borderRadius: 12,
       backgroundColor: theme.background.darker,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: theme.primary.main + "30",
@@ -590,7 +590,7 @@ function createStyles(theme: Theme) {
       backgroundColor: theme.primary.main,
       paddingVertical: 8,
       paddingHorizontal: 16,
-      borderRadius: 18,
+      borderRadius: 12,
       marginTop: 4,
     },
     routinesEmptyBtnText: {
@@ -608,7 +608,7 @@ function createStyles(theme: Theme) {
     },
     actionBtnWrap: {
       flex: 1,
-      borderRadius: 16,
+      borderRadius: 12,
       overflow: "hidden",
       ...surfaceShadow,
     },
@@ -639,7 +639,7 @@ function createStyles(theme: Theme) {
     quickStartCard: {
       marginHorizontal: 20,
       height: 200,
-      borderRadius: 16,
+      borderRadius: 12,
       overflow: "hidden",
       marginBottom: 20,
     },
@@ -693,7 +693,7 @@ function createStyles(theme: Theme) {
       justifyContent: "center",
       gap: 6,
       backgroundColor: "#fff",
-      borderRadius: 14,
+      borderRadius: 12,
       paddingVertical: 10,
       paddingHorizontal: 28,
       alignSelf: "flex-start",
@@ -708,7 +708,7 @@ function createStyles(theme: Theme) {
     statsCard: {
       marginHorizontal: 20,
       backgroundColor: theme.background.darker,
-      borderRadius: 18,
+      borderRadius: 12,
       paddingVertical: 16,
       paddingHorizontal: 10,
       marginBottom: 24,
@@ -815,7 +815,7 @@ function createStyles(theme: Theme) {
     routineCard: {
       width: ROUTINE_CARD_W,
       height: 220,
-      borderRadius: 16,
+      borderRadius: 12,
       overflow: "hidden",
       marginRight: 14,
       backgroundColor: theme.background.accent,
@@ -889,7 +889,7 @@ function createStyles(theme: Theme) {
     recentCard: {
       width: SCREEN_WIDTH * 0.42,
       height: 160,
-      borderRadius: 16,
+      borderRadius: 12,
       overflow: "hidden",
       marginRight: 12,
       backgroundColor: theme.background.accent,
@@ -933,7 +933,7 @@ function createStyles(theme: Theme) {
     // Create Routine
     createCard: {
       marginHorizontal: 20,
-      borderRadius: 16,
+      borderRadius: 12,
       overflow: "hidden",
       marginBottom: 20,
     },
@@ -962,7 +962,7 @@ function createStyles(theme: Theme) {
     },
     createBtn: {
       backgroundColor: "#fff",
-      borderRadius: 14,
+      borderRadius: 12,
       paddingVertical: 8,
       paddingHorizontal: 24,
       alignSelf: "flex-start",
@@ -977,7 +977,7 @@ function createStyles(theme: Theme) {
     exploreCard: {
       marginHorizontal: 20,
       height: 140,
-      borderRadius: 16,
+      borderRadius: 12,
       overflow: "hidden",
       marginBottom: 10,
     },

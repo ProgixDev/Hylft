@@ -207,8 +207,6 @@ export default function Alimentation() {
     ]).start();
   };
   const [weightTarget] = useState(DEFAULT_WEIGHT_TARGET); // UI only, out of scope for backend
-  const [weightInput, setWeightInput] = useState("");
-  const [isEditingWeight, setIsEditingWeight] = useState(false);
   const [isSavingWeight, setIsSavingWeight] = useState(false);
 
   const waterMl = daily.waterMl;
@@ -259,18 +257,8 @@ export default function Alimentation() {
       `/food-search?mealType=${mealType}&date=${selectedDate}` as any,
     );
 
-  const startEditWeight = () => {
-    setWeightInput(weightCurrent.toFixed(1));
-    setIsEditingWeight(true);
-  };
-
-  const handleSaveWeight = async () => {
-    const parsed = parseFloat(weightInput.replace(",", "."));
-    if (!parsed || parsed < 30 || parsed > 300) {
-      setIsEditingWeight(false);
-      return;
-    }
-    const rounded = Math.round(parsed * 10) / 10;
+  const adjustWeight = async (nextWeight: number) => {
+    const rounded = Math.round(nextWeight * 10) / 10;
     setIsSavingWeight(true);
     try {
       setWeight(rounded);
@@ -283,7 +271,6 @@ export default function Alimentation() {
       console.warn("[Alimentation] updateProfile(weight) failed:", err);
     } finally {
       setIsSavingWeight(false);
-      setIsEditingWeight(false);
     }
   };
 
@@ -593,7 +580,8 @@ export default function Alimentation() {
           <View style={styles.weightRow}>
             <Pressable
               style={styles.weightBtn}
-              onPress={() => setWeight(Math.max(30, weightCurrent - 0.1))}
+              disabled={isSavingWeight}
+              onPress={() => void adjustWeight(Math.max(30, weightCurrent - 0.1))}
             >
               <Ionicons
                 name="remove-circle-outline"
@@ -601,48 +589,23 @@ export default function Alimentation() {
                 color={theme.foreground.gray}
               />
             </Pressable>
-            {isEditingWeight ? (
-              <TextInput
-                style={styles.weightInput}
-                value={weightInput}
-                onChangeText={setWeightInput}
-                keyboardType="decimal-pad"
-                autoFocus
-                selectTextOnFocus
-                onSubmitEditing={handleSaveWeight}
-                onBlur={handleSaveWeight}
-              />
-            ) : (
-              <Text style={styles.weightValue}>
-                {weightCurrent.toFixed(1)} kg
-              </Text>
-            )}
+            <Text style={styles.weightValue}>{weightCurrent.toFixed(1)} kg</Text>
             <Pressable
               style={styles.weightBtn}
-              onPress={() => setWeight(Math.min(300, weightCurrent + 0.1))}
+              disabled={isSavingWeight}
+              onPress={() => void adjustWeight(Math.min(300, weightCurrent + 0.1))}
             >
               <Ionicons name="add-circle-outline" size={32} color="#FFFFFF" />
             </Pressable>
           </View>
 
           <Pressable
-            style={[styles.weightSaveBtn, isSavingWeight && { opacity: 0.6 }]}
-            disabled={isSavingWeight}
-            onPress={isEditingWeight ? handleSaveWeight : startEditWeight}
+            style={styles.weightSaveBtn}
+            onPress={() => router.push("/body-measurements" as any)}
           >
-            <Ionicons
-              name={isEditingWeight ? "checkmark" : "create-outline"}
-              size={16}
-              color="#fff"
-            />
+            <Ionicons name="body-outline" size={18} color="#fff" />
             <Text style={styles.weightSaveText}>
-              {isEditingWeight
-                ? isFr
-                  ? "Enregistrer"
-                  : "Save"
-                : isFr
-                  ? "Mettre à jour le poids"
-                  : "Update weight"}
+              {isFr ? "Données corporelles" : "Body measurements"}
             </Text>
           </Pressable>
         </View>
@@ -820,7 +783,7 @@ function createStyles(theme: Theme) {
     summaryCard: {
       marginHorizontal: 20,
       padding: 18,
-      borderRadius: 18,
+      borderRadius: 12,
     },
     summaryTopRow: {
       flexDirection: "row",
@@ -894,7 +857,7 @@ function createStyles(theme: Theme) {
 
     mealsBlock: {
       marginHorizontal: 20,
-      borderRadius: 18,
+      borderRadius: 12,
       overflow: "hidden",
       ...navyCard,
     },
@@ -992,7 +955,7 @@ function createStyles(theme: Theme) {
     waterCard: {
       marginHorizontal: 20,
       padding: 18,
-      borderRadius: 18,
+      borderRadius: 12,
       alignItems: "center",
       ...navyCard,
     },
@@ -1024,7 +987,7 @@ function createStyles(theme: Theme) {
     waterBtn: {
       width: 36,
       height: 36,
-      borderRadius: 18,
+      borderRadius: 12,
       backgroundColor: NAVY_CARD_DEEP,
       borderWidth: 1,
       borderColor: "rgba(255,255,255,0.14)",
@@ -1039,7 +1002,7 @@ function createStyles(theme: Theme) {
     weightCard: {
       marginHorizontal: 20,
       padding: 18,
-      borderRadius: 18,
+      borderRadius: 12,
       alignItems: "center",
       ...navyCard,
     },
@@ -1100,7 +1063,7 @@ function createStyles(theme: Theme) {
     noteCard: {
       marginHorizontal: 20,
       padding: 18,
-      borderRadius: 18,
+      borderRadius: 12,
       marginBottom: 16,
       ...navyCard,
     },

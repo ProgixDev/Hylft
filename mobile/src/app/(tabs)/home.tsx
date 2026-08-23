@@ -1262,7 +1262,7 @@ export default function Home() {
                 <Text style={styles.routinePickerEmptyText}>
                   {t(
                     "home.noRoutinesYet",
-                    "Vous n'avez pas encore de séances. Créez-en une depuis l'onglet Entraînement.",
+                    "You haven't created a session yet. Add your first session to get started. You can personalize it with the exercises that suit you.",
                   )}
                 </Text>
               </View>
@@ -1368,10 +1368,17 @@ export default function Home() {
                 styles.routinePickerCloseBtn,
                 pressed && { opacity: 0.88 },
               ]}
-              onPress={() => setIsRoutinePickerVisible(false)}
+              onPress={() => {
+                setIsRoutinePickerVisible(false);
+                if (userRoutines.length === 0) {
+                  router.push("/create-routine" as any);
+                }
+              }}
             >
               <Text style={styles.routinePickerCloseBtnText}>
-                {t("common.done", "Terminé")}
+                {userRoutines.length === 0
+                  ? t("home.addSession", "Ajouter une séance")
+                  : t("common.done", "Terminé")}
               </Text>
             </Pressable>
           </Pressable>
@@ -1422,7 +1429,7 @@ function createStyles(theme: Theme) {
     routineCard: {
       width: 170,
       height: 230,
-      borderRadius: 14,
+      borderRadius: 12,
       marginRight: 14,
       backgroundColor: theme.background.accent,
       alignItems: "center",
@@ -1443,7 +1450,7 @@ function createStyles(theme: Theme) {
       backgroundColor: "#F5A623",
       paddingHorizontal: 12,
       paddingVertical: 6,
-      borderRadius: 14,
+      borderRadius: 12,
     },
     proBadgeText: {
       fontFamily: FONTS.bold,
@@ -1456,14 +1463,14 @@ function createStyles(theme: Theme) {
     dailyQuoteCard: {
       marginHorizontal: 20,
       backgroundColor: theme.background.darker,
-      borderRadius: 14,
+      borderRadius: 12,
       padding: 24,
       marginBottom: 14,
     },
     calorieCard: {
       marginHorizontal: 20,
       backgroundColor: theme.background.darker,
-      borderRadius: 14,
+      borderRadius: 12,
       padding: 18,
       marginBottom: 14,
     },
@@ -1482,7 +1489,7 @@ function createStyles(theme: Theme) {
       backgroundColor: theme.background.darker,
       marginHorizontal: 20,
       marginBottom: 20,
-      borderRadius: 14,
+      borderRadius: 12,
       padding: 20,
     },
     calorieGoalBadge: {
@@ -1526,7 +1533,7 @@ function createStyles(theme: Theme) {
       alignItems: "center",
       gap: 10,
       backgroundColor: theme.background.accent + "60",
-      borderRadius: 14,
+      borderRadius: 12,
       paddingHorizontal: 14,
       paddingVertical: 12,
     },
@@ -1577,7 +1584,7 @@ function createStyles(theme: Theme) {
       flex: 1,
       alignItems: "center",
       backgroundColor: theme.background.darker,
-      borderRadius: 16,
+      borderRadius: 12,
       paddingVertical: 14,
       paddingHorizontal: 6,
       gap: 6,
@@ -1606,14 +1613,14 @@ function createStyles(theme: Theme) {
     waterCard: {
       marginHorizontal: 20,
       backgroundColor: theme.background.darker,
-      borderRadius: 14,
+      borderRadius: 12,
       padding: 18,
       marginBottom: 24,
     },
     chartCard: {
       marginHorizontal: 20,
       backgroundColor: theme.background.darker,
-      borderRadius: 16,
+      borderRadius: 12,
       padding: 18,
       marginBottom: 24,
     },
@@ -1661,7 +1668,7 @@ function createStyles(theme: Theme) {
     // ── Week Sessions ─────────────────────────
     weekSessionsCard: {
       marginHorizontal: 20,
-      borderRadius: 18,
+      borderRadius: 12,
       paddingHorizontal: 18,
       paddingTop: 14,
       paddingBottom: 16,
@@ -1686,18 +1693,18 @@ function createStyles(theme: Theme) {
     categoryCard: {
       flex: 1,
       height: 100,
-      borderRadius: 14,
+      borderRadius: 12,
     },
     categoryCardContent: {
       flex: 1,
       justifyContent: "space-between",
       padding: 14,
-      borderRadius: 14,
+      borderRadius: 12,
       position: "relative",
     },
     categoryCardBg: {
       ...StyleSheet.absoluteFill,
-      borderRadius: 14,
+      borderRadius: 12,
     },
     weekChipsRow: {
       flexDirection: "row",
@@ -1728,14 +1735,14 @@ function createStyles(theme: Theme) {
     healthBlock: {
       flex: 1,
       minHeight: 110,
-      borderRadius: 14,
+      borderRadius: 12,
       overflow: "hidden",
       borderWidth: 2,
       borderColor: theme.primary.main + "40",
     },
     nextWorkoutCard: {
       height: 150,
-      borderRadius: 14,
+      borderRadius: 12,
       overflow: "hidden",
       borderWidth: 2,
       borderColor: theme.primary.main + "40",
@@ -1780,7 +1787,7 @@ function createStyles(theme: Theme) {
       backgroundColor: "rgba(255,255,255,0.12)",
       borderWidth: 1,
       borderColor: "rgba(255,255,255,0.4)",
-      borderRadius: 14,
+      borderRadius: 12,
       paddingHorizontal: 12,
       paddingVertical: 10,
     },
@@ -1792,7 +1799,7 @@ function createStyles(theme: Theme) {
     },
     startWorkoutBtn: {
       backgroundColor: theme.primary.main,
-      borderRadius: 14,
+      borderRadius: 12,
       paddingHorizontal: 20,
       paddingVertical: 10,
       alignItems: "center",
@@ -1815,7 +1822,7 @@ function createStyles(theme: Theme) {
     },
     nextWorkoutBtn: {
       backgroundColor: theme.primary.main,
-      borderRadius: 14,
+      borderRadius: 12,
       paddingHorizontal: 20,
       paddingVertical: 10,
       marginLeft: 10,
@@ -1852,7 +1859,7 @@ function createStyles(theme: Theme) {
     challengeCard: {
       width: CHALLENGE_CARD_WIDTH,
       height: 340,
-      borderRadius: 16,
+      borderRadius: 12,
       overflow: "hidden",
       marginRight: 14,
       backgroundColor: "#1565C0",
@@ -1902,7 +1909,7 @@ function createStyles(theme: Theme) {
     },
     challengeStartBtn: {
       backgroundColor: "#fff",
-      borderRadius: 14,
+      borderRadius: 12,
       paddingVertical: 12,
       alignItems: "center",
     },
@@ -1922,7 +1929,7 @@ function createStyles(theme: Theme) {
     chip: {
       paddingHorizontal: 20,
       paddingVertical: 9,
-      borderRadius: 14,
+      borderRadius: 12,
       borderWidth: 1.5,
       borderColor: theme.background.accent,
       backgroundColor: theme.background.dark,
@@ -1978,12 +1985,12 @@ function createStyles(theme: Theme) {
     activityLevelCard: {
       marginHorizontal: 20,
       marginBottom: 20,
-      borderRadius: 14,
+      borderRadius: 12,
       overflow: "hidden",
     },
     customWorkoutCard: {
       marginHorizontal: 20,
-      borderRadius: 18,
+      borderRadius: 12,
       overflow: "hidden",
       marginBottom: 20,
     },
@@ -2014,7 +2021,7 @@ function createStyles(theme: Theme) {
     },
     goButton: {
       backgroundColor: "#fff",
-      borderRadius: 14,
+      borderRadius: 12,
       paddingHorizontal: 28,
       paddingVertical: 10,
       alignSelf: "flex-start",
@@ -2035,15 +2042,15 @@ function createStyles(theme: Theme) {
     },
     healthTile: {
       width: (SCREEN_WIDTH - 48) / 2,
-      borderRadius: 16,
+      borderRadius: 12,
       overflow: "hidden",
     },
     healthTileImage: {
-      borderRadius: 16,
+      borderRadius: 12,
     },
     healthTileOverlay: {
       padding: 8,
-      borderRadius: 16,
+      borderRadius: 12,
     },
     healthTileTop: {
       flexDirection: "row",
@@ -2137,14 +2144,14 @@ function createStyles(theme: Theme) {
     heroCard: {
       width: SCREEN_WIDTH - 40,
       marginRight: 12,
-      borderRadius: 14,
+      borderRadius: 12,
       overflow: "hidden",
       backgroundColor: theme.background.accent,
     },
     stretchCard: {
       width: SCREEN_WIDTH * 0.42,
       height: 180,
-      borderRadius: 14,
+      borderRadius: 12,
       overflow: "hidden",
       marginRight: 12,
       backgroundColor: theme.background.accent,
@@ -2266,7 +2273,7 @@ function createStyles(theme: Theme) {
     routinePickerModal: {
       width: "88%",
       backgroundColor: theme.background.darker,
-      borderRadius: 16,
+      borderRadius: 12,
       padding: 22,
       gap: 12,
     },
@@ -2287,7 +2294,8 @@ function createStyles(theme: Theme) {
     },
     routinePickerEmptyText: {
       fontFamily: FONTS.regular,
-      fontSize: 13,
+      fontSize: 15,
+      lineHeight: 22,
       color: theme.foreground.gray,
       textAlign: "center",
     },
@@ -2296,7 +2304,7 @@ function createStyles(theme: Theme) {
       backgroundColor: theme.background.darker,
       marginHorizontal: 20,
       marginBottom: 24,
-      borderRadius: 14,
+      borderRadius: 12,
       padding: 14,
     },
     routinePickerRow: {
@@ -2325,7 +2333,7 @@ function createStyles(theme: Theme) {
     },
     routinePickerCloseBtn: {
       backgroundColor: theme.primary.main,
-      borderRadius: 14,
+      borderRadius: 12,
       paddingVertical: 12,
       alignItems: "center",
       marginTop: 6,
@@ -2348,7 +2356,7 @@ function createStyles(theme: Theme) {
     },
     restDayBtn: {
       backgroundColor: "rgba(103,232,249,0.15)",
-      borderRadius: 14,
+      borderRadius: 12,
       paddingHorizontal: 16,
       paddingVertical: 10,
       borderWidth: 1,
@@ -2388,7 +2396,7 @@ function createStyles(theme: Theme) {
     },
     restModal: {
       width: "100%",
-      borderRadius: 16,
+      borderRadius: 12,
       overflow: "hidden",
       padding: 28,
       alignItems: "center",
@@ -2428,7 +2436,7 @@ function createStyles(theme: Theme) {
       alignItems: "center",
       gap: 8,
       backgroundColor: "rgba(103,232,249,0.10)",
-      borderRadius: 14,
+      borderRadius: 12,
       paddingHorizontal: 14,
       paddingVertical: 10,
       borderWidth: 1,
@@ -2444,7 +2452,7 @@ function createStyles(theme: Theme) {
     restModalBtn: {
       marginTop: 8,
       backgroundColor: "#0E7490",
-      borderRadius: 14,
+      borderRadius: 12,
       paddingHorizontal: 36,
       paddingVertical: 14,
       borderWidth: 1,

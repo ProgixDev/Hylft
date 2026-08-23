@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   FlatList,
   Image,
+  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -184,6 +185,7 @@ export default function FoodSearchScreen() {
   const [history, setHistory] = useState<FoodHistoryItem[]>([]);
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
   const [selectedFood, setSelectedFood] = useState<FoodItem | null>(null);
+  const [showAddedModal, setShowAddedModal] = useState(false);
   const requestIdRef = useRef(0);
   // Last query we actually kicked off a first-page search for — lets the
   // debounce skip redundant searches (e.g. right after tapping a suggestion).
@@ -588,7 +590,7 @@ export default function FoodSearchScreen() {
         </Pressable>
         <Text style={styles.title}>{isFr ? "Rechercher" : "Search Food"}</Text>
         {addedIds.size > 0 ? (
-          <Pressable style={styles.doneBtn} onPress={() => router.back()}>
+          <Pressable style={styles.doneBtn} onPress={() => setShowAddedModal(true)}>
             <Text style={styles.doneBtnText}>
               {addedIds.size} {isFr ? "ajouté(s)" : "added"}
             </Text>
@@ -707,6 +709,53 @@ export default function FoodSearchScreen() {
           handleAddFood(food, servings);
         }}
       />
+
+      <Modal
+        visible={showAddedModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowAddedModal(false)}
+      >
+        <Pressable
+          style={styles.confirmOverlay}
+          onPress={() => setShowAddedModal(false)}
+        >
+          <Pressable style={styles.confirmCard} onPress={() => {}}>
+            <View style={styles.confirmIcon}>
+              <Ionicons name="checkmark" size={28} color="#fff" />
+            </View>
+            <Text style={styles.confirmTitle}>
+              {isFr ? "Terminer l'ajout ?" : "Finish adding?"}
+            </Text>
+            <Text style={styles.confirmMessage}>
+              {addedIds.size} {isFr ? "aliment(s) ajouté(s) à" : "food(s) added to"} {mealLabels[selectedMealType]}. {isFr ? "Voulez-vous quitter cette page ?" : "Would you like to leave this page?"}
+            </Text>
+            <View style={styles.confirmActions}>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.confirmButton,
+                  styles.cancelButton,
+                  pressed && { opacity: 0.75 },
+                ]}
+                onPress={() => setShowAddedModal(false)}
+              >
+                <Text style={[styles.confirmButtonText, styles.cancelButtonText]}>
+                  {isFr ? "Annuler" : "Cancel"}
+                </Text>
+              </Pressable>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.confirmButton,
+                  pressed && { opacity: 0.85 },
+                ]}
+                onPress={() => router.back()}
+              >
+                <Text style={styles.confirmButtonText}>OK</Text>
+              </Pressable>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -1079,6 +1128,66 @@ function createStyles(theme: Theme) {
       fontFamily: FONTS.bold,
       fontSize: 13,
       color: "#fff",
+    },
+    confirmOverlay: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: "rgba(0,0,0,0.55)",
+      paddingHorizontal: 24,
+    },
+    confirmCard: {
+      width: "100%",
+      borderRadius: 20,
+      padding: 24,
+      alignItems: "center",
+      backgroundColor: theme.background.darker,
+    },
+    confirmIcon: {
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: "#34C759",
+      marginBottom: 14,
+    },
+    confirmTitle: {
+      fontFamily: FONTS.bold,
+      fontSize: 20,
+      color: theme.foreground.white,
+    },
+    confirmMessage: {
+      fontFamily: FONTS.regular,
+      fontSize: 14,
+      lineHeight: 21,
+      color: theme.foreground.gray,
+      textAlign: "center",
+      marginTop: 8,
+    },
+    confirmButton: {
+      flex: 1,
+      alignItems: "center",
+      borderRadius: 12,
+      paddingVertical: 13,
+      backgroundColor: theme.primary.main,
+    },
+    confirmActions: {
+      width: "100%",
+      flexDirection: "row",
+      gap: 10,
+      marginTop: 22,
+    },
+    cancelButton: {
+      backgroundColor: theme.background.accent,
+    },
+    confirmButtonText: {
+      fontFamily: FONTS.bold,
+      fontSize: 16,
+      color: "#fff",
+    },
+    cancelButtonText: {
+      color: theme.foreground.gray,
     },
   });
 }

@@ -262,6 +262,76 @@ export default function CreateRoutineScreen() {
         contentContainerStyle={{ paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
       >
+        {/* Routine name */}
+        <View style={styles.section}>
+          <Text style={styles.label}>
+            {t("createRoutine.name", "Nom de la séance")}
+          </Text>
+          <TextInput
+            style={styles.nameInput}
+            value={draft.name}
+            onChangeText={(value) => updateDraft({ name: value })}
+            placeholder={t("createRoutine.namePlaceholder", "Push day, Full body…")}
+            placeholderTextColor={theme.foreground.gray}
+          />
+        </View>
+
+        {/* Exercises */}
+        <View style={styles.section}>
+          <View style={styles.exercisesHeader}>
+            <Text style={styles.label}>
+              {t("createRoutine.exercises")} ({draft.exercises.length})
+            </Text>
+            <TouchableOpacity
+              style={styles.addExBtn}
+              onPress={() => router.push("/exercise-picker" as any)}
+            >
+              <Ionicons name="add" size={18} color={theme.background.dark} />
+              <Text style={styles.addExBtnText}>{t("createRoutine.add")}</Text>
+            </TouchableOpacity>
+          </View>
+
+          {draft.exercises.length === 0 ? (
+            <TouchableOpacity
+              style={styles.emptyEx}
+              onPress={() => router.push("/exercise-picker" as any)}
+            >
+              <Ionicons
+                name="barbell-outline"
+                size={32}
+                color={theme.foreground.gray}
+              />
+              <Text style={styles.emptyExText}>{t("createRoutine.tapToAddExercises")}</Text>
+            </TouchableOpacity>
+          ) : (
+            draft.exercises.map((ex, index) => (
+              <ExerciseSummaryCard
+                key={ex.id}
+                exercise={ex}
+                index={index}
+                theme={theme}
+                styles={styles}
+                onEdit={() => setEditingExerciseId(ex.id)}
+                onRemove={() => removeExerciseFromRoutine(ex.id)}
+              />
+            ))
+          )}
+        </View>
+
+        {/* Target Muscles (auto-detected, read-only chips) */}
+        {draft.targetMuscles.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.label}>{t("createRoutine.targetMuscles")}</Text>
+            <View style={styles.muscleChips}>
+              {draft.targetMuscles.map((m) => (
+                <View key={m} style={styles.muscleChip}>
+                  <Text style={styles.muscleChipText}>{m}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+
         {/* Cover image */}
         <View style={styles.section}>
           <Text style={styles.label}>
@@ -332,76 +402,6 @@ export default function CreateRoutineScreen() {
             </ScrollView>
           )}
         </View>
-
-        {/* Routine name */}
-        <View style={styles.section}>
-          <Text style={styles.label}>
-            {t("createRoutine.name", "Nom de la séance")}
-          </Text>
-          <TextInput
-            style={styles.nameInput}
-            value={draft.name}
-            onChangeText={(value) => updateDraft({ name: value })}
-            placeholder={t("createRoutine.namePlaceholder", "Push day, Full body…")}
-            placeholderTextColor={theme.foreground.gray}
-          />
-        </View>
-
-        {/* Exercises */}
-        <View style={styles.section}>
-          <View style={styles.exercisesHeader}>
-            <Text style={styles.label}>
-              {t("createRoutine.exercises")} ({draft.exercises.length})
-            </Text>
-            <TouchableOpacity
-              style={styles.addExBtn}
-              onPress={() => router.push("/exercise-picker" as any)}
-            >
-              <Ionicons name="add" size={18} color={theme.background.dark} />
-              <Text style={styles.addExBtnText}>{t("createRoutine.add")}</Text>
-            </TouchableOpacity>
-          </View>
-
-          {draft.exercises.length === 0 ? (
-            <TouchableOpacity
-              style={styles.emptyEx}
-              onPress={() => router.push("/exercise-picker" as any)}
-            >
-              <Ionicons
-                name="barbell-outline"
-                size={32}
-                color={theme.foreground.gray}
-              />
-              <Text style={styles.emptyExText}>{t("createRoutine.tapToAddExercises")}</Text>
-            </TouchableOpacity>
-          ) : (
-            draft.exercises.map((ex, index) => (
-              <ExerciseSummaryCard
-                key={ex.id}
-                exercise={ex}
-                index={index}
-                theme={theme}
-                styles={styles}
-                onEdit={() => setEditingExerciseId(ex.id)}
-                onRemove={() => removeExerciseFromRoutine(ex.id)}
-              />
-            ))
-          )}
-        </View>
-
-        {/* Target Muscles (auto-detected, read-only chips) */}
-        {draft.targetMuscles.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.label}>{t("createRoutine.targetMuscles")}</Text>
-            <View style={styles.muscleChips}>
-              {draft.targetMuscles.map((m) => (
-                <View key={m} style={styles.muscleChip}>
-                  <Text style={styles.muscleChipText}>{m}</Text>
-                </View>
-              ))}
-            </View>
-          </View>
-        )}
       </ScrollView>
 
       {/* Per-exercise editor sheet */}
@@ -736,7 +736,7 @@ const restPickerStyles = (theme: Theme) =>
     preset: {
       paddingHorizontal: 14,
       paddingVertical: 8,
-      borderRadius: 18,
+      borderRadius: 12,
       backgroundColor: theme.background.accent,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: theme.foreground.gray + "20",
@@ -1069,7 +1069,7 @@ const createStyles = (theme: Theme) => {
     headerBtn: {
       width: 40,
       height: 40,
-      borderRadius: 20,
+      borderRadius: 12,
       alignItems: "center",
       justifyContent: "center",
       backgroundColor: theme.background.darker,
@@ -1086,7 +1086,7 @@ const createStyles = (theme: Theme) => {
       backgroundColor: theme.primary.main,
       paddingHorizontal: 18,
       paddingVertical: 9,
-      borderRadius: 14,
+      borderRadius: 12,
     },
     saveBtnDisabled: {
       opacity: 0.7,
@@ -1113,7 +1113,7 @@ const createStyles = (theme: Theme) => {
       gap: 10,
       paddingHorizontal: 22,
       paddingVertical: 24,
-      borderRadius: 20,
+      borderRadius: 12,
       backgroundColor: theme.background.darker,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: theme.foreground.gray + "20",
@@ -1121,7 +1121,7 @@ const createStyles = (theme: Theme) => {
     savingSpinnerWrap: {
       width: 68,
       height: 68,
-      borderRadius: 20,
+      borderRadius: 12,
       alignItems: "center",
       justifyContent: "center",
       marginBottom: 4,
@@ -1156,7 +1156,7 @@ const createStyles = (theme: Theme) => {
       gap: 12,
       paddingHorizontal: 22,
       paddingVertical: 24,
-      borderRadius: 20,
+      borderRadius: 12,
       backgroundColor: theme.background.darker,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: theme.foreground.gray + "20",
@@ -1164,7 +1164,7 @@ const createStyles = (theme: Theme) => {
     discardIconWrap: {
       width: 56,
       height: 56,
-      borderRadius: 20,
+      borderRadius: 12,
       alignItems: "center",
       justifyContent: "center",
       backgroundColor: theme.background.accent,
@@ -1191,7 +1191,7 @@ const createStyles = (theme: Theme) => {
     },
     discardBtn: {
       flex: 1,
-      borderRadius: 14,
+      borderRadius: 12,
       paddingVertical: 13,
       alignItems: "center",
       justifyContent: "center",
@@ -1221,7 +1221,7 @@ const createStyles = (theme: Theme) => {
     coverPicker: {
       width: "100%",
       height: 160,
-      borderRadius: 16,
+      borderRadius: 12,
       backgroundColor: theme.background.darker,
       borderWidth: 1,
       borderColor: theme.background.accent,
@@ -1287,7 +1287,7 @@ const createStyles = (theme: Theme) => {
     },
     nameInput: {
       backgroundColor: theme.background.darker,
-      borderRadius: 14,
+      borderRadius: 12,
       paddingHorizontal: 14,
       paddingVertical: 12,
       color: theme.foreground.white,
@@ -1306,7 +1306,7 @@ const createStyles = (theme: Theme) => {
     },
     input: {
       backgroundColor: theme.background.darker,
-      borderRadius: 14,
+      borderRadius: 12,
       paddingHorizontal: 14,
       paddingVertical: 13,
       fontSize: 15,
@@ -1334,7 +1334,7 @@ const createStyles = (theme: Theme) => {
       backgroundColor: theme.primary.main,
       paddingHorizontal: 12,
       paddingVertical: 7,
-      borderRadius: 14,
+      borderRadius: 12,
     },
     addExBtnText: {
       fontSize: 12,
@@ -1346,7 +1346,7 @@ const createStyles = (theme: Theme) => {
       alignItems: "center",
       justifyContent: "center",
       paddingVertical: 32,
-      borderRadius: 16,
+      borderRadius: 12,
       borderWidth: 1,
       borderColor: theme.foreground.gray + "30",
       borderStyle: "dashed",
@@ -1364,7 +1364,7 @@ const createStyles = (theme: Theme) => {
       alignItems: "center",
       gap: 12,
       backgroundColor: theme.background.darker,
-      borderRadius: 16,
+      borderRadius: 12,
       padding: 11,
       minHeight: 80,
       borderWidth: StyleSheet.hairlineWidth,
@@ -1513,7 +1513,7 @@ const createStyles = (theme: Theme) => {
     },
     editorBlock: {
       backgroundColor: theme.background.darker,
-      borderRadius: 14,
+      borderRadius: 12,
       padding: 14,
       gap: 10,
       borderWidth: StyleSheet.hairlineWidth,
@@ -1600,7 +1600,7 @@ const createStyles = (theme: Theme) => {
     editorGifWrap: {
       width: "100%",
       height: 200,
-      borderRadius: 16,
+      borderRadius: 12,
       overflow: "hidden",
     },
     editorGif: {
@@ -1616,7 +1616,7 @@ const createStyles = (theme: Theme) => {
     // ── Per-set targets table
     setTargetsContainer: {
       backgroundColor: theme.background.darker,
-      borderRadius: 14,
+      borderRadius: 12,
       padding: 12,
       gap: 6,
       borderWidth: StyleSheet.hairlineWidth,
@@ -1668,7 +1668,7 @@ const createStyles = (theme: Theme) => {
       borderColor: theme.primary.main + "40",
       paddingHorizontal: 12,
       paddingVertical: 6,
-      borderRadius: 20,
+      borderRadius: 12,
     },
     muscleChipText: {
       fontSize: 12,

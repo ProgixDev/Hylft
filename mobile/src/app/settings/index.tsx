@@ -75,7 +75,7 @@ function createStyles(theme: Theme) {
     sectionBody: {
       backgroundColor: theme.background.accent,
       marginHorizontal: 16,
-      borderRadius: 16,
+      borderRadius: 12,
       borderWidth: 1,
       borderColor: `${theme.primary.main}22`,
       borderBottomWidth: 3,
@@ -214,7 +214,7 @@ function createStyles(theme: Theme) {
     dangerSection: {
       backgroundColor: theme.background.accent,
       marginHorizontal: 16,
-      borderRadius: 16,
+      borderRadius: 12,
       borderWidth: 1,
       borderColor: "rgba(248,113,113,0.24)",
       borderBottomWidth: 3,

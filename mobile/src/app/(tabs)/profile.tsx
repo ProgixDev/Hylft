@@ -725,14 +725,14 @@ function createStyles(theme: Theme) {
       height: 220,
       marginHorizontal: 12,
       marginTop: 12,
-      borderRadius: 24,
+      borderRadius: 12,
     },
     skeletonAvatarShell: {
       position: "absolute",
       top: 188,
       width: 96,
       height: 96,
-      borderRadius: 48,
+      borderRadius: 12,
       padding: 4,
       backgroundColor: theme.background.dark,
       alignSelf: "center",
@@ -742,7 +742,7 @@ function createStyles(theme: Theme) {
     skeletonAvatar: {
       width: "100%",
       height: "100%",
-      borderRadius: 44,
+      borderRadius: 12,
     },
     skeletonHeaderBody: {
       paddingHorizontal: 20,
@@ -800,12 +800,12 @@ function createStyles(theme: Theme) {
     skeletonPrimaryAction: {
       flex: 1,
       height: 48,
-      borderRadius: 14,
+      borderRadius: 12,
     },
     skeletonSecondaryAction: {
       flex: 1,
       height: 48,
-      borderRadius: 14,
+      borderRadius: 12,
     },
     skeletonSectionTitle: {
       height: 20,
@@ -818,7 +818,7 @@ function createStyles(theme: Theme) {
     skeletonPeriodTab: {
       width: 92,
       height: 38,
-      borderRadius: 24,
+      borderRadius: 12,
     },
     skeletonWeightHeader: {
       flexDirection: "row",
@@ -840,12 +840,12 @@ function createStyles(theme: Theme) {
     skeletonBadge: {
       height: 34,
       width: 110,
-      borderRadius: 18,
+      borderRadius: 12,
     },
     skeletonChart: {
       width: "100%",
       height: 150,
-      borderRadius: 16,
+      borderRadius: 12,
     },
     skeletonLegendColumn: {
       gap: 10,
@@ -867,14 +867,14 @@ function createStyles(theme: Theme) {
     skeletonSummarySwitch: {
       width: 90,
       height: 32,
-      borderRadius: 16,
+      borderRadius: 12,
       marginTop: 16,
       marginBottom: 12,
     },
     skeletonSummaryCard: {
       width: "31.5%",
       minHeight: 120,
-      borderRadius: 18,
+      borderRadius: 12,
     },
 
     // Header
@@ -898,7 +898,7 @@ function createStyles(theme: Theme) {
       gap: 12,
       backgroundColor: theme.background.accent,
       marginHorizontal: 20,
-      borderRadius: 16,
+      borderRadius: 12,
       padding: 14,
     },
     healthConnectIcon: {
@@ -924,7 +924,7 @@ function createStyles(theme: Theme) {
     // Chart
     chartCard: {
       marginHorizontal: 20, marginBottom: 8, padding: 16,
-      borderRadius: 20, backgroundColor: theme.background.darker,
+      borderRadius: 12, backgroundColor: theme.background.darker,
     },
     chartWrap: { alignItems: "center", overflow: "hidden" },
 
@@ -958,7 +958,7 @@ function createStyles(theme: Theme) {
     weightTarget: { fontFamily: FONTS.regular, fontSize: 12, color: theme.foreground.gray, marginTop: 2 },
     weightBadge: {
       flexDirection: "row", alignItems: "center", gap: 4,
-      paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20,
+      paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12,
     },
     weightBadgeText: { fontFamily: FONTS.bold, fontSize: 12 },
 
@@ -973,7 +973,7 @@ function createStyles(theme: Theme) {
     },
     switchBtn: {
       flexDirection: "row", alignItems: "center", gap: 5,
-      paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20,
+      paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12,
       backgroundColor: `${theme.primary.main}15`,
     },
     switchText: { fontFamily: FONTS.bold, fontSize: 12, color: theme.primary.main },
@@ -989,7 +989,7 @@ function createStyles(theme: Theme) {
     },
     summaryItem: {
       width: "31.5%",
-      borderRadius: 18,
+      borderRadius: 12,
       overflow: "hidden",
       borderWidth: 1,
       borderColor: "rgba(255,255,255,0.16)",
@@ -1018,7 +1018,7 @@ function createStyles(theme: Theme) {
     summaryIconWrap: {
       width: 40,
       height: 40,
-      borderRadius: 20,
+      borderRadius: 12,
       alignItems: "center",
       justifyContent: "center",
       backgroundColor: "rgba(255,255,255,0.14)",

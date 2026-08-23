@@ -115,6 +115,16 @@
     "extra": {
       "router": {
         "root": "./src/app"
+      },
+      "expo-status-bar": {
+        "style": "light"
+      },
+      "expo-navigation-bar": {
+        "style": "dark",
+        "hidden": true
+      },
+      "eas": {
+        "projectId": "b67abbf2-ef75-469b-8b80-64f01b7f094c"
       }
     }
   }

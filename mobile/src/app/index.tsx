@@ -22,10 +22,12 @@ export default function Index() {
           setDestination("/onboarding");
           return;
         }
-        setDestination(user ? "/(tabs)/home" : "/get-started/language");
+        // Auto-login is always active, so user should always exist after loading
+        // Navigate to home directly, skipping all auth screens
+        setDestination("/(tabs)/home");
       } catch (error) {
         console.error("Error checking auth status:", error);
-        setDestination("/get-started/language");
+        setDestination("/(tabs)/home");
       }
     })();
   }, [isLoading, user]);

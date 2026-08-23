@@ -46,6 +46,11 @@ interface AuthContextType {
 const ONBOARDING_KEY = "@hylift_onboarding_completed";
 const GET_STARTED_COMPLETED_KEY = "@hylift_get_started_completed";
 
+// Temporarily disabled auto-login. Keep this commented until the test account
+// is moved to a secure, development-only configuration.
+// const AUTO_LOGIN_EMAIL = "...";
+// const AUTO_LOGIN_PASSWORD = "...";
+
 const getStartedCompletedKey = (userId: string) =>
   `${GET_STARTED_COMPLETED_KEY}:${userId}`;
 
@@ -136,8 +141,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           } else {
             throw error;
           }
-        } else {
+        } else if (s) {
           setSession(s);
+        } else {
+          // Auto-login is temporarily disabled. No session means the user
+          // must authenticate through the normal login/signup flow.
+          setSession(null);
         }
       } catch (err) {
         console.error("[Auth] Failed to restore session", err);
