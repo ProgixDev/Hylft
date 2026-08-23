@@ -58,7 +58,7 @@ interface OFFProduct {
   product_name_en?: string;
   brands?: string;
   serving_quantity?: number | string;
-  serving_size?: string;
+  serving_size?: string | number;
   nutriments?: OFFNutriments;
   image_small_url?: string;
   image_front_small_url?: string;
@@ -95,7 +95,7 @@ const FIELDS = [
 function pickServingSize(p: OFFProduct): number | undefined {
   const q = Number(p.serving_quantity);
   if (Number.isFinite(q) && q > 0) return q;
-  if (p.serving_size) {
+  if (typeof p.serving_size === "string") {
     const m = p.serving_size.match(/([\d.,]+)\s*g/i);
     if (m) {
       const n = Number(m[1].replace(",", "."));
@@ -106,7 +106,9 @@ function pickServingSize(p: OFFProduct): number | undefined {
 }
 
 function pickBrand(p: OFFProduct): string | undefined {
-  const first = (p.brands || "").split(",")[0]?.trim();
+  const first = typeof p.brands === "string"
+    ? p.brands.split(",")[0]?.trim()
+    : undefined;
   return first || undefined;
 }
 
@@ -116,24 +118,21 @@ function safeNum(v: unknown): number {
 }
 
 function pickName(p: OFFProduct, lang: "fr" | "en"): string {
+  const text = (...values: unknown[]) =>
+    values.find((value): value is string => typeof value === "string" && value.trim().length > 0)?.trim() ?? "";
   if (lang === "fr") {
-    return (
-      p.product_name_fr || p.product_name || p.product_name_en || ""
-    ).trim();
+    return text(p.product_name_fr, p.product_name, p.product_name_en);
   }
-  return (
-    p.product_name_en || p.product_name || p.product_name_fr || ""
-  ).trim();
+  return text(p.product_name_en, p.product_name, p.product_name_fr);
 }
 
 function pickImage(p: OFFProduct): string | undefined {
-  return (
-    p.image_small_url ||
-    p.image_front_small_url ||
-    p.image_url ||
-    p.image_front_url ||
-    undefined
-  );
+  return [
+    p.image_small_url,
+    p.image_front_small_url,
+    p.image_url,
+    p.image_front_url,
+  ].find((value): value is string => typeof value === "string" && value.length > 0);
 }
 
 /**

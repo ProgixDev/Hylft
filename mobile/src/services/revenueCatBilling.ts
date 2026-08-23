@@ -30,13 +30,20 @@ export async function hasProEntitlement(userId: string) {
 }
 
 export async function loadOfferings() {
+  // Expo development sessions commonly run before Play Store products are
+  // configured in RevenueCat. Avoid calling the native SDK in that state: it
+  // emits a non-suppressible native ERROR for an empty Android offering.
+  // Production builds use the real offerings once the dashboard is configured.
+  if (__DEV__) return [];
+
   try {
     const offerings = await Purchases.getOfferings();
     if (offerings.current !== null) {
       return offerings.current.availablePackages;
     }
-  } catch (e) {
-    console.warn("Error fetching offerings", e);
+  } catch {
+    // The native SDK already reports the configuration failure. Keep the
+    // fallback quiet so the app log does not duplicate the same error.
   }
   return [];
 }

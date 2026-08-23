@@ -184,9 +184,17 @@ export default function FoodSearchScreen() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [history, setHistory] = useState<FoodHistoryItem[]>([]);
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
+  const [pendingMeals, setPendingMeals] = useState<
+    Array<{ food: FoodItem; servings: number }>
+  >([]);
   const [selectedFood, setSelectedFood] = useState<FoodItem | null>(null);
   const [showAddedModal, setShowAddedModal] = useState(false);
+  const [isSavingSelection, setIsSavingSelection] = useState(false);
   const requestIdRef = useRef(0);
+  const confirmAfterDismissRef = useRef(false);
+  const confirmFallbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
   // Last query we actually kicked off a first-page search for — lets the
   // debounce skip redundant searches (e.g. right after tapping a suggestion).
   const lastQueryRef = useRef("");
@@ -315,45 +323,78 @@ export default function FoodSearchScreen() {
     runSearch(activeQuery, page + 1);
   };
 
-  const handleAddFood = async (food: FoodItem, servings: number = 1) => {
+  const handleAddFood = (food: FoodItem, servings: number = 1) => {
+    setPendingMeals((prev) => {
+      if (prev.some((entry) => entry.food.id === food.id)) return prev;
+      return [...prev, { food, servings }];
+    });
     setAddedIds((prev) => new Set(prev).add(food.id));
-    try {
-      await addMeal({
-        date: targetDate,
-        mealType: selectedMealType,
-        foodId: food.id,
-        foodName: food.name,
-        imageUrl: food.imageUrl,
-        servings,
-        calories: food.calories,
-        protein: food.protein,
-        carbs: food.carbs,
-        fat: food.fat,
-      });
+  };
 
-      // Optimistic local cache + fire-and-forget server record.
-      const next = await bumpCachedHistory(food, userId);
-      setHistory(next);
-      api
-        .recordFoodSelection({
-          food_id: food.id,
-          food_name: food.name,
-          image_url: food.imageUrl,
+  const confirmPendingMeals = () => {
+    // The native Android Modal must finish detaching before context updates or
+    // navigation can mount another view hierarchy. The actual save is started
+    // from onDismiss below, rather than after a fixed timeout.
+    confirmAfterDismissRef.current = true;
+    setIsSavingSelection(true);
+    setShowAddedModal(false);
+
+    // Some Expo Go/Android combinations do not deliver Modal.onDismiss.
+    // Keep the action functional while still allowing the native modal time
+    // to detach before the save updates context and navigates.
+    confirmFallbackTimerRef.current = setTimeout(() => {
+      startSavingAfterModalDismiss();
+    }, 500);
+  };
+
+  const startSavingAfterModalDismiss = () => {
+    if (!confirmAfterDismissRef.current) return;
+    confirmAfterDismissRef.current = false;
+    if (confirmFallbackTimerRef.current) {
+      clearTimeout(confirmFallbackTimerRef.current);
+      confirmFallbackTimerRef.current = null;
+    }
+    void savePendingMeals();
+  };
+
+  const savePendingMeals = async () => {
+    try {
+      for (const { food, servings } of pendingMeals) {
+        await addMeal({
+          date: targetDate,
+          mealType: selectedMealType,
+          foodId: food.id,
+          foodName: food.name,
+          imageUrl: food.imageUrl,
+          servings,
           calories: food.calories,
           protein: food.protein,
           carbs: food.carbs,
           fat: food.fat,
-        })
-        .catch(() => {
-          /* cached locally — server retry not critical */
         });
+
+        const next = await bumpCachedHistory(food, userId);
+        setHistory(next);
+        api
+          .recordFoodSelection({
+            food_id: food.id,
+            food_name: food.name,
+            image_url: food.imageUrl,
+            calories: food.calories,
+            protein: food.protein,
+            carbs: food.carbs,
+            fat: food.fat,
+          })
+          .catch(() => {
+            /* cached locally — server retry not critical */
+          });
+      }
+      router.back();
     } catch (error) {
-      console.error("[Food Search] Failed to add meal:", error);
-      setAddedIds((prev) => {
-        const next = new Set(prev);
-        next.delete(food.id);
-        return next;
-      });
+      console.error("[Food Search] Failed to confirm meals:", error);
+    } finally {
+      confirmAfterDismissRef.current = false;
+      setIsSavingSelection(false);
     }
   };
 
@@ -592,7 +633,7 @@ export default function FoodSearchScreen() {
         {addedIds.size > 0 ? (
           <Pressable style={styles.doneBtn} onPress={() => setShowAddedModal(true)}>
             <Text style={styles.doneBtnText}>
-              {addedIds.size} {isFr ? "ajouté(s)" : "added"}
+              {addedIds.size} {isFr ? "sélectionné(s)" : "selected"}
             </Text>
             <Ionicons name="checkmark" size={16} color="#fff" />
           </Pressable>
@@ -715,6 +756,9 @@ export default function FoodSearchScreen() {
         transparent
         animationType="fade"
         onRequestClose={() => setShowAddedModal(false)}
+        onDismiss={() => {
+          startSavingAfterModalDismiss();
+        }}
       >
         <Pressable
           style={styles.confirmOverlay}
@@ -728,7 +772,7 @@ export default function FoodSearchScreen() {
               {isFr ? "Terminer l'ajout ?" : "Finish adding?"}
             </Text>
             <Text style={styles.confirmMessage}>
-              {addedIds.size} {isFr ? "aliment(s) ajouté(s) à" : "food(s) added to"} {mealLabels[selectedMealType]}. {isFr ? "Voulez-vous quitter cette page ?" : "Would you like to leave this page?"}
+              {addedIds.size} {isFr ? "aliment(s) sélectionné(s) pour" : "food(s) selected for"} {mealLabels[selectedMealType]}. {isFr ? "Voulez-vous les ajouter ?" : "Would you like to add them?"}
             </Text>
             <View style={styles.confirmActions}>
               <Pressable
@@ -748,7 +792,8 @@ export default function FoodSearchScreen() {
                   styles.confirmButton,
                   pressed && { opacity: 0.85 },
                 ]}
-                onPress={() => router.back()}
+                disabled={isSavingSelection}
+                onPress={() => void confirmPendingMeals()}
               >
                 <Text style={styles.confirmButtonText}>OK</Text>
               </Pressable>
