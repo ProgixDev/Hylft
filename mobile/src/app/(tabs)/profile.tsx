@@ -40,6 +40,7 @@ import {
 import { pickAndUploadAvatar } from "../../services/avatarUploader";
 import { WeightEntry, WeightHistory } from "../../services/weightHistory";
 import { Shimmer } from "../../components/ui/PostSkeleton";
+import { computeWaterGoalMl } from "../../utils/nutritionGoals";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -128,7 +129,7 @@ export default function Profile() {
     requestPermissions: healthRequestPermissions,
     refreshData: healthRefreshData,
   } = useHealth();
-  const { daily } = useNutrition();
+  const { daily, goals } = useNutrition();
   const [healthBusy, setHealthBusy] = useState(false);
 
   const handleConnectHealth = useCallback(async () => {
@@ -166,6 +167,7 @@ export default function Profile() {
   const [weightHistory, setWeightHistory] = useState<WeightEntry[]>([]);
   const [activityPeriod, setActivityPeriod] = useState<Period>("weekly");
   const [summaryMode, setSummaryMode] = useState<"total" | "average">("total");
+  const [bodyMeasurements, setBodyMeasurements] = useState<Record<string, { value: number; date: string }[]>>({});
 
   const loadProfileAndStats = useCallback(async () => {
     if (!user?.id) {
@@ -230,11 +232,12 @@ export default function Profile() {
   useFocusEffect(
     useCallback(() => {
       (async () => {
-        const [w, tw, h, a, g, fg, dn, wh] = await Promise.all([
+        const [w, tw, h, a, g, fg, dn, wh, bm] = await Promise.all([
           AsyncStorage.getItem(KEYS.weight), AsyncStorage.getItem(KEYS.targetWeight),
           AsyncStorage.getItem(KEYS.height), AsyncStorage.getItem(KEYS.age),
           AsyncStorage.getItem(KEYS.gender), AsyncStorage.getItem(KEYS.fitnessGoals),
           AsyncStorage.getItem(KEYS.displayName), WeightHistory.getLastDays(30),
+          AsyncStorage.getItem("@hylift_body_measurements"),
         ]);
         if (w) setWeight(Number(w) || 70);
         if (tw) setTargetWeight(Number(tw) || 65);
@@ -244,6 +247,7 @@ export default function Profile() {
         if (fg) { try { setFitnessGoals(JSON.parse(fg)); } catch { /* */ } }
         if (dn) setDisplayName(dn);
         setWeightHistory(wh);
+        if (bm) { try { setBodyMeasurements(JSON.parse(bm)); } catch { /* */ } }
       })();
     }, [])
   );
@@ -251,6 +255,55 @@ export default function Profile() {
   const bmi = calcBMI(weight, height);
   const bmiData = bmiInfo(bmi);
   const bmr = calcBMR(weight, height, age, gender);
+
+  // ── Weight delta over selected period ──
+  const weightDelta = useMemo(() => {
+    if (weightHistory.length < 2) return null;
+    const sorted = [...weightHistory].sort((a, b) => a.date.localeCompare(b.date));
+    const now = new Date();
+    let periodStart: Date;
+    if (activityPeriod === "daily") {
+      periodStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    } else if (activityPeriod === "weekly") {
+      periodStart = new Date(now);
+      periodStart.setDate(periodStart.getDate() - 7);
+    } else {
+      periodStart = new Date(now);
+      periodStart.setMonth(periodStart.getMonth() - 1);
+    }
+    const periodEntries = sorted.filter(e => new Date(e.date) >= periodStart);
+    if (periodEntries.length < 2) return null;
+    return +(periodEntries[periodEntries.length - 1].weight - periodEntries[0].weight).toFixed(1);
+  }, [weightHistory, activityPeriod]);
+
+  // ── Daily progress % ──
+  const waterGoalMl = useMemo(() => computeWaterGoalMl({
+    weightKg: weight, heightCm: height, age, gender,
+  }), [weight, height, age, gender]);
+
+  const dailyProgressPct = useMemo(() => {
+    const stepsPct = Math.min(todaySteps / 10000, 1);
+    const calPct = goals.calorieGoal > 0 ? Math.min(todayCaloriesBurned / goals.calorieGoal, 1) : 0;
+    const waterPct = waterGoalMl > 0 ? Math.min((daily.waterMl || 0) / waterGoalMl, 1) : 0;
+    const parts = [stepsPct, calPct, waterPct].filter(v => v > 0);
+    return parts.length > 0 ? parts.reduce((s, v) => s + v, 0) / parts.length : 0;
+  }, [todaySteps, todayCaloriesBurned, goals.calorieGoal, daily.waterMl, waterGoalMl]);
+
+  // ── Body measurements (latest values) ──
+  const latestMeasurements = useMemo(() => {
+    const keys = ["waist", "hips", "chest", "thigh", "arm"];
+    const result: { id: string; value: number; date: string }[] = [];
+    for (const k of keys) {
+      const entries = bodyMeasurements[k];
+      if (entries?.length) result.push({ id: k, ...entries[entries.length - 1] });
+    }
+    return result;
+  }, [bodyMeasurements]);
+
+  const bodyComposition = useMemo(() => ({
+    bodyFat: bodyMeasurements.body_fat?.at(-1) ?? null,
+    muscleMass: bodyMeasurements.muscle_mass?.at(-1) ?? null,
+  }), [bodyMeasurements]);
 
   const dayLabels = isFr ? ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"] : ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const todayIdx = (new Date().getDay() + 6) % 7;
@@ -352,19 +405,37 @@ export default function Profile() {
                 {isFr ? "Objectif" : "Goal"}: {targetWeight} kg
               </Text>
             </View>
-            <View style={[styles.weightBadge, {
-              backgroundColor: weight <= targetWeight ? "#34C75920" : `${theme.primary.main}20`,
-            }]}>
-              <Ionicons
-                name={weight <= targetWeight ? "trending-down" : "trending-up"}
-                size={16}
-                color={weight <= targetWeight ? "#34C759" : theme.primary.main}
-              />
-              <Text style={[styles.weightBadgeText, {
-                color: weight <= targetWeight ? "#34C759" : theme.primary.main,
+            <View style={{ alignItems: "flex-end", gap: 6 }}>
+              <View style={[styles.weightBadge, {
+                backgroundColor: weight <= targetWeight ? "#34C75920" : `${theme.primary.main}20`,
               }]}>
-                {Math.abs(weight - targetWeight)} kg {weight <= targetWeight ? (isFr ? "atteint" : "reached") : (isFr ? "restant" : "left")}
-              </Text>
+                <Ionicons
+                  name={weight <= targetWeight ? "trending-down" : "trending-up"}
+                  size={16}
+                  color={weight <= targetWeight ? "#34C759" : theme.primary.main}
+                />
+                <Text style={[styles.weightBadgeText, {
+                  color: weight <= targetWeight ? "#34C759" : theme.primary.main,
+                }]}>
+                  {Math.abs(weight - targetWeight)} kg {weight <= targetWeight ? (isFr ? "atteint" : "reached") : (isFr ? "restant" : "left")}
+                </Text>
+              </View>
+              {weightDelta !== null && (
+                <View style={[styles.weightBadge, {
+                  backgroundColor: weightDelta <= 0 ? "#34C75920" : "#ED666520",
+                }]}>
+                  <Ionicons
+                    name={weightDelta <= 0 ? "trending-down" : "trending-up"}
+                    size={14}
+                    color={weightDelta <= 0 ? "#34C759" : "#ED6665"}
+                  />
+                  <Text style={[styles.weightBadgeText, {
+                    color: weightDelta <= 0 ? "#34C759" : "#ED6665",
+                  }]}>
+                    {weightDelta > 0 ? "+" : ""}{weightDelta} kg
+                  </Text>
+                </View>
+              )}
             </View>
           </View>
 
@@ -597,6 +668,146 @@ export default function Profile() {
             </View>
           ))}
         </View>
+
+        {/* ── Progression du jour ────────────────────────────────── */}
+        <Text style={styles.sectionTitle}>
+          {isFr ? "Progression du jour" : "Daily Progress"}
+        </Text>
+        <View style={styles.chartCard}>
+          <View style={{ alignItems: "center", paddingVertical: 12 }}>
+            <ProgressRing pct={dailyProgressPct} size={120} color={theme.primary.main} strokeWidth={10}>
+              <Text style={{ fontFamily: FONTS.extraBold, fontSize: 24, color: theme.foreground.white }}>
+                {Math.round(dailyProgressPct * 100)}%
+              </Text>
+            </ProgressRing>
+            <View style={{ flexDirection: "row", justifyContent: "space-around", width: "100%", marginTop: 16 }}>
+              <View style={{ alignItems: "center" }}>
+                <ProgressRing pct={Math.min(todaySteps / 10000, 1)} size={44} color="#4A90D9" strokeWidth={4}>
+                  <MaterialCommunityIcons name="shoe-print" size={16} color="#4A90D9" />
+                </ProgressRing>
+                <Text style={{ fontFamily: FONTS.bold, fontSize: 10, color: theme.foreground.gray, marginTop: 4 }}>
+                  {isFr ? "Pas" : "Steps"}
+                </Text>
+              </View>
+              <View style={{ alignItems: "center" }}>
+                <ProgressRing pct={goals.calorieGoal > 0 ? Math.min(todayCaloriesBurned / goals.calorieGoal, 1) : 0} size={44} color="#F5A623" strokeWidth={4}>
+                  <MaterialCommunityIcons name="fire" size={16} color="#F5A623" />
+                </ProgressRing>
+                <Text style={{ fontFamily: FONTS.bold, fontSize: 10, color: theme.foreground.gray, marginTop: 4 }}>
+                  Calories
+                </Text>
+              </View>
+              <View style={{ alignItems: "center" }}>
+                <ProgressRing pct={waterGoalMl > 0 ? Math.min((daily.waterMl || 0) / waterGoalMl, 1) : 0} size={44} color="#4FC3F7" strokeWidth={4}>
+                  <MaterialCommunityIcons name="water" size={16} color="#4FC3F7" />
+                </ProgressRing>
+                <Text style={{ fontFamily: FONTS.bold, fontSize: 10, color: theme.foreground.gray, marginTop: 4 }}>
+                  {isFr ? "Eau" : "Water"}
+                </Text>
+              </View>
+            </View>
+          </View>
+        </View>
+
+        {/* ── Mensurations ───────────────────────────────────────── */}
+        <Text style={styles.sectionTitle}>
+          {isFr ? "Mensurations" : "Body Measurements"}
+        </Text>
+        <Pressable
+          style={styles.chartCard}
+          onPress={() => router.push("/body-measurements" as any)}
+        >
+          {latestMeasurements.length === 0 ? (
+            <View style={{ alignItems: "center", paddingVertical: 16 }}>
+              <MaterialCommunityIcons name="human-male-height" size={32} color={theme.foreground.gray} />
+              <Text style={{ fontFamily: FONTS.regular, fontSize: 13, color: theme.foreground.gray, marginTop: 8, textAlign: "center" }}>
+                {isFr ? "Aucune mesure enregistrée.\nAppuyez pour ajouter." : "No measurements recorded.\nTap to add."}
+              </Text>
+            </View>
+          ) : (
+            <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "space-around", gap: 12 }}>
+              {latestMeasurements.map(m => {
+                const labels: Record<string, { fr: string; en: string }> = {
+                  waist: { fr: "Taille", en: "Waist" },
+                  hips: { fr: "Hanches", en: "Hips" },
+                  chest: { fr: "Poitrine", en: "Chest" },
+                  thigh: { fr: "Cuisse", en: "Thigh" },
+                  arm: { fr: "Bras", en: "Arm" },
+                };
+                return (
+                  <View key={m.id} style={{ alignItems: "center", minWidth: 56 }}>
+                    <Text style={{ fontFamily: FONTS.extraBold, fontSize: 18, color: theme.foreground.white }}>
+                      {m.value}
+                    </Text>
+                    <Text style={{ fontFamily: FONTS.regular, fontSize: 11, color: theme.foreground.gray }}>
+                      cm
+                    </Text>
+                    <Text style={{ fontFamily: FONTS.bold, fontSize: 10, color: theme.foreground.gray, marginTop: 2 }}>
+                      {isFr ? labels[m.id]?.fr : labels[m.id]?.en}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
+          )}
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", marginTop: 12, gap: 4 }}>
+            <Text style={{ fontFamily: FONTS.bold, fontSize: 12, color: theme.primary.main }}>
+              {isFr ? "Voir tout" : "View all"}
+            </Text>
+            <Ionicons name="chevron-forward" size={14} color={theme.primary.main} />
+          </View>
+        </Pressable>
+
+        {/* ── Composition corporelle ──────────────────────────────── */}
+        <Text style={styles.sectionTitle}>
+          {isFr ? "Composition corporelle" : "Body Composition"}
+        </Text>
+        <View style={[styles.chartCard, { marginBottom: 24 }]}>
+          {!bodyComposition.bodyFat && !bodyComposition.muscleMass ? (
+            <Pressable
+              style={{ alignItems: "center", paddingVertical: 16 }}
+              onPress={() => router.push("/body-measurements" as any)}
+            >
+              <MaterialCommunityIcons name="percent-circle-outline" size={32} color={theme.foreground.gray} />
+              <Text style={{ fontFamily: FONTS.regular, fontSize: 13, color: theme.foreground.gray, marginTop: 8, textAlign: "center" }}>
+                {isFr ? "Aucune donnée.\nAppuyez pour ajouter." : "No data.\nTap to add."}
+              </Text>
+            </Pressable>
+          ) : (
+            <View style={{ flexDirection: "row", justifyContent: "space-around", alignItems: "center" }}>
+              <View style={{ alignItems: "center" }}>
+                <ProgressRing
+                  pct={bodyComposition.bodyFat ? Math.min(bodyComposition.bodyFat.value / 40, 1) : 0}
+                  size={80}
+                  color="#F5A623"
+                  strokeWidth={7}
+                >
+                  <Text style={{ fontFamily: FONTS.extraBold, fontSize: 16, color: theme.foreground.white }}>
+                    {bodyComposition.bodyFat ? `${bodyComposition.bodyFat.value}%` : "—"}
+                  </Text>
+                </ProgressRing>
+                <Text style={{ fontFamily: FONTS.bold, fontSize: 12, color: theme.foreground.gray, marginTop: 8 }}>
+                  {isFr ? "Masse grasse" : "Body fat"}
+                </Text>
+              </View>
+              <View style={{ alignItems: "center" }}>
+                <ProgressRing
+                  pct={bodyComposition.muscleMass ? Math.min(bodyComposition.muscleMass.value / 50, 1) : 0}
+                  size={80}
+                  color="#34C759"
+                  strokeWidth={7}
+                >
+                  <Text style={{ fontFamily: FONTS.extraBold, fontSize: 16, color: theme.foreground.white }}>
+                    {bodyComposition.muscleMass ? `${bodyComposition.muscleMass.value}%` : "—"}
+                  </Text>
+                </ProgressRing>
+                <Text style={{ fontFamily: FONTS.bold, fontSize: 12, color: theme.foreground.gray, marginTop: 8 }}>
+                  {isFr ? "Masse musculaire" : "Muscle mass"}
+                </Text>
+              </View>
+            </View>
+          )}
+        </View>
           </>
         )}
 
@@ -708,6 +919,18 @@ function ProfileSkeleton() {
           <Shimmer key={index} style={styles.skeletonSummaryCard} baseColor={base} highlightColor={highlight} />
         ))}
       </View>
+
+      {/* Progress ring skeleton */}
+      <Shimmer style={styles.skeletonSectionTitle} baseColor={base} highlightColor={highlight} />
+      <Shimmer style={{ ...styles.skeletonChart, marginHorizontal: 20, height: 200 }} baseColor={base} highlightColor={highlight} />
+
+      {/* Mensurations skeleton */}
+      <Shimmer style={styles.skeletonSectionTitle} baseColor={base} highlightColor={highlight} />
+      <Shimmer style={{ ...styles.skeletonChart, marginHorizontal: 20, height: 100 }} baseColor={base} highlightColor={highlight} />
+
+      {/* Composition corporelle skeleton */}
+      <Shimmer style={styles.skeletonSectionTitle} baseColor={base} highlightColor={highlight} />
+      <Shimmer style={{ ...styles.skeletonChart, marginHorizontal: 20, height: 140, marginBottom: 24 }} baseColor={base} highlightColor={highlight} />
     </>
   );
 }

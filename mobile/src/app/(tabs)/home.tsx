@@ -1254,7 +1254,7 @@ export default function Home() {
             <Text style={styles.routinePickerSubtitle}>
               {t(
                 "home.pickSessionsHint",
-                "Choisis les séances à afficher dans le carrousel de l'accueil.",
+                "Choisis les séances à afficher dans le carrousel.",
               )}
             </Text>
             {userRoutines.length === 0 ? (
@@ -1262,7 +1262,7 @@ export default function Home() {
                 <Text style={styles.routinePickerEmptyText}>
                   {t(
                     "home.noRoutinesYet",
-                    "You haven't created a session yet. Add your first session to get started. You can personalize it with the exercises that suit you.",
+                    "Créez votre première séance et ajoutez les exercices de votre choix.",
                   )}
                 </Text>
               </View>
