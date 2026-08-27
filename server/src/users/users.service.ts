@@ -293,6 +293,114 @@ export class UsersService {
     };
   }
 
+  async getProgressionScore(userId: string) {
+    const today = new Date().toISOString().split('T')[0];
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    const weekAgoStr = weekAgo.toISOString().split('T')[0];
+
+    const [profileRes, snapshotRes, goalsRes, dailyRes, weightRes, measurementsRes] =
+      await Promise.all([
+        // User profile (weight, target_weight, height, age, gender)
+        this.supabase
+          .from('user_profiles')
+          .select('weight_kg, target_weight_kg, height_cm, date_of_birth, gender, workout_frequency')
+          .eq('id', userId)
+          .single(),
+        // Today's health snapshot (steps, calories_burned)
+        this.supabase
+          .from('daily_health_snapshots')
+          .select('steps, calories_burned')
+          .eq('user_id', userId)
+          .eq('date', today)
+          .maybeSingle(),
+        // Nutrition goals (calorie_goal)
+        this.supabase
+          .from('alimentation_goals')
+          .select('calorie_goal')
+          .eq('user_id', userId)
+          .maybeSingle(),
+        // Today's alimentation daily (water_ml)
+        this.supabase
+          .from('alimentation_daily')
+          .select('water_ml')
+          .eq('user_id', userId)
+          .eq('date', today)
+          .maybeSingle(),
+        // Weight entries in last 7 days
+        this.supabase
+          .from('weight_entries')
+          .select('entry_date')
+          .eq('user_id', userId)
+          .gte('entry_date', weekAgoStr),
+        // Distinct body measurement metrics logged
+        this.supabase
+          .from('body_measurements')
+          .select('metric')
+          .eq('user_id', userId),
+      ]);
+
+    if (profileRes.error) throw profileRes.error;
+    const profile = profileRes.data as {
+      weight_kg: number | null;
+      target_weight_kg: number | null;
+      height_cm: number | null;
+      date_of_birth: string | null;
+      gender: string | null;
+      workout_frequency: number | null;
+    } | null;
+
+    const weight = Number(profile?.weight_kg) || 70;
+    const targetWeight = Number(profile?.target_weight_kg) || 65;
+    const heightCm = Number(profile?.height_cm) || 175;
+
+    // 1. Daily activity (40%) — steps + calories burned + water
+    const steps = Number(snapshotRes.data?.steps) || 0;
+    const caloriesBurned = Number(snapshotRes.data?.calories_burned) || 0;
+    const calorieGoal = Number(goalsRes.data?.calorie_goal) || 2200;
+    const waterMl = Number(dailyRes.data?.water_ml) || 0;
+
+    // Water goal: 35 ml/kg, clamped [1500, 4000]
+    const waterGoalMl = Math.max(1500, Math.min(4000, Math.round((weight * 35) / 50) * 50));
+
+    const stepsPct = Math.min(steps / 10000, 1);
+    const calPct = calorieGoal > 0 ? Math.min(caloriesBurned / calorieGoal, 1) : 0;
+    const waterPct = waterGoalMl > 0 ? Math.min(waterMl / waterGoalMl, 1) : 0;
+    const activityParts = [stepsPct, calPct, waterPct];
+    const activityScore =
+      activityParts.length > 0
+        ? activityParts.reduce((s, v) => s + v, 0) / activityParts.length
+        : 0;
+
+    // 2. Weight adherence (30%)
+    const weightDiff = Math.abs(weight - targetWeight);
+    const weightScore = weightDiff === 0 ? 1 : Math.max(0, 1 - weightDiff / 20);
+
+    // 3. Body tracking consistency (15%)
+    const uniqueMetrics = new Set(
+      ((measurementsRes.data ?? []) as { metric: string }[]).map((r) => r.metric),
+    );
+    const trackingScore = Math.min(uniqueMetrics.size / 3, 1);
+
+    // 4. Weight logging consistency (15%)
+    const recentWeightEntries = (weightRes.data ?? []).length;
+    const weightLogScore = Math.min(recentWeightEntries / 3, 1);
+
+    const score = Math.round(
+      activityScore * 40 + weightScore * 30 + trackingScore * 15 + weightLogScore * 15,
+    );
+
+    return {
+      score,
+      breakdown: {
+        activity: Math.round(activityScore * 100),
+        weight_adherence: Math.round(weightScore * 100),
+        body_tracking: Math.round(trackingScore * 100),
+        weight_logging: Math.round(weightLogScore * 100),
+      },
+    };
+  }
+
   async completeOnboarding(userId: string, dto: UpdateProfileDto) {
     const payload = await this.withSyncedDisplayName(userId, dto);
     const { data, error } = await this.supabase

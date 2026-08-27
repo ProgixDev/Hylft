@@ -57,6 +57,7 @@ export const api = {
     }),
   getPublicProfile: (userId: string) => authFetch(`/users/${userId}`),
   getUserStats: (userId: string) => authFetch(`/users/${userId}/stats`),
+  getProgressionScore: () => authFetch("/users/me/progression-score"),
   searchUsers: (q: string, limit = 20) => {
     const qs = new URLSearchParams({ q, limit: String(limit) });
     return authFetch(`/users/search?${qs.toString()}`);

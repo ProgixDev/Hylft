@@ -169,6 +169,7 @@ export default function Profile() {
   const [activityPeriod, setActivityPeriod] = useState<Period>("weekly");
   const [summaryMode, setSummaryMode] = useState<"total" | "average">("total");
   const [bodyMeasurements, setBodyMeasurements] = useState<Record<string, { value: number; date: string }[]>>({});
+  const [progressionScore, setProgressionScore] = useState(0);
 
   const loadProfileAndStats = useCallback(async () => {
     if (!user?.id) {
@@ -249,6 +250,11 @@ export default function Profile() {
         if (dn) setDisplayName(dn);
         setWeightHistory(wh);
         setBodyMeasurements(bm);
+        // Fetch progression score from server
+        try {
+          const scoreRes = await api.getProgressionScore() as { score: number };
+          setProgressionScore(scoreRes.score);
+        } catch { /* fallback to 0 */ }
       })();
     }, [])
   );
@@ -305,37 +311,6 @@ export default function Profile() {
     bodyFat: bodyMeasurements.body_fat?.at(-1) ?? null,
     muscleMass: bodyMeasurements.muscle_mass?.at(-1) ?? null,
   }), [bodyMeasurements]);
-
-  // ── Score de progression (0–100) ──
-  const progressionScore = useMemo(() => {
-    // 1. Daily activity (40%) — steps + calories burned + water
-    const stepsPct = Math.min(todaySteps / 10000, 1);
-    const calPct = goals.calorieGoal > 0 ? Math.min(todayCaloriesBurned / goals.calorieGoal, 1) : 0;
-    const waterPct = waterGoalMl > 0 ? Math.min((daily.waterMl || 0) / waterGoalMl, 1) : 0;
-    const activityParts = [stepsPct, calPct, waterPct];
-    const activityScore = activityParts.length > 0
-      ? activityParts.reduce((s, v) => s + v, 0) / activityParts.length
-      : 0;
-
-    // 2. Weight adherence (30%) — how close to target
-    const weightDiff = Math.abs(weight - targetWeight);
-    const weightScore = weightDiff === 0 ? 1 : Math.max(0, 1 - weightDiff / 20);
-
-    // 3. Body tracking consistency (15%) — have they logged measurements?
-    const measurementKeys = ["waist", "hips", "chest", "thigh", "arm", "body_fat", "muscle_mass"];
-    const trackedCount = measurementKeys.filter(k => bodyMeasurements[k]?.length).length;
-    const trackingScore = Math.min(trackedCount / 3, 1);
-
-    // 4. Weight logging consistency (15%) — entries in last 7 days
-    const weekAgo = new Date();
-    weekAgo.setDate(weekAgo.getDate() - 7);
-    const recentWeightEntries = weightHistory.filter(e => new Date(e.date) >= weekAgo).length;
-    const weightLogScore = Math.min(recentWeightEntries / 3, 1);
-
-    return Math.round(
-      activityScore * 40 + weightScore * 30 + trackingScore * 15 + weightLogScore * 15
-    );
-  }, [todaySteps, todayCaloriesBurned, goals.calorieGoal, daily.waterMl, waterGoalMl, weight, targetWeight, bodyMeasurements, weightHistory]);
 
   const scoreLabel = useMemo(() => {
     if (progressionScore >= 80) return isFr ? "Super travail !" : "Great work!";

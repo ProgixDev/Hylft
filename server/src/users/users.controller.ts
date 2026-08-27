@@ -53,6 +53,11 @@ export class UsersController {
     return this.usersService.updateProfile(user.id, dto);
   }
 
+  @Get('me/progression-score')
+  getProgressionScore(@CurrentUser() user: AuthUser) {
+    return this.usersService.getProgressionScore(user.id);
+  }
+
   @Post('me/onboarding')
   completeOnboarding(
     @CurrentUser() user: AuthUser,
