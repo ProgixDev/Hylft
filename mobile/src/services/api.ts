@@ -57,6 +57,10 @@ export const api = {
     }),
   getPublicProfile: (userId: string) => authFetch(`/users/${userId}`),
   getUserStats: (userId: string) => authFetch(`/users/${userId}/stats`),
+  getDailyProgress: (period?: string) => {
+    const qs = period ? `?period=${period}` : "";
+    return authFetch(`/users/me/daily-progress${qs}`);
+  },
   getProgressionScore: () => authFetch("/users/me/progression-score"),
   searchUsers: (q: string, limit = 20) => {
     const qs = new URLSearchParams({ q, limit: String(limit) });

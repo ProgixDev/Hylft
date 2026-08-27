@@ -40,7 +40,6 @@ import {
 import { pickAndUploadAvatar } from "../../services/avatarUploader";
 import { WeightEntry, WeightHistory } from "../../services/weightHistory";
 import { Shimmer } from "../../components/ui/PostSkeleton";
-import { computeWaterGoalMl } from "../../utils/nutritionGoals";
 import { BodyMeasurements } from "../../services/bodyMeasurements";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -130,7 +129,7 @@ export default function Profile() {
     requestPermissions: healthRequestPermissions,
     refreshData: healthRefreshData,
   } = useHealth();
-  const { daily, goals } = useNutrition();
+  const { daily } = useNutrition();
   const [healthBusy, setHealthBusy] = useState(false);
 
   const handleConnectHealth = useCallback(async () => {
@@ -170,6 +169,13 @@ export default function Profile() {
   const [summaryMode, setSummaryMode] = useState<"total" | "average">("total");
   const [bodyMeasurements, setBodyMeasurements] = useState<Record<string, { value: number; date: string }[]>>({});
   const [progressionScore, setProgressionScore] = useState(0);
+  const [dailyProgress, setDailyProgress] = useState<{
+    progress_pct: number;
+    steps: { value: number; goal: number; pct: number };
+    calories: { value: number; goal: number; pct: number };
+    water: { value: number; goal: number; pct: number };
+    weight_delta: number | null;
+  } | null>(null);
 
   const loadProfileAndStats = useCallback(async () => {
     if (!user?.id) {
@@ -250,51 +256,36 @@ export default function Profile() {
         if (dn) setDisplayName(dn);
         setWeightHistory(wh);
         setBodyMeasurements(bm);
-        // Fetch progression score from server
+        // Fetch server-computed stats
         try {
-          const scoreRes = await api.getProgressionScore() as { score: number };
+          const [scoreRes, progressRes] = await Promise.all([
+            api.getProgressionScore() as Promise<{ score: number }>,
+            api.getDailyProgress(activityPeriod) as Promise<typeof dailyProgress>,
+          ]);
           setProgressionScore(scoreRes.score);
-        } catch { /* fallback to 0 */ }
+          setDailyProgress(progressRes);
+        } catch { /* fallback to defaults */ }
       })();
     }, [])
   );
+
+  // Refetch daily progress when period changes
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await api.getDailyProgress(activityPeriod) as typeof dailyProgress;
+        setDailyProgress(res);
+      } catch { /* */ }
+    })();
+  }, [activityPeriod]);
 
   const bmi = calcBMI(weight, height);
   const bmiData = bmiInfo(bmi);
   const bmr = calcBMR(weight, height, age, gender);
 
-  // ── Weight delta over selected period ──
-  const weightDelta = useMemo(() => {
-    if (weightHistory.length < 2) return null;
-    const sorted = [...weightHistory].sort((a, b) => a.date.localeCompare(b.date));
-    const now = new Date();
-    let periodStart: Date;
-    if (activityPeriod === "daily") {
-      periodStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    } else if (activityPeriod === "weekly") {
-      periodStart = new Date(now);
-      periodStart.setDate(periodStart.getDate() - 7);
-    } else {
-      periodStart = new Date(now);
-      periodStart.setMonth(periodStart.getMonth() - 1);
-    }
-    const periodEntries = sorted.filter(e => new Date(e.date) >= periodStart);
-    if (periodEntries.length < 2) return null;
-    return +(periodEntries[periodEntries.length - 1].weight - periodEntries[0].weight).toFixed(1);
-  }, [weightHistory, activityPeriod]);
-
-  // ── Daily progress % ──
-  const waterGoalMl = useMemo(() => computeWaterGoalMl({
-    weightKg: weight, heightCm: height, age, gender,
-  }), [weight, height, age, gender]);
-
-  const dailyProgressPct = useMemo(() => {
-    const stepsPct = Math.min(todaySteps / 10000, 1);
-    const calPct = goals.calorieGoal > 0 ? Math.min(todayCaloriesBurned / goals.calorieGoal, 1) : 0;
-    const waterPct = waterGoalMl > 0 ? Math.min((daily.waterMl || 0) / waterGoalMl, 1) : 0;
-    const parts = [stepsPct, calPct, waterPct].filter(v => v > 0);
-    return parts.length > 0 ? parts.reduce((s, v) => s + v, 0) / parts.length : 0;
-  }, [todaySteps, todayCaloriesBurned, goals.calorieGoal, daily.waterMl, waterGoalMl]);
+  // ── Weight delta + daily progress from server ──
+  const weightDelta = dailyProgress?.weight_delta ?? null;
+  const dailyProgressPct = dailyProgress?.progress_pct ?? 0;
 
   // ── Body measurements (latest values) ──
   const latestMeasurements = useMemo(() => {
@@ -704,7 +695,7 @@ export default function Profile() {
             </ProgressRing>
             <View style={{ flexDirection: "row", justifyContent: "space-around", width: "100%", marginTop: 16 }}>
               <View style={{ alignItems: "center" }}>
-                <ProgressRing pct={Math.min(todaySteps / 10000, 1)} size={44} color="#4A90D9" strokeWidth={4}>
+                <ProgressRing pct={dailyProgress?.steps.pct ?? 0} size={44} color="#4A90D9" strokeWidth={4}>
                   <MaterialCommunityIcons name="shoe-print" size={16} color="#4A90D9" />
                 </ProgressRing>
                 <Text style={{ fontFamily: FONTS.bold, fontSize: 10, color: theme.foreground.gray, marginTop: 4 }}>
@@ -712,7 +703,7 @@ export default function Profile() {
                 </Text>
               </View>
               <View style={{ alignItems: "center" }}>
-                <ProgressRing pct={goals.calorieGoal > 0 ? Math.min(todayCaloriesBurned / goals.calorieGoal, 1) : 0} size={44} color="#F5A623" strokeWidth={4}>
+                <ProgressRing pct={dailyProgress?.calories.pct ?? 0} size={44} color="#F5A623" strokeWidth={4}>
                   <MaterialCommunityIcons name="fire" size={16} color="#F5A623" />
                 </ProgressRing>
                 <Text style={{ fontFamily: FONTS.bold, fontSize: 10, color: theme.foreground.gray, marginTop: 4 }}>
@@ -720,7 +711,7 @@ export default function Profile() {
                 </Text>
               </View>
               <View style={{ alignItems: "center" }}>
-                <ProgressRing pct={waterGoalMl > 0 ? Math.min((daily.waterMl || 0) / waterGoalMl, 1) : 0} size={44} color="#4FC3F7" strokeWidth={4}>
+                <ProgressRing pct={dailyProgress?.water.pct ?? 0} size={44} color="#4FC3F7" strokeWidth={4}>
                   <MaterialCommunityIcons name="water" size={16} color="#4FC3F7" />
                 </ProgressRing>
                 <Text style={{ fontFamily: FONTS.bold, fontSize: 10, color: theme.foreground.gray, marginTop: 4 }}>

@@ -293,6 +293,94 @@ export class UsersService {
     };
   }
 
+  async getDailyProgress(userId: string, period: string = 'weekly') {
+    const today = new Date().toISOString().split('T')[0];
+    const now = new Date();
+    let periodStart: string;
+    if (period === 'daily') {
+      periodStart = today;
+    } else if (period === 'monthly') {
+      const d = new Date(now);
+      d.setMonth(d.getMonth() - 1);
+      periodStart = d.toISOString().split('T')[0];
+    } else {
+      const d = new Date(now);
+      d.setDate(d.getDate() - 7);
+      periodStart = d.toISOString().split('T')[0];
+    }
+
+    const [profileRes, snapshotRes, goalsRes, dailyRes, weightRes] =
+      await Promise.all([
+        this.supabase
+          .from('user_profiles')
+          .select('weight_kg, target_weight_kg, height_cm, date_of_birth, gender, workout_frequency')
+          .eq('id', userId)
+          .single(),
+        this.supabase
+          .from('daily_health_snapshots')
+          .select('steps, calories_burned, active_minutes, distance_km')
+          .eq('user_id', userId)
+          .eq('date', today)
+          .maybeSingle(),
+        this.supabase
+          .from('alimentation_goals')
+          .select('calorie_goal')
+          .eq('user_id', userId)
+          .maybeSingle(),
+        this.supabase
+          .from('alimentation_daily')
+          .select('water_ml')
+          .eq('user_id', userId)
+          .eq('date', today)
+          .maybeSingle(),
+        this.supabase
+          .from('weight_entries')
+          .select('entry_date, weight_kg')
+          .eq('user_id', userId)
+          .gte('entry_date', periodStart)
+          .order('entry_date', { ascending: true }),
+      ]);
+
+    if (profileRes.error) throw profileRes.error;
+    const profile = profileRes.data as {
+      weight_kg: number | null;
+      target_weight_kg: number | null;
+      height_cm: number | null;
+    } | null;
+
+    const weight = Number(profile?.weight_kg) || 70;
+    const steps = Number(snapshotRes.data?.steps) || 0;
+    const caloriesBurned = Number(snapshotRes.data?.calories_burned) || 0;
+    const calorieGoal = Number(goalsRes.data?.calorie_goal) || 2200;
+    const waterMl = Number(dailyRes.data?.water_ml) || 0;
+    const waterGoalMl = Math.max(1500, Math.min(4000, Math.round((weight * 35) / 50) * 50));
+
+    // Daily progress %
+    const stepsPct = Math.min(steps / 10000, 1);
+    const calPct = calorieGoal > 0 ? Math.min(caloriesBurned / calorieGoal, 1) : 0;
+    const waterPct = waterGoalMl > 0 ? Math.min(waterMl / waterGoalMl, 1) : 0;
+    const parts = [stepsPct, calPct, waterPct].filter((v) => v > 0);
+    const progressPct = parts.length > 0 ? parts.reduce((s, v) => s + v, 0) / parts.length : 0;
+
+    // Weight delta over period
+    const weightEntries = (weightRes.data ?? []) as { entry_date: string; weight_kg: number }[];
+    let weightDelta: number | null = null;
+    if (weightEntries.length >= 2) {
+      const first = Number(weightEntries[0].weight_kg);
+      const last = Number(weightEntries[weightEntries.length - 1].weight_kg);
+      weightDelta = +(last - first).toFixed(1);
+    }
+
+    return {
+      progress_pct: +progressPct.toFixed(3),
+      steps: { value: steps, goal: 10000, pct: +stepsPct.toFixed(3) },
+      calories: { value: Math.round(caloriesBurned), goal: calorieGoal, pct: +calPct.toFixed(3) },
+      water: { value: waterMl, goal: waterGoalMl, pct: +waterPct.toFixed(3) },
+      weight_delta: weightDelta,
+      period,
+    };
+  }
+
   async getProgressionScore(userId: string) {
     const today = new Date().toISOString().split('T')[0];
     const weekAgo = new Date();

@@ -53,6 +53,14 @@ export class UsersController {
     return this.usersService.updateProfile(user.id, dto);
   }
 
+  @Get('me/daily-progress')
+  getDailyProgress(
+    @CurrentUser() user: AuthUser,
+    @Query('period') period?: string,
+  ) {
+    return this.usersService.getDailyProgress(user.id, period);
+  }
+
   @Get('me/progression-score')
   getProgressionScore(@CurrentUser() user: AuthUser) {
     return this.usersService.getProgressionScore(user.id);
