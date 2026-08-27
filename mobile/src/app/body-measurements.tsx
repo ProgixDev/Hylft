@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Modal, Pressable, StyleSheet, TextInput, View } from "react-native";
@@ -7,6 +6,7 @@ import { Text } from "../components/ui/ScaledText";
 import { FONTS } from "../constants/fonts";
 import { useI18n } from "../contexts/I18nContext";
 import { useTheme } from "../contexts/ThemeContext";
+import { BodyMeasurements as BodyMeasurementsService, type LocalData } from "../services/bodyMeasurements";
 
 type Metric = {
   id: string;
@@ -27,8 +27,6 @@ const METRICS: Metric[] = [
   { id: "arm", fr: "Tour de bras", en: "Arm", icon: "resize-outline" },
 ];
 
-const STORAGE_KEY = "@hylift_body_measurements";
-
 export default function BodyMeasurements() {
   const router = useRouter();
   const { theme } = useTheme();
@@ -39,29 +37,17 @@ export default function BodyMeasurements() {
   const [input, setInput] = useState("");
 
   useEffect(() => {
-    AsyncStorage.getItem(STORAGE_KEY).then((value) => {
-      if (!value) return;
-      try {
-        setEntries(JSON.parse(value) as Record<string, Entry[]>);
-      } catch {
-        // Ignore malformed local cache.
-      }
-    });
+    BodyMeasurementsService.migrateFromAsyncStorage();
+    BodyMeasurementsService.getAll().then(setEntries).catch(() => {});
   }, []);
 
   const saveEntry = async () => {
     if (!selected) return;
     const value = Number(input.replace(",", "."));
     if (!Number.isFinite(value) || value <= 0) return;
-    const next = {
-      ...entries,
-      [selected.id]: [
-        ...(entries[selected.id] ?? []),
-        { value, date: new Date().toISOString() },
-      ],
-    };
-    setEntries(next);
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    await BodyMeasurementsService.log(selected.id, value);
+    const updated = await BodyMeasurementsService.getAll();
+    setEntries(updated);
     setInput("");
     setSelected(null);
   };

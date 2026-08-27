@@ -12,6 +12,7 @@ import { SocialModule } from './social/social.module';
 import { UsersModule } from './users/users.module';
 import { WallpapersModule } from './wallpapers/wallpapers.module';
 import { WeightEntriesModule } from './weight-entries/weight-entries.module';
+import { BodyMeasurementsModule } from './body-measurements/body-measurements.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { WeightEntriesModule } from './weight-entries/weight-entries.module';
     RoutinesModule,
     SocialModule,
     WeightEntriesModule,
+    BodyMeasurementsModule,
     NotificationsModule,
     ExercisesModule,
     WallpapersModule,

@@ -224,6 +224,38 @@ export const api = {
   deleteWeightEntry: (date: string) =>
     authFetch(`/weight/${date}`, { method: "DELETE" }),
 
+  // ── Body Measurements ──────────────────────────────────
+  listBodyMeasurements: (params: {
+    metric?: string;
+    start?: string;
+    end?: string;
+    limit?: number;
+  } = {}) => {
+    const qs = new URLSearchParams();
+    if (params.metric) qs.set("metric", params.metric);
+    if (params.start) qs.set("start", params.start);
+    if (params.end) qs.set("end", params.end);
+    if (params.limit) qs.set("limit", String(params.limit));
+    const s = qs.toString();
+    return authFetch(`/body-measurements${s ? `?${s}` : ""}`);
+  },
+  getLatestBodyMeasurements: () =>
+    authFetch("/body-measurements/latest"),
+  upsertBodyMeasurement: (data: {
+    metric: string;
+    value: number;
+    measurement_date: string;
+  }) =>
+    authFetch("/body-measurements", { method: "POST", body: JSON.stringify(data) }),
+  bulkUpsertBodyMeasurements: (entries: {
+    metric: string;
+    value: number;
+    measurement_date: string;
+  }[]) =>
+    authFetch("/body-measurements/bulk", { method: "POST", body: JSON.stringify({ entries }) }),
+  deleteBodyMeasurement: (id: string) =>
+    authFetch(`/body-measurements/${id}`, { method: "DELETE" }),
+
   // ── Notifications ───────────────────────────────────────
   listNotifications: (params: {
     unread?: boolean;

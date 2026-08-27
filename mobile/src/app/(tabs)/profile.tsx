@@ -41,6 +41,7 @@ import { pickAndUploadAvatar } from "../../services/avatarUploader";
 import { WeightEntry, WeightHistory } from "../../services/weightHistory";
 import { Shimmer } from "../../components/ui/PostSkeleton";
 import { computeWaterGoalMl } from "../../utils/nutritionGoals";
+import { BodyMeasurements } from "../../services/bodyMeasurements";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -237,7 +238,7 @@ export default function Profile() {
           AsyncStorage.getItem(KEYS.height), AsyncStorage.getItem(KEYS.age),
           AsyncStorage.getItem(KEYS.gender), AsyncStorage.getItem(KEYS.fitnessGoals),
           AsyncStorage.getItem(KEYS.displayName), WeightHistory.getLastDays(30),
-          AsyncStorage.getItem("@hylift_body_measurements"),
+          BodyMeasurements.getAll(),
         ]);
         if (w) setWeight(Number(w) || 70);
         if (tw) setTargetWeight(Number(tw) || 65);
@@ -247,7 +248,7 @@ export default function Profile() {
         if (fg) { try { setFitnessGoals(JSON.parse(fg)); } catch { /* */ } }
         if (dn) setDisplayName(dn);
         setWeightHistory(wh);
-        if (bm) { try { setBodyMeasurements(JSON.parse(bm)); } catch { /* */ } }
+        setBodyMeasurements(bm);
       })();
     }, [])
   );
@@ -304,6 +305,52 @@ export default function Profile() {
     bodyFat: bodyMeasurements.body_fat?.at(-1) ?? null,
     muscleMass: bodyMeasurements.muscle_mass?.at(-1) ?? null,
   }), [bodyMeasurements]);
+
+  // ── Score de progression (0–100) ──
+  const progressionScore = useMemo(() => {
+    // 1. Daily activity (40%) — steps + calories burned + water
+    const stepsPct = Math.min(todaySteps / 10000, 1);
+    const calPct = goals.calorieGoal > 0 ? Math.min(todayCaloriesBurned / goals.calorieGoal, 1) : 0;
+    const waterPct = waterGoalMl > 0 ? Math.min((daily.waterMl || 0) / waterGoalMl, 1) : 0;
+    const activityParts = [stepsPct, calPct, waterPct];
+    const activityScore = activityParts.length > 0
+      ? activityParts.reduce((s, v) => s + v, 0) / activityParts.length
+      : 0;
+
+    // 2. Weight adherence (30%) — how close to target
+    const weightDiff = Math.abs(weight - targetWeight);
+    const weightScore = weightDiff === 0 ? 1 : Math.max(0, 1 - weightDiff / 20);
+
+    // 3. Body tracking consistency (15%) — have they logged measurements?
+    const measurementKeys = ["waist", "hips", "chest", "thigh", "arm", "body_fat", "muscle_mass"];
+    const trackedCount = measurementKeys.filter(k => bodyMeasurements[k]?.length).length;
+    const trackingScore = Math.min(trackedCount / 3, 1);
+
+    // 4. Weight logging consistency (15%) — entries in last 7 days
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    const recentWeightEntries = weightHistory.filter(e => new Date(e.date) >= weekAgo).length;
+    const weightLogScore = Math.min(recentWeightEntries / 3, 1);
+
+    return Math.round(
+      activityScore * 40 + weightScore * 30 + trackingScore * 15 + weightLogScore * 15
+    );
+  }, [todaySteps, todayCaloriesBurned, goals.calorieGoal, daily.waterMl, waterGoalMl, weight, targetWeight, bodyMeasurements, weightHistory]);
+
+  const scoreLabel = useMemo(() => {
+    if (progressionScore >= 80) return isFr ? "Super travail !" : "Great work!";
+    if (progressionScore >= 60) return isFr ? "Bien joué !" : "Well done!";
+    if (progressionScore >= 40) return isFr ? "Continue !" : "Keep going!";
+    if (progressionScore >= 20) return isFr ? "Bon début !" : "Good start!";
+    return isFr ? "C'est parti !" : "Let's go!";
+  }, [progressionScore, isFr]);
+
+  const scoreColor = useMemo(() => {
+    if (progressionScore >= 80) return "#34C759";
+    if (progressionScore >= 60) return "#4A90D9";
+    if (progressionScore >= 40) return "#F5A623";
+    return "#ED6665";
+  }, [progressionScore]);
 
   const dayLabels = isFr ? ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"] : ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const todayIdx = (new Date().getDay() + 6) % 7;
@@ -807,6 +854,30 @@ export default function Profile() {
               </View>
             </View>
           )}
+        </View>
+
+        {/* ── Score de progression ────────────────────────────────── */}
+        <Text style={styles.sectionTitle}>
+          {isFr ? "Score de progression" : "Progression Score"}
+        </Text>
+        <View style={[styles.chartCard, { marginBottom: 24 }]}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
+            <ProgressRing pct={progressionScore / 100} size={90} color={scoreColor} strokeWidth={8}>
+              <Text style={{ fontFamily: FONTS.extraBold, fontSize: 28, color: theme.foreground.white }}>
+                {progressionScore}
+              </Text>
+            </ProgressRing>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontFamily: FONTS.bold, fontSize: 18, color: scoreColor }}>
+                {scoreLabel}
+              </Text>
+              <Text style={{ fontFamily: FONTS.regular, fontSize: 12, color: theme.foreground.gray, marginTop: 4, lineHeight: 18 }}>
+                {isFr
+                  ? "Basé sur ton activité, ton poids, ta nutrition et tes mesures."
+                  : "Based on your activity, weight, nutrition, and measurements."}
+              </Text>
+            </View>
+          </View>
         </View>
           </>
         )}
