@@ -430,7 +430,7 @@ export default function Profile() {
                 <Text style={[styles.weightBadgeText, {
                   color: weight <= targetWeight ? "#34C759" : theme.primary.main,
                 }]}>
-                  {Math.abs(weight - targetWeight)} kg {weight <= targetWeight ? (isFr ? "atteint" : "reached") : (isFr ? "restant" : "left")}
+                  {+Math.abs(weight - targetWeight).toFixed(1)} kg {weight <= targetWeight ? (isFr ? "atteint" : "reached") : (isFr ? "restant" : "left")}
                 </Text>
               </View>
               {weightDelta !== null && (
