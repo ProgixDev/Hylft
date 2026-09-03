@@ -173,18 +173,22 @@ export async function fetchExercisesExerciseDb(options?: {
   }
 }
 
+const stripAccents = (s: string) =>
+  s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
 export async function searchExercisesExerciseDb(
   query: string,
   _translate: boolean = false,
 ): Promise<ExerciseDbExercise[]> {
   if (!query.trim()) return [];
-  const key = `search_${query.toLowerCase()}`;
+  const normalized = stripAccents(query.trim());
+  const key = `search_${normalized.toLowerCase()}`;
   const cached = getCached<ExerciseDbExercise[]>(key);
   if (cached) return cached;
 
   try {
     const res: { items: BackendExercise[] } = await api.listExercises({
-      search: query.trim(),
+      search: normalized,
       limit: 50,
     });
     const exercises = (res.items ?? []).map(mapExercise);
