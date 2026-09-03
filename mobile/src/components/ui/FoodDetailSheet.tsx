@@ -50,7 +50,7 @@ interface FoodDetailSheetProps {
 }
 
 const QTY_MIN = 0.1;
-const QTY_MAX = 99;
+const QTY_MAX = 9999;
 
 interface PortionUnit {
   label: string;
