@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Image,
   Pressable,
   StyleSheet,
@@ -164,6 +165,31 @@ export default function TrainingHistoryView() {
     }
   }, [cursor, loadingMore]);
 
+  const handleDeleteSession = useCallback(
+    (session: WorkoutHistoryRow) => {
+      Alert.alert(
+        t("home.history.deleteSessionTitle"),
+        t("home.history.deleteSessionMessage"),
+        [
+          { text: t("home.history.cancel"), style: "cancel" },
+          {
+            text: t("home.history.deleteSession"),
+            style: "destructive",
+            onPress: async () => {
+              try {
+                await api.deleteWorkout(session.id);
+                setSessions((prev) => prev.filter((s) => s.id !== session.id));
+              } catch (err) {
+                console.warn("[TrainingHistoryView] delete failed:", err);
+              }
+            },
+          },
+        ],
+      );
+    },
+    [t],
+  );
+
   useEffect(() => {
     void loadFirstPage();
   }, [loadFirstPage]);
@@ -254,6 +280,20 @@ export default function TrainingHistoryView() {
                   {formatRelative(s.created_at || s.date, isFr)}
                 </Text>
               </View>
+              <Pressable
+                onPress={() => handleDeleteSession(s)}
+                hitSlop={8}
+                style={({ pressed }) => [
+                  styles.moreBtn,
+                  pressed && { opacity: 0.6 },
+                ]}
+              >
+                <Ionicons
+                  name="ellipsis-horizontal"
+                  size={20}
+                  color={theme.foreground.gray}
+                />
+              </Pressable>
             </View>
 
             {/* Title */}
@@ -393,6 +433,13 @@ const createStyles = (theme: Theme) =>
     headerText: {
       flex: 1,
       minWidth: 0,
+    },
+    moreBtn: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      alignItems: "center" as const,
+      justifyContent: "center" as const,
     },
     username: {
       fontFamily: FONTS.bold,

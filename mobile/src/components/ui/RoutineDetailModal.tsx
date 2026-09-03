@@ -4,6 +4,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  Alert,
   Animated,
   Dimensions,
   Easing,
@@ -44,6 +45,7 @@ type Props = {
   routine: Routine | null;
   onClose: () => void;
   onStart: (routine: Routine) => void;
+  onDelete?: (routine: Routine) => void;
 };
 
 export default function RoutineDetailModal({
@@ -51,6 +53,7 @@ export default function RoutineDetailModal({
   routine,
   onClose,
   onStart,
+  onDelete,
 }: Props) {
   const { t } = useTranslation();
   const { theme, themeType } = useTheme();
@@ -112,6 +115,35 @@ export default function RoutineDetailModal({
                 {translateRoutineName(routine.name)}
               </Text>
             </View>
+            {onDelete && (
+              <Pressable
+                onPress={() => {
+                  Alert.alert(
+                    t("routines.deleteTitle", "Supprimer cette routine ?"),
+                    t("routines.deleteMessage", "Cette action est irréversible."),
+                    [
+                      { text: t("common.cancel", "Annuler"), style: "cancel" },
+                      {
+                        text: t("common.delete", "Supprimer"),
+                        style: "destructive",
+                        onPress: () => onDelete(routine),
+                      },
+                    ],
+                  );
+                }}
+                style={({ pressed }) => [
+                  styles.deleteBtn,
+                  pressed && { opacity: 0.7, transform: [{ scale: 0.94 }] },
+                ]}
+                hitSlop={8}
+              >
+                <Ionicons
+                  name="trash-outline"
+                  size={18}
+                  color="#F44336"
+                />
+              </Pressable>
+            )}
             <Pressable
               onPress={onClose}
               style={({ pressed }) => [
@@ -349,6 +381,17 @@ const createStyles = (theme: Theme, isDark: boolean) =>
       color: theme.foreground.white,
       textTransform: "uppercase",
       letterSpacing: -0.2,
+    },
+    deleteBtn: {
+      width: 36,
+      height: 36,
+      borderRadius: 12,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: "rgba(244,67,54,0.12)",
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: "rgba(244,67,54,0.25)",
+      marginRight: 8,
     },
     closeBtn: {
       width: 36,

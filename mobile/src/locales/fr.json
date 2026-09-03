@@ -771,7 +771,11 @@
       "statVolume": "Volume",
       "statSets": "Séries",
       "setsCount": "{{count}} sets",
-      "seeMore": "Voir {{count}} exercices en plus"
+      "seeMore": "Voir {{count}} exercices en plus",
+      "deleteSession": "Supprimer la séance",
+      "deleteSessionTitle": "Supprimer cette séance ?",
+      "deleteSessionMessage": "Cette action est irréversible.",
+      "cancel": "Annuler"
     }
   },
   "schedule": {
@@ -1046,7 +1050,9 @@
     "lastUsed": "Dernière utilisation",
     "routinesLabel": "Séances",
     "noRoutinesFound": "Aucune séance ne correspond",
-    "searchRoutines": "Rechercher une séance"
+    "searchRoutines": "Rechercher une séance",
+    "deleteTitle": "Supprimer cette routine ?",
+    "deleteMessage": "Cette action est irréversible."
   },
   "exercisePicker": {
     "searchExercise": "Rechercher un exercice",

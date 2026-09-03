@@ -481,6 +481,15 @@ export default function Workout() {
           setSelectedRoutine(null);
           handleStartRoutine(routine);
         }}
+        onDelete={async (routine) => {
+          try {
+            await api.deleteRoutine(routine.id);
+            setSelectedRoutine(null);
+            setRoutines((prev) => prev.filter((r) => r.id !== routine.id));
+          } catch (err) {
+            console.warn("[Workout] delete routine failed:", err);
+          }
+        }}
       />
     </AnimatedScreen>
   );

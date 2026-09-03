@@ -771,7 +771,11 @@
       "statVolume": "Volume",
       "statSets": "Sets",
       "setsCount": "{{count}} sets",
-      "seeMore": "See {{count}} more exercises"
+      "seeMore": "See {{count}} more exercises",
+      "deleteSession": "Delete session",
+      "deleteSessionTitle": "Delete this session?",
+      "deleteSessionMessage": "This action cannot be undone.",
+      "cancel": "Cancel"
     }
   },
   "schedule": {
@@ -1046,7 +1050,9 @@
     "lastUsed": "Last used",
     "routinesLabel": "Sessions",
     "noRoutinesFound": "No sessions match your search",
-    "searchRoutines": "Search sessions"
+    "searchRoutines": "Search sessions",
+    "deleteTitle": "Delete this routine?",
+    "deleteMessage": "This action cannot be undone."
   },
   "exercisePicker": {
     "searchExercise": "Search exercise",
