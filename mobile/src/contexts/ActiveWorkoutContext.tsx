@@ -129,6 +129,8 @@ interface ActiveWorkoutContextType {
   startPlayerRest: (exerciseId: string, seconds?: number) => void;
   stopPlayerRest: () => void;
   adjustPlayerRest: (deltaSeconds: number) => void;
+  restTimerMinimized: boolean;
+  setRestTimerMinimized: (minimized: boolean) => void;
   endGuidedRoutine: (save: boolean) => Promise<void>;
 }
 
@@ -163,6 +165,7 @@ export const ActiveWorkoutProvider: React.FC<ActiveWorkoutProviderProps> = ({
   const [guidedPlayer, setGuidedPlayer] = useState<GuidedPlayerState | null>(
     null,
   );
+  const [restTimerMinimized, setRestTimerMinimized] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startTimeRef = useRef<number>(0);
 
@@ -565,6 +568,7 @@ export const ActiveWorkoutProvider: React.FC<ActiveWorkoutProviderProps> = ({
 
   const startPlayerRest = useCallback(
     (exerciseId: string, secondsOverride?: number) => {
+      setRestTimerMinimized(false);
       setGuidedPlayer((prev) => {
         if (!prev) return prev;
         const ex = prev.exercises.find((e) => e.id === exerciseId);
@@ -747,6 +751,8 @@ export const ActiveWorkoutProvider: React.FC<ActiveWorkoutProviderProps> = ({
         startPlayerRest,
         stopPlayerRest,
         adjustPlayerRest,
+        restTimerMinimized,
+        setRestTimerMinimized,
         endGuidedRoutine,
       }}
     >

@@ -15,7 +15,7 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
 export default function MiniRestTimer() {
   const { theme } = useTheme();
-  const { guidedPlayer, stopPlayerRest } = useActiveWorkout();
+  const { guidedPlayer, stopPlayerRest, setRestTimerMinimized } = useActiveWorkout();
   const router = useRouter();
 
   const endsAt = guidedPlayer?.restEndsAt;
@@ -50,7 +50,10 @@ export default function MiniRestTimer() {
     <TouchableOpacity
       style={[styles.container, { backgroundColor: theme.background.darker }]}
       activeOpacity={0.85}
-      onPress={() => router.push("/workout-player")}
+      onPress={() => {
+        setRestTimerMinimized(false);
+        router.push("/workout-player");
+      }}
     >
       {/* Mini ring */}
       <View style={{ width: RING_SIZE, height: RING_SIZE }}>

@@ -54,6 +54,8 @@ export default function WorkoutPlayerScreen() {
     togglePlayerSetCompleted,
     stopPlayerRest,
     adjustPlayerRest,
+    restTimerMinimized,
+    setRestTimerMinimized,
     pauseWorkout,
   } = useActiveWorkout();
 
@@ -294,12 +296,23 @@ export default function WorkoutPlayerScreen() {
 
         {/* ── Rest timer bottom sheet ──────────────────────────────── */}
         <RestTimerSheet
-          visible={!!guidedPlayer.restEndsAt}
+          visible={!!guidedPlayer.restEndsAt && !restTimerMinimized}
           endsAt={guidedPlayer.restEndsAt ?? 0}
           totalSeconds={guidedPlayer.restTotalSeconds ?? 60}
           onSkip={stopPlayerRest}
           onAdjust={adjustPlayerRest}
+          onMinimize={() => setRestTimerMinimized(true)}
         />
+
+        {/* ── Mini rest timer bar (when minimized) ────────────────── */}
+        {!!guidedPlayer.restEndsAt && restTimerMinimized && (
+          <MiniRestTimerBar
+            endsAt={guidedPlayer.restEndsAt}
+            totalSeconds={guidedPlayer.restTotalSeconds ?? 60}
+            onExpand={() => setRestTimerMinimized(false)}
+            onSkip={stopPlayerRest}
+          />
+        )}
 
         {/* ── PR Toast ─────────────────────────────────────────────── */}
         {prToast && (
@@ -632,6 +645,117 @@ function formatDuration(seconds: number) {
   if (h > 0) return `${h}h ${m}min ${String(s).padStart(2, "0")}s`;
   return `${m}min ${String(s).padStart(2, "0")}s`;
 }
+
+function MiniRestTimerBar({
+  endsAt,
+  totalSeconds,
+  onExpand,
+  onSkip,
+}: {
+  endsAt: number;
+  totalSeconds: number;
+  onExpand: () => void;
+  onSkip: () => void;
+}) {
+  const { theme } = useTheme();
+  const [remaining, setRemaining] = useState(
+    Math.max(0, Math.round((endsAt - Date.now()) / 1000)),
+  );
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      const next = Math.max(0, Math.round((endsAt - Date.now()) / 1000));
+      setRemaining(next);
+      if (next <= 0) clearInterval(id);
+    }, 250);
+    return () => clearInterval(id);
+  }, [endsAt]);
+
+  if (remaining <= 0) return null;
+
+  const progress = totalSeconds > 0 ? remaining / totalSeconds : 0;
+  const minutes = Math.floor(remaining / 60);
+  const seconds = remaining % 60;
+
+  return (
+    <TouchableOpacity
+      style={[miniStyles.bar, { backgroundColor: theme.background.darker }]}
+      activeOpacity={0.85}
+      onPress={onExpand}
+    >
+      <Ionicons name="timer-outline" size={20} color={theme.primary.main} />
+      <View style={miniStyles.progressWrap}>
+        <View
+          style={[
+            miniStyles.progressTrack,
+            { backgroundColor: theme.background.accent },
+          ]}
+        >
+          <View
+            style={[
+              miniStyles.progressFill,
+              {
+                backgroundColor: theme.primary.main,
+                width: `${progress * 100}%`,
+              },
+            ]}
+          />
+        </View>
+      </View>
+      <Text style={[miniStyles.time, { color: theme.foreground.white }]}>
+        {`${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`}
+      </Text>
+      <TouchableOpacity
+        onPress={(e) => {
+          e.stopPropagation();
+          onSkip();
+        }}
+        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+      >
+        <Ionicons name="close-circle" size={22} color={theme.foreground.gray} />
+      </TouchableOpacity>
+    </TouchableOpacity>
+  );
+}
+
+const miniStyles = StyleSheet.create({
+  bar: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 8,
+  },
+  progressWrap: {
+    flex: 1,
+  },
+  progressTrack: {
+    height: 4,
+    borderRadius: 2,
+    overflow: "hidden",
+  },
+  progressFill: {
+    height: "100%",
+    borderRadius: 2,
+  },
+  time: {
+    fontSize: 16,
+    fontFamily: FONTS.bold,
+    minWidth: 50,
+    textAlign: "center",
+  },
+});
 
 const createStyles = (theme: Theme) =>
   StyleSheet.create({
