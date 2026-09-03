@@ -3,16 +3,21 @@ import {
   Animated,
   Dimensions,
   Easing,
+  Keyboard,
   StyleSheet,
   TouchableOpacity,
   View,
 } from "react-native";
+import { createAudioPlayer } from "expo-audio";
 import { Text } from "./ScaledText";
 import Svg, { Circle } from "react-native-svg";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { FONTS } from "../../constants/fonts";
 import { useTheme } from "../../contexts/ThemeContext";
+
+const TIMER_DONE_SOUND = require("../../../assets/timer-done.wav");
+const TIMER_TICK_SOUND = require("../../../assets/timer-tick.wav");
 
 const { width: SCREEN_W } = Dimensions.get("window");
 
@@ -31,6 +36,7 @@ interface Props {
   totalSeconds: number;
   onSkip: () => void;
   onAdjust: (delta: number) => void;
+  onMinimize?: () => void;
 }
 
 export default function RestTimerSheet({
@@ -39,12 +45,18 @@ export default function RestTimerSheet({
   totalSeconds,
   onSkip,
   onAdjust,
+  onMinimize,
 }: Props) {
   const { t } = useTranslation();
   const { theme } = useTheme();
   const [remaining, setRemaining] = useState(() =>
     Math.max(0, Math.round((endsAt - Date.now()) / 1000)),
   );
+
+  // ── Dismiss keyboard when timer opens ──────────────────────────────
+  useEffect(() => {
+    if (visible) Keyboard.dismiss();
+  }, [visible]);
 
   // ── Slide-up animation ─────────────────────────────────────────────
   const slideAnim = useRef(new Animated.Value(0)).current;
@@ -82,16 +94,72 @@ export default function RestTimerSheet({
     outputRange: [CIRCUMFERENCE, 0],
   });
 
+  // ── Tick sound each second during last 10 ──────────────────────────
+  const prevRemaining = useRef(remaining);
+  useEffect(() => {
+    if (visible && remaining > 0 && remaining <= 10 && remaining !== prevRemaining.current) {
+      try {
+        const tick = createAudioPlayer(TIMER_TICK_SOUND);
+        tick.volume = 1;
+        tick.play();
+        setTimeout(() => { try { tick.release(); } catch {} }, 500);
+      } catch {}
+    }
+    prevRemaining.current = remaining;
+  }, [visible, remaining]);
+
+  // ── Blink animation for last 10 seconds ────────────────────────────
+  const blinkAnim = useRef(new Animated.Value(1)).current;
+  const [showGo, setShowGo] = useState(false);
+
+  useEffect(() => {
+    if (!visible) {
+      setShowGo(false);
+      blinkAnim.setValue(1);
+      return;
+    }
+    if (remaining > 0 && remaining <= 10) {
+      const loop = Animated.loop(
+        Animated.sequence([
+          Animated.timing(blinkAnim, {
+            toValue: 0.2,
+            duration: 300,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(blinkAnim, {
+            toValue: 1,
+            duration: 300,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+        ]),
+      );
+      loop.start();
+      return () => loop.stop();
+    }
+    blinkAnim.setValue(1);
+  }, [visible, remaining <= 10 && remaining > 0, blinkAnim]);
+
   // ── Timer label tick ───────────────────────────────────────────────
   useEffect(() => {
     if (!visible) return;
+    let done = false;
     setRemaining(Math.max(0, Math.round((endsAt - Date.now()) / 1000)));
     const id = setInterval(() => {
       const next = Math.max(0, Math.round((endsAt - Date.now()) / 1000));
       setRemaining(next);
-      if (next <= 0) {
+      if (next <= 0 && !done) {
+        done = true;
         clearInterval(id);
-        onSkip();
+        setShowGo(true);
+        try {
+          const player = createAudioPlayer(TIMER_DONE_SOUND);
+          player.volume = 1;
+          player.play();
+          setTimeout(() => { try { player.release(); } catch {} }, 2000);
+        } catch {}
+        setTimeout(() => onSkip(), 1500);
       }
     }, 250);
     return () => clearInterval(id);
@@ -132,12 +200,16 @@ export default function RestTimerSheet({
             { backgroundColor: theme.background.darker },
           ]}
         >
-          {/* ── Handle bar ──────────────────────────────────────────── */}
-          <View style={styles.handleRow}>
+          {/* ── Handle bar (tap to minimize) ─────────────────────────── */}
+          <TouchableOpacity
+            style={styles.handleRow}
+            onPress={onMinimize}
+            activeOpacity={0.6}
+          >
             <View
               style={[styles.handle, { backgroundColor: theme.foreground.gray }]}
             />
-          </View>
+          </TouchableOpacity>
 
           {/* ── Header ──────────────────────────────────────────────── */}
           <View style={styles.header}>
@@ -194,11 +266,20 @@ export default function RestTimerSheet({
               </Svg>
 
               {/* Timer digits centered in ring */}
-              <View style={styles.timerOverlay}>
-                <Text style={[styles.timerText, { color: theme.foreground.white }]}>
-                  {`${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`}
-                </Text>
-              </View>
+              <Animated.View style={[styles.timerOverlay, { opacity: showGo ? 1 : blinkAnim }]}>
+                {showGo ? (
+                  <Text style={[styles.goText, { color: "#34C759" }]}>GO!</Text>
+                ) : (
+                  <Text
+                    style={[
+                      styles.timerText,
+                      { color: remaining <= 10 && remaining > 0 ? "#FF6B6B" : theme.foreground.white },
+                    ]}
+                  >
+                    {`${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`}
+                  </Text>
+                )}
+              </Animated.View>
             </View>
 
             {/* -15s / +15s anchored at bottom corners of ring */}
@@ -312,6 +393,11 @@ const styles = StyleSheet.create({
     fontSize: 58,
     fontFamily: FONTS.extraBold,
     letterSpacing: -1,
+  },
+  goText: {
+    fontSize: 64,
+    fontFamily: FONTS.extraBold,
+    letterSpacing: 2,
   },
   adjustRow: {
     flexDirection: "row",

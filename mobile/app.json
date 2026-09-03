@@ -110,7 +110,8 @@
           "hidden": true,
           "style": "dark"
         }
-      ]
+      ],
+      "expo-audio"
     ],
     "extra": {
       "router": {
