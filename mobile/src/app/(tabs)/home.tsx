@@ -1365,20 +1365,28 @@ export default function Home() {
             )}
             <Pressable
               style={({ pressed }) => [
-                styles.routinePickerCloseBtn,
-                pressed && { opacity: 0.88 },
+                styles.routinePickerCreateBtn,
+                pressed && { opacity: 0.6 },
               ]}
               onPress={() => {
                 setIsRoutinePickerVisible(false);
-                if (userRoutines.length === 0) {
-                  router.push("/create-routine" as any);
-                }
+                router.push("/create-routine" as any);
               }}
             >
+              <Ionicons name="add" size={18} color={theme.foreground.gray} />
+              <Text style={styles.routinePickerCreateBtnText}>
+                {t("home.createSession", "Créer une séance")}
+              </Text>
+            </Pressable>
+            <Pressable
+              style={({ pressed }) => [
+                styles.routinePickerCloseBtn,
+                pressed && { opacity: 0.88 },
+              ]}
+              onPress={() => setIsRoutinePickerVisible(false)}
+            >
               <Text style={styles.routinePickerCloseBtnText}>
-                {userRoutines.length === 0
-                  ? t("home.addSession", "Ajouter une séance")
-                  : t("common.done", "Terminé")}
+                {t("common.done", "Terminé")}
               </Text>
             </Pressable>
           </Pressable>
@@ -2331,12 +2339,24 @@ function createStyles(theme: Theme) {
       color: theme.foreground.gray,
       marginTop: 2,
     },
+    routinePickerCreateBtn: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 6,
+      paddingVertical: 14,
+    },
+    routinePickerCreateBtnText: {
+      fontFamily: FONTS.semiBold,
+      fontSize: 13,
+      color: theme.foreground.gray,
+    },
     routinePickerCloseBtn: {
       backgroundColor: theme.primary.main,
       borderRadius: 12,
       paddingVertical: 12,
       alignItems: "center",
-      marginTop: 6,
+      marginTop: 2,
     },
     routinePickerCloseBtnText: {
       fontFamily: FONTS.bold,
