@@ -13,18 +13,19 @@ type Metric = {
   fr: string;
   en: string;
   icon: keyof typeof Ionicons.glyphMap;
+  unit: "kg" | "cm";
 };
 
 type Entry = { value: number; date: string };
 
 const METRICS: Metric[] = [
-  { id: "body_fat", fr: "Masse grasse", en: "Body fat", icon: "water-outline" },
-  { id: "muscle_mass", fr: "Masse musculaire", en: "Muscle mass", icon: "barbell-outline" },
-  { id: "waist", fr: "Tour de taille", en: "Waist", icon: "resize-outline" },
-  { id: "hips", fr: "Tour de hanches", en: "Hips", icon: "resize-outline" },
-  { id: "chest", fr: "Tour de poitrine", en: "Chest", icon: "resize-outline" },
-  { id: "thigh", fr: "Tour de cuisse", en: "Thigh", icon: "resize-outline" },
-  { id: "arm", fr: "Tour de bras", en: "Arm", icon: "resize-outline" },
+  { id: "body_fat", fr: "Masse grasse", en: "Body fat", icon: "water-outline", unit: "kg" },
+  { id: "muscle_mass", fr: "Masse musculaire", en: "Muscle mass", icon: "barbell-outline", unit: "kg" },
+  { id: "waist", fr: "Tour de taille", en: "Waist", icon: "resize-outline", unit: "cm" },
+  { id: "hips", fr: "Tour de hanches", en: "Hips", icon: "resize-outline", unit: "cm" },
+  { id: "chest", fr: "Tour de poitrine", en: "Chest", icon: "resize-outline", unit: "cm" },
+  { id: "thigh", fr: "Tour de cuisse", en: "Thigh", icon: "resize-outline", unit: "cm" },
+  { id: "arm", fr: "Tour de bras", en: "Arm", icon: "resize-outline", unit: "cm" },
 ];
 
 export default function BodyMeasurements() {
@@ -86,7 +87,7 @@ export default function BodyMeasurements() {
                 <Text style={styles.metricName}>{isFr ? metric.fr : metric.en}</Text>
                 {latest && (
                   <Text style={styles.latest}>
-                    {latest.value} cm · {isFr ? "Dernière mesure" : "Last measurement"}
+                    {latest.value} {metric.unit} · {isFr ? "Dernière mesure" : "Last measurement"}
                   </Text>
                 )}
               </View>
@@ -100,7 +101,7 @@ export default function BodyMeasurements() {
         <Pressable style={styles.backdrop} onPress={() => setSelected(null)}>
           <Pressable style={styles.modal} onPress={() => {}}>
             <Text style={styles.modalTitle}>{selected && (isFr ? selected.fr : selected.en)}</Text>
-            <Text style={styles.modalHint}>{isFr ? "Valeur en cm" : "Value in cm"}</Text>
+            <Text style={styles.modalHint}>{isFr ? `Valeur en ${selected?.unit}` : `Value in ${selected?.unit}`}</Text>
             <TextInput
               style={styles.input}
               value={input}
