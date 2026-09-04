@@ -203,12 +203,11 @@ export default function RestTimerSheet({
           {/* ── Handle bar (tap to minimize) ─────────────────────────── */}
           <TouchableOpacity
             style={styles.handleRow}
-            onPress={onMinimize}
+            onPress={() => { if (onMinimize) onMinimize(); }}
             activeOpacity={0.6}
+            hitSlop={{ top: 12, bottom: 12, left: 40, right: 40 }}
           >
-            <View
-              style={[styles.handle, { backgroundColor: theme.foreground.gray }]}
-            />
+            <Ionicons name="chevron-down" size={18} color={theme.foreground.gray} />
           </TouchableOpacity>
 
           {/* ── Header ──────────────────────────────────────────────── */}

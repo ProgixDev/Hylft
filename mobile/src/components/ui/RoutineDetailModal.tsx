@@ -46,6 +46,7 @@ type Props = {
   onClose: () => void;
   onStart: (routine: Routine) => void;
   onDelete?: (routine: Routine) => void;
+  onEdit?: (routine: Routine) => void;
 };
 
 export default function RoutineDetailModal({
@@ -54,6 +55,7 @@ export default function RoutineDetailModal({
   onClose,
   onStart,
   onDelete,
+  onEdit,
 }: Props) {
   const { t } = useTranslation();
   const { theme, themeType } = useTheme();
@@ -115,6 +117,22 @@ export default function RoutineDetailModal({
                 {translateRoutineName(routine.name)}
               </Text>
             </View>
+            {onEdit && (
+              <Pressable
+                onPress={() => onEdit(routine)}
+                style={({ pressed }) => [
+                  styles.editBtn,
+                  pressed && { opacity: 0.7, transform: [{ scale: 0.94 }] },
+                ]}
+                hitSlop={8}
+              >
+                <Ionicons
+                  name="create-outline"
+                  size={18}
+                  color={theme.primary.main}
+                />
+              </Pressable>
+            )}
             {onDelete && (
               <Pressable
                 onPress={() => {
@@ -381,6 +399,21 @@ const createStyles = (theme: Theme, isDark: boolean) =>
       color: theme.foreground.white,
       textTransform: "uppercase",
       letterSpacing: -0.2,
+    },
+    editBtn: {
+      width: 36,
+      height: 36,
+      borderRadius: 12,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: isDark
+        ? "rgba(255,255,255,0.06)"
+        : "rgba(0,0,0,0.06)",
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: isDark
+        ? "rgba(255,255,255,0.08)"
+        : "rgba(0,0,0,0.08)",
+      marginRight: 8,
     },
     deleteBtn: {
       width: 36,

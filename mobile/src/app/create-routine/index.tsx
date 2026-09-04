@@ -58,6 +58,7 @@ export default function CreateRoutineScreen() {
 
   const {
     isCreating,
+    editingRoutineId,
     draft,
     initCreation,
     updateDraft,
@@ -209,7 +210,11 @@ export default function CreateRoutineScreen() {
         estimatedDuration: Math.round(estimatedDuration),
       };
       if (draft.coverImageUrl) payload.wallpaperUrl = draft.coverImageUrl;
-      await api.createRoutine(payload);
+      if (editingRoutineId) {
+        await api.updateRoutine(editingRoutineId, payload);
+      } else {
+        await api.createRoutine(payload);
+      }
     } catch (error: any) {
       setIsSavingRoutine(false);
       Alert.alert(
@@ -245,7 +250,11 @@ export default function CreateRoutineScreen() {
         >
           <Ionicons name="close" size={20} color={theme.foreground.gray} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t("createRoutine.title")}</Text>
+        <Text style={styles.headerTitle}>
+          {editingRoutineId
+            ? t("createRoutine.editTitle", "Modifier la séance")
+            : t("createRoutine.title")}
+        </Text>
         <TouchableOpacity
           onPress={handleSave}
           style={[styles.saveBtn, isSavingRoutine && styles.saveBtnDisabled]}

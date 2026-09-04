@@ -65,14 +65,28 @@ export default function WorkoutPlayerScreen() {
     let cancelled = false;
     guidedPlayer.exercises.forEach(async (ex) => {
       if (ex.gifUrl) return;
-      const found = await findExerciseByNameExerciseDb(ex.name);
-      if (cancelled || !found) return;
-      updateGuidedExercise(ex.id, {
-        gifUrl: found.gifUrl,
-        bodyPart: found.bodyPart,
-        target: found.target,
-        equipment: found.equipment,
-      });
+      try {
+        // Try fetching by ID first (reliable), fall back to name search
+        const byId = await api.getExerciseByExternalId(ex.id).catch(() => null);
+        if (cancelled) return;
+        if (byId?.gif_url) {
+          updateGuidedExercise(ex.id, {
+            gifUrl: byId.gif_url,
+            bodyPart: byId.body_part,
+            target: byId.target_muscle,
+            equipment: byId.equipment,
+          });
+          return;
+        }
+        const found = await findExerciseByNameExerciseDb(ex.name);
+        if (cancelled || !found) return;
+        updateGuidedExercise(ex.id, {
+          gifUrl: found.gifUrl,
+          bodyPart: found.bodyPart,
+          target: found.target,
+          equipment: found.equipment,
+        });
+      } catch {}
     });
     return () => {
       cancelled = true;
@@ -174,11 +188,11 @@ export default function WorkoutPlayerScreen() {
 
   useEffect(() => {
     const sub = BackHandler.addEventListener("hardwareBackPress", () => {
-      confirmExit();
+      router.back();
       return true;
     });
     return () => sub.remove();
-  }, [confirmExit]);
+  }, [router]);
 
   if (!guidedPlayer) {
     return (
@@ -221,7 +235,7 @@ export default function WorkoutPlayerScreen() {
         <View style={styles.header}>
           <TouchableOpacity
             style={styles.headerIconBtn}
-            onPress={confirmExit}
+            onPress={() => router.back()}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
             <Ionicons
@@ -244,7 +258,7 @@ export default function WorkoutPlayerScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.finishBtn}
-              onPress={handleEndConfirm}
+              onPress={confirmExit}
             >
               <Text style={styles.finishBtnText}>
                 {t("workoutPlayer.finish")}
@@ -292,6 +306,18 @@ export default function WorkoutPlayerScreen() {
               prSetIds={prSetIds}
             />
           ))}
+
+          {/* ── Add exercise button ───────────────────────────────── */}
+          <TouchableOpacity
+            style={styles.addExerciseBtn}
+            activeOpacity={0.7}
+            onPress={() => router.push("/exercise-picker" as any)}
+          >
+            <Ionicons name="add" size={20} color={theme.primary.main} />
+            <Text style={[styles.addExerciseBtnText, { color: theme.primary.main }]}>
+              {t("workoutPlayer.addExercise", "Ajouter un Exercice")}
+            </Text>
+          </TouchableOpacity>
         </ScrollView>
 
         {/* ── Rest timer bottom sheet ──────────────────────────────── */}
@@ -661,49 +687,83 @@ function MiniRestTimerBar({
   const [remaining, setRemaining] = useState(
     Math.max(0, Math.round((endsAt - Date.now()) / 1000)),
   );
+  const [finished, setFinished] = useState(false);
+  const prevRemaining = useRef(remaining);
+
+  // Tick sound for last 10 seconds
+  useEffect(() => {
+    if (remaining > 0 && remaining <= 10 && remaining !== prevRemaining.current) {
+      try {
+        const { createAudioPlayer } = require("expo-audio");
+        const tick = createAudioPlayer(require("../../../assets/timer-tick.wav"));
+        tick.volume = 1;
+        tick.play();
+        setTimeout(() => { try { tick.release(); } catch {} }, 500);
+      } catch {}
+    }
+    prevRemaining.current = remaining;
+  }, [remaining]);
 
   useEffect(() => {
+    let done = false;
     const id = setInterval(() => {
       const next = Math.max(0, Math.round((endsAt - Date.now()) / 1000));
       setRemaining(next);
-      if (next <= 0) clearInterval(id);
+      if (next <= 0 && !done) {
+        done = true;
+        clearInterval(id);
+        setFinished(true);
+        try {
+          const { createAudioPlayer } = require("expo-audio");
+          const player = createAudioPlayer(require("../../../assets/timer-done.wav"));
+          player.volume = 1;
+          player.play();
+          setTimeout(() => { try { player.release(); } catch {} }, 2000);
+        } catch {}
+      }
     }, 250);
     return () => clearInterval(id);
   }, [endsAt]);
 
-  if (remaining <= 0) return null;
-
   const progress = totalSeconds > 0 ? remaining / totalSeconds : 0;
   const minutes = Math.floor(remaining / 60);
   const seconds = remaining % 60;
+  const isUrgent = remaining <= 10 && remaining > 0;
 
   return (
     <TouchableOpacity
-      style={[miniStyles.bar, { backgroundColor: theme.background.darker }]}
+      style={[
+        miniStyles.bar,
+        { backgroundColor: finished ? "#34C759" : theme.background.darker },
+      ]}
       activeOpacity={0.85}
       onPress={onExpand}
     >
-      <Ionicons name="timer-outline" size={20} color={theme.primary.main} />
+      <Ionicons
+        name={finished ? "checkmark-circle" : "timer-outline"}
+        size={20}
+        color={finished ? "#fff" : isUrgent ? "#FF6B6B" : theme.primary.main}
+      />
       <View style={miniStyles.progressWrap}>
         <View
           style={[
             miniStyles.progressTrack,
-            { backgroundColor: theme.background.accent },
+            { backgroundColor: finished ? "rgba(255,255,255,0.3)" : theme.background.accent },
           ]}
         >
           <View
             style={[
               miniStyles.progressFill,
               {
-                backgroundColor: theme.primary.main,
-                width: `${progress * 100}%`,
+                backgroundColor: finished ? "#fff" : isUrgent ? "#FF6B6B" : theme.primary.main,
+                width: finished ? "100%" : `${progress * 100}%`,
               },
             ]}
           />
         </View>
       </View>
-      <Text style={[miniStyles.time, { color: theme.foreground.white }]}>
-        {`${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`}
+      <Text style={[miniStyles.time, { color: finished ? "#fff" : isUrgent ? "#FF6B6B" : theme.foreground.white }]}>
+        {finished ? "GO!" : `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`}
       </Text>
       <TouchableOpacity
         onPress={(e) => {
@@ -712,7 +772,7 @@ function MiniRestTimerBar({
         }}
         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
       >
-        <Ionicons name="close-circle" size={22} color={theme.foreground.gray} />
+        <Ionicons name="close-circle" size={22} color={finished ? "rgba(255,255,255,0.7)" : theme.foreground.gray} />
       </TouchableOpacity>
     </TouchableOpacity>
   );
@@ -852,6 +912,21 @@ const createStyles = (theme: Theme) =>
       paddingTop: 14,
       paddingBottom: 60,
       gap: 24,
+    },
+    addExerciseBtn: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 6,
+      paddingVertical: 14,
+      borderWidth: 1.5,
+      borderColor: theme.primary.main,
+      borderRadius: 12,
+      borderStyle: "dashed",
+    },
+    addExerciseBtnText: {
+      fontFamily: FONTS.bold,
+      fontSize: 14,
     },
     // Exercise card
     exerciseCard: {

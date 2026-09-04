@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import React, { useCallback } from "react";
-import OnboardingScreen from "../../screens/Onboarding";
+import NewOnboarding from "../../screens/Onboarding/NewOnboarding";
 import { setHasSeenOnboarding } from "../../storage/onboarding";
 
 export default function OnboardingRoute() {
@@ -11,5 +11,5 @@ export default function OnboardingRoute() {
     router.replace("/auth");
   }, [router]);
 
-  return <OnboardingScreen onComplete={onComplete} />;
+  return <NewOnboarding onComplete={onComplete} />;
 }

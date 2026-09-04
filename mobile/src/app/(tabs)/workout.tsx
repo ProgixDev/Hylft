@@ -86,7 +86,7 @@ export default function Workout() {
     transform: [{ translateX: togglePos.value }],
   }));
   const { startWorkout, startGuidedRoutine } = useActiveWorkout();
-  const { initCreation } = useCreateRoutine();
+  const { initCreation, initEditing } = useCreateRoutine();
   const scrollRef = useRef<ScrollView | null>(null);
 
   const loadData = useCallback(async () => {
@@ -480,6 +480,11 @@ export default function Workout() {
         onStart={(routine) => {
           setSelectedRoutine(null);
           handleStartRoutine(routine);
+        }}
+        onEdit={(routine) => {
+          setSelectedRoutine(null);
+          initEditing(routine);
+          router.push("/create-routine" as any);
         }}
         onDelete={async (routine) => {
           try {

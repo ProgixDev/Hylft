@@ -1,5 +1,5 @@
 import React, { createContext, ReactNode, useContext, useState } from "react";
-import { RoutineExercise } from "../data/mockData";
+import { Routine, RoutineExercise } from "../data/mockData";
 import { ExerciseDbExercise } from "../services/exerciseDbApi";
 
 export interface RoutineDraft {
@@ -12,8 +12,10 @@ export interface RoutineDraft {
 
 interface CreateRoutineContextType {
   isCreating: boolean;
+  editingRoutineId: string | null;
   draft: RoutineDraft;
   initCreation: () => void;
+  initEditing: (routine: Routine) => void;
   clearCreation: () => void;
   updateDraft: (updates: Partial<Omit<RoutineDraft, "exercises">>) => void;
   addExercisesToRoutine: (exercises: ExerciseDbExercise[]) => void;
@@ -50,15 +52,30 @@ export const CreateRoutineProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const [isCreating, setIsCreating] = useState(false);
+  const [editingRoutineId, setEditingRoutineId] = useState<string | null>(null);
   const [draft, setDraft] = useState<RoutineDraft>({ ...DEFAULT_DRAFT });
 
   const initCreation = () => {
     setDraft({ ...DEFAULT_DRAFT });
+    setEditingRoutineId(null);
+    setIsCreating(true);
+  };
+
+  const initEditing = (routine: Routine) => {
+    setDraft({
+      name: routine.name,
+      description: routine.description,
+      targetMuscles: routine.targetMuscles,
+      exercises: routine.exercises,
+      coverImageUrl: "",
+    });
+    setEditingRoutineId(routine.id);
     setIsCreating(true);
   };
 
   const clearCreation = () => {
     setDraft({ ...DEFAULT_DRAFT });
+    setEditingRoutineId(null);
     setIsCreating(false);
   };
 
@@ -152,8 +169,10 @@ export const CreateRoutineProvider: React.FC<{ children: ReactNode }> = ({
     <CreateRoutineContext.Provider
       value={{
         isCreating,
+        editingRoutineId,
         draft,
         initCreation,
+        initEditing,
         clearCreation,
         updateDraft,
         addExercisesToRoutine,

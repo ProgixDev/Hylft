@@ -389,7 +389,8 @@ export default function FoodSearchScreen() {
             /* cached locally — server retry not critical */
           });
       }
-      router.back();
+      setIsSavingSelection(false);
+      setTimeout(() => router.back(), 400);
     } catch (error) {
       console.error("[Food Search] Failed to confirm meals:", error);
     } finally {
@@ -631,11 +632,18 @@ export default function FoodSearchScreen() {
         </Pressable>
         <Text style={styles.title}>{isFr ? "Rechercher" : "Search Food"}</Text>
         {addedIds.size > 0 ? (
-          <Pressable style={styles.doneBtn} onPress={() => setShowAddedModal(true)}>
+          <Pressable
+            style={[styles.doneBtn, isSavingSelection && { backgroundColor: "#34C759" }]}
+            disabled={isSavingSelection}
+            onPress={() => {
+              setIsSavingSelection(true);
+              void savePendingMeals();
+            }}
+          >
             <Text style={styles.doneBtnText}>
-              {addedIds.size} {isFr ? "sélectionné(s)" : "selected"}
+              {isSavingSelection ? (isFr ? "Ajouté !" : "Added!") : (isFr ? "Valider" : "Done")}
             </Text>
-            <Ionicons name="checkmark" size={16} color="#fff" />
+            <Ionicons name={isSavingSelection ? "checkmark-circle" : "checkmark"} size={16} color="#fff" />
           </Pressable>
         ) : (
           <View style={{ width: 40 }} />
@@ -679,6 +687,17 @@ export default function FoodSearchScreen() {
             )}
           </Pressable>
         </TutorialTarget>
+        <Pressable
+          style={styles.scanBtn}
+          onPress={() =>
+            router.push({
+              pathname: "/food-scan" as any,
+              params: { mealType: selectedMealType, date: targetDate },
+            })
+          }
+        >
+          <Ionicons name="barcode-outline" size={22} color={theme.primary.main} />
+        </Pressable>
       </View>
 
       {belowThreshold ? (
@@ -751,56 +770,6 @@ export default function FoodSearchScreen() {
         }}
       />
 
-      <Modal
-        visible={showAddedModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowAddedModal(false)}
-        onDismiss={() => {
-          startSavingAfterModalDismiss();
-        }}
-      >
-        <Pressable
-          style={styles.confirmOverlay}
-          onPress={() => setShowAddedModal(false)}
-        >
-          <Pressable style={styles.confirmCard} onPress={() => {}}>
-            <View style={styles.confirmIcon}>
-              <Ionicons name="checkmark" size={28} color="#fff" />
-            </View>
-            <Text style={styles.confirmTitle}>
-              {isFr ? "Terminer l'ajout ?" : "Finish adding?"}
-            </Text>
-            <Text style={styles.confirmMessage}>
-              {addedIds.size} {isFr ? "aliment(s) sélectionné(s) pour" : "food(s) selected for"} {mealLabels[selectedMealType]}. {isFr ? "Voulez-vous les ajouter ?" : "Would you like to add them?"}
-            </Text>
-            <View style={styles.confirmActions}>
-              <Pressable
-                style={({ pressed }) => [
-                  styles.confirmButton,
-                  styles.cancelButton,
-                  pressed && { opacity: 0.75 },
-                ]}
-                onPress={() => setShowAddedModal(false)}
-              >
-                <Text style={[styles.confirmButtonText, styles.cancelButtonText]}>
-                  {isFr ? "Annuler" : "Cancel"}
-                </Text>
-              </Pressable>
-              <Pressable
-                style={({ pressed }) => [
-                  styles.confirmButton,
-                  pressed && { opacity: 0.85 },
-                ]}
-                disabled={isSavingSelection}
-                onPress={() => void confirmPendingMeals()}
-              >
-                <Text style={styles.confirmButtonText}>OK</Text>
-              </Pressable>
-            </View>
-          </Pressable>
-        </Pressable>
-      </Modal>
     </View>
   );
 }
@@ -856,6 +825,7 @@ function createStyles(theme: Theme) {
     },
     searchInput: {
       width: "100%",
+      height: 48,
       borderRadius: 10,
       borderWidth: 1.5,
       borderColor: theme.background.accent,
@@ -864,7 +834,6 @@ function createStyles(theme: Theme) {
       fontFamily: FONTS.regular,
       fontSize: 14,
       paddingHorizontal: 12,
-      paddingVertical: 10,
     },
     searchBtn: {
       width: 48,
@@ -876,6 +845,15 @@ function createStyles(theme: Theme) {
     },
     searchBtnDisabled: {
       opacity: 0.6,
+    },
+    scanBtn: {
+      width: 48,
+      height: 48,
+      borderRadius: 10,
+      borderWidth: 1.5,
+      borderColor: theme.primary.main,
+      alignItems: "center",
+      justifyContent: "center",
     },
     sectionTitle: {
       fontFamily: FONTS.bold,

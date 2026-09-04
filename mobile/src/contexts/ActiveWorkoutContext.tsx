@@ -281,6 +281,46 @@ export const ActiveWorkoutProvider: React.FC<ActiveWorkoutProviderProps> = ({
 
   // ── Exercise/set management ──────────────────────────────────────────
   const addExerciseToWorkout = useCallback((exercise: any) => {
+    // Add to guided player if active
+    setGuidedPlayer((prev) => {
+      if (!prev) return prev;
+      const newExercise: GuidedPlayerExercise = {
+        id: exercise.id,
+        name: exercise.name,
+        gifUrl: exercise.gifUrl,
+        bodyPart: exercise.bodyPart,
+        target: exercise.target,
+        equipment: exercise.equipment,
+        targetReps: "8-12",
+        notes: "",
+        restSeconds: 90,
+        sets: [
+          {
+            id: `${Date.now()}-${Math.random()}`,
+            kg: "",
+            reps: "",
+            isWarmup: false,
+            isCompleted: false,
+          },
+          {
+            id: `${Date.now()}-${Math.random()}-2`,
+            kg: "",
+            reps: "",
+            isWarmup: false,
+            isCompleted: false,
+          },
+          {
+            id: `${Date.now()}-${Math.random()}-3`,
+            kg: "",
+            reps: "",
+            isWarmup: false,
+            isCompleted: false,
+          },
+        ],
+      };
+      return { ...prev, exercises: [...prev.exercises, newExercise] };
+    });
+
     setActiveWorkout((prev) => {
       if (!prev) return prev;
 
