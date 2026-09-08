@@ -37,6 +37,7 @@ import {
 } from "../constants/tutorial";
 import { hasProEntitlement, initRevenueCat } from "../services/revenueCatBilling";
 import { clearPreloadCache, preloadAppData } from "../services/preloadCache";
+import { setupWorkoutNotificationChannel } from "../services/workoutNotification";
 
 SplashScreen.preventAutoHideAsync().catch(() => {
   // Ignore errors if splash screen was already prevented.
@@ -62,6 +63,10 @@ function AppContent() {
     isGetStartedRoute && routeSegments[1] === "ready";
   const isFullBleedRoute = isAuthRoute || isOnboardingRoute;
   const shellBackgroundColor = isAuthRoute ? "#06101F" : theme.background.dark;
+
+  useEffect(() => {
+    setupWorkoutNotificationChannel().catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (user?.id) {

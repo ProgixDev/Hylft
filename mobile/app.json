@@ -111,7 +111,14 @@
           "style": "dark"
         }
       ],
-      "expo-audio"
+      "expo-audio",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#0B1437"
+        }
+      ]
     ],
     "extra": {
       "router": {
