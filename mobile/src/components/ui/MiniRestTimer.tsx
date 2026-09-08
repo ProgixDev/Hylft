@@ -68,8 +68,28 @@ export default function MiniRestTimer() {
     return () => clearInterval(id);
   }, [hasTimer, endsAt]);
 
-  if (!hasTimer) return null;
-  if (!finished && remaining <= 0) return null;
+  // No guided player at all → hide
+  if (!guidedPlayer) return null;
+
+  // Timer active
+  const showTimer = hasTimer && (finished || remaining > 0);
+
+  if (!showTimer) {
+    // No rest timer → show mini workout bar to return to session
+    return (
+      <TouchableOpacity
+        style={[styles.container, { backgroundColor: theme.background.darker }]}
+        activeOpacity={0.85}
+        onPress={() => router.push("/workout-player")}
+      >
+        <Ionicons name="barbell-outline" size={18} color={theme.primary.main} />
+        <Text style={[styles.timerText, { color: theme.foreground.white, fontSize: 14 }]}>
+          {guidedPlayer.routineName}
+        </Text>
+        <Ionicons name="chevron-forward" size={16} color={theme.foreground.gray} />
+      </TouchableOpacity>
+    );
+  }
 
   const progress = totalSeconds > 0 ? remaining / totalSeconds : 0;
   const dashOffset = CIRCUMFERENCE * (1 - progress);
