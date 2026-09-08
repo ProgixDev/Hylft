@@ -168,11 +168,22 @@ export default function WorkoutPlayerScreen() {
   }, [guidedPlayer, exercisePRs, togglePlayerSetCompleted, showPrToast]);
 
   const [exitModalVisible, setExitModalVisible] = useState(false);
+  const [cancelModalVisible, setCancelModalVisible] = useState(false);
   const [completionVisible, setCompletionVisible] = useState(false);
 
   const confirmExit = useCallback(() => {
     setExitModalVisible(true);
   }, []);
+
+  const confirmCancel = useCallback(() => {
+    setCancelModalVisible(true);
+  }, []);
+
+  const handleCancelConfirm = useCallback(async () => {
+    setCancelModalVisible(false);
+    await endGuidedRoutine(false);
+    router.replace("/(tabs)/workout" as any);
+  }, [endGuidedRoutine, router]);
 
   const handleEndConfirm = useCallback(async () => {
     setExitModalVisible(false);
@@ -248,12 +259,13 @@ export default function WorkoutPlayerScreen() {
           <View style={styles.headerRight}>
             <TouchableOpacity
               style={styles.headerIconBtn}
+              onPress={confirmCancel}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
               <Ionicons
-                name="alarm-outline"
+                name="trash-outline"
                 size={20}
-                color={theme.foreground.white}
+                color="#FF6B6B"
               />
             </TouchableOpacity>
             <TouchableOpacity
@@ -337,6 +349,7 @@ export default function WorkoutPlayerScreen() {
             totalSeconds={guidedPlayer.restTotalSeconds ?? 60}
             onExpand={() => setRestTimerMinimized(false)}
             onSkip={stopPlayerRest}
+            onAdjust={adjustPlayerRest}
           />
         )}
 
@@ -372,6 +385,18 @@ export default function WorkoutPlayerScreen() {
           cancelLabel={t("workoutPlayer.cancel")}
           onCancel={() => setExitModalVisible(false)}
           onConfirm={handleEndConfirm}
+        />
+
+        <ConfirmationModal
+          visible={cancelModalVisible}
+          variant="destructive"
+          icon="trash"
+          title={t("workoutPlayer.cancelWorkout")}
+          message={t("workoutPlayer.cancelWorkoutConfirm")}
+          confirmLabel={t("workoutPlayer.cancelWorkoutBtn")}
+          cancelLabel={t("workoutPlayer.cancel")}
+          onCancel={() => setCancelModalVisible(false)}
+          onConfirm={handleCancelConfirm}
         />
 
         <Modal
@@ -579,6 +604,7 @@ function ExerciseCard({
                 styles.input,
                 styles.colInput,
                 set.isCompleted && { color: "#FFFFFF" },
+                set.isPreFilled && !set.isCompleted && { color: theme.foreground.gray },
               ]}
               value={set.kg}
               onChangeText={(v) => onSetChange(set.id, { kg: v })}
@@ -592,6 +618,7 @@ function ExerciseCard({
                 styles.input,
                 styles.colInput,
                 set.isCompleted && { color: "#FFFFFF" },
+                set.isPreFilled && !set.isCompleted && { color: theme.foreground.gray },
               ]}
               value={set.reps}
               onChangeText={(v) => onSetChange(set.id, { reps: v })}
@@ -677,11 +704,13 @@ function MiniRestTimerBar({
   totalSeconds,
   onExpand,
   onSkip,
+  onAdjust,
 }: {
   endsAt: number;
   totalSeconds: number;
   onExpand: () => void;
   onSkip: () => void;
+  onAdjust: (delta: number) => void;
 }) {
   const { theme } = useTheme();
   const [remaining, setRemaining] = useState(
@@ -765,6 +794,24 @@ function MiniRestTimerBar({
       <Text style={[miniStyles.time, { color: finished ? "#fff" : isUrgent ? "#FF6B6B" : theme.foreground.white }]}>
         {finished ? "GO!" : `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`}
       </Text>
+      {!finished && (
+        <>
+          <TouchableOpacity
+            style={miniStyles.adjustBtn}
+            onPress={(e) => { e.stopPropagation(); onAdjust(-15); }}
+            hitSlop={{ top: 6, bottom: 6, left: 4, right: 4 }}
+          >
+            <Text style={[miniStyles.adjustText, { color: theme.foreground.gray }]}>-15</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={miniStyles.adjustBtn}
+            onPress={(e) => { e.stopPropagation(); onAdjust(15); }}
+            hitSlop={{ top: 6, bottom: 6, left: 4, right: 4 }}
+          >
+            <Text style={[miniStyles.adjustText, { color: theme.foreground.gray }]}>+15</Text>
+          </TouchableOpacity>
+        </>
+      )}
       <TouchableOpacity
         onPress={(e) => {
           e.stopPropagation();
@@ -814,6 +861,14 @@ const miniStyles = StyleSheet.create({
     fontFamily: FONTS.bold,
     minWidth: 50,
     textAlign: "center",
+  },
+  adjustBtn: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  adjustText: {
+    fontSize: 13,
+    fontFamily: FONTS.semiBold,
   },
 });
 

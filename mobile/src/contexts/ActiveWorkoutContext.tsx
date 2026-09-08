@@ -10,6 +10,10 @@ import React, {
 import { Routine } from "../data/mockData";
 import { api } from "../services/api";
 import { estimateCaloriesBurned } from "../utils/calorieEstimator";
+import {
+  dismissWorkoutNotification,
+  showWorkoutNotification,
+} from "../services/workoutNotification";
 import { useAuth } from "./AuthContext";
 import { useHealth } from "./HealthContext";
 
@@ -21,6 +25,8 @@ export interface ExerciseSet {
   kg: string;
   reps: string;
   isCompleted: boolean;
+  /** True when kg/reps were auto-copied from the previous validated set */
+  isPreFilled?: boolean;
 }
 
 /** Exercise entry within a workout session */
@@ -53,6 +59,8 @@ export interface PlayerSet {
   /** Last time the user trained this set, for the PREVIOUS column. */
   previousKg?: number;
   previousReps?: number;
+  /** True when kg/reps were auto-copied from the previous validated set */
+  isPreFilled?: boolean;
 }
 
 /** Per-exercise state inside the Hevy-style guided player. */
@@ -187,6 +195,38 @@ export const ActiveWorkoutProvider: React.FC<ActiveWorkoutProviderProps> = ({
       }
     };
   }, [activeWorkout !== null, isPaused]);
+
+  // ── Persistent workout notification ────────────────────────────────
+  useEffect(() => {
+    if (!guidedPlayer) {
+      dismissWorkoutNotification().catch(() => {});
+      return;
+    }
+    // Find current exercise (first with uncompleted sets, or last)
+    const currentEx =
+      guidedPlayer.exercises.find((ex) =>
+        ex.sets.some((s) => !s.isCompleted),
+      ) ?? guidedPlayer.exercises[guidedPlayer.exercises.length - 1];
+    if (!currentEx) return;
+
+    const completedCount = currentEx.sets.filter((s) => s.isCompleted).length;
+    const totalSets = currentEx.sets.length;
+    const currentSetNum = Math.max(1, completedCount);
+    const lastDone = [...currentEx.sets].reverse().find((s) => s.isCompleted);
+    const displaySet = lastDone ?? currentEx.sets[0];
+    const kgLabel = displaySet?.kg ? `${parseFloat(displaySet.kg)} kg` : "";
+    const repsLabel = displaySet?.reps ? `x ${displaySet.reps}` : "";
+    const detail = [kgLabel, repsLabel].filter(Boolean).join(" ");
+
+    const setLabel = `Série ${currentSetNum}/${totalSets}${detail ? ` - ${detail} répétitions` : ""}`;
+
+    console.log("[WorkoutNotif] Showing:", currentEx.name, setLabel);
+    showWorkoutNotification({
+      exerciseName: currentEx.name,
+      setLabel,
+      routineName: guidedPlayer.routineName,
+    }).catch((e) => console.warn("[WorkoutNotif] Failed:", e));
+  }, [guidedPlayer]);
 
   const startWorkout = useCallback((workout: ActiveWorkout) => {
     const workoutWithExercises = {
@@ -387,9 +427,17 @@ export const ActiveWorkoutProvider: React.FC<ActiveWorkoutProviderProps> = ({
             if (ex.id !== exerciseEntryId) return ex;
             return {
               ...ex,
-              sets: ex.sets.map((s) =>
-                s.id === setId ? { ...s, ...updates } : s,
-              ),
+              sets: ex.sets.map((s) => {
+                if (s.id !== setId) return s;
+                // Clear pre-filled flag when user manually edits kg/reps
+                const clearPreFill =
+                  s.isPreFilled && ("kg" in updates || "reps" in updates);
+                return {
+                  ...s,
+                  ...updates,
+                  ...(clearPreFill ? { isPreFilled: false } : {}),
+                };
+              }),
             };
           }),
         };
@@ -540,9 +588,17 @@ export const ActiveWorkoutProvider: React.FC<ActiveWorkoutProviderProps> = ({
             if (ex.id !== exerciseId) return ex;
             return {
               ...ex,
-              sets: ex.sets.map((s) =>
-                s.id === setId ? { ...s, ...updates } : s,
-              ),
+              sets: ex.sets.map((s) => {
+                if (s.id !== setId) return s;
+                // Clear pre-filled flag when user manually edits kg/reps
+                const clearPreFill =
+                  s.isPreFilled && ("kg" in updates || "reps" in updates);
+                return {
+                  ...s,
+                  ...updates,
+                  ...(clearPreFill ? { isPreFilled: false } : {}),
+                };
+              }),
             };
           }),
         };
@@ -657,14 +713,28 @@ export const ActiveWorkoutProvider: React.FC<ActiveWorkoutProviderProps> = ({
           exercises: prev.exercises.map((ex) => {
             if (ex.id !== exerciseId) return ex;
             restSecondsForExercise = ex.restSeconds;
-            return {
-              ...ex,
-              sets: ex.sets.map((s) => {
-                if (s.id !== setId) return s;
-                willComplete = !s.isCompleted;
-                return { ...s, isCompleted: !s.isCompleted };
-              }),
-            };
+            const toggledSets = ex.sets.map((s) => {
+              if (s.id !== setId) return s;
+              willComplete = !s.isCompleted;
+              return { ...s, isCompleted: !s.isCompleted, isPreFilled: false };
+            });
+            // Pre-fill next uncompleted set when completing
+            if (willComplete) {
+              const idx = toggledSets.findIndex((s) => s.id === setId);
+              const completedSet = toggledSets[idx];
+              if (completedSet && idx < toggledSets.length - 1) {
+                const next = toggledSets[idx + 1];
+                if (!next.isCompleted) {
+                  toggledSets[idx + 1] = {
+                    ...next,
+                    kg: completedSet.kg,
+                    reps: completedSet.reps,
+                    isPreFilled: true,
+                  };
+                }
+              }
+            }
+            return { ...ex, sets: toggledSets };
           }),
         };
       });

@@ -336,16 +336,35 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
 
     // ── Set row ───────────────────────────────────────────────────────────────
     const renderSetRow = useCallback(
-      (exerciseId: string, set: ExerciseSet) => {
+      (exerciseId: string, set: ExerciseSet, allSets: ExerciseSet[]) => {
         const prevLabel =
           set.previousKg !== undefined && set.previousReps !== undefined
             ? `${set.previousKg} × ${set.previousReps}`
             : "—";
 
         const toggleComplete = () => {
-          updateSet(exerciseId, set.id, { isCompleted: !set.isCompleted });
-          if (!set.isCompleted) startRestTimer();
+          updateSet(exerciseId, set.id, {
+            isCompleted: !set.isCompleted,
+            isPreFilled: false,
+          });
+          if (!set.isCompleted) {
+            startRestTimer();
+            // Pre-fill next uncompleted set with current values
+            const idx = allSets.findIndex((s) => s.id === set.id);
+            if (idx >= 0 && idx < allSets.length - 1) {
+              const next = allSets[idx + 1];
+              if (!next.isCompleted) {
+                updateSet(exerciseId, next.id, {
+                  kg: set.kg,
+                  reps: set.reps,
+                  isPreFilled: true,
+                });
+              }
+            }
+          }
         };
+
+        const isPreFilled = set.isPreFilled && !set.isCompleted;
 
         return (
           <View
@@ -369,6 +388,7 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
               style={[
                 styles.setInput,
                 set.isCompleted && styles.setInputCompleted,
+                isPreFilled && { color: theme.foreground.gray },
               ]}
               value={set.kg}
               onChangeText={(v) => updateSet(exerciseId, set.id, { kg: v })}
@@ -383,6 +403,7 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
               style={[
                 styles.setInput,
                 set.isCompleted && styles.setInputCompleted,
+                isPreFilled && { color: theme.foreground.gray },
               ]}
               value={set.reps}
               onChangeText={(v) => updateSet(exerciseId, set.id, { reps: v })}
@@ -472,7 +493,7 @@ const ActiveWorkoutSheet = forwardRef<BottomSheet, ActiveWorkoutSheetProps>(
             </View>
 
             {/* Set rows */}
-            {item.sets.map((s) => renderSetRow(item.id, s))}
+            {item.sets.map((s) => renderSetRow(item.id, s, item.sets))}
 
             {/* Add set */}
             <TouchableOpacity
