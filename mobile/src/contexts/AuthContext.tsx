@@ -46,9 +46,8 @@ interface AuthContextType {
 const ONBOARDING_KEY = "@hylift_onboarding_completed";
 const GET_STARTED_COMPLETED_KEY = "@hylift_get_started_completed";
 
-// Hardcoded auto-login credentials (disabled — may re-enable later)
-// const AUTO_LOGIN_EMAIL = "medabderraouf.zouaid@gmail.com";
-// const AUTO_LOGIN_PASSWORD = "Raouf2003@";
+const AUTO_LOGIN_EMAIL = "medabderraouf.zouaid@gmail.com";
+const AUTO_LOGIN_PASSWORD = "Raouf2003@";
 
 const getStartedCompletedKey = (userId: string) =>
   `${GET_STARTED_COMPLETED_KEY}:${userId}`;
@@ -143,21 +142,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } else if (s) {
           setSession(s);
         } else {
-          // Auto-login disabled — user must sign in manually
-          // To re-enable, uncomment AUTO_LOGIN_EMAIL/PASSWORD above and this block:
-          // console.log("[Auth] No session found, attempting auto-login...");
-          // const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-          //   email: AUTO_LOGIN_EMAIL,
-          //   password: AUTO_LOGIN_PASSWORD,
-          // });
-          // if (signInError) {
-          //   console.error("[Auth] Auto-login failed", signInError);
-          //   setSession(null);
-          // } else if (signInData.session) {
-          //   console.log("[Auth] Auto-login successful");
-          //   setSession(signInData.session);
-          // }
-          setSession(null);
+          console.log("[Auth] No session found, attempting auto-login...");
+          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+            email: AUTO_LOGIN_EMAIL,
+            password: AUTO_LOGIN_PASSWORD,
+          });
+          if (signInError) {
+            console.error("[Auth] Auto-login failed", signInError);
+            setSession(null);
+          } else if (signInData.session) {
+            console.log("[Auth] Auto-login successful");
+            setSession(signInData.session);
+          }
         }
       } catch (err) {
         console.error("[Auth] Failed to restore session", err);
