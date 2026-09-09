@@ -19,7 +19,6 @@ import { useCreateRoutine } from "../../contexts/CreateRoutineContext";
 import { useI18n } from "../../contexts/I18nContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import {
-  Difficulty,
   ExerciseDbExercise,
   fetchExercisesExerciseDb,
   getAvailableBodyPartsExerciseDb,
@@ -30,13 +29,7 @@ import { translateExerciseName, translateExerciseTerm } from "../../utils/exerci
 
 import { FONTS } from "../../constants/fonts";
 
-const DIFFICULTY_COLORS: Record<Difficulty, string> = {
-  beginner: "#4CAF50",
-  intermediate: "#FF9800",
-  advanced: "#F44336",
-};
-
-type FilterTab = "bodyPart" | "equipment" | "difficulty";
+type FilterTab = "bodyPart" | "equipment";
 
 export default function ExercisePicker() {
   const router = useRouter();
@@ -69,8 +62,6 @@ export default function ExercisePicker() {
   const [selectedEquipment, setSelectedEquipment] = useState<string | null>(
     null,
   );
-  const [selectedDifficulty, setSelectedDifficulty] =
-    useState<Difficulty | null>(null);
   const [bodyParts, setBodyParts] = useState<string[]>([]);
   const [equipments, setEquipments] = useState<string[]>([]);
 
@@ -78,14 +69,12 @@ export default function ExercisePicker() {
 
   const hasActiveFilters =
     selectedBodyPart !== null ||
-    selectedEquipment !== null ||
-    selectedDifficulty !== null;
+    selectedEquipment !== null;
 
   const isSearchMode = searchQuery.trim().length > 0;
   const activeFilterCount =
     (selectedBodyPart ? 1 : 0) +
-    (selectedEquipment ? 1 : 0) +
-    (selectedDifficulty ? 1 : 0);
+    (selectedEquipment ? 1 : 0);
 
   // Load filter options (canonical English values; display translation happens in the chip)
   useEffect(() => {
@@ -115,10 +104,7 @@ export default function ExercisePicker() {
           bodyParts: selectedBodyPart,
           equipments: selectedEquipment,
         });
-        const filtered = (selectedDifficulty
-          ? result.exercises.filter((e) => e.difficulty === selectedDifficulty)
-          : result.exercises
-        ).filter((e) => !!e.gifUrl);
+        const filtered = result.exercises.filter((e) => !!e.gifUrl);
         setExercises((prev) => (reset ? filtered : [...prev, ...filtered]));
         setHasMore(result.hasMore);
         setCursor(result.nextCursor);
@@ -135,7 +121,6 @@ export default function ExercisePicker() {
       shouldTranslate,
       selectedBodyPart,
       selectedEquipment,
-      selectedDifficulty,
     ],
   );
 
@@ -150,7 +135,6 @@ export default function ExercisePicker() {
   }, [
     selectedBodyPart,
     selectedEquipment,
-    selectedDifficulty,
     shouldTranslate,
     isSearchMode,
   ]);
@@ -177,8 +161,6 @@ export default function ExercisePicker() {
             !e.rawEquipments.includes(selectedEquipment.toLowerCase())
           )
             return false;
-          if (selectedDifficulty && e.difficulty !== selectedDifficulty)
-            return false;
           return true;
         });
         setExercises(filtered);
@@ -194,13 +176,12 @@ export default function ExercisePicker() {
       if (searchTimeout.current) clearTimeout(searchTimeout.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchQuery, selectedBodyPart, selectedEquipment, selectedDifficulty, shouldTranslate]);
+  }, [searchQuery, selectedBodyPart, selectedEquipment, shouldTranslate]);
 
   // Clear all filters
   const clearAllFilters = () => {
     setSelectedBodyPart(null);
     setSelectedEquipment(null);
-    setSelectedDifficulty(null);
   };
 
   const toggleSelected = useCallback((idKey: string) => {
@@ -214,7 +195,6 @@ export default function ExercisePicker() {
   // List row
   const renderExerciseRow = useCallback(
     ({ item }: { item: ExerciseDbExercise }) => {
-      const diffColor = DIFFICULTY_COLORS[item.difficulty];
       const isSelected = selectedIds.includes(item.id);
 
       const handleNavigateDetail = () =>
@@ -247,9 +227,6 @@ export default function ExercisePicker() {
                 />
               </View>
             )}
-            <View
-              style={[styles.difficultyDot, { backgroundColor: diffColor }]}
-            />
           </View>
 
           <View style={styles.exerciseInfo}>
@@ -314,7 +291,6 @@ export default function ExercisePicker() {
   // Grid card
   const renderExerciseCard = useCallback(
     ({ item }: { item: ExerciseDbExercise }) => {
-      const diffColor = DIFFICULTY_COLORS[item.difficulty];
       const isSelected = selectedIds.includes(item.id);
 
       const handleNavigateDetail = () =>
@@ -347,11 +323,6 @@ export default function ExercisePicker() {
                 />
               </View>
             )}
-
-            {/* difficulty pill */}
-            <View
-              style={[styles.gridDifficulty, { backgroundColor: diffColor }]}
-            />
 
             {/* info button */}
             <TouchableOpacity
@@ -594,8 +565,6 @@ export default function ExercisePicker() {
         onBodyPartChange={setSelectedBodyPart}
         selectedEquipment={selectedEquipment}
         onEquipmentChange={setSelectedEquipment}
-        selectedDifficulty={selectedDifficulty}
-        onDifficultyChange={setSelectedDifficulty}
         bodyParts={bodyParts}
         equipments={equipments}
         hasActiveFilters={hasActiveFilters}
@@ -707,16 +676,6 @@ const createStyles = (theme: Theme) =>
       backgroundColor: theme.background.accent,
     },
     exerciseThumbnail: { width: 56, height: 56 },
-    difficultyDot: {
-      position: "absolute",
-      bottom: 4,
-      right: 4,
-      width: 8,
-      height: 8,
-      borderRadius: 4,
-      borderWidth: 1.5,
-      borderColor: "#0A1628",
-    },
     exerciseRowSelected: {
       borderColor: "#FFFFFF",
     },
@@ -786,16 +745,6 @@ const createStyles = (theme: Theme) =>
       flex: 1,
       alignItems: "center",
       justifyContent: "center",
-    },
-    gridDifficulty: {
-      position: "absolute",
-      top: 8,
-      left: 8,
-      width: 10,
-      height: 10,
-      borderRadius: 5,
-      borderWidth: 2,
-      borderColor: "rgba(0,0,0,0.4)",
     },
     gridInfoButton: {
       position: "absolute",

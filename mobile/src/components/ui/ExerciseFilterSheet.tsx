@@ -18,10 +18,42 @@ import Animated, {
 import { FONTS } from "../../constants/fonts";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
-import { Difficulty } from "../../services/exerciseDbApi";
 import { translateExerciseTerm } from "../../utils/exerciseTranslator";
 
-type FilterTab = "bodyPart" | "equipment" | "difficulty";
+type FilterTab = "bodyPart" | "equipment";
+
+const BODY_PART_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
+  back: "body-outline",
+  cardio: "heart-outline",
+  chest: "body-outline",
+  "lower arms": "hand-left-outline",
+  "lower legs": "footsteps-outline",
+  neck: "body-outline",
+  shoulders: "body-outline",
+  "upper arms": "fitness-outline",
+  "upper legs": "walk-outline",
+  waist: "body-outline",
+};
+
+const EQUIPMENT_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
+  barbell: "barbell-outline",
+  dumbbell: "barbell-outline",
+  cable: "link-outline",
+  "body weight": "body-outline",
+  band: "resize-outline",
+  "leverage machine": "cog-outline",
+  "smith machine": "grid-outline",
+  kettlebell: "fitness-outline",
+  "medicine ball": "football-outline",
+  "ez barbell": "barbell-outline",
+  "olympic barbell": "barbell-outline",
+  "trap bar": "barbell-outline",
+  roller: "ellipse-outline",
+  rope: "link-outline",
+  "stability ball": "ellipse-outline",
+  assisted: "hand-right-outline",
+  weighted: "barbell-outline",
+};
 
 interface ExerciseFilterSheetProps {
   visible: boolean;
@@ -32,8 +64,6 @@ interface ExerciseFilterSheetProps {
   onBodyPartChange: (bodyPart: string | null) => void;
   selectedEquipment: string | null;
   onEquipmentChange: (equipment: string | null) => void;
-  selectedDifficulty: Difficulty | null;
-  onDifficultyChange: (difficulty: Difficulty | null) => void;
   bodyParts: string[];
   equipments: string[];
   hasActiveFilters: boolean;
@@ -43,7 +73,6 @@ interface ExerciseFilterSheetProps {
 const TAB_ICONS: Record<FilterTab, keyof typeof Ionicons.glyphMap> = {
   bodyPart: "body-outline",
   equipment: "barbell-outline",
-  difficulty: "speedometer-outline",
 };
 
 const ExerciseFilterSheet: React.FC<ExerciseFilterSheetProps> = ({
@@ -55,8 +84,6 @@ const ExerciseFilterSheet: React.FC<ExerciseFilterSheetProps> = ({
   onBodyPartChange,
   selectedEquipment,
   onEquipmentChange,
-  selectedDifficulty,
-  onDifficultyChange,
   bodyParts,
   equipments,
   hasActiveFilters,
@@ -67,7 +94,7 @@ const ExerciseFilterSheet: React.FC<ExerciseFilterSheetProps> = ({
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   // Sliding indicator behind the active tab
-  const TAB_ORDER: FilterTab[] = ["bodyPart", "equipment", "difficulty"];
+  const TAB_ORDER: FilterTab[] = ["bodyPart", "equipment"];
   const TAB_GAP = 4;
   const TAB_PADDING = 4;
   const [tabsWidth, setTabsWidth] = useState(0);
@@ -96,95 +123,69 @@ const ExerciseFilterSheet: React.FC<ExerciseFilterSheetProps> = ({
     setTabsWidth(e.nativeEvent.layout.width);
   };
 
-  const renderChip = (
+  const renderGridItem = (
     label: string,
     key: string,
     selected: boolean,
     onPress: () => void,
-    icon?: keyof typeof Ionicons.glyphMap,
+    icon: keyof typeof Ionicons.glyphMap,
   ) => (
     <Pressable
       key={key}
       style={({ pressed }) => [
-        styles.chip,
-        selected && styles.chipActive,
-        pressed && { opacity: 0.75, transform: [{ scale: 0.98 }] },
+        styles.gridItem,
+        selected && styles.gridItemActive,
+        pressed && { opacity: 0.8, transform: [{ scale: 0.97 }] },
       ]}
       onPress={onPress}
     >
-      {icon && (
+      <View
+        style={[
+          styles.gridIconWrap,
+          selected && styles.gridIconWrapActive,
+        ]}
+      >
         <Ionicons
           name={icon}
-          size={14}
-          color={selected ? theme.background.dark : theme.foreground.gray}
-          style={{ marginRight: 6 }}
+          size={20}
+          color={selected ? "#fff" : theme.foreground.gray}
         />
-      )}
+      </View>
       <Text
-        numberOfLines={1}
-        ellipsizeMode="tail"
-        style={[styles.chipText, selected && styles.chipTextActive]}
+        numberOfLines={2}
+        style={[styles.gridItemText, selected && styles.gridItemTextActive]}
       >
-        {label.charAt(0).toUpperCase() + label.slice(1)}
+        {label}
       </Text>
-      {selected && (
-        <Ionicons
-          name="checkmark"
-          size={14}
-          color={theme.background.dark}
-          style={{ marginLeft: 6 }}
-        />
-      )}
     </Pressable>
   );
 
   const renderTabContent = () => {
     switch (activeTab) {
-      case "difficulty": {
-        const items: { label: string; value: Difficulty; icon: keyof typeof Ionicons.glyphMap }[] = [
-          { label: t("filters.beginner"), value: "beginner", icon: "leaf-outline" },
-          { label: t("filters.intermediate"), value: "intermediate", icon: "flame-outline" },
-          { label: t("filters.advanced"), value: "advanced", icon: "flash-outline" },
-        ];
-        return (
-          <View style={styles.chipContainer}>
-            {items.map(({ label, value, icon }) =>
-              renderChip(
-                label,
-                value,
-                selectedDifficulty === value,
-                () =>
-                  onDifficultyChange(
-                    selectedDifficulty === value ? null : value,
-                  ),
-                icon,
-              ),
-            )}
-          </View>
-        );
-      }
       case "bodyPart":
         return (
-          <View style={styles.chipContainer}>
+          <View style={styles.grid}>
             {bodyParts.map((bp) =>
-              renderChip(
+              renderGridItem(
                 translateExerciseTerm(bp, "bodyParts"),
                 bp,
                 selectedBodyPart === bp,
                 () => onBodyPartChange(selectedBodyPart === bp ? null : bp),
+                BODY_PART_ICONS[bp] ?? "body-outline",
               ),
             )}
           </View>
         );
       case "equipment":
         return (
-          <View style={styles.chipContainer}>
+          <View style={styles.grid}>
             {equipments.map((eq) =>
-              renderChip(
+              renderGridItem(
                 translateExerciseTerm(eq, "equipment"),
                 eq,
                 selectedEquipment === eq,
                 () => onEquipmentChange(selectedEquipment === eq ? null : eq),
+                EQUIPMENT_ICONS[eq] ?? "ellipse-outline",
               ),
             )}
           </View>
@@ -198,17 +199,8 @@ const ExerciseFilterSheet: React.FC<ExerciseFilterSheetProps> = ({
         return t("filters.bodyPart");
       case "equipment":
         return t("filters.equipment");
-      case "difficulty":
-        return t("filters.difficulty");
     }
   };
-
-  // Quick summary of currently-selected values shown under the header.
-  const summaryItems = [
-    selectedBodyPart && translateExerciseTerm(selectedBodyPart, "bodyParts"),
-    selectedEquipment && translateExerciseTerm(selectedEquipment, "equipment"),
-    selectedDifficulty && t(`filters.${selectedDifficulty}`),
-  ].filter(Boolean) as string[];
 
   return (
     <Modal
@@ -219,7 +211,7 @@ const ExerciseFilterSheet: React.FC<ExerciseFilterSheetProps> = ({
       statusBarTranslucent
     >
       <View style={styles.backdrop}>
-        <Pressable style={styles.backdropTouchable} onPress={onClose} />
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
 
         <View style={styles.modalCard}>
           {/* Drag indicator */}
@@ -227,14 +219,7 @@ const ExerciseFilterSheet: React.FC<ExerciseFilterSheetProps> = ({
 
           {/* Header */}
           <View style={styles.header}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.title}>{t("filters.filterExercises")}</Text>
-              {summaryItems.length > 0 && (
-                <Text style={styles.subtitle} numberOfLines={1}>
-                  {summaryItems.join(" · ")}
-                </Text>
-              )}
-            </View>
+            <Text style={styles.title}>{t("filters.filterExercises")}</Text>
             <Pressable
               style={({ pressed }) => [
                 styles.closeButton,
@@ -253,7 +238,6 @@ const ExerciseFilterSheet: React.FC<ExerciseFilterSheetProps> = ({
 
           {/* Tabs */}
           <View style={styles.tabsContainer} onLayout={onTabsLayout}>
-            {/* Sliding active indicator */}
             {tabWidth > 0 && (
               <Animated.View
                 pointerEvents="none"
@@ -301,6 +285,30 @@ const ExerciseFilterSheet: React.FC<ExerciseFilterSheetProps> = ({
           >
             {renderTabContent()}
           </ScrollView>
+
+          {/* Footer */}
+          <View style={styles.footer}>
+            {hasActiveFilters ? (
+              <Pressable onPress={onClearAll} hitSlop={8}>
+                <Text style={styles.clearText}>
+                  {t("filters.clearAll")}
+                </Text>
+              </Pressable>
+            ) : (
+              <View />
+            )}
+            <Pressable
+              style={({ pressed }) => [
+                styles.applyBtn,
+                pressed && { opacity: 0.85 },
+              ]}
+              onPress={onClose}
+            >
+              <Text style={styles.applyBtnText}>
+                {t("filters.apply")}
+              </Text>
+            </Pressable>
+          </View>
         </View>
       </View>
     </Modal>
@@ -314,16 +322,13 @@ const createStyles = (theme: Theme) =>
       backgroundColor: "rgba(0,0,0,0.55)",
       justifyContent: "flex-end",
     },
-    backdropTouchable: {
-      ...StyleSheet.absoluteFillObject,
-    },
     modalCard: {
       backgroundColor: theme.background.dark,
       borderTopLeftRadius: 24,
       borderTopRightRadius: 24,
       paddingTop: 8,
-      paddingBottom: 18,
-      height: "50%",
+      paddingBottom: 24,
+      maxHeight: "70%",
       shadowColor: "#000",
       shadowOpacity: 0.35,
       shadowRadius: 20,
@@ -342,20 +347,14 @@ const createStyles = (theme: Theme) =>
     header: {
       flexDirection: "row",
       alignItems: "center",
+      justifyContent: "space-between",
       paddingHorizontal: 20,
       marginBottom: 14,
-      gap: 12,
     },
     title: {
       fontSize: 20,
       fontFamily: FONTS.bold,
       color: theme.foreground.white,
-    },
-    subtitle: {
-      marginTop: 2,
-      fontSize: 12,
-      fontFamily: FONTS.medium,
-      color: theme.primary.main,
     },
     closeButton: {
       width: 34,
@@ -399,39 +398,79 @@ const createStyles = (theme: Theme) =>
       color: theme.background.dark,
     },
     scrollView: {
-      marginTop: 14,
+      marginTop: 16,
     },
     scrollContent: {
       paddingHorizontal: 20,
-      paddingBottom: 12,
+      paddingBottom: 8,
     },
-    chipContainer: {
+    // 2-column grid like Hevy
+    grid: {
       flexDirection: "row",
       flexWrap: "wrap",
-      gap: 8,
+      gap: 10,
     },
-    chip: {
+    gridItem: {
+      width: "48%",
       flexDirection: "row",
       alignItems: "center",
-      paddingHorizontal: 14,
-      paddingVertical: 10,
-      borderRadius: 20,
       backgroundColor: theme.background.darker,
-      borderWidth: 1,
+      borderRadius: 14,
+      paddingVertical: 14,
+      paddingHorizontal: 14,
+      borderWidth: 1.5,
       borderColor: "transparent",
+      gap: 12,
     },
-    chipActive: {
-      backgroundColor: theme.primary.main,
+    gridItemActive: {
       borderColor: theme.primary.main,
+      backgroundColor: theme.primary.main + "15",
     },
-    chipText: {
-      fontSize: 12,
+    gridIconWrap: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: theme.background.accent,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    gridIconWrapActive: {
+      backgroundColor: theme.primary.main,
+    },
+    gridItemText: {
+      flex: 1,
+      fontSize: 13,
+      fontFamily: FONTS.semiBold,
+      color: theme.foreground.gray,
+    },
+    gridItemTextActive: {
+      color: theme.foreground.white,
+    },
+    // Footer
+    footer: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingHorizontal: 20,
+      paddingTop: 12,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: theme.background.accent,
+    },
+    clearText: {
+      fontSize: 14,
       fontFamily: FONTS.medium,
       color: theme.foreground.gray,
     },
-    chipTextActive: {
-      color: theme.background.dark,
+    applyBtn: {
+      backgroundColor: theme.primary.main,
+      borderRadius: 12,
+      paddingHorizontal: 24,
+      paddingVertical: 12,
+    },
+    applyBtnText: {
+      fontSize: 14,
       fontFamily: FONTS.bold,
+      color: "#fff",
     },
   });
 

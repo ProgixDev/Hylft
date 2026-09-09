@@ -1134,7 +1134,9 @@
     "equipment": "Equipment",
     "difficulty": "Difficulty",
     "filterExercises": "Filter Exercises",
-    "reset": "Reset"
+    "reset": "Reset",
+    "clearAll": "Clear filters",
+    "apply": "Apply"
   },
   "exerciseDetail": {
     "title": "Exercise Details",
