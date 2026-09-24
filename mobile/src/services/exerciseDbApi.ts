@@ -147,24 +147,57 @@ export async function fetchExercisesExerciseDb(options?: {
     equipments = null,
   } = options ?? {};
   const safeLimit = Math.min(Math.max(limit, 1), 100);
-  const key = `list_${cursor ?? "start"}_${safeLimit}_${bodyParts ?? ""}_${equipments ?? ""}`;
+
+  // Expand "leverage machine" filter to include all machine types
+  const equipmentList =
+    equipments && MACHINE_GROUP.includes(equipments)
+      ? MACHINE_GROUP
+      : equipments
+        ? [equipments]
+        : null;
+
+  const key = `list_${cursor ?? "start"}_${safeLimit}_${bodyParts ?? ""}_${(equipmentList ?? []).join(",")}`;
   const cached = getCached<ExerciseDbResponse>(key);
   if (cached) return cached;
 
   try {
-    const res: { items: BackendExercise[]; next_cursor: string | null } =
-      await api.listExercises({
-        limit: safeLimit,
-        cursor: cursor ?? undefined,
-        body_part: bodyParts ?? undefined,
-        equipment: equipments ?? undefined,
-      });
-    const exercises = (res.items ?? []).map(mapExercise);
+    let allItems: BackendExercise[] = [];
+    let lastCursor: string | null = null;
+
+    if (equipmentList && equipmentList.length > 1) {
+      // Fetch all machine types in parallel
+      const results = await Promise.all(
+        equipmentList.map((eq) =>
+          api.listExercises({
+            limit: safeLimit,
+            cursor: cursor ?? undefined,
+            body_part: bodyParts ?? undefined,
+            equipment: eq,
+          }),
+        ),
+      );
+      for (const res of results) {
+        allItems.push(...(res.items ?? []));
+        if (res.next_cursor) lastCursor = res.next_cursor;
+      }
+    } else {
+      const res: { items: BackendExercise[]; next_cursor: string | null } =
+        await api.listExercises({
+          limit: safeLimit,
+          cursor: cursor ?? undefined,
+          body_part: bodyParts ?? undefined,
+          equipment: equipmentList?.[0] ?? undefined,
+        });
+      allItems = res.items ?? [];
+      lastCursor = res.next_cursor;
+    }
+
+    const exercises = allItems.map(mapExercise);
     const data: ExerciseDbResponse = {
       exercises,
       totalExercises: 1500,
-      hasMore: !!res.next_cursor,
-      nextCursor: res.next_cursor,
+      hasMore: !!lastCursor,
+      nextCursor: lastCursor,
     };
     return setCached(key, data);
   } catch (err) {
@@ -256,13 +289,24 @@ export async function getAvailableBodyPartsExerciseDb(): Promise<string[]> {
   }
 }
 
+const REQUIRED_EQUIPMENTS = [
+  "leverage machine",
+];
+
+// When "leverage machine" (Machine) is selected, also include these
+const MACHINE_GROUP = ["leverage machine", "smith machine", "sled machine"];
+
 export async function getAvailableEquipmentsExerciseDb(): Promise<string[]> {
   const key = "equipments_list";
   const cached = getCached<string[]>(key);
   if (cached) return cached;
   try {
     const res: { items: string[] } = await api.getExerciseEquipments();
-    return setCached(key, res.items ?? []);
+    const items = res.items ?? [];
+    for (const eq of REQUIRED_EQUIPMENTS) {
+      if (!items.includes(eq)) items.push(eq);
+    }
+    return setCached(key, items);
   } catch (err) {
     console.error("equipments list failed:", err);
     return [];

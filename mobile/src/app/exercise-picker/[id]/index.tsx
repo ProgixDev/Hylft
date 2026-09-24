@@ -150,7 +150,10 @@ export default function ExerciseDetailPage() {
         <View style={styles.videoContainer}>
           {exerciseData.gifUrl ? (
             <Image
-              source={{ uri: exerciseData.gifUrl }}
+              source={{
+                uri: exerciseData.gifUrl,
+                headers: { "User-Agent": "Mozilla/5.0" },
+              }}
               style={styles.video}
               contentFit="cover"
               transition={300}
@@ -381,7 +384,7 @@ const createStyles = (theme: Theme) =>
       borderRadius: 16,
       overflow: "hidden",
       marginBottom: 14,
-      backgroundColor: theme.background.darker,
+      backgroundColor: "#FFFFFF",
     },
     video: { width: "100%", height: "100%" },
     videoPlaceholder: {

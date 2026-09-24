@@ -542,7 +542,10 @@ function ExerciseSummaryCard({
       <View style={styles.exerciseGifWrap}>
         {exercise.gifUrl ? (
           <Image
-            source={{ uri: exercise.gifUrl }}
+            source={{
+              uri: exercise.gifUrl,
+              headers: { "User-Agent": "Mozilla/5.0" },
+            }}
             style={styles.exerciseGif}
             contentFit="cover"
             transition={200}
@@ -853,7 +856,10 @@ function ExerciseEditorSheet({
           <View style={styles.editorGifWrap}>
             {exercise.gifUrl ? (
               <Image
-                source={{ uri: exercise.gifUrl }}
+                source={{
+                  uri: exercise.gifUrl,
+                  headers: { "User-Agent": "Mozilla/5.0" },
+                }}
                 style={styles.editorGif}
                 contentFit="contain"
                 transition={200}

@@ -492,11 +492,13 @@ function ExerciseCard({
         >
           {exercise.gifUrl ? (
             <Image
-              source={{ uri: exercise.gifUrl }}
+              source={{
+                uri: exercise.gifUrl,
+                headers: { "User-Agent": "Mozilla/5.0" },
+              }}
               style={styles.thumb}
               contentFit="cover"
               transition={150}
-              autoplay={true}
             />
           ) : (
             <Ionicons
@@ -672,7 +674,10 @@ function ExerciseCard({
             </Text>
             {exercise.gifUrl ? (
               <Image
-                source={{ uri: exercise.gifUrl }}
+                source={{
+                  uri: exercise.gifUrl,
+                  headers: { "User-Agent": "Mozilla/5.0" },
+                }}
                 style={styles.gifModalImage}
                 contentFit="contain"
               />
@@ -1163,9 +1168,10 @@ const createStyles = (theme: Theme) =>
     },
     gifModalImage: {
       width: "100%",
+      maxWidth: 350,
       aspectRatio: 1,
       borderRadius: 12,
-      backgroundColor: theme.background.dark,
+      backgroundColor: "#FFFFFF",
     },
     gifModalCloseBtn: {
       width: 36,

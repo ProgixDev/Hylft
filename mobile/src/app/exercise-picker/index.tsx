@@ -212,11 +212,13 @@ export default function ExercisePicker() {
           <View style={styles.exerciseThumbnailContainer}>
             {item.gifUrl ? (
               <Image
-                source={{ uri: item.gifUrl }}
+                source={{
+                  uri: item.gifUrl,
+                  headers: { "User-Agent": "Mozilla/5.0" },
+                }}
                 style={styles.exerciseThumbnail}
                 contentFit="cover"
                 transition={200}
-                autoplay={false}
               />
             ) : (
               <View style={styles.exerciseThumbnailPlaceholder}>
@@ -308,11 +310,13 @@ export default function ExercisePicker() {
           <View style={styles.gridThumbWrap}>
             {item.gifUrl ? (
               <Image
-                source={{ uri: item.gifUrl }}
+                source={{
+                  uri: item.gifUrl,
+                  headers: { "User-Agent": "Mozilla/5.0" },
+                }}
                 style={styles.gridThumb}
                 contentFit="cover"
                 transition={200}
-                autoplay={false}
               />
             ) : (
               <View style={styles.gridThumbPlaceholder}>

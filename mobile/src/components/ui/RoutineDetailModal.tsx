@@ -255,10 +255,12 @@ export default function RoutineDetailModal({
                   <View style={styles.exerciseThumbWrap}>
                     {exercise.gifUrl ? (
                       <Image
-                        source={{ uri: exercise.gifUrl }}
+                        source={{
+                          uri: exercise.gifUrl,
+                          headers: { "User-Agent": "Mozilla/5.0" },
+                        }}
                         style={styles.exerciseThumb}
                         contentFit="cover"
-                        autoplay={false}
                         transition={150}
                       />
                     ) : (

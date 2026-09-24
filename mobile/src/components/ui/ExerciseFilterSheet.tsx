@@ -42,7 +42,6 @@ const EQUIPMENT_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
   "body weight": "body-outline",
   band: "resize-outline",
   "leverage machine": "cog-outline",
-  "smith machine": "grid-outline",
   kettlebell: "fitness-outline",
   "medicine ball": "football-outline",
   "ez barbell": "barbell-outline",
