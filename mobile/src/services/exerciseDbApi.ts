@@ -156,7 +156,15 @@ export async function fetchExercisesExerciseDb(options?: {
         ? [equipments]
         : null;
 
-  const key = `list_${cursor ?? "start"}_${safeLimit}_${bodyParts ?? ""}_${(equipmentList ?? []).join(",")}`;
+  // Expand "lower arms" filter to include both arm types
+  const bodyPartList =
+    bodyParts && ARMS_GROUP.includes(bodyParts)
+      ? ARMS_GROUP
+      : bodyParts
+        ? [bodyParts]
+        : null;
+
+  const key = `list_${cursor ?? "start"}_${safeLimit}_${(bodyPartList ?? []).join(",")}_${(equipmentList ?? []).join(",")}`;
   const cached = getCached<ExerciseDbResponse>(key);
   if (cached) return cached;
 
@@ -164,15 +172,22 @@ export async function fetchExercisesExerciseDb(options?: {
     let allItems: BackendExercise[] = [];
     let lastCursor: string | null = null;
 
-    if (equipmentList && equipmentList.length > 1) {
-      // Fetch all machine types in parallel
+    const bpArr = bodyPartList ?? [undefined];
+    const eqArr = equipmentList ?? [undefined];
+
+    // Build all combinations of body part × equipment groups
+    const queries = bpArr.flatMap((bp) =>
+      eqArr.map((eq) => ({ body_part: bp, equipment: eq })),
+    );
+
+    if (queries.length > 1) {
       const results = await Promise.all(
-        equipmentList.map((eq) =>
+        queries.map((q) =>
           api.listExercises({
             limit: safeLimit,
             cursor: cursor ?? undefined,
-            body_part: bodyParts ?? undefined,
-            equipment: eq,
+            body_part: q.body_part,
+            equipment: q.equipment,
           }),
         ),
       );
@@ -185,8 +200,8 @@ export async function fetchExercisesExerciseDb(options?: {
         await api.listExercises({
           limit: safeLimit,
           cursor: cursor ?? undefined,
-          body_part: bodyParts ?? undefined,
-          equipment: equipmentList?.[0] ?? undefined,
+          body_part: queries[0].body_part,
+          equipment: queries[0].equipment,
         });
       allItems = res.items ?? [];
       lastCursor = res.next_cursor;
@@ -282,7 +297,9 @@ export async function getAvailableBodyPartsExerciseDb(): Promise<string[]> {
   if (cached) return cached;
   try {
     const res: { items: string[] } = await api.getExerciseBodyParts();
-    return setCached(key, res.items ?? []);
+    // Remove "upper arms" — grouped under "lower arms" which displays as "Bras"
+    const items = (res.items ?? []).filter((bp) => bp !== "upper arms");
+    return setCached(key, items);
   } catch (err) {
     console.error("body parts list failed:", err);
     return [];
@@ -295,6 +312,9 @@ const REQUIRED_EQUIPMENTS = [
 
 // When "leverage machine" (Machine) is selected, also include these
 const MACHINE_GROUP = ["leverage machine", "smith machine", "sled machine"];
+
+// Group "lower arms" + "upper arms" into one "Bras" filter
+const ARMS_GROUP = ["lower arms", "upper arms"];
 
 export async function getAvailableEquipmentsExerciseDb(): Promise<string[]> {
   const key = "equipments_list";

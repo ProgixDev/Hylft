@@ -649,7 +649,7 @@ export default function Alimentation() {
             <Pressable
               style={[styles.waterBtn, styles.waterBtnPrimary]}
               onPress={() =>
-                setWater(Math.min(waterGoalMl * 2, waterMl + GLASS_STEP_ML))
+                setWater(Math.min(10000, waterMl + GLASS_STEP_ML))
               }
             >
               <Ionicons name="add" size={18} color="#fff" />

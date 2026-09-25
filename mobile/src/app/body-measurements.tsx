@@ -1,12 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
-import { Modal, Pressable, StyleSheet, TextInput, View } from "react-native";
+import { useFocusEffect, useRouter } from "expo-router";
+import React, { useCallback, useState } from "react";
+import { Pressable, StyleSheet, View } from "react-native";
 import { Text } from "../components/ui/ScaledText";
 import { FONTS } from "../constants/fonts";
 import { useI18n } from "../contexts/I18nContext";
 import { useTheme } from "../contexts/ThemeContext";
-import { BodyMeasurements as BodyMeasurementsService, type LocalData } from "../services/bodyMeasurements";
+import { BodyMeasurements as BodyMeasurementsService } from "../services/bodyMeasurements";
 
 type Metric = {
   id: string;
@@ -34,24 +34,13 @@ export default function BodyMeasurements() {
   const { language } = useI18n();
   const isFr = language.startsWith("fr");
   const [entries, setEntries] = useState<Record<string, Entry[]>>({});
-  const [selected, setSelected] = useState<Metric | null>(null);
-  const [input, setInput] = useState("");
 
-  useEffect(() => {
-    BodyMeasurementsService.migrateFromAsyncStorage();
-    BodyMeasurementsService.getAll().then(setEntries).catch(() => {});
-  }, []);
-
-  const saveEntry = async () => {
-    if (!selected) return;
-    const value = Number(input.replace(",", "."));
-    if (!Number.isFinite(value) || value <= 0) return;
-    await BodyMeasurementsService.log(selected.id, value);
-    const updated = await BodyMeasurementsService.getAll();
-    setEntries(updated);
-    setInput("");
-    setSelected(null);
-  };
+  useFocusEffect(
+    useCallback(() => {
+      BodyMeasurementsService.migrateFromAsyncStorage();
+      BodyMeasurementsService.getAll().then(setEntries).catch(() => {});
+    }, []),
+  );
 
   const styles = createStyles(theme);
 
@@ -80,14 +69,14 @@ export default function BodyMeasurements() {
             <Pressable
               key={metric.id}
               style={({ pressed }) => [styles.row, pressed && { opacity: 0.7 }]}
-              onPress={() => setSelected(metric)}
+              onPress={() => router.push(`/body-measurement-detail?metric=${metric.id}`)}
             >
               <Ionicons name={metric.icon} size={25} color={theme.foreground.white} />
               <View style={styles.rowText}>
                 <Text style={styles.metricName}>{isFr ? metric.fr : metric.en}</Text>
                 {latest && (
                   <Text style={styles.latest}>
-                    {latest.value} {metric.unit} · {isFr ? "Dernière mesure" : "Last measurement"}
+                    {latest.value} {metric.unit} · {latest.date.split("-").reverse().join("/")}
                   </Text>
                 )}
               </View>
@@ -96,27 +85,6 @@ export default function BodyMeasurements() {
           );
         })}
       </View>
-
-      <Modal visible={!!selected} transparent animationType="fade" onRequestClose={() => setSelected(null)}>
-        <Pressable style={styles.backdrop} onPress={() => setSelected(null)}>
-          <Pressable style={styles.modal} onPress={() => {}}>
-            <Text style={styles.modalTitle}>{selected && (isFr ? selected.fr : selected.en)}</Text>
-            <Text style={styles.modalHint}>{isFr ? `Valeur en ${selected?.unit}` : `Value in ${selected?.unit}`}</Text>
-            <TextInput
-              style={styles.input}
-              value={input}
-              onChangeText={setInput}
-              keyboardType="decimal-pad"
-              autoFocus
-              placeholder="0.0"
-              placeholderTextColor={theme.foreground.gray}
-            />
-            <Pressable style={styles.saveButton} onPress={() => void saveEntry()}>
-              <Text style={styles.saveText}>{isFr ? "Enregistrer" : "Save"}</Text>
-            </Pressable>
-          </Pressable>
-        </Pressable>
-      </Modal>
     </View>
   );
 }
@@ -132,12 +100,5 @@ function createStyles(theme: ReturnType<typeof useTheme>["theme"]) {
     rowText: { flex: 1 },
     metricName: { fontFamily: FONTS.semiBold, fontSize: 17, color: theme.foreground.white },
     latest: { fontFamily: FONTS.regular, fontSize: 12, color: theme.foreground.gray, marginTop: 4 },
-    backdrop: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0,0,0,0.55)" },
-    modal: { width: "86%", backgroundColor: theme.background.darker, borderRadius: 18, padding: 22 },
-    modalTitle: { fontFamily: FONTS.bold, fontSize: 20, color: theme.foreground.white },
-    modalHint: { fontFamily: FONTS.regular, fontSize: 13, color: theme.foreground.gray, marginTop: 5 },
-    input: { marginTop: 16, borderRadius: 12, backgroundColor: theme.background.accent, color: theme.foreground.white, fontFamily: FONTS.semiBold, fontSize: 20, padding: 14 },
-    saveButton: { marginTop: 16, borderRadius: 12, paddingVertical: 14, alignItems: "center", backgroundColor: theme.primary.main },
-    saveText: { fontFamily: FONTS.bold, fontSize: 16, color: "#fff" },
   });
 }

@@ -71,6 +71,22 @@ export const BodyMeasurements = {
     }
   },
 
+  /** Fetch history for a single metric. */
+  async getByMetric(metric: string): Promise<MeasurementEntry[]> {
+    try {
+      const res: { items: BackendEntry[] } = await api.listBodyMeasurements({
+        metric,
+        limit: 365,
+      });
+      return (res.items ?? [])
+        .map((r) => ({ value: Number(r.value), date: r.measurement_date }))
+        .sort((a, b) => a.date.localeCompare(b.date));
+    } catch {
+      const cache = await readCache();
+      return cache[metric] ?? [];
+    }
+  },
+
   /** Get latest value per metric (optimized endpoint). */
   async getLatest(): Promise<BackendEntry[]> {
     try {
