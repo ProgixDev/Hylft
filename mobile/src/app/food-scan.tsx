@@ -139,58 +139,56 @@ export default function FoodScanScreen() {
 
   return (
     <View style={styles.container}>
-      <CameraView
-        style={StyleSheet.absoluteFill}
-        facing="back"
-        onBarcodeScanned={scannedFood ? undefined : handleScan}
-        barcodeScannerSettings={{
-          barcodeTypes: ["ean13", "ean8", "upc_a", "upc_e"],
-        }}
-      />
+      <View style={styles.header}>
+        <Pressable onPress={() => router.back()} hitSlop={10} style={styles.closeBtn}>
+          <Ionicons name="close" size={24} color="#fff" />
+        </Pressable>
+        <Text style={styles.title}>
+          {isFr ? "Scanner un aliment" : "Scan food"}
+        </Text>
+        <View style={{ width: 40 }} />
+      </View>
 
-      <View style={styles.overlay} pointerEvents="box-none">
-        <View style={styles.header}>
-          <Pressable onPress={() => router.back()} hitSlop={10} style={styles.closeBtn}>
-            <Ionicons name="close" size={24} color="#fff" />
-          </Pressable>
-          <Text style={styles.title}>
-            {isFr ? "Scanner un aliment" : "Scan food"}
-          </Text>
-          <View style={{ width: 40 }} />
-        </View>
-
-        <View style={styles.frameWrap}>
-          {loading ? (
-            <View style={styles.loadingWrap}>
-              <ActivityIndicator color="#fff" size="large" />
-              <Text style={styles.hint}>
-                {isFr ? "Recherche du produit..." : "Looking up product..."}
-              </Text>
+      <View style={styles.frameWrap}>
+        {loading ? (
+          <View style={styles.loadingWrap}>
+            <ActivityIndicator color="#fff" size="large" />
+            <Text style={styles.hint}>
+              {isFr ? "Recherche du produit..." : "Looking up product..."}
+            </Text>
+          </View>
+        ) : (
+          <>
+            <View style={styles.cameraContainer}>
+              <CameraView
+                style={StyleSheet.absoluteFill}
+                facing="back"
+                onBarcodeScanned={scannedFood ? undefined : handleScan}
+                barcodeScannerSettings={{
+                  barcodeTypes: ["ean13", "ean8", "upc_a", "upc_e"],
+                }}
+              />
             </View>
-          ) : (
-            <>
-              <View style={styles.frame} />
-              <Text style={styles.hint}>
-                {isFr
-                  ? "Alignez le code-barres dans le cadre"
-                  : "Align the barcode inside the frame"}
-              </Text>
-            </>
-          )}
-          {error && (
-            <Pressable
-              onPress={() => {
-                setError(null);
-                handledRef.current = false;
-              }}
-              style={styles.errorBtn}
-            >
-              <Text style={styles.errorText}>
-                {error} {isFr ? "Appuyez pour réessayer." : "Tap to retry."}
-              </Text>
-            </Pressable>
-          )}
-        </View>
+            <Text style={styles.hint}>
+              {isFr
+                ? "Alignez le code-barres dans le cadre"
+                : "Align the barcode inside the frame"}
+            </Text>
+          </>
+        )}
+        {error && (
+          <Pressable
+            onPress={() => {
+              setError(null);
+              handledRef.current = false;
+            }}
+            style={styles.errorBtn}
+          >
+            <Text style={styles.errorText}>
+              {error} {isFr ? "Appuyez pour réessayer." : "Tap to retry."}
+            </Text>
+          </Pressable>
+        )}
       </View>
 
       <FoodDetailSheet
@@ -211,9 +209,8 @@ export default function FoodScanScreen() {
 
 function createStyles(theme: Theme) {
   return StyleSheet.create({
-    container: { flex: 1, backgroundColor: "#000" },
+    container: { flex: 1, backgroundColor: theme.primary.main },
     center: { alignItems: "center", justifyContent: "center" },
-    overlay: { flex: 1 },
     header: {
       flexDirection: "row",
       alignItems: "center",
@@ -226,7 +223,7 @@ function createStyles(theme: Theme) {
       width: 40,
       height: 40,
       borderRadius: 20,
-      backgroundColor: "rgba(0,0,0,0.45)",
+      backgroundColor: "rgba(0,0,0,0.2)",
       alignItems: "center",
       justifyContent: "center",
     },
@@ -236,12 +233,13 @@ function createStyles(theme: Theme) {
       fontSize: 16,
     },
     frameWrap: { flex: 1, alignItems: "center", justifyContent: "center" },
-    frame: {
-      width: 280,
-      height: 160,
-      borderRadius: 16,
+    cameraContainer: {
+      width: 300,
+      height: 220,
+      borderRadius: 20,
+      overflow: "hidden",
       borderWidth: 3,
-      borderColor: theme.primary.main,
+      borderColor: "#fff",
     },
     hint: {
       marginTop: 16,

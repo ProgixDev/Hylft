@@ -9,7 +9,7 @@ import { FONTS } from "../../constants/fonts";
 import { useActiveWorkout } from "../../contexts/ActiveWorkoutContext";
 import { useTheme } from "../../contexts/ThemeContext";
 
-const TIMER_TICK_SOUND = require("../../../assets/timer-tick.wav");
+const TIMER_TICK_SOUND = require("../../../assets/timer-tick-countdown.mp3");
 const TIMER_DONE_SOUND = require("../../../assets/timer-done.wav");
 
 const RING_SIZE = 40;
@@ -28,20 +28,27 @@ export default function MiniRestTimer() {
 
   const [remaining, setRemaining] = useState(0);
   const [finished, setFinished] = useState(false);
-  const prevRemaining = useRef(0);
+  const tickPlayerRef = useRef<ReturnType<typeof createAudioPlayer> | null>(null);
 
-  // Tick sound for last 10 seconds
+  // Ticking clock sound for last 10 seconds
   useEffect(() => {
-    if (remaining > 0 && remaining <= 10 && remaining !== prevRemaining.current) {
+    if (remaining === 10) {
       try {
+        tickPlayerRef.current?.release();
         const tick = createAudioPlayer(TIMER_TICK_SOUND);
-        tick.volume = 1;
+        tick.volume = 0.5;
         tick.play();
-        setTimeout(() => { try { tick.release(); } catch {} }, 500);
+        tickPlayerRef.current = tick;
       } catch {}
     }
-    prevRemaining.current = remaining;
+    if (remaining <= 0) {
+      try { tickPlayerRef.current?.release(); } catch {}
+      tickPlayerRef.current = null;
+    }
   }, [remaining]);
+  useEffect(() => {
+    return () => { try { tickPlayerRef.current?.release(); } catch {} };
+  }, []);
 
   useEffect(() => {
     if (!hasTimer || !endsAt) {

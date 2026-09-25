@@ -17,7 +17,7 @@ import { FONTS } from "../../constants/fonts";
 import { useTheme } from "../../contexts/ThemeContext";
 
 const TIMER_DONE_SOUND = require("../../../assets/timer-done.wav");
-const TIMER_TICK_SOUND = require("../../../assets/timer-tick.wav");
+const TIMER_TICK_SOUND = require("../../../assets/timer-tick-countdown.mp3");
 
 const { width: SCREEN_W } = Dimensions.get("window");
 
@@ -94,19 +94,26 @@ export default function RestTimerSheet({
     outputRange: [CIRCUMFERENCE, 0],
   });
 
-  // ── Tick sound each second during last 10 ──────────────────────────
-  const prevRemaining = useRef(remaining);
+  // ── Ticking clock sound for last 10 seconds ────────────────────────
+  const tickPlayerRef = useRef<ReturnType<typeof createAudioPlayer> | null>(null);
   useEffect(() => {
-    if (visible && remaining > 0 && remaining <= 10 && remaining !== prevRemaining.current) {
+    if (visible && remaining === 10) {
       try {
+        tickPlayerRef.current?.release();
         const tick = createAudioPlayer(TIMER_TICK_SOUND);
-        tick.volume = 1;
+        tick.volume = 0.5;
         tick.play();
-        setTimeout(() => { try { tick.release(); } catch {} }, 500);
+        tickPlayerRef.current = tick;
       } catch {}
     }
-    prevRemaining.current = remaining;
+    if (remaining <= 0 || !visible) {
+      try { tickPlayerRef.current?.release(); } catch {}
+      tickPlayerRef.current = null;
+    }
   }, [visible, remaining]);
+  useEffect(() => {
+    return () => { try { tickPlayerRef.current?.release(); } catch {} };
+  }, []);
 
   // ── Blink animation for last 10 seconds ────────────────────────────
   const blinkAnim = useRef(new Animated.Value(1)).current;

@@ -722,21 +722,28 @@ function MiniRestTimerBar({
     Math.max(0, Math.round((endsAt - Date.now()) / 1000)),
   );
   const [finished, setFinished] = useState(false);
-  const prevRemaining = useRef(remaining);
 
-  // Tick sound for last 10 seconds
+  // Ticking clock sound for last 10 seconds
+  const tickPlayerRef = useRef<any>(null);
   useEffect(() => {
-    if (remaining > 0 && remaining <= 10 && remaining !== prevRemaining.current) {
+    if (remaining === 10) {
       try {
+        tickPlayerRef.current?.release();
         const { createAudioPlayer } = require("expo-audio");
-        const tick = createAudioPlayer(require("../../../assets/timer-tick.wav"));
-        tick.volume = 1;
+        const tick = createAudioPlayer(require("../../../assets/timer-tick-countdown.mp3"));
+        tick.volume = 0.5;
         tick.play();
-        setTimeout(() => { try { tick.release(); } catch {} }, 500);
+        tickPlayerRef.current = tick;
       } catch {}
     }
-    prevRemaining.current = remaining;
+    if (remaining <= 0) {
+      try { tickPlayerRef.current?.release(); } catch {}
+      tickPlayerRef.current = null;
+    }
   }, [remaining]);
+  useEffect(() => {
+    return () => { try { tickPlayerRef.current?.release(); } catch {} };
+  }, []);
 
   useEffect(() => {
     let done = false;

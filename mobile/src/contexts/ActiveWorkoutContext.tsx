@@ -704,22 +704,22 @@ export const ActiveWorkoutProvider: React.FC<ActiveWorkoutProviderProps> = ({
 
   const togglePlayerSetCompleted = useCallback(
     (exerciseId: string, setId: string) => {
-      let willComplete = false;
-      let restSecondsForExercise = 0;
+      let shouldStartRest = false;
+      let restSeconds = 0;
+
       setGuidedPlayer((prev) => {
         if (!prev) return prev;
-        return {
+        const updated = {
           ...prev,
           exercises: prev.exercises.map((ex) => {
             if (ex.id !== exerciseId) return ex;
-            restSecondsForExercise = ex.restSeconds;
             const toggledSets = ex.sets.map((s) => {
               if (s.id !== setId) return s;
-              willComplete = !s.isCompleted;
               return { ...s, isCompleted: !s.isCompleted, isPreFilled: false };
             });
+            const justCompleted = toggledSets.find((s) => s.id === setId)?.isCompleted ?? false;
             // Pre-fill next uncompleted set when completing
-            if (willComplete) {
+            if (justCompleted) {
               const idx = toggledSets.findIndex((s) => s.id === setId);
               const completedSet = toggledSets[idx];
               if (completedSet && idx < toggledSets.length - 1) {
@@ -733,16 +733,26 @@ export const ActiveWorkoutProvider: React.FC<ActiveWorkoutProviderProps> = ({
                   };
                 }
               }
+              shouldStartRest = true;
+              restSeconds = ex.restSeconds;
             }
             return { ...ex, sets: toggledSets };
           }),
         };
+        // Start rest timer inline to avoid race condition
+        if (shouldStartRest && restSeconds > 0) {
+          updated.restEndsAt = Date.now() + restSeconds * 1000;
+          updated.restExerciseId = exerciseId;
+          updated.restTotalSeconds = restSeconds;
+        }
+        return updated;
       });
-      if (willComplete && restSecondsForExercise > 0) {
-        startPlayerRest(exerciseId, restSecondsForExercise);
+
+      if (shouldStartRest) {
+        setRestTimerMinimized(false);
       }
     },
-    [startPlayerRest],
+    [],
   );
 
   const endGuidedRoutine = useCallback(
