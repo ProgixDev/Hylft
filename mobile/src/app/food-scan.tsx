@@ -16,6 +16,8 @@ import { Theme } from "../constants/themes";
 import { useNutrition } from "../contexts/NutritionContext";
 import { useTheme } from "../contexts/ThemeContext";
 import { getFoodByCodeOFF } from "../services/openFoodFactsApi";
+import { api } from "../services/api";
+import { bumpCachedHistory } from "../services/foodHistoryCache";
 import type { FoodItem } from "../services/nutritionApi";
 
 const VALID_MEAL_TYPES = ["breakfast", "lunch", "dinner", "snack"] as const;
@@ -93,6 +95,16 @@ export default function FoodScanScreen() {
         carbs: food.carbs,
         fat: food.fat,
       });
+      bumpCachedHistory(food).catch(() => {});
+      api.recordFoodSelection({
+        food_id: food.id,
+        food_name: food.name,
+        image_url: food.imageUrl,
+        calories: food.calories,
+        protein: food.protein,
+        carbs: food.carbs,
+        fat: food.fat,
+      }).catch(() => {});
       setAdded(true);
       setTimeout(() => {
         setScannedFood(null);

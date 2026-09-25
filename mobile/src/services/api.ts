@@ -122,6 +122,22 @@ export const api = {
   updateNutritionGoals: (data: Record<string, unknown>) =>
     authFetch("/nutrition/goals", { method: "PATCH", body: JSON.stringify(data) }),
 
+  // ── Custom food values ──────────────────────────────────
+  getFoodCustomValues: (foodId: string) =>
+    authFetch(`/nutrition/food-custom-values/${encodeURIComponent(foodId)}`),
+  upsertFoodCustomValues: (data: {
+    food_id: string;
+    food_name: string;
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+  }) =>
+    authFetch("/nutrition/food-custom-values", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
   // ── Routines ─────────────────────────────────────────────
   getRoutines: () =>
     authFetch("/routines"),

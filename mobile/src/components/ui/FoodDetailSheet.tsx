@@ -87,9 +87,29 @@ const FoodDetailSheet: React.FC<FoodDetailSheetProps> = ({
   const [detailError, setDetailError] = useState(false);
   const [hiResFailed, setHiResFailed] = useState(false);
 
+  // Editable per-100g macro overrides
+  const [editCalories, setEditCalories] = useState<number | null>(null);
+  const [editProtein, setEditProtein] = useState<number | null>(null);
+  const [editCarbs, setEditCarbs] = useState<number | null>(null);
+  const [editFat, setEditFat] = useState<number | null>(null);
+  const [showEditSheet, setShowEditSheet] = useState(false);
+
   // Lazy-fetch full nutrition when the search result has no macros yet.
+  // Also check food_custom_values for user-corrected values.
   useEffect(() => {
     if (!visible || !food) return;
+
+    let cancelled = false;
+
+    const applyCustomValues = async (base: FoodItem): Promise<FoodItem> => {
+      try {
+        const custom: any = await api.getFoodCustomValues(base.id);
+        if (custom && (custom.calories > 0 || custom.protein > 0 || custom.carbs > 0 || custom.fat > 0)) {
+          return { ...base, calories: custom.calories, protein: custom.protein, carbs: custom.carbs, fat: custom.fat };
+        }
+      } catch {}
+      return base;
+    };
 
     const hasMacros =
       food.calories > 0 ||
@@ -98,31 +118,34 @@ const FoodDetailSheet: React.FC<FoodDetailSheetProps> = ({
       food.fat > 0;
 
     if (hasMacros) {
-      setDetail(food);
-      setLoadingDetail(false);
-      setDetailError(false);
+      applyCustomValues(food).then((enriched) => {
+        if (!cancelled) {
+          setDetail(enriched);
+          setLoadingDetail(false);
+          setDetailError(false);
+        }
+      });
       return;
     }
 
-    let cancelled = false;
     setDetail(null);
     setLoadingDetail(true);
     setDetailError(false);
     api
       .getFoodDetails(food.id)
-      .then((res: FoodItem | null) => {
+      .then(async (res: FoodItem | null) => {
         if (cancelled) return;
         if (!res) {
           setDetailError(true);
         } else {
-          // Fall back to the search result's name/image if the detail call
-          // returns blanks (e.g. some products lack a title).
-          setDetail({
+          const base = {
             ...res,
             name: res.name || food.name,
             brand: res.brand || food.brand,
             imageUrl: res.imageUrl || food.imageUrl,
-          });
+          };
+          const enriched = await applyCustomValues(base);
+          if (!cancelled) setDetail(enriched);
         }
       })
       .catch(() => {
@@ -137,6 +160,16 @@ const FoodDetailSheet: React.FC<FoodDetailSheetProps> = ({
     };
   }, [visible, food]);
 
+  // Sync editable overrides when detail changes
+  useEffect(() => {
+    if (detail) {
+      setEditCalories(detail.calories);
+      setEditProtein(detail.protein);
+      setEditCarbs(detail.carbs);
+      setEditFat(detail.fat);
+    }
+  }, [detail]);
+
   // Reset the controls each time the sheet opens.
   useEffect(() => {
     if (visible) {
@@ -146,6 +179,11 @@ const FoodDetailSheet: React.FC<FoodDetailSheetProps> = ({
       setShowUnitPicker(false);
       setFavorite(false);
       setHiResFailed(false);
+      setEditCalories(null);
+      setEditProtein(null);
+      setEditCarbs(null);
+      setEditFat(null);
+      setShowEditSheet(false);
     }
   }, [visible]);
 
@@ -174,11 +212,23 @@ const FoodDetailSheet: React.FC<FoodDetailSheetProps> = ({
   const totalGrams = quantity * unit.grams;
   const servings = totalGrams / 100; // ×100g multiplier the parent expects
 
-  const calories = Math.round(display.calories * servings);
-  const protein = display.protein * servings;
-  const carbs = display.carbs * servings;
-  const fat = display.fat * servings;
+  const baseCal = editCalories ?? display.calories;
+  const basePro = editProtein ?? display.protein;
+  const baseCarb = editCarbs ?? display.carbs;
+  const baseFat = editFat ?? display.fat;
+
+  const calories = Math.round(baseCal * servings);
+  const protein = basePro * servings;
+  const carbs = baseCarb * servings;
+  const fat = baseFat * servings;
   const canAdd = !loadingDetail && !!detail;
+
+  const hasEdits = detail != null && (
+    baseCal !== detail.calories ||
+    basePro !== detail.protein ||
+    baseCarb !== detail.carbs ||
+    baseFat !== detail.fat
+  );
 
   const handleQuantityChange = (text: string) => {
     const cleaned = text.replace(",", ".").replace(/[^0-9.]/g, "");
@@ -379,6 +429,14 @@ const FoodDetailSheet: React.FC<FoodDetailSheetProps> = ({
                     styles={styles}
                   />
                 </View>
+                <Pressable style={styles.editLink} onPress={() => setShowEditSheet(true)}>
+                  <Ionicons name="create-outline" size={16} color={theme.primary.main} />
+                  <Text style={styles.editLinkText}>
+                    {hasEdits
+                      ? (isFr ? "Valeurs modifiées · Modifier" : "Values edited · Edit")
+                      : (isFr ? "Modifier les valeurs" : "Edit values")}
+                  </Text>
+                </Pressable>
 
                 {/* Quantity + portion size */}
                 <View style={styles.portionRow}>
@@ -434,7 +492,10 @@ const FoodDetailSheet: React.FC<FoodDetailSheetProps> = ({
               ]}
               onPress={() => {
                 if (!canAdd || !detail) return;
-                onAdd(detail, servings);
+                onAdd(
+                  { ...detail, calories: baseCal, protein: basePro, carbs: baseCarb, fat: baseFat },
+                  servings,
+                );
               }}
               disabled={!canAdd}
             >
@@ -502,7 +563,72 @@ const FoodDetailSheet: React.FC<FoodDetailSheetProps> = ({
             </Pressable>
           </Pressable>
         </Modal>
+
       </KeyboardAvoidingView>
+
+      {/* Edit nutrition modal */}
+      <Modal
+        visible={showEditSheet}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowEditSheet(false)}
+        statusBarTranslucent
+      >
+        <Pressable style={styles.editBackdrop} onPress={() => setShowEditSheet(false)}>
+          <Pressable style={styles.editModal} onPress={() => {}}>
+            <View style={styles.editHandle} />
+
+            <View style={styles.editHeader}>
+              <Text style={styles.editTitle}>
+                {isFr ? "Modifier les valeurs" : "Edit values"}
+              </Text>
+              <Pressable
+                style={({ pressed }) => [styles.editCloseBtn, pressed && { opacity: 0.7 }]}
+                onPress={() => setShowEditSheet(false)}
+                hitSlop={8}
+              >
+                <Ionicons name="close" size={20} color={theme.foreground.white} />
+              </Pressable>
+            </View>
+
+            <Text style={styles.editHintText}>
+              {isFr ? "Valeurs pour 100 g" : "Values per 100 g"}
+            </Text>
+
+            <EditField label={isFr ? "Calories" : "Calories"} unit="kcal" value={baseCal} onChange={setEditCalories} theme={theme} isFr={isFr} />
+            <EditField label={isFr ? "Glucides" : "Carbs"} unit="g" value={baseCarb} onChange={setEditCarbs} theme={theme} isFr={isFr} />
+            <EditField label={isFr ? "Protéines" : "Protein"} unit="g" value={basePro} onChange={setEditProtein} theme={theme} isFr={isFr} />
+            <EditField label={isFr ? "Lipides" : "Fat"} unit="g" value={baseFat} onChange={setEditFat} theme={theme} isFr={isFr} last />
+
+            <View style={styles.editButtons}>
+              <Pressable
+                style={({ pressed }) => [styles.editCancelBtn, pressed && { opacity: 0.7 }]}
+                onPress={() => setShowEditSheet(false)}
+              >
+                <Text style={styles.editCancelText}>{isFr ? "Annuler" : "Cancel"}</Text>
+              </Pressable>
+              <Pressable
+                style={({ pressed }) => [styles.editSaveBtn, pressed && { opacity: 0.85 }]}
+                onPress={() => {
+                  if (display) {
+                    api.upsertFoodCustomValues({
+                      food_id: display.id,
+                      food_name: display.name,
+                      calories: baseCal,
+                      protein: basePro,
+                      carbs: baseCarb,
+                      fat: baseFat,
+                    }).catch(() => {});
+                  }
+                  setShowEditSheet(false);
+                }}
+              >
+                <Text style={styles.editSaveText}>{isFr ? "Sauvegarder" : "Save"}</Text>
+              </Pressable>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </Modal>
   );
 };
@@ -525,6 +651,78 @@ const MacroStat: React.FC<MacroStatProps> = ({ value, unit, label, styles }) => 
     </Text>
   </View>
 );
+
+interface EditFieldProps {
+  label: string;
+  unit: string;
+  value: number;
+  onChange: (v: number) => void;
+  theme: Theme;
+  isFr: boolean;
+  last?: boolean;
+}
+
+const EditField: React.FC<EditFieldProps> = ({ label, unit, value, onChange, theme, isFr, last }) => {
+  const [text, setText] = useState(formatNum(value, isFr));
+
+  useEffect(() => {
+    setText(formatNum(value, isFr));
+  }, [value, isFr]);
+
+  return (
+    <View style={{ marginBottom: last ? 0 : 12 }}>
+      <Text style={{
+        fontFamily: FONTS.semiBold,
+        fontSize: 14,
+        color: theme.foreground.gray,
+        marginBottom: 6,
+      }}>
+        {label}
+      </Text>
+      <View style={{
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: theme.background.accent,
+        borderRadius: 14,
+        paddingRight: 16,
+      }}>
+        <TextInput
+          style={{
+            flex: 1,
+            borderRadius: 14,
+            color: theme.foreground.white,
+            fontFamily: FONTS.bold,
+            fontSize: 22,
+            padding: 14,
+          }}
+          value={text}
+          onChangeText={(t) => {
+            const cleaned = t.replace(",", ".").replace(/[^0-9.]/g, "");
+            setText(cleaned);
+            const n = parseFloat(cleaned);
+            if (!Number.isNaN(n) && n >= 0) onChange(n);
+          }}
+          onBlur={() => {
+            const n = parseFloat(text);
+            if (Number.isNaN(n) || n < 0) {
+              setText(formatNum(value, isFr));
+            }
+          }}
+          keyboardType="decimal-pad"
+          selectTextOnFocus
+          maxLength={7}
+        />
+        <Text style={{
+          fontFamily: FONTS.semiBold,
+          fontSize: 18,
+          color: theme.foreground.gray,
+        }}>
+          {unit}
+        </Text>
+      </View>
+    </View>
+  );
+};
 
 function createStyles(theme: Theme) {
   return StyleSheet.create({
@@ -644,6 +842,96 @@ function createStyles(theme: Theme) {
       fontFamily: FONTS.regular,
       fontSize: 12,
       color: theme.foreground.gray,
+    },
+    editLink: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 6,
+      paddingBottom: 12,
+    },
+    editLinkText: {
+      fontFamily: FONTS.medium,
+      fontSize: 13,
+      color: theme.primary.main,
+    },
+    editBackdrop: {
+      flex: 1,
+      justifyContent: "flex-end",
+      backgroundColor: "rgba(0,0,0,0.55)",
+    },
+    editModal: {
+      width: "100%",
+      backgroundColor: theme.background.darker,
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      paddingHorizontal: 22,
+      paddingBottom: 34,
+      paddingTop: 8,
+    },
+    editHandle: {
+      alignSelf: "center",
+      width: 42,
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: theme.foreground.gray,
+      opacity: 0.4,
+      marginBottom: 16,
+    },
+    editHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginBottom: 4,
+    },
+    editCloseBtn: {
+      width: 34,
+      height: 34,
+      borderRadius: 17,
+      backgroundColor: theme.background.accent,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    editTitle: {
+      fontFamily: FONTS.bold,
+      fontSize: 20,
+      color: theme.foreground.white,
+    },
+    editHintText: {
+      fontFamily: FONTS.regular,
+      fontSize: 13,
+      color: theme.foreground.gray,
+      marginTop: 2,
+      marginBottom: 16,
+    },
+    editButtons: {
+      flexDirection: "row",
+      gap: 12,
+      marginTop: 18,
+    },
+    editCancelBtn: {
+      flex: 1,
+      borderRadius: 14,
+      paddingVertical: 16,
+      alignItems: "center",
+      backgroundColor: theme.background.accent,
+    },
+    editCancelText: {
+      fontFamily: FONTS.semiBold,
+      fontSize: 16,
+      color: theme.foreground.white,
+    },
+    editSaveBtn: {
+      flex: 1,
+      borderRadius: 14,
+      paddingVertical: 16,
+      alignItems: "center",
+      backgroundColor: theme.primary.main,
+    },
+    editSaveText: {
+      fontFamily: FONTS.bold,
+      fontSize: 16,
+      color: "#fff",
     },
     portionRow: {
       flexDirection: "row",
