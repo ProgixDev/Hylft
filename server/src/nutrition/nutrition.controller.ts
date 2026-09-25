@@ -20,6 +20,7 @@ import { CreateMealDto } from './dto/create-meal.dto';
 import { UpdateGoalsDto } from './dto/update-goals.dto';
 import { UpsertDailyDto } from './dto/upsert-daily.dto';
 import { RecordFoodHistoryDto } from './dto/record-food-history.dto';
+import { UpsertFoodCustomValuesDto } from './dto/upsert-food-custom-values.dto';
 
 @Controller('nutrition')
 @UseGuards(SupabaseJwtGuard)
@@ -106,5 +107,23 @@ export class NutritionController {
   @Patch('goals')
   updateGoals(@CurrentUser() user: AuthUser, @Body() dto: UpdateGoalsDto) {
     return this.nutritionService.updateGoals(user.id, dto);
+  }
+
+  // ── Custom food values ────────────────────────────────────────────────
+
+  @Get('food-custom-values/:foodId')
+  getFoodCustomValues(
+    @CurrentUser() user: AuthUser,
+    @Param('foodId') foodId: string,
+  ) {
+    return this.nutritionService.getFoodCustomValues(user.id, foodId);
+  }
+
+  @Post('food-custom-values')
+  upsertFoodCustomValues(
+    @CurrentUser() user: AuthUser,
+    @Body() dto: UpsertFoodCustomValuesDto,
+  ) {
+    return this.nutritionService.upsertFoodCustomValues(user.id, dto);
   }
 }

@@ -5,6 +5,7 @@ import { CreateMealDto } from './dto/create-meal.dto';
 import { UpdateGoalsDto } from './dto/update-goals.dto';
 import { UpsertDailyDto } from './dto/upsert-daily.dto';
 import { RecordFoodHistoryDto } from './dto/record-food-history.dto';
+import { UpsertFoodCustomValuesDto } from './dto/upsert-food-custom-values.dto';
 import {
   ageFromDateOfBirth,
   computeNutritionGoals,
@@ -308,5 +309,46 @@ export class NutritionService {
 
     if (error) throw error;
     return { ok: true, useCount };
+  }
+
+  // ── Custom food values ────────────────────────────────────────────────
+
+  async getFoodCustomValues(userId: string, foodId: string) {
+    const { data, error } = await this.supabase
+      .from('food_custom_values')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('food_id', foodId)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!data) return null;
+    return {
+      foodId: data.food_id,
+      foodName: data.food_name,
+      calories: Number(data.calories) || 0,
+      protein: Number(data.protein) || 0,
+      carbs: Number(data.carbs) || 0,
+      fat: Number(data.fat) || 0,
+    };
+  }
+
+  async upsertFoodCustomValues(userId: string, dto: UpsertFoodCustomValuesDto) {
+    const { error } = await this.supabase.from('food_custom_values').upsert(
+      {
+        user_id: userId,
+        food_id: dto.food_id,
+        food_name: dto.food_name,
+        calories: dto.calories,
+        protein: dto.protein,
+        carbs: dto.carbs,
+        fat: dto.fat,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'user_id,food_id' },
+    );
+
+    if (error) throw error;
+    return { ok: true };
   }
 }
