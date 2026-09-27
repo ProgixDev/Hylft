@@ -18,6 +18,7 @@ import { Text } from "./ScaledText";
 import { FONTS } from "../../constants/fonts";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { api } from "../../services/api";
 import { upgradeOFFImage } from "../../services/openFoodFactsApi";
 import type { FoodItem } from "../../services/nutritionApi";
@@ -75,6 +76,7 @@ const FoodDetailSheet: React.FC<FoodDetailSheetProps> = ({
   onAdd,
 }) => {
   const { theme } = useTheme();
+  const insets = useSafeAreaInsets();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   const [quantity, setQuantity] = useState(1);
@@ -326,7 +328,7 @@ const FoodDetailSheet: React.FC<FoodDetailSheetProps> = ({
             contentContainerStyle={styles.scrollContent}
             keyboardShouldPersistTaps="handled"
           >
-            {/* Hero — product name + brand centered over a soft image/gradient */}
+            {/* Hero — product image */}
             <View style={styles.heroWrap}>
               {display.imageUrl ? (
                 <>
@@ -353,25 +355,32 @@ const FoodDetailSheet: React.FC<FoodDetailSheetProps> = ({
                 <View
                   style={[
                     StyleSheet.absoluteFillObject,
-                    { backgroundColor: avatarColor + "22" },
+                    {
+                      backgroundColor: avatarColor + "22",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    },
                   ]}
-                />
+                >
+                  <Ionicons
+                    name="restaurant-outline"
+                    size={48}
+                    color={theme.foreground.gray}
+                  />
+                </View>
               )}
-              <LinearGradient
-                colors={["rgba(0,0,0,0.15)", "rgba(0,0,0,0.55)"]}
-                style={StyleSheet.absoluteFillObject}
-                pointerEvents="none"
-              />
-              <View style={styles.heroTextWrap} pointerEvents="none">
-                <Text style={styles.heroName} numberOfLines={2}>
-                  {display.name}
+            </View>
+
+            {/* Product name & brand */}
+            <View style={styles.titleSection}>
+              <Text style={styles.heroName} numberOfLines={2}>
+                {display.name}
+              </Text>
+              {!!display.brand && (
+                <Text style={styles.heroBrand} numberOfLines={1}>
+                  {display.brand}
                 </Text>
-                {!!display.brand && (
-                  <Text style={styles.heroBrand} numberOfLines={1}>
-                    {display.brand}
-                  </Text>
-                )}
-              </View>
+              )}
             </View>
 
             {loadingDetail && (
@@ -746,7 +755,7 @@ function createStyles(theme: Theme) {
       alignItems: "center",
       justifyContent: "space-between",
       paddingHorizontal: 8,
-      height: 56,
+      paddingVertical: 14,
       backgroundColor: theme.background.dark,
       zIndex: 2,
     },
@@ -779,40 +788,42 @@ function createStyles(theme: Theme) {
     },
     heroWrap: {
       width: "100%",
-      height: 200,
+      height: 180,
       backgroundColor: theme.background.darker,
       position: "relative",
       alignItems: "center",
       justifyContent: "center",
+      overflow: "hidden",
     },
     heroThumb: {
-      width: "70%",
-      height: "70%",
+      width: "80%",
+      height: "80%",
     },
     heroDim: {
       ...StyleSheet.absoluteFillObject,
-      backgroundColor: "rgba(0,0,0,0.30)",
+      backgroundColor: "rgba(0,0,0,0.06)",
     },
-    heroTextWrap: {
-      ...StyleSheet.absoluteFillObject,
+    titleSection: {
       alignItems: "center",
       justifyContent: "center",
-      paddingHorizontal: 24,
+      paddingHorizontal: 20,
+      paddingTop: 16,
+      paddingBottom: 2,
     },
     heroName: {
       fontFamily: FONTS.bold,
-      fontSize: 26,
-      color: "#fff",
+      fontSize: 22,
+      color: theme.foreground.white,
       fontWeight: "800",
       textAlign: "center",
-      lineHeight: 30,
+      lineHeight: 28,
     },
     heroBrand: {
-      fontFamily: FONTS.semiBold,
-      fontSize: 16,
-      color: "rgba(255,255,255,0.85)",
+      fontFamily: FONTS.medium,
+      fontSize: 14,
+      color: theme.foreground.gray,
       textAlign: "center",
-      marginTop: 6,
+      marginTop: 4,
     },
     macroRow: {
       flexDirection: "row",
