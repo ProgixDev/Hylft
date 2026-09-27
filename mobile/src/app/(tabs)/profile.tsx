@@ -77,7 +77,7 @@ function ProgressRing({ pct, size, color, strokeWidth = 6, children }: {
   return (
     <View style={{ width: size, height: size, alignItems: "center", justifyContent: "center" }}>
       <Svg width={size} height={size} style={{ position: "absolute" }}>
-        <Circle cx={size / 2} cy={size / 2} r={r} stroke={`${color}20`} strokeWidth={strokeWidth} fill="none" />
+        <Circle cx={size / 2} cy={size / 2} r={r} stroke="rgba(255,255,255,0.12)" strokeWidth={strokeWidth} fill="none" />
         <Circle cx={size / 2} cy={size / 2} r={r} stroke={color} strokeWidth={strokeWidth} fill="none"
           strokeLinecap="round" strokeDasharray={`${c}`} strokeDashoffset={o} rotation="-90" origin={`${size / 2}, ${size / 2}`} />
       </Svg>
@@ -86,6 +86,11 @@ function ProgressRing({ pct, size, color, strokeWidth = 6, children }: {
   );
 }
 
+const NAVY_CARD = "#0A1628";
+const NAVY_CARD_LIGHT = "#1A2F50";
+const NAVY_CARD_DEEP = "#07101F";
+const NAVY_TEXT_MUTED = "rgba(255,255,255,0.72)";
+const NAVY_TEXT_SOFT = "rgba(255,255,255,0.55)";
 const PERIOD_ACTIVE_NAVY = "#0A1628";
 
 function buildPeriodItems(isFr: boolean): { value: Period; label: string }[] {
@@ -686,19 +691,19 @@ export default function Profile() {
         <Text style={styles.sectionTitle}>
           {isFr ? "Progression du jour" : "Daily Progress"}
         </Text>
-        <View style={styles.chartCard}>
+        <View style={styles.navySectionCard}>
           <View style={{ alignItems: "center", paddingVertical: 12 }}>
-            <ProgressRing pct={dailyProgressPct} size={120} color={theme.primary.main} strokeWidth={10}>
-              <Text style={{ fontFamily: FONTS.extraBold, fontSize: 24, color: theme.foreground.white }}>
+            <ProgressRing pct={dailyProgressPct} size={120} color="#38BDF8" strokeWidth={10}>
+              <Text style={{ fontFamily: FONTS.extraBold, fontSize: 24, color: "#FFFFFF" }}>
                 {Math.round(dailyProgressPct * 100)}%
               </Text>
             </ProgressRing>
             <View style={{ flexDirection: "row", justifyContent: "space-around", width: "100%", marginTop: 16 }}>
               <View style={{ alignItems: "center" }}>
-                <ProgressRing pct={dailyProgress?.steps.pct ?? 0} size={44} color="#4A90D9" strokeWidth={4}>
-                  <MaterialCommunityIcons name="shoe-print" size={16} color="#4A90D9" />
+                <ProgressRing pct={dailyProgress?.steps.pct ?? 0} size={44} color="#38BDF8" strokeWidth={4}>
+                  <MaterialCommunityIcons name="shoe-print" size={16} color="#38BDF8" />
                 </ProgressRing>
-                <Text style={{ fontFamily: FONTS.bold, fontSize: 10, color: theme.foreground.gray, marginTop: 4 }}>
+                <Text style={{ fontFamily: FONTS.bold, fontSize: 10, color: NAVY_TEXT_MUTED, marginTop: 4 }}>
                   {isFr ? "Pas" : "Steps"}
                 </Text>
               </View>
@@ -706,7 +711,7 @@ export default function Profile() {
                 <ProgressRing pct={dailyProgress?.calories.pct ?? 0} size={44} color="#F5A623" strokeWidth={4}>
                   <MaterialCommunityIcons name="fire" size={16} color="#F5A623" />
                 </ProgressRing>
-                <Text style={{ fontFamily: FONTS.bold, fontSize: 10, color: theme.foreground.gray, marginTop: 4 }}>
+                <Text style={{ fontFamily: FONTS.bold, fontSize: 10, color: NAVY_TEXT_MUTED, marginTop: 4 }}>
                   Calories
                 </Text>
               </View>
@@ -714,7 +719,7 @@ export default function Profile() {
                 <ProgressRing pct={dailyProgress?.water.pct ?? 0} size={44} color="#4FC3F7" strokeWidth={4}>
                   <MaterialCommunityIcons name="water" size={16} color="#4FC3F7" />
                 </ProgressRing>
-                <Text style={{ fontFamily: FONTS.bold, fontSize: 10, color: theme.foreground.gray, marginTop: 4 }}>
+                <Text style={{ fontFamily: FONTS.bold, fontSize: 10, color: NAVY_TEXT_MUTED, marginTop: 4 }}>
                   {isFr ? "Eau" : "Water"}
                 </Text>
               </View>
@@ -727,13 +732,13 @@ export default function Profile() {
           {isFr ? "Mensurations" : "Body Measurements"}
         </Text>
         <Pressable
-          style={styles.chartCard}
+          style={styles.navySectionCard}
           onPress={() => router.push("/body-measurements" as any)}
         >
           {latestMeasurements.length === 0 ? (
             <View style={{ alignItems: "center", paddingVertical: 16 }}>
-              <MaterialCommunityIcons name="human-male-height" size={32} color={theme.foreground.gray} />
-              <Text style={{ fontFamily: FONTS.regular, fontSize: 13, color: theme.foreground.gray, marginTop: 8, textAlign: "center" }}>
+              <MaterialCommunityIcons name="human-male-height" size={32} color={NAVY_TEXT_MUTED} />
+              <Text style={{ fontFamily: FONTS.regular, fontSize: 13, color: NAVY_TEXT_MUTED, marginTop: 8, textAlign: "center" }}>
                 {isFr ? "Aucune mesure enregistrée.\nAppuyez pour ajouter." : "No measurements recorded.\nTap to add."}
               </Text>
             </View>
@@ -749,13 +754,13 @@ export default function Profile() {
                 };
                 return (
                   <View key={m.id} style={{ alignItems: "center", minWidth: 56 }}>
-                    <Text style={{ fontFamily: FONTS.extraBold, fontSize: 18, color: theme.foreground.white }}>
+                    <Text style={{ fontFamily: FONTS.extraBold, fontSize: 18, color: "#FFFFFF" }}>
                       {m.value}
                     </Text>
-                    <Text style={{ fontFamily: FONTS.regular, fontSize: 11, color: theme.foreground.gray }}>
+                    <Text style={{ fontFamily: FONTS.regular, fontSize: 11, color: NAVY_TEXT_SOFT }}>
                       cm
                     </Text>
-                    <Text style={{ fontFamily: FONTS.bold, fontSize: 10, color: theme.foreground.gray, marginTop: 2 }}>
+                    <Text style={{ fontFamily: FONTS.bold, fontSize: 10, color: NAVY_TEXT_MUTED, marginTop: 2 }}>
                       {isFr ? labels[m.id]?.fr : labels[m.id]?.en}
                     </Text>
                   </View>
@@ -764,10 +769,10 @@ export default function Profile() {
             </View>
           )}
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", marginTop: 12, gap: 4 }}>
-            <Text style={{ fontFamily: FONTS.bold, fontSize: 12, color: theme.primary.main }}>
+            <Text style={{ fontFamily: FONTS.bold, fontSize: 12, color: "#38BDF8" }}>
               {isFr ? "Voir tout" : "View all"}
             </Text>
-            <Ionicons name="chevron-forward" size={14} color={theme.primary.main} />
+            <Ionicons name="chevron-forward" size={14} color="#38BDF8" />
           </View>
         </Pressable>
 
@@ -775,14 +780,14 @@ export default function Profile() {
         <Text style={styles.sectionTitle}>
           {isFr ? "Composition corporelle" : "Body Composition"}
         </Text>
-        <View style={[styles.chartCard, { marginBottom: 24 }]}>
+        <View style={[styles.navySectionCard, { marginBottom: 24 }]}>
           {!bodyComposition.bodyFat && !bodyComposition.muscleMass ? (
             <Pressable
               style={{ alignItems: "center", paddingVertical: 16 }}
               onPress={() => router.push("/body-measurements" as any)}
             >
-              <MaterialCommunityIcons name="percent-circle-outline" size={32} color={theme.foreground.gray} />
-              <Text style={{ fontFamily: FONTS.regular, fontSize: 13, color: theme.foreground.gray, marginTop: 8, textAlign: "center" }}>
+              <MaterialCommunityIcons name="percent-circle-outline" size={32} color={NAVY_TEXT_MUTED} />
+              <Text style={{ fontFamily: FONTS.regular, fontSize: 13, color: NAVY_TEXT_MUTED, marginTop: 8, textAlign: "center" }}>
                 {isFr ? "Aucune donnée.\nAppuyez pour ajouter." : "No data.\nTap to add."}
               </Text>
             </Pressable>
@@ -795,11 +800,11 @@ export default function Profile() {
                   color="#F5A623"
                   strokeWidth={7}
                 >
-                  <Text style={{ fontFamily: FONTS.extraBold, fontSize: 16, color: theme.foreground.white }}>
+                  <Text style={{ fontFamily: FONTS.extraBold, fontSize: 16, color: "#FFFFFF" }}>
                     {bodyComposition.bodyFat ? `${bodyComposition.bodyFat.value}%` : "—"}
                   </Text>
                 </ProgressRing>
-                <Text style={{ fontFamily: FONTS.bold, fontSize: 12, color: theme.foreground.gray, marginTop: 8 }}>
+                <Text style={{ fontFamily: FONTS.bold, fontSize: 12, color: NAVY_TEXT_MUTED, marginTop: 8 }}>
                   {isFr ? "Masse grasse" : "Body fat"}
                 </Text>
               </View>
@@ -810,11 +815,11 @@ export default function Profile() {
                   color="#34C759"
                   strokeWidth={7}
                 >
-                  <Text style={{ fontFamily: FONTS.extraBold, fontSize: 16, color: theme.foreground.white }}>
+                  <Text style={{ fontFamily: FONTS.extraBold, fontSize: 16, color: "#FFFFFF" }}>
                     {bodyComposition.muscleMass ? `${bodyComposition.muscleMass.value}%` : "—"}
                   </Text>
                 </ProgressRing>
-                <Text style={{ fontFamily: FONTS.bold, fontSize: 12, color: theme.foreground.gray, marginTop: 8 }}>
+                <Text style={{ fontFamily: FONTS.bold, fontSize: 12, color: NAVY_TEXT_MUTED, marginTop: 8 }}>
                   {isFr ? "Masse musculaire" : "Muscle mass"}
                 </Text>
               </View>
@@ -826,10 +831,10 @@ export default function Profile() {
         <Text style={styles.sectionTitle}>
           {isFr ? "Score de progression" : "Progression Score"}
         </Text>
-        <View style={[styles.chartCard, { marginBottom: 24 }]}>
+        <View style={[styles.navySectionCard, { marginBottom: 24 }]}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
             <ProgressRing pct={progressionScore / 100} size={90} color={scoreColor} strokeWidth={8}>
-              <Text style={{ fontFamily: FONTS.extraBold, fontSize: 28, color: theme.foreground.white }}>
+              <Text style={{ fontFamily: FONTS.extraBold, fontSize: 28, color: "#FFFFFF" }}>
                 {progressionScore}
               </Text>
             </ProgressRing>
@@ -837,7 +842,7 @@ export default function Profile() {
               <Text style={{ fontFamily: FONTS.bold, fontSize: 18, color: scoreColor }}>
                 {scoreLabel}
               </Text>
-              <Text style={{ fontFamily: FONTS.regular, fontSize: 12, color: theme.foreground.gray, marginTop: 4, lineHeight: 18 }}>
+              <Text style={{ fontFamily: FONTS.regular, fontSize: 12, color: NAVY_TEXT_MUTED, marginTop: 4, lineHeight: 18 }}>
                 {isFr
                   ? "Basé sur ton activité, ton poids, ta nutrition et tes mesures."
                   : "Based on your activity, weight, nutrition, and measurements."}
@@ -1187,6 +1192,22 @@ function createStyles(theme: Theme) {
       borderRadius: 12, backgroundColor: theme.background.darker,
     },
     chartWrap: { alignItems: "center", overflow: "hidden" },
+
+    // Navy Section Cards (Progression du jour, Mensurations, Composition corporelle, Score de progression)
+    navySectionCard: {
+      marginHorizontal: 20,
+      marginBottom: 10,
+      padding: 18,
+      borderRadius: 18,
+      backgroundColor: NAVY_CARD,
+      borderWidth: 1,
+      borderColor: "rgba(255,255,255,0.10)",
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.18,
+      shadowRadius: 8,
+      elevation: 4,
+    },
 
     devRoutesButton: {
       marginHorizontal: 20,
