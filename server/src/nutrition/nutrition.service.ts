@@ -11,6 +11,9 @@ import {
   computeNutritionGoals,
 } from './nutrition.utils';
 
+import { SubmitFoodCorrectionDto } from './dto/submit-food-correction.dto';
+import { ReviewFoodCorrectionDto } from './dto/review-food-correction.dto';
+
 function genId(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
@@ -350,5 +353,141 @@ export class NutritionService {
 
     if (error) throw error;
     return { ok: true };
+  }
+
+  // ── Food Corrections & Moderation ─────────────────────────────────────
+
+  async submitFoodCorrection(userId: string, dto: SubmitFoodCorrectionDto) {
+    // 1. Submit pending correction for admin moderation
+    const { data: correction, error: correctionError } = await this.supabase
+      .from('food_corrections')
+      .insert({
+        user_id: userId,
+        food_id: dto.food_id,
+        food_name: dto.food_name,
+        brand: dto.brand ?? null,
+        image_url: dto.image_url ?? null,
+        original_calories: dto.original_calories ?? 0,
+        original_protein: dto.original_protein ?? 0,
+        original_carbs: dto.original_carbs ?? 0,
+        original_fat: dto.original_fat ?? 0,
+        calories: dto.calories,
+        protein: dto.protein,
+        carbs: dto.carbs,
+        fat: dto.fat,
+        status: 'pending',
+      })
+      .select()
+      .single();
+
+    // 2. Also keep user's personal draft values updated
+    await this.supabase.from('food_custom_values').upsert(
+      {
+        user_id: userId,
+        food_id: dto.food_id,
+        food_name: dto.food_name,
+        calories: dto.calories,
+        protein: dto.protein,
+        carbs: dto.carbs,
+        fat: dto.fat,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'user_id,food_id' },
+    );
+
+    if (correctionError && correctionError.code !== '42P01') {
+      this.logger.warn(`Could not insert food_correction: ${correctionError.message}`);
+    }
+
+    return { ok: true, correctionId: correction?.id, status: 'pending' };
+  }
+
+  async getAdminFoodCorrections(status?: string, limit = 50) {
+    let query = this.supabase
+      .from('food_corrections')
+      .select(
+        `*,
+        user:user_profiles!food_corrections_user_id_fkey(id, username, display_name, avatar_url)`,
+      )
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (status && status !== 'all') {
+      query = query.eq('status', status);
+    }
+
+    const { data, error } = await query;
+    if (error) {
+      // If table does not exist yet, fallback gracefully
+      this.logger.warn(`getAdminFoodCorrections query failed: ${error.message}`);
+      return { corrections: [], stats: { total: 0, pending: 0, approved: 0, rejected: 0 } };
+    }
+
+    // Get count stats
+    const { data: allItems } = await this.supabase
+      .from('food_corrections')
+      .select('status');
+
+    const stats = {
+      total: allItems?.length ?? 0,
+      pending: allItems?.filter((i) => i.status === 'pending').length ?? 0,
+      approved: allItems?.filter((i) => i.status === 'approved').length ?? 0,
+      rejected: allItems?.filter((i) => i.status === 'rejected').length ?? 0,
+    };
+
+    return { corrections: data ?? [], stats };
+  }
+
+  async reviewFoodCorrection(
+    adminId: string,
+    correctionId: string,
+    dto: ReviewFoodCorrectionDto,
+  ) {
+    const status = dto.action === 'approve' ? 'approved' : 'rejected';
+
+    const { data: correction, error: fetchError } = await this.supabase
+      .from('food_corrections')
+      .select('*')
+      .eq('id', correctionId)
+      .single();
+
+    if (fetchError || !correction) {
+      throw new Error(`Correction not found: ${fetchError?.message}`);
+    }
+
+    // Update status in food_corrections
+    const { error: updateError } = await this.supabase
+      .from('food_corrections')
+      .update({
+        status,
+        rejection_reason: dto.rejection_reason ?? null,
+        reviewed_by: adminId,
+        reviewed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', correctionId);
+
+    if (updateError) throw updateError;
+
+    // If approved, push to verified_food_values table
+    if (status === 'approved') {
+      await this.supabase.from('verified_food_values').upsert(
+        {
+          food_id: correction.food_id,
+          food_name: correction.food_name,
+          brand: correction.brand ?? null,
+          image_url: correction.image_url ?? null,
+          calories: correction.calories,
+          protein: correction.protein,
+          carbs: correction.carbs,
+          fat: correction.fat,
+          verified_by: adminId,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'food_id' },
+      );
+    }
+
+    return { ok: true, id: correctionId, status };
   }
 }

@@ -21,6 +21,8 @@ import { UpdateGoalsDto } from './dto/update-goals.dto';
 import { UpsertDailyDto } from './dto/upsert-daily.dto';
 import { RecordFoodHistoryDto } from './dto/record-food-history.dto';
 import { UpsertFoodCustomValuesDto } from './dto/upsert-food-custom-values.dto';
+import { SubmitFoodCorrectionDto } from './dto/submit-food-correction.dto';
+import { ReviewFoodCorrectionDto } from './dto/review-food-correction.dto';
 
 @Controller('nutrition')
 @UseGuards(SupabaseJwtGuard)
@@ -125,5 +127,35 @@ export class NutritionController {
     @Body() dto: UpsertFoodCustomValuesDto,
   ) {
     return this.nutritionService.upsertFoodCustomValues(user.id, dto);
+  }
+
+  // ── Food Corrections & Moderation ─────────────────────────────────────
+
+  @Post('corrections')
+  submitFoodCorrection(
+    @CurrentUser() user: AuthUser,
+    @Body() dto: SubmitFoodCorrectionDto,
+  ) {
+    return this.nutritionService.submitFoodCorrection(user.id, dto);
+  }
+
+  @Get('admin/corrections')
+  getAdminCorrections(
+    @Query('status') status?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.nutritionService.getAdminFoodCorrections(
+      status,
+      limit ? parseInt(limit, 10) : 50,
+    );
+  }
+
+  @Patch('admin/corrections/:id/review')
+  reviewCorrection(
+    @CurrentUser() admin: AuthUser,
+    @Param('id') id: string,
+    @Body() dto: ReviewFoodCorrectionDto,
+  ) {
+    return this.nutritionService.reviewFoodCorrection(admin.id, id, dto);
   }
 }
