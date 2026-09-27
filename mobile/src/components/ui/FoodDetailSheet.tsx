@@ -110,6 +110,34 @@ const FoodDetailSheet: React.FC<FoodDetailSheetProps> = ({
   const [editFat, setEditFat] = useState<number | null>(null);
   const [editSugars, setEditSugars] = useState<number | null>(null);
   const [editSaturatedFat, setEditSaturatedFat] = useState<number | null>(null);
+  const [editMonounsaturatedFat, setEditMonounsaturatedFat] = useState<number | null>(null);
+  const [editPolyunsaturatedFat, setEditPolyunsaturatedFat] = useState<number | null>(null);
+  const [editTransFat, setEditTransFat] = useState<number | null>(null);
+  const [editCholesterol, setEditCholesterol] = useState<number | null>(null);
+  const [editPolyols, setEditPolyols] = useState<number | null>(null);
+  const [editStarch, setEditStarch] = useState<number | null>(null);
+  const [editAlcohol, setEditAlcohol] = useState<number | null>(null);
+  const [editWater, setEditWater] = useState<number | null>(null);
+  const [editCaffeine, setEditCaffeine] = useState<number | null>(null);
+  const [editPotassium, setEditPotassium] = useState<number | null>(null);
+  const [editCalcium, setEditCalcium] = useState<number | null>(null);
+  const [editMagnesium, setEditMagnesium] = useState<number | null>(null);
+  const [editIron, setEditIron] = useState<number | null>(null);
+  const [editZinc, setEditZinc] = useState<number | null>(null);
+  const [editPhosphorus, setEditPhosphorus] = useState<number | null>(null);
+  const [editVitaminA, setEditVitaminA] = useState<number | null>(null);
+  const [editVitaminB1, setEditVitaminB1] = useState<number | null>(null);
+  const [editVitaminB2, setEditVitaminB2] = useState<number | null>(null);
+  const [editVitaminB3, setEditVitaminB3] = useState<number | null>(null);
+  const [editVitaminB5, setEditVitaminB5] = useState<number | null>(null);
+  const [editVitaminB6, setEditVitaminB6] = useState<number | null>(null);
+  const [editVitaminB7, setEditVitaminB7] = useState<number | null>(null);
+  const [editVitaminB9, setEditVitaminB9] = useState<number | null>(null);
+  const [editVitaminB12, setEditVitaminB12] = useState<number | null>(null);
+  const [editVitaminC, setEditVitaminC] = useState<number | null>(null);
+  const [editVitaminD, setEditVitaminD] = useState<number | null>(null);
+  const [editVitaminE, setEditVitaminE] = useState<number | null>(null);
+  const [editVitaminK, setEditVitaminK] = useState<number | null>(null);
   const [editFiber, setEditFiber] = useState<number | null>(null);
   const [editSalt, setEditSalt] = useState<number | null>(null);
   const [editServingSize, setEditServingSize] = useState<number | null>(null);
@@ -198,6 +226,34 @@ const FoodDetailSheet: React.FC<FoodDetailSheetProps> = ({
       setEditFat(detail.fat);
       setEditSugars(detail.sugars ?? null);
       setEditSaturatedFat(detail.saturatedFat ?? null);
+      setEditMonounsaturatedFat(detail.monounsaturatedFat ?? null);
+      setEditPolyunsaturatedFat(detail.polyunsaturatedFat ?? null);
+      setEditTransFat(detail.transFat ?? null);
+      setEditCholesterol(detail.cholesterol ?? null);
+      setEditPolyols(detail.polyols ?? null);
+      setEditStarch(detail.starch ?? null);
+      setEditAlcohol(detail.alcohol ?? null);
+      setEditWater(detail.water ?? null);
+      setEditCaffeine(detail.caffeine ?? null);
+      setEditPotassium(detail.potassium ?? null);
+      setEditCalcium(detail.calcium ?? null);
+      setEditMagnesium(detail.magnesium ?? null);
+      setEditIron(detail.iron ?? null);
+      setEditZinc(detail.zinc ?? null);
+      setEditPhosphorus(detail.phosphorus ?? null);
+      setEditVitaminA(detail.vitaminA ?? null);
+      setEditVitaminB1(detail.vitaminB1 ?? null);
+      setEditVitaminB2(detail.vitaminB2 ?? null);
+      setEditVitaminB3(detail.vitaminB3 ?? null);
+      setEditVitaminB5(detail.vitaminB5 ?? null);
+      setEditVitaminB6(detail.vitaminB6 ?? null);
+      setEditVitaminB7(detail.vitaminB7 ?? null);
+      setEditVitaminB9(detail.vitaminB9 ?? null);
+      setEditVitaminB12(detail.vitaminB12 ?? null);
+      setEditVitaminC(detail.vitaminC ?? null);
+      setEditVitaminD(detail.vitaminD ?? null);
+      setEditVitaminE(detail.vitaminE ?? null);
+      setEditVitaminK(detail.vitaminK ?? null);
       setEditFiber(detail.fiber ?? null);
       setEditSalt(detail.salt ?? null);
       setEditServingSize(detail.servingSize ?? null);
@@ -219,6 +275,34 @@ const FoodDetailSheet: React.FC<FoodDetailSheetProps> = ({
       setEditFat(null);
       setEditSugars(null);
       setEditSaturatedFat(null);
+      setEditMonounsaturatedFat(null);
+      setEditPolyunsaturatedFat(null);
+      setEditTransFat(null);
+      setEditCholesterol(null);
+      setEditPolyols(null);
+      setEditStarch(null);
+      setEditAlcohol(null);
+      setEditWater(null);
+      setEditCaffeine(null);
+      setEditPotassium(null);
+      setEditCalcium(null);
+      setEditMagnesium(null);
+      setEditIron(null);
+      setEditZinc(null);
+      setEditPhosphorus(null);
+      setEditVitaminA(null);
+      setEditVitaminB1(null);
+      setEditVitaminB2(null);
+      setEditVitaminB3(null);
+      setEditVitaminB5(null);
+      setEditVitaminB6(null);
+      setEditVitaminB7(null);
+      setEditVitaminB9(null);
+      setEditVitaminB12(null);
+      setEditVitaminC(null);
+      setEditVitaminD(null);
+      setEditVitaminE(null);
+      setEditVitaminK(null);
       setEditFiber(null);
       setEditSalt(null);
       setEditServingSize(null);
@@ -265,6 +349,34 @@ const FoodDetailSheet: React.FC<FoodDetailSheetProps> = ({
   const formFat = editFat ?? display.fat;
   const formSugars = editSugars ?? display.sugars ?? null;
   const formSaturatedFat = editSaturatedFat ?? display.saturatedFat ?? null;
+  const formMonounsaturatedFat = editMonounsaturatedFat ?? display.monounsaturatedFat ?? null;
+  const formPolyunsaturatedFat = editPolyunsaturatedFat ?? display.polyunsaturatedFat ?? null;
+  const formTransFat = editTransFat ?? display.transFat ?? null;
+  const formCholesterol = editCholesterol ?? display.cholesterol ?? null;
+  const formPolyols = editPolyols ?? display.polyols ?? null;
+  const formStarch = editStarch ?? display.starch ?? null;
+  const formAlcohol = editAlcohol ?? display.alcohol ?? null;
+  const formWater = editWater ?? display.water ?? null;
+  const formCaffeine = editCaffeine ?? display.caffeine ?? null;
+  const formPotassium = editPotassium ?? display.potassium ?? null;
+  const formCalcium = editCalcium ?? display.calcium ?? null;
+  const formMagnesium = editMagnesium ?? display.magnesium ?? null;
+  const formIron = editIron ?? display.iron ?? null;
+  const formZinc = editZinc ?? display.zinc ?? null;
+  const formPhosphorus = editPhosphorus ?? display.phosphorus ?? null;
+  const formVitaminA = editVitaminA ?? display.vitaminA ?? null;
+  const formVitaminB1 = editVitaminB1 ?? display.vitaminB1 ?? null;
+  const formVitaminB2 = editVitaminB2 ?? display.vitaminB2 ?? null;
+  const formVitaminB3 = editVitaminB3 ?? display.vitaminB3 ?? null;
+  const formVitaminB5 = editVitaminB5 ?? display.vitaminB5 ?? null;
+  const formVitaminB6 = editVitaminB6 ?? display.vitaminB6 ?? null;
+  const formVitaminB7 = editVitaminB7 ?? display.vitaminB7 ?? null;
+  const formVitaminB9 = editVitaminB9 ?? display.vitaminB9 ?? null;
+  const formVitaminB12 = editVitaminB12 ?? display.vitaminB12 ?? null;
+  const formVitaminC = editVitaminC ?? display.vitaminC ?? null;
+  const formVitaminD = editVitaminD ?? display.vitaminD ?? null;
+  const formVitaminE = editVitaminE ?? display.vitaminE ?? null;
+  const formVitaminK = editVitaminK ?? display.vitaminK ?? null;
   const formFiber = editFiber ?? display.fiber ?? null;
   const formSalt = editSalt ?? display.salt ?? null;
   const formServingSize = editServingSize ?? display.servingSize ?? null;
@@ -559,7 +671,42 @@ const FoodDetailSheet: React.FC<FoodDetailSheetProps> = ({
                 </Text>
 
                 {/* Expandable detailed nutrition & quality */}
-                {detail != null && (detail.sugars != null || detail.fiber != null || detail.saturatedFat != null || detail.salt != null || !!detail.nutriScore || !!detail.novaGroup) && (
+                {detail != null && (
+                  detail.sugars != null ||
+                  detail.fiber != null ||
+                  detail.saturatedFat != null ||
+                  detail.monounsaturatedFat != null ||
+                  detail.polyunsaturatedFat != null ||
+                  detail.transFat != null ||
+                  detail.cholesterol != null ||
+                  detail.polyols != null ||
+                  detail.starch != null ||
+                  detail.salt != null ||
+                  detail.potassium != null ||
+                  detail.calcium != null ||
+                  detail.magnesium != null ||
+                  detail.iron != null ||
+                  detail.zinc != null ||
+                  detail.phosphorus != null ||
+                  detail.vitaminA != null ||
+                  detail.vitaminB1 != null ||
+                  detail.vitaminB2 != null ||
+                  detail.vitaminB3 != null ||
+                  detail.vitaminB5 != null ||
+                  detail.vitaminB6 != null ||
+                  detail.vitaminB7 != null ||
+                  detail.vitaminB9 != null ||
+                  detail.vitaminB12 != null ||
+                  detail.vitaminC != null ||
+                  detail.vitaminD != null ||
+                  detail.vitaminE != null ||
+                  detail.vitaminK != null ||
+                  detail.alcohol != null ||
+                  detail.water != null ||
+                  detail.caffeine != null ||
+                  !!detail.nutriScore ||
+                  !!detail.novaGroup
+                ) && (
                   <View style={styles.detailsCard}>
                     <Pressable
                       style={styles.detailsHeader}
@@ -584,7 +731,7 @@ const FoodDetailSheet: React.FC<FoodDetailSheetProps> = ({
                               styles.miniNutriBadge,
                               {
                                 backgroundColor:
-                                  NUTRI_COLORS[
+                                   NUTRI_COLORS[
                                     detail.nutriScore.toUpperCase()
                                   ] || theme.primary.main,
                               },
@@ -658,57 +805,226 @@ const FoodDetailSheet: React.FC<FoodDetailSheetProps> = ({
 
                           {detail.sugars != null && (
                             <View style={styles.subMacroRow}>
-                              <Text style={styles.subMacroName}>
-                                {isFr ? "· Dont sucres" : "· Of which sugars"}
-                              </Text>
-                              <Text style={styles.subMacroValue}>
-                                {formatNum(detail.sugars * servings, isFr)} g
-                              </Text>
-                              <Text style={styles.subMacroValue100}>
-                                {formatNum(detail.sugars, isFr)} g
-                              </Text>
+                              <Text style={styles.subMacroName}>{isFr ? "· Dont sucres" : "· Of which sugars"}</Text>
+                              <Text style={styles.subMacroValue}>{formatNum(detail.sugars * servings, isFr)} g</Text>
+                              <Text style={styles.subMacroValue100}>{formatNum(detail.sugars, isFr)} g</Text>
                             </View>
                           )}
-
-                          {detail.saturatedFat != null && (
-                            <View style={styles.subMacroRow}>
-                              <Text style={styles.subMacroName}>
-                                {isFr ? "· Dont acides gras saturés" : "· Saturated fat"}
-                              </Text>
-                              <Text style={styles.subMacroValue}>
-                                {formatNum(detail.saturatedFat * servings, isFr)} g
-                              </Text>
-                              <Text style={styles.subMacroValue100}>
-                                {formatNum(detail.saturatedFat, isFr)} g
-                              </Text>
-                            </View>
-                          )}
-
                           {detail.fiber != null && (
                             <View style={styles.subMacroRow}>
-                              <Text style={styles.subMacroName}>
-                                {isFr ? "Fibres alimentaires" : "Dietary fiber"}
-                              </Text>
-                              <Text style={styles.subMacroValue}>
-                                {formatNum(detail.fiber * servings, isFr)} g
-                              </Text>
-                              <Text style={styles.subMacroValue100}>
-                                {formatNum(detail.fiber, isFr)} g
-                              </Text>
+                              <Text style={styles.subMacroName}>{isFr ? "Fibres alimentaires" : "Dietary fiber"}</Text>
+                              <Text style={styles.subMacroValue}>{formatNum(detail.fiber * servings, isFr)} g</Text>
+                              <Text style={styles.subMacroValue100}>{formatNum(detail.fiber, isFr)} g</Text>
                             </View>
                           )}
-
+                          {detail.polyols != null && (
+                            <View style={styles.subMacroRow}>
+                              <Text style={styles.subMacroName}>{isFr ? "Polyols" : "Polyols"}</Text>
+                              <Text style={styles.subMacroValue}>{formatNum(detail.polyols * servings, isFr)} g</Text>
+                              <Text style={styles.subMacroValue100}>{formatNum(detail.polyols, isFr)} g</Text>
+                            </View>
+                          )}
+                          {detail.starch != null && (
+                            <View style={styles.subMacroRow}>
+                              <Text style={styles.subMacroName}>{isFr ? "Amidon" : "Starch"}</Text>
+                              <Text style={styles.subMacroValue}>{formatNum(detail.starch * servings, isFr)} g</Text>
+                              <Text style={styles.subMacroValue100}>{formatNum(detail.starch, isFr)} g</Text>
+                            </View>
+                          )}
+                          {detail.saturatedFat != null && (
+                            <View style={styles.subMacroRow}>
+                              <Text style={styles.subMacroName}>{isFr ? "· Dont acides gras saturés" : "· Saturated fat"}</Text>
+                              <Text style={styles.subMacroValue}>{formatNum(detail.saturatedFat * servings, isFr)} g</Text>
+                              <Text style={styles.subMacroValue100}>{formatNum(detail.saturatedFat, isFr)} g</Text>
+                            </View>
+                          )}
+                          {detail.monounsaturatedFat != null && (
+                            <View style={styles.subMacroRow}>
+                              <Text style={styles.subMacroName}>{isFr ? "Acides gras mono-insaturés" : "Monounsaturated fat"}</Text>
+                              <Text style={styles.subMacroValue}>{formatNum(detail.monounsaturatedFat * servings, isFr)} g</Text>
+                              <Text style={styles.subMacroValue100}>{formatNum(detail.monounsaturatedFat, isFr)} g</Text>
+                            </View>
+                          )}
+                          {detail.polyunsaturatedFat != null && (
+                            <View style={styles.subMacroRow}>
+                              <Text style={styles.subMacroName}>{isFr ? "Acides gras poly-insaturés" : "Polyunsaturated fat"}</Text>
+                              <Text style={styles.subMacroValue}>{formatNum(detail.polyunsaturatedFat * servings, isFr)} g</Text>
+                              <Text style={styles.subMacroValue100}>{formatNum(detail.polyunsaturatedFat, isFr)} g</Text>
+                            </View>
+                          )}
+                          {detail.transFat != null && (
+                            <View style={styles.subMacroRow}>
+                              <Text style={styles.subMacroName}>{isFr ? "Acides gras trans" : "Trans fat"}</Text>
+                              <Text style={styles.subMacroValue}>{formatNum(detail.transFat * servings, isFr)} g</Text>
+                              <Text style={styles.subMacroValue100}>{formatNum(detail.transFat, isFr)} g</Text>
+                            </View>
+                          )}
+                          {detail.cholesterol != null && (
+                            <View style={styles.subMacroRow}>
+                              <Text style={styles.subMacroName}>{isFr ? "Cholestérol" : "Cholesterol"}</Text>
+                              <Text style={styles.subMacroValue}>{formatNum(detail.cholesterol * servings, isFr)} mg</Text>
+                              <Text style={styles.subMacroValue100}>{formatNum(detail.cholesterol, isFr)} mg</Text>
+                            </View>
+                          )}
                           {detail.salt != null && (
                             <View style={styles.subMacroRow}>
-                              <Text style={styles.subMacroName}>
-                                {isFr ? "Sel / Sodium" : "Salt / Sodium"}
-                              </Text>
-                              <Text style={styles.subMacroValue}>
-                                {formatNum(detail.salt * servings, isFr)} g
-                              </Text>
-                              <Text style={styles.subMacroValue100}>
-                                {formatNum(detail.salt, isFr)} g
-                              </Text>
+                              <Text style={styles.subMacroName}>{isFr ? "Sel / Sodium" : "Salt / Sodium"}</Text>
+                              <Text style={styles.subMacroValue}>{formatNum(detail.salt * servings, isFr)} g</Text>
+                              <Text style={styles.subMacroValue100}>{formatNum(detail.salt, isFr)} g</Text>
+                            </View>
+                          )}
+                          {detail.potassium != null && (
+                            <View style={styles.subMacroRow}>
+                              <Text style={styles.subMacroName}>{isFr ? "Potassium" : "Potassium"}</Text>
+                              <Text style={styles.subMacroValue}>{formatNum(detail.potassium * servings, isFr)} mg</Text>
+                              <Text style={styles.subMacroValue100}>{formatNum(detail.potassium, isFr)} mg</Text>
+                            </View>
+                          )}
+                          {detail.calcium != null && (
+                            <View style={styles.subMacroRow}>
+                              <Text style={styles.subMacroName}>{isFr ? "Calcium" : "Calcium"}</Text>
+                              <Text style={styles.subMacroValue}>{formatNum(detail.calcium * servings, isFr)} mg</Text>
+                              <Text style={styles.subMacroValue100}>{formatNum(detail.calcium, isFr)} mg</Text>
+                            </View>
+                          )}
+                          {detail.magnesium != null && (
+                            <View style={styles.subMacroRow}>
+                              <Text style={styles.subMacroName}>{isFr ? "Magnésium" : "Magnesium"}</Text>
+                              <Text style={styles.subMacroValue}>{formatNum(detail.magnesium * servings, isFr)} mg</Text>
+                              <Text style={styles.subMacroValue100}>{formatNum(detail.magnesium, isFr)} mg</Text>
+                            </View>
+                          )}
+                          {detail.iron != null && (
+                            <View style={styles.subMacroRow}>
+                              <Text style={styles.subMacroName}>{isFr ? "Fer" : "Iron"}</Text>
+                              <Text style={styles.subMacroValue}>{formatNum(detail.iron * servings, isFr)} mg</Text>
+                              <Text style={styles.subMacroValue100}>{formatNum(detail.iron, isFr)} mg</Text>
+                            </View>
+                          )}
+                          {detail.zinc != null && (
+                            <View style={styles.subMacroRow}>
+                              <Text style={styles.subMacroName}>{isFr ? "Zinc" : "Zinc"}</Text>
+                              <Text style={styles.subMacroValue}>{formatNum(detail.zinc * servings, isFr)} mg</Text>
+                              <Text style={styles.subMacroValue100}>{formatNum(detail.zinc, isFr)} mg</Text>
+                            </View>
+                          )}
+                          {detail.phosphorus != null && (
+                            <View style={styles.subMacroRow}>
+                              <Text style={styles.subMacroName}>{isFr ? "Phosphore" : "Phosphorus"}</Text>
+                              <Text style={styles.subMacroValue}>{formatNum(detail.phosphorus * servings, isFr)} mg</Text>
+                              <Text style={styles.subMacroValue100}>{formatNum(detail.phosphorus, isFr)} mg</Text>
+                            </View>
+                          )}
+                          {detail.vitaminA != null && (
+                            <View style={styles.subMacroRow}>
+                              <Text style={styles.subMacroName}>{isFr ? "Vitamine A" : "Vitamin A"}</Text>
+                              <Text style={styles.subMacroValue}>{formatNum(detail.vitaminA * servings, isFr)} µg</Text>
+                              <Text style={styles.subMacroValue100}>{formatNum(detail.vitaminA, isFr)} µg</Text>
+                            </View>
+                          )}
+                          {detail.vitaminB1 != null && (
+                            <View style={styles.subMacroRow}>
+                              <Text style={styles.subMacroName}>{isFr ? "Vitamine B1" : "Vitamin B1"}</Text>
+                              <Text style={styles.subMacroValue}>{formatNum(detail.vitaminB1 * servings, isFr)} mg</Text>
+                              <Text style={styles.subMacroValue100}>{formatNum(detail.vitaminB1, isFr)} mg</Text>
+                            </View>
+                          )}
+                          {detail.vitaminB2 != null && (
+                            <View style={styles.subMacroRow}>
+                              <Text style={styles.subMacroName}>{isFr ? "Vitamine B2" : "Vitamin B2"}</Text>
+                              <Text style={styles.subMacroValue}>{formatNum(detail.vitaminB2 * servings, isFr)} mg</Text>
+                              <Text style={styles.subMacroValue100}>{formatNum(detail.vitaminB2, isFr)} mg</Text>
+                            </View>
+                          )}
+                          {detail.vitaminB3 != null && (
+                            <View style={styles.subMacroRow}>
+                              <Text style={styles.subMacroName}>{isFr ? "Vitamine B3 / PP" : "Vitamin B3"}</Text>
+                              <Text style={styles.subMacroValue}>{formatNum(detail.vitaminB3 * servings, isFr)} mg</Text>
+                              <Text style={styles.subMacroValue100}>{formatNum(detail.vitaminB3, isFr)} mg</Text>
+                            </View>
+                          )}
+                          {detail.vitaminB5 != null && (
+                            <View style={styles.subMacroRow}>
+                              <Text style={styles.subMacroName}>{isFr ? "Vitamine B5" : "Vitamin B5"}</Text>
+                              <Text style={styles.subMacroValue}>{formatNum(detail.vitaminB5 * servings, isFr)} mg</Text>
+                              <Text style={styles.subMacroValue100}>{formatNum(detail.vitaminB5, isFr)} mg</Text>
+                            </View>
+                          )}
+                          {detail.vitaminB6 != null && (
+                            <View style={styles.subMacroRow}>
+                              <Text style={styles.subMacroName}>{isFr ? "Vitamine B6" : "Vitamin B6"}</Text>
+                              <Text style={styles.subMacroValue}>{formatNum(detail.vitaminB6 * servings, isFr)} mg</Text>
+                              <Text style={styles.subMacroValue100}>{formatNum(detail.vitaminB6, isFr)} mg</Text>
+                            </View>
+                          )}
+                          {detail.vitaminB7 != null && (
+                            <View style={styles.subMacroRow}>
+                              <Text style={styles.subMacroName}>{isFr ? "Vitamine B7 / Biotine" : "Vitamin B7"}</Text>
+                              <Text style={styles.subMacroValue}>{formatNum(detail.vitaminB7 * servings, isFr)} µg</Text>
+                              <Text style={styles.subMacroValue100}>{formatNum(detail.vitaminB7, isFr)} µg</Text>
+                            </View>
+                          )}
+                          {detail.vitaminB9 != null && (
+                            <View style={styles.subMacroRow}>
+                              <Text style={styles.subMacroName}>{isFr ? "Vitamine B9 / Folates" : "Vitamin B9"}</Text>
+                              <Text style={styles.subMacroValue}>{formatNum(detail.vitaminB9 * servings, isFr)} µg</Text>
+                              <Text style={styles.subMacroValue100}>{formatNum(detail.vitaminB9, isFr)} µg</Text>
+                            </View>
+                          )}
+                          {detail.vitaminB12 != null && (
+                            <View style={styles.subMacroRow}>
+                              <Text style={styles.subMacroName}>{isFr ? "Vitamine B12" : "Vitamin B12"}</Text>
+                              <Text style={styles.subMacroValue}>{formatNum(detail.vitaminB12 * servings, isFr)} µg</Text>
+                              <Text style={styles.subMacroValue100}>{formatNum(detail.vitaminB12, isFr)} µg</Text>
+                            </View>
+                          )}
+                          {detail.vitaminC != null && (
+                            <View style={styles.subMacroRow}>
+                              <Text style={styles.subMacroName}>{isFr ? "Vitamine C" : "Vitamin C"}</Text>
+                              <Text style={styles.subMacroValue}>{formatNum(detail.vitaminC * servings, isFr)} mg</Text>
+                              <Text style={styles.subMacroValue100}>{formatNum(detail.vitaminC, isFr)} mg</Text>
+                            </View>
+                          )}
+                          {detail.vitaminD != null && (
+                            <View style={styles.subMacroRow}>
+                              <Text style={styles.subMacroName}>{isFr ? "Vitamine D" : "Vitamin D"}</Text>
+                              <Text style={styles.subMacroValue}>{formatNum(detail.vitaminD * servings, isFr)} µg</Text>
+                              <Text style={styles.subMacroValue100}>{formatNum(detail.vitaminD, isFr)} µg</Text>
+                            </View>
+                          )}
+                          {detail.vitaminE != null && (
+                            <View style={styles.subMacroRow}>
+                              <Text style={styles.subMacroName}>{isFr ? "Vitamine E" : "Vitamin E"}</Text>
+                              <Text style={styles.subMacroValue}>{formatNum(detail.vitaminE * servings, isFr)} mg</Text>
+                              <Text style={styles.subMacroValue100}>{formatNum(detail.vitaminE, isFr)} mg</Text>
+                            </View>
+                          )}
+                          {detail.vitaminK != null && (
+                            <View style={styles.subMacroRow}>
+                              <Text style={styles.subMacroName}>{isFr ? "Vitamine K" : "Vitamin K"}</Text>
+                              <Text style={styles.subMacroValue}>{formatNum(detail.vitaminK * servings, isFr)} µg</Text>
+                              <Text style={styles.subMacroValue100}>{formatNum(detail.vitaminK, isFr)} µg</Text>
+                            </View>
+                          )}
+                          {detail.water != null && (
+                            <View style={styles.subMacroRow}>
+                              <Text style={styles.subMacroName}>{isFr ? "Eau" : "Water"}</Text>
+                              <Text style={styles.subMacroValue}>{formatNum(detail.water * servings, isFr)} g</Text>
+                              <Text style={styles.subMacroValue100}>{formatNum(detail.water, isFr)} g</Text>
+                            </View>
+                          )}
+                          {detail.alcohol != null && (
+                            <View style={styles.subMacroRow}>
+                              <Text style={styles.subMacroName}>{isFr ? "Alcool" : "Alcohol"}</Text>
+                              <Text style={styles.subMacroValue}>{formatNum(detail.alcohol * servings, isFr)} g</Text>
+                              <Text style={styles.subMacroValue100}>{formatNum(detail.alcohol, isFr)} g</Text>
+                            </View>
+                          )}
+                          {detail.caffeine != null && (
+                            <View style={styles.subMacroRow}>
+                              <Text style={styles.subMacroName}>{isFr ? "Caféine" : "Caffeine"}</Text>
+                              <Text style={styles.subMacroValue}>{formatNum(detail.caffeine * servings, isFr)} mg</Text>
+                              <Text style={styles.subMacroValue100}>{formatNum(detail.caffeine, isFr)} mg</Text>
                             </View>
                           )}
                         </View>
@@ -835,8 +1151,8 @@ const FoodDetailSheet: React.FC<FoodDetailSheetProps> = ({
             </View>
 
             <ScrollView
-              style={{ maxHeight: SCREEN_HEIGHT * 0.58 }}
-              showsVerticalScrollIndicator={false}
+              style={{ maxHeight: SCREEN_HEIGHT * 0.62 }}
+              showsVerticalScrollIndicator={true}
               keyboardShouldPersistTaps="handled"
             >
               <Text style={styles.editSectionTitle}>
@@ -847,15 +1163,59 @@ const FoodDetailSheet: React.FC<FoodDetailSheetProps> = ({
               <EditField label={isFr ? "Protéines" : "Protein"} unit="g" value={formPro} onChange={setEditProtein} theme={theme} isFr={isFr} />
               <EditField label={isFr ? "Lipides" : "Fat"} unit="g" value={formFat} onChange={setEditFat} theme={theme} isFr={isFr} />
 
-              <Text style={[styles.editSectionTitle, { marginTop: 14 }]}>
-                {isFr ? "Détails & Micronutriments (pour 100 g)" : "Details & Micronutrients (per 100 g)"}
+              <Text style={[styles.editSectionTitle, { marginTop: 16 }]}>
+                {isFr ? "Glucides & Fibres (pour 100 g)" : "Carbs & Fiber (per 100 g)"}
               </Text>
               <EditField label={isFr ? "· Dont sucres" : "· Of which sugars"} unit="g" value={formSugars} onChange={setEditSugars} theme={theme} isFr={isFr} />
-              <EditField label={isFr ? "· Dont acides gras saturés" : "· Saturated fat"} unit="g" value={formSaturatedFat} onChange={setEditSaturatedFat} theme={theme} isFr={isFr} />
               <EditField label={isFr ? "Fibres alimentaires" : "Dietary fiber"} unit="g" value={formFiber} onChange={setEditFiber} theme={theme} isFr={isFr} />
-              <EditField label={isFr ? "Sel / Sodium" : "Salt / Sodium"} unit="g" value={formSalt} onChange={setEditSalt} theme={theme} isFr={isFr} />
+              <EditField label={isFr ? "Polyols" : "Polyols"} unit="g" value={formPolyols} onChange={setEditPolyols} theme={theme} isFr={isFr} />
+              <EditField label={isFr ? "Amidon" : "Starch"} unit="g" value={formStarch} onChange={setEditStarch} theme={theme} isFr={isFr} />
 
-              <Text style={[styles.editSectionTitle, { marginTop: 14 }]}>
+              <Text style={[styles.editSectionTitle, { marginTop: 16 }]}>
+                {isFr ? "Lipides spécifiques (pour 100 g)" : "Specific Lipids (per 100 g)"}
+              </Text>
+              <EditField label={isFr ? "· Dont acides gras saturés" : "· Saturated fat"} unit="g" value={formSaturatedFat} onChange={setEditSaturatedFat} theme={theme} isFr={isFr} />
+              <EditField label={isFr ? "Acides gras mono-insaturés" : "Monounsaturated fat"} unit="g" value={formMonounsaturatedFat} onChange={setEditMonounsaturatedFat} theme={theme} isFr={isFr} />
+              <EditField label={isFr ? "Acides gras poly-insaturés" : "Polyunsaturated fat"} unit="g" value={formPolyunsaturatedFat} onChange={setEditPolyunsaturatedFat} theme={theme} isFr={isFr} />
+              <EditField label={isFr ? "Acides gras trans" : "Trans fat"} unit="g" value={formTransFat} onChange={setEditTransFat} theme={theme} isFr={isFr} />
+              <EditField label={isFr ? "Cholestérol" : "Cholesterol"} unit="mg" value={formCholesterol} onChange={setEditCholesterol} theme={theme} isFr={isFr} />
+
+              <Text style={[styles.editSectionTitle, { marginTop: 16 }]}>
+                {isFr ? "Minéraux & Électrolytes (pour 100 g)" : "Minerals & Electrolytes (per 100 g)"}
+              </Text>
+              <EditField label={isFr ? "Sel / Sodium" : "Salt / Sodium"} unit="g" value={formSalt} onChange={setEditSalt} theme={theme} isFr={isFr} />
+              <EditField label={isFr ? "Potassium" : "Potassium"} unit="mg" value={formPotassium} onChange={setEditPotassium} theme={theme} isFr={isFr} />
+              <EditField label={isFr ? "Calcium" : "Calcium"} unit="mg" value={formCalcium} onChange={setEditCalcium} theme={theme} isFr={isFr} />
+              <EditField label={isFr ? "Magnésium" : "Magnesium"} unit="mg" value={formMagnesium} onChange={setEditMagnesium} theme={theme} isFr={isFr} />
+              <EditField label={isFr ? "Fer" : "Iron"} unit="mg" value={formIron} onChange={setEditIron} theme={theme} isFr={isFr} />
+              <EditField label={isFr ? "Zinc" : "Zinc"} unit="mg" value={formZinc} onChange={setEditZinc} theme={theme} isFr={isFr} />
+              <EditField label={isFr ? "Phosphore" : "Phosphorus"} unit="mg" value={formPhosphorus} onChange={setEditPhosphorus} theme={theme} isFr={isFr} />
+
+              <Text style={[styles.editSectionTitle, { marginTop: 16 }]}>
+                {isFr ? "Vitamines (pour 100 g)" : "Vitamins (per 100 g)"}
+              </Text>
+              <EditField label={isFr ? "Vitamine A" : "Vitamin A"} unit="µg" value={formVitaminA} onChange={setEditVitaminA} theme={theme} isFr={isFr} />
+              <EditField label={isFr ? "Vitamine B1 (Thiamine)" : "Vitamin B1 (Thiamin)"} unit="mg" value={formVitaminB1} onChange={setEditVitaminB1} theme={theme} isFr={isFr} />
+              <EditField label={isFr ? "Vitamine B2 (Riboflavine)" : "Vitamin B2 (Riboflavin)"} unit="mg" value={formVitaminB2} onChange={setEditVitaminB2} theme={theme} isFr={isFr} />
+              <EditField label={isFr ? "Vitamine B3 (Niacine / PP)" : "Vitamin B3 (Niacin)"} unit="mg" value={formVitaminB3} onChange={setEditVitaminB3} theme={theme} isFr={isFr} />
+              <EditField label={isFr ? "Vitamine B5 (Acide pantothénique)" : "Vitamin B5"} unit="mg" value={formVitaminB5} onChange={setEditVitaminB5} theme={theme} isFr={isFr} />
+              <EditField label={isFr ? "Vitamine B6 (Pyridoxine)" : "Vitamin B6"} unit="mg" value={formVitaminB6} onChange={setEditVitaminB6} theme={theme} isFr={isFr} />
+              <EditField label={isFr ? "Vitamine B7 (Biotine)" : "Vitamin B7 (Biotin)"} unit="µg" value={formVitaminB7} onChange={setEditVitaminB7} theme={theme} isFr={isFr} />
+              <EditField label={isFr ? "Vitamine B9 (Folates)" : "Vitamin B9 (Folates)"} unit="µg" value={formVitaminB9} onChange={setEditVitaminB9} theme={theme} isFr={isFr} />
+              <EditField label={isFr ? "Vitamine B12 (Cobalamine)" : "Vitamin B12"} unit="µg" value={formVitaminB12} onChange={setEditVitaminB12} theme={theme} isFr={isFr} />
+              <EditField label={isFr ? "Vitamine C" : "Vitamin C"} unit="mg" value={formVitaminC} onChange={setEditVitaminC} theme={theme} isFr={isFr} />
+              <EditField label={isFr ? "Vitamine D" : "Vitamin D"} unit="µg" value={formVitaminD} onChange={setEditVitaminD} theme={theme} isFr={isFr} />
+              <EditField label={isFr ? "Vitamine E" : "Vitamin E"} unit="mg" value={formVitaminE} onChange={setEditVitaminE} theme={theme} isFr={isFr} />
+              <EditField label={isFr ? "Vitamine K" : "Vitamin K"} unit="µg" value={formVitaminK} onChange={setEditVitaminK} theme={theme} isFr={isFr} />
+
+              <Text style={[styles.editSectionTitle, { marginTop: 16 }]}>
+                {isFr ? "Autres & Liquides (pour 100 g)" : "Other & Fluids (per 100 g)"}
+              </Text>
+              <EditField label={isFr ? "Eau" : "Water"} unit="g" value={formWater} onChange={setEditWater} theme={theme} isFr={isFr} />
+              <EditField label={isFr ? "Alcool" : "Alcohol"} unit="g" value={formAlcohol} onChange={setEditAlcohol} theme={theme} isFr={isFr} />
+              <EditField label={isFr ? "Caféine" : "Caffeine"} unit="mg" value={formCaffeine} onChange={setEditCaffeine} theme={theme} isFr={isFr} />
+
+              <Text style={[styles.editSectionTitle, { marginTop: 16 }]}>
                 {isFr ? "Portion" : "Serving"}
               </Text>
               <EditField label={isFr ? "Taille de la portion" : "Serving size"} unit="g" value={formServingSize} onChange={setEditServingSize} theme={theme} isFr={isFr} last />
@@ -884,6 +1244,34 @@ const FoodDetailSheet: React.FC<FoodDetailSheetProps> = ({
                       original_fat: round2(food?.fat) ?? 0,
                       original_sugars: round2(food?.sugars),
                       original_saturated_fat: round2(food?.saturatedFat),
+                      original_monounsaturated_fat: round2(food?.monounsaturatedFat),
+                      original_polyunsaturated_fat: round2(food?.polyunsaturatedFat),
+                      original_trans_fat: round2(food?.transFat),
+                      original_cholesterol: round2(food?.cholesterol),
+                      original_polyols: round2(food?.polyols),
+                      original_starch: round2(food?.starch),
+                      original_alcohol: round2(food?.alcohol),
+                      original_water: round2(food?.water),
+                      original_caffeine: round2(food?.caffeine),
+                      original_potassium: round2(food?.potassium),
+                      original_calcium: round2(food?.calcium),
+                      original_magnesium: round2(food?.magnesium),
+                      original_iron: round2(food?.iron),
+                      original_zinc: round2(food?.zinc),
+                      original_phosphorus: round2(food?.phosphorus),
+                      original_vitamin_a: round2(food?.vitaminA),
+                      original_vitamin_b1: round2(food?.vitaminB1),
+                      original_vitamin_b2: round2(food?.vitaminB2),
+                      original_vitamin_b3: round2(food?.vitaminB3),
+                      original_vitamin_b5: round2(food?.vitaminB5),
+                      original_vitamin_b6: round2(food?.vitaminB6),
+                      original_vitamin_b7: round2(food?.vitaminB7),
+                      original_vitamin_b9: round2(food?.vitaminB9),
+                      original_vitamin_b12: round2(food?.vitaminB12),
+                      original_vitamin_c: round2(food?.vitaminC),
+                      original_vitamin_d: round2(food?.vitaminD),
+                      original_vitamin_e: round2(food?.vitaminE),
+                      original_vitamin_k: round2(food?.vitaminK),
                       original_fiber: round2(food?.fiber),
                       original_salt: round2(food?.salt),
                       original_serving_size: round2(food?.servingSize),
@@ -893,6 +1281,34 @@ const FoodDetailSheet: React.FC<FoodDetailSheetProps> = ({
                       fat: round2(formFat) ?? 0,
                       sugars: round2(formSugars),
                       saturated_fat: round2(formSaturatedFat),
+                      monounsaturated_fat: round2(formMonounsaturatedFat),
+                      polyunsaturated_fat: round2(formPolyunsaturatedFat),
+                      trans_fat: round2(formTransFat),
+                      cholesterol: round2(formCholesterol),
+                      polyols: round2(formPolyols),
+                      starch: round2(formStarch),
+                      alcohol: round2(formAlcohol),
+                      water: round2(formWater),
+                      caffeine: round2(formCaffeine),
+                      potassium: round2(formPotassium),
+                      calcium: round2(formCalcium),
+                      magnesium: round2(formMagnesium),
+                      iron: round2(formIron),
+                      zinc: round2(formZinc),
+                      phosphorus: round2(formPhosphorus),
+                      vitamin_a: round2(formVitaminA),
+                      vitamin_b1: round2(formVitaminB1),
+                      vitamin_b2: round2(formVitaminB2),
+                      vitamin_b3: round2(formVitaminB3),
+                      vitamin_b5: round2(formVitaminB5),
+                      vitamin_b6: round2(formVitaminB6),
+                      vitamin_b7: round2(formVitaminB7),
+                      vitamin_b9: round2(formVitaminB9),
+                      vitamin_b12: round2(formVitaminB12),
+                      vitamin_c: round2(formVitaminC),
+                      vitamin_d: round2(formVitaminD),
+                      vitamin_e: round2(formVitaminE),
+                      vitamin_k: round2(formVitaminK),
                       fiber: round2(formFiber),
                       salt: round2(formSalt),
                       serving_size: round2(formServingSize),
@@ -914,6 +1330,34 @@ const FoodDetailSheet: React.FC<FoodDetailSheetProps> = ({
                           original_fat: round2(food?.fat) ?? 0,
                           original_sugars: round2(food?.sugars) ?? null,
                           original_saturated_fat: round2(food?.saturatedFat) ?? null,
+                          original_monounsaturated_fat: round2(food?.monounsaturatedFat) ?? null,
+                          original_polyunsaturated_fat: round2(food?.polyunsaturatedFat) ?? null,
+                          original_trans_fat: round2(food?.transFat) ?? null,
+                          original_cholesterol: round2(food?.cholesterol) ?? null,
+                          original_polyols: round2(food?.polyols) ?? null,
+                          original_starch: round2(food?.starch) ?? null,
+                          original_alcohol: round2(food?.alcohol) ?? null,
+                          original_water: round2(food?.water) ?? null,
+                          original_caffeine: round2(food?.caffeine) ?? null,
+                          original_potassium: round2(food?.potassium) ?? null,
+                          original_calcium: round2(food?.calcium) ?? null,
+                          original_magnesium: round2(food?.magnesium) ?? null,
+                          original_iron: round2(food?.iron) ?? null,
+                          original_zinc: round2(food?.zinc) ?? null,
+                          original_phosphorus: round2(food?.phosphorus) ?? null,
+                          original_vitamin_a: round2(food?.vitaminA) ?? null,
+                          original_vitamin_b1: round2(food?.vitaminB1) ?? null,
+                          original_vitamin_b2: round2(food?.vitaminB2) ?? null,
+                          original_vitamin_b3: round2(food?.vitaminB3) ?? null,
+                          original_vitamin_b5: round2(food?.vitaminB5) ?? null,
+                          original_vitamin_b6: round2(food?.vitaminB6) ?? null,
+                          original_vitamin_b7: round2(food?.vitaminB7) ?? null,
+                          original_vitamin_b9: round2(food?.vitaminB9) ?? null,
+                          original_vitamin_b12: round2(food?.vitaminB12) ?? null,
+                          original_vitamin_c: round2(food?.vitaminC) ?? null,
+                          original_vitamin_d: round2(food?.vitaminD) ?? null,
+                          original_vitamin_e: round2(food?.vitaminE) ?? null,
+                          original_vitamin_k: round2(food?.vitaminK) ?? null,
                           original_fiber: round2(food?.fiber) ?? null,
                           original_salt: round2(food?.salt) ?? null,
                           original_serving_size: round2(food?.servingSize) ?? null,
@@ -923,6 +1367,34 @@ const FoodDetailSheet: React.FC<FoodDetailSheetProps> = ({
                           fat: round2(formFat) ?? 0,
                           sugars: round2(formSugars) ?? null,
                           saturated_fat: round2(formSaturatedFat) ?? null,
+                          monounsaturated_fat: round2(formMonounsaturatedFat) ?? null,
+                          polyunsaturated_fat: round2(formPolyunsaturatedFat) ?? null,
+                          trans_fat: round2(formTransFat) ?? null,
+                          cholesterol: round2(formCholesterol) ?? null,
+                          polyols: round2(formPolyols) ?? null,
+                          starch: round2(formStarch) ?? null,
+                          alcohol: round2(formAlcohol) ?? null,
+                          water: round2(formWater) ?? null,
+                          caffeine: round2(formCaffeine) ?? null,
+                          potassium: round2(formPotassium) ?? null,
+                          calcium: round2(formCalcium) ?? null,
+                          magnesium: round2(formMagnesium) ?? null,
+                          iron: round2(formIron) ?? null,
+                          zinc: round2(formZinc) ?? null,
+                          phosphorus: round2(formPhosphorus) ?? null,
+                          vitamin_a: round2(formVitaminA) ?? null,
+                          vitamin_b1: round2(formVitaminB1) ?? null,
+                          vitamin_b2: round2(formVitaminB2) ?? null,
+                          vitamin_b3: round2(formVitaminB3) ?? null,
+                          vitamin_b5: round2(formVitaminB5) ?? null,
+                          vitamin_b6: round2(formVitaminB6) ?? null,
+                          vitamin_b7: round2(formVitaminB7) ?? null,
+                          vitamin_b9: round2(formVitaminB9) ?? null,
+                          vitamin_b12: round2(formVitaminB12) ?? null,
+                          vitamin_c: round2(formVitaminC) ?? null,
+                          vitamin_d: round2(formVitaminD) ?? null,
+                          vitamin_e: round2(formVitaminE) ?? null,
+                          vitamin_k: round2(formVitaminK) ?? null,
                           fiber: round2(formFiber) ?? null,
                           salt: round2(formSalt) ?? null,
                           serving_size: round2(formServingSize) ?? null,

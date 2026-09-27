@@ -105,6 +105,34 @@ export default function FoodCorrectionsPage() {
           originalFat: Number(item.original_fat) || 0,
           originalSugars: item.original_sugars != null ? Number(item.original_sugars) : undefined,
           originalSaturatedFat: item.original_saturated_fat != null ? Number(item.original_saturated_fat) : undefined,
+          originalMonounsaturatedFat: item.original_monounsaturated_fat != null ? Number(item.original_monounsaturated_fat) : undefined,
+          originalPolyunsaturatedFat: item.original_polyunsaturated_fat != null ? Number(item.original_polyunsaturated_fat) : undefined,
+          originalTransFat: item.original_trans_fat != null ? Number(item.original_trans_fat) : undefined,
+          originalCholesterol: item.original_cholesterol != null ? Number(item.original_cholesterol) : undefined,
+          originalPolyols: item.original_polyols != null ? Number(item.original_polyols) : undefined,
+          originalStarch: item.original_starch != null ? Number(item.original_starch) : undefined,
+          originalAlcohol: item.original_alcohol != null ? Number(item.original_alcohol) : undefined,
+          originalWater: item.original_water != null ? Number(item.original_water) : undefined,
+          originalCaffeine: item.original_caffeine != null ? Number(item.original_caffeine) : undefined,
+          originalPotassium: item.original_potassium != null ? Number(item.original_potassium) : undefined,
+          originalCalcium: item.original_calcium != null ? Number(item.original_calcium) : undefined,
+          originalMagnesium: item.original_magnesium != null ? Number(item.original_magnesium) : undefined,
+          originalIron: item.original_iron != null ? Number(item.original_iron) : undefined,
+          originalZinc: item.original_zinc != null ? Number(item.original_zinc) : undefined,
+          originalPhosphorus: item.original_phosphorus != null ? Number(item.original_phosphorus) : undefined,
+          originalVitaminA: item.original_vitamin_a != null ? Number(item.original_vitamin_a) : undefined,
+          originalVitaminB1: item.original_vitamin_b1 != null ? Number(item.original_vitamin_b1) : undefined,
+          originalVitaminB2: item.original_vitamin_b2 != null ? Number(item.original_vitamin_b2) : undefined,
+          originalVitaminB3: item.original_vitamin_b3 != null ? Number(item.original_vitamin_b3) : undefined,
+          originalVitaminB5: item.original_vitamin_b5 != null ? Number(item.original_vitamin_b5) : undefined,
+          originalVitaminB6: item.original_vitamin_b6 != null ? Number(item.original_vitamin_b6) : undefined,
+          originalVitaminB7: item.original_vitamin_b7 != null ? Number(item.original_vitamin_b7) : undefined,
+          originalVitaminB9: item.original_vitamin_b9 != null ? Number(item.original_vitamin_b9) : undefined,
+          originalVitaminB12: item.original_vitamin_b12 != null ? Number(item.original_vitamin_b12) : undefined,
+          originalVitaminC: item.original_vitamin_c != null ? Number(item.original_vitamin_c) : undefined,
+          originalVitaminD: item.original_vitamin_d != null ? Number(item.original_vitamin_d) : undefined,
+          originalVitaminE: item.original_vitamin_e != null ? Number(item.original_vitamin_e) : undefined,
+          originalVitaminK: item.original_vitamin_k != null ? Number(item.original_vitamin_k) : undefined,
           originalFiber: item.original_fiber != null ? Number(item.original_fiber) : undefined,
           originalSalt: item.original_salt != null ? Number(item.original_salt) : undefined,
           originalServingSize: item.original_serving_size != null ? Number(item.original_serving_size) : undefined,
@@ -114,6 +142,34 @@ export default function FoodCorrectionsPage() {
           fat: Number(item.fat) || 0,
           sugars: item.sugars != null ? Number(item.sugars) : undefined,
           saturatedFat: item.saturated_fat != null ? Number(item.saturated_fat) : undefined,
+          monounsaturatedFat: item.monounsaturated_fat != null ? Number(item.monounsaturated_fat) : undefined,
+          polyunsaturatedFat: item.polyunsaturated_fat != null ? Number(item.polyunsaturated_fat) : undefined,
+          transFat: item.trans_fat != null ? Number(item.trans_fat) : undefined,
+          cholesterol: item.cholesterol != null ? Number(item.cholesterol) : undefined,
+          polyols: item.polyols != null ? Number(item.polyols) : undefined,
+          starch: item.starch != null ? Number(item.starch) : undefined,
+          alcohol: item.alcohol != null ? Number(item.alcohol) : undefined,
+          water: item.water != null ? Number(item.water) : undefined,
+          caffeine: item.caffeine != null ? Number(item.caffeine) : undefined,
+          potassium: item.potassium != null ? Number(item.potassium) : undefined,
+          calcium: item.calcium != null ? Number(item.calcium) : undefined,
+          magnesium: item.magnesium != null ? Number(item.magnesium) : undefined,
+          iron: item.iron != null ? Number(item.iron) : undefined,
+          zinc: item.zinc != null ? Number(item.zinc) : undefined,
+          phosphorus: item.phosphorus != null ? Number(item.phosphorus) : undefined,
+          vitaminA: item.vitamin_a != null ? Number(item.vitamin_a) : undefined,
+          vitaminB1: item.vitamin_b1 != null ? Number(item.vitamin_b1) : undefined,
+          vitaminB2: item.vitamin_b2 != null ? Number(item.vitamin_b2) : undefined,
+          vitaminB3: item.vitamin_b3 != null ? Number(item.vitamin_b3) : undefined,
+          vitaminB5: item.vitamin_b5 != null ? Number(item.vitamin_b5) : undefined,
+          vitaminB6: item.vitamin_b6 != null ? Number(item.vitamin_b6) : undefined,
+          vitaminB7: item.vitamin_b7 != null ? Number(item.vitamin_b7) : undefined,
+          vitaminB9: item.vitamin_b9 != null ? Number(item.vitamin_b9) : undefined,
+          vitaminB12: item.vitamin_b12 != null ? Number(item.vitamin_b12) : undefined,
+          vitaminC: item.vitamin_c != null ? Number(item.vitamin_c) : undefined,
+          vitaminD: item.vitamin_d != null ? Number(item.vitamin_d) : undefined,
+          vitaminE: item.vitamin_e != null ? Number(item.vitamin_e) : undefined,
+          vitaminK: item.vitamin_k != null ? Number(item.vitamin_k) : undefined,
           fiber: item.fiber != null ? Number(item.fiber) : undefined,
           salt: item.salt != null ? Number(item.salt) : undefined,
           servingSize: item.serving_size != null ? Number(item.serving_size) : undefined,
@@ -162,6 +218,34 @@ export default function FoodCorrectionsPage() {
           fat: corr.fat,
           sugars: corr.sugars ?? null,
           saturated_fat: corr.saturatedFat ?? null,
+          monounsaturated_fat: corr.monounsaturatedFat ?? null,
+          polyunsaturated_fat: corr.polyunsaturatedFat ?? null,
+          trans_fat: corr.transFat ?? null,
+          cholesterol: corr.cholesterol ?? null,
+          polyols: corr.polyols ?? null,
+          starch: corr.starch ?? null,
+          alcohol: corr.alcohol ?? null,
+          water: corr.water ?? null,
+          caffeine: corr.caffeine ?? null,
+          potassium: corr.potassium ?? null,
+          calcium: corr.calcium ?? null,
+          magnesium: corr.magnesium ?? null,
+          iron: corr.iron ?? null,
+          zinc: corr.zinc ?? null,
+          phosphorus: corr.phosphorus ?? null,
+          vitamin_a: corr.vitaminA ?? null,
+          vitamin_b1: corr.vitaminB1 ?? null,
+          vitamin_b2: corr.vitaminB2 ?? null,
+          vitamin_b3: corr.vitaminB3 ?? null,
+          vitamin_b5: corr.vitaminB5 ?? null,
+          vitamin_b6: corr.vitaminB6 ?? null,
+          vitamin_b7: corr.vitaminB7 ?? null,
+          vitamin_b9: corr.vitaminB9 ?? null,
+          vitamin_b12: corr.vitaminB12 ?? null,
+          vitamin_c: corr.vitaminC ?? null,
+          vitamin_d: corr.vitaminD ?? null,
+          vitamin_e: corr.vitaminE ?? null,
+          vitamin_k: corr.vitaminK ?? null,
           fiber: corr.fiber ?? null,
           salt: corr.salt ?? null,
           serving_size: corr.servingSize ?? null,
@@ -595,38 +679,208 @@ export default function FoodCorrectionsPage() {
                         {formatVal(selectedCorrection.originalFat)} g
                       </span>
                     </div>
-                    {selectedCorrection.originalSugars !== undefined && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">· Dont sucres :</span>
-                        <span className="font-semibold text-foreground">
-                          {formatVal(selectedCorrection.originalSugars)} g
-                        </span>
-                      </div>
-                    )}
+                    {/* Lipids breakdown */}
                     {selectedCorrection.originalSaturatedFat !== undefined && (
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">· Dont saturés :</span>
-                        <span className="font-semibold text-foreground">
-                          {formatVal(selectedCorrection.originalSaturatedFat)} g
-                        </span>
+                        <span className="font-semibold text-foreground">{formatVal(selectedCorrection.originalSaturatedFat)} g</span>
+                      </div>
+                    )}
+                    {selectedCorrection.originalMonounsaturatedFat !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Mono-insaturés :</span>
+                        <span className="font-semibold text-foreground">{formatVal(selectedCorrection.originalMonounsaturatedFat)} g</span>
+                      </div>
+                    )}
+                    {selectedCorrection.originalPolyunsaturatedFat !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Poly-insaturés :</span>
+                        <span className="font-semibold text-foreground">{formatVal(selectedCorrection.originalPolyunsaturatedFat)} g</span>
+                      </div>
+                    )}
+                    {selectedCorrection.originalTransFat !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Gras trans :</span>
+                        <span className="font-semibold text-foreground">{formatVal(selectedCorrection.originalTransFat)} g</span>
+                      </div>
+                    )}
+                    {selectedCorrection.originalCholesterol !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Cholestérol :</span>
+                        <span className="font-semibold text-foreground">{formatVal(selectedCorrection.originalCholesterol)} mg</span>
+                      </div>
+                    )}
+
+                    {/* Carbs breakdown */}
+                    {selectedCorrection.originalSugars !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">· Dont sucres :</span>
+                        <span className="font-semibold text-foreground">{formatVal(selectedCorrection.originalSugars)} g</span>
                       </div>
                     )}
                     {selectedCorrection.originalFiber !== undefined && (
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Fibres :</span>
-                        <span className="font-semibold text-foreground">
-                          {formatVal(selectedCorrection.originalFiber)} g
-                        </span>
+                        <span className="font-semibold text-foreground">{formatVal(selectedCorrection.originalFiber)} g</span>
                       </div>
                     )}
+                    {selectedCorrection.originalPolyols !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Polyols :</span>
+                        <span className="font-semibold text-foreground">{formatVal(selectedCorrection.originalPolyols)} g</span>
+                      </div>
+                    )}
+                    {selectedCorrection.originalStarch !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Amidon :</span>
+                        <span className="font-semibold text-foreground">{formatVal(selectedCorrection.originalStarch)} g</span>
+                      </div>
+                    )}
+
+                    {/* Minerals */}
                     {selectedCorrection.originalSalt !== undefined && (
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Sel :</span>
-                        <span className="font-semibold text-foreground">
-                          {formatVal(selectedCorrection.originalSalt)} g
-                        </span>
+                        <span className="font-semibold text-foreground">{formatVal(selectedCorrection.originalSalt)} g</span>
                       </div>
                     )}
+                    {selectedCorrection.originalPotassium !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Potassium :</span>
+                        <span className="font-semibold text-foreground">{formatVal(selectedCorrection.originalPotassium)} mg</span>
+                      </div>
+                    )}
+                    {selectedCorrection.originalCalcium !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Calcium :</span>
+                        <span className="font-semibold text-foreground">{formatVal(selectedCorrection.originalCalcium)} mg</span>
+                      </div>
+                    )}
+                    {selectedCorrection.originalMagnesium !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Magnésium :</span>
+                        <span className="font-semibold text-foreground">{formatVal(selectedCorrection.originalMagnesium)} mg</span>
+                      </div>
+                    )}
+                    {selectedCorrection.originalIron !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Fer :</span>
+                        <span className="font-semibold text-foreground">{formatVal(selectedCorrection.originalIron)} mg</span>
+                      </div>
+                    )}
+                    {selectedCorrection.originalZinc !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Zinc :</span>
+                        <span className="font-semibold text-foreground">{formatVal(selectedCorrection.originalZinc)} mg</span>
+                      </div>
+                    )}
+                    {selectedCorrection.originalPhosphorus !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Phosphore :</span>
+                        <span className="font-semibold text-foreground">{formatVal(selectedCorrection.originalPhosphorus)} mg</span>
+                      </div>
+                    )}
+
+                    {/* Vitamins */}
+                    {selectedCorrection.originalVitaminA !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Vitamine A :</span>
+                        <span className="font-semibold text-foreground">{formatVal(selectedCorrection.originalVitaminA)} µg</span>
+                      </div>
+                    )}
+                    {selectedCorrection.originalVitaminB1 !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Vitamine B1 :</span>
+                        <span className="font-semibold text-foreground">{formatVal(selectedCorrection.originalVitaminB1)} mg</span>
+                      </div>
+                    )}
+                    {selectedCorrection.originalVitaminB2 !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Vitamine B2 :</span>
+                        <span className="font-semibold text-foreground">{formatVal(selectedCorrection.originalVitaminB2)} mg</span>
+                      </div>
+                    )}
+                    {selectedCorrection.originalVitaminB3 !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Vitamine B3 :</span>
+                        <span className="font-semibold text-foreground">{formatVal(selectedCorrection.originalVitaminB3)} mg</span>
+                      </div>
+                    )}
+                    {selectedCorrection.originalVitaminB5 !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Vitamine B5 :</span>
+                        <span className="font-semibold text-foreground">{formatVal(selectedCorrection.originalVitaminB5)} mg</span>
+                      </div>
+                    )}
+                    {selectedCorrection.originalVitaminB6 !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Vitamine B6 :</span>
+                        <span className="font-semibold text-foreground">{formatVal(selectedCorrection.originalVitaminB6)} mg</span>
+                      </div>
+                    )}
+                    {selectedCorrection.originalVitaminB7 !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Vitamine B7 :</span>
+                        <span className="font-semibold text-foreground">{formatVal(selectedCorrection.originalVitaminB7)} µg</span>
+                      </div>
+                    )}
+                    {selectedCorrection.originalVitaminB9 !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Vitamine B9 :</span>
+                        <span className="font-semibold text-foreground">{formatVal(selectedCorrection.originalVitaminB9)} µg</span>
+                      </div>
+                    )}
+                    {selectedCorrection.originalVitaminB12 !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Vitamine B12 :</span>
+                        <span className="font-semibold text-foreground">{formatVal(selectedCorrection.originalVitaminB12)} µg</span>
+                      </div>
+                    )}
+                    {selectedCorrection.originalVitaminC !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Vitamine C :</span>
+                        <span className="font-semibold text-foreground">{formatVal(selectedCorrection.originalVitaminC)} mg</span>
+                      </div>
+                    )}
+                    {selectedCorrection.originalVitaminD !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Vitamine D :</span>
+                        <span className="font-semibold text-foreground">{formatVal(selectedCorrection.originalVitaminD)} µg</span>
+                      </div>
+                    )}
+                    {selectedCorrection.originalVitaminE !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Vitamine E :</span>
+                        <span className="font-semibold text-foreground">{formatVal(selectedCorrection.originalVitaminE)} mg</span>
+                      </div>
+                    )}
+                    {selectedCorrection.originalVitaminK !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Vitamine K :</span>
+                        <span className="font-semibold text-foreground">{formatVal(selectedCorrection.originalVitaminK)} µg</span>
+                      </div>
+                    )}
+
+                    {/* Others */}
+                    {selectedCorrection.originalWater !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Eau :</span>
+                        <span className="font-semibold text-foreground">{formatVal(selectedCorrection.originalWater)} g</span>
+                      </div>
+                    )}
+                    {selectedCorrection.originalAlcohol !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Alcool :</span>
+                        <span className="font-semibold text-foreground">{formatVal(selectedCorrection.originalAlcohol)} g</span>
+                      </div>
+                    )}
+                    {selectedCorrection.originalCaffeine !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Caféine :</span>
+                        <span className="font-semibold text-foreground">{formatVal(selectedCorrection.originalCaffeine)} mg</span>
+                      </div>
+                    )}
+
                     {selectedCorrection.originalServingSize !== undefined && (
                       <div className="flex justify-between border-t border-border/40 pt-1 mt-1">
                         <span className="text-muted-foreground">Portion :</span>
@@ -668,38 +922,209 @@ export default function FoodCorrectionsPage() {
                         {formatVal(selectedCorrection.fat)} g
                       </span>
                     </div>
-                    {selectedCorrection.sugars !== undefined && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">· Dont sucres :</span>
-                        <span className="font-bold text-lime">
-                          {formatVal(selectedCorrection.sugars)} g
-                        </span>
-                      </div>
-                    )}
+
+                    {/* Lipids breakdown */}
                     {selectedCorrection.saturatedFat !== undefined && (
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">· Dont saturés :</span>
-                        <span className="font-bold text-lime">
-                          {formatVal(selectedCorrection.saturatedFat)} g
-                        </span>
+                        <span className="font-bold text-lime">{formatVal(selectedCorrection.saturatedFat)} g</span>
+                      </div>
+                    )}
+                    {selectedCorrection.monounsaturatedFat !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Mono-insaturés :</span>
+                        <span className="font-bold text-lime">{formatVal(selectedCorrection.monounsaturatedFat)} g</span>
+                      </div>
+                    )}
+                    {selectedCorrection.polyunsaturatedFat !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Poly-insaturés :</span>
+                        <span className="font-bold text-lime">{formatVal(selectedCorrection.polyunsaturatedFat)} g</span>
+                      </div>
+                    )}
+                    {selectedCorrection.transFat !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Gras trans :</span>
+                        <span className="font-bold text-lime">{formatVal(selectedCorrection.transFat)} g</span>
+                      </div>
+                    )}
+                    {selectedCorrection.cholesterol !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Cholestérol :</span>
+                        <span className="font-bold text-lime">{formatVal(selectedCorrection.cholesterol)} mg</span>
+                      </div>
+                    )}
+
+                    {/* Carbs breakdown */}
+                    {selectedCorrection.sugars !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">· Dont sucres :</span>
+                        <span className="font-bold text-lime">{formatVal(selectedCorrection.sugars)} g</span>
                       </div>
                     )}
                     {selectedCorrection.fiber !== undefined && (
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Fibres :</span>
-                        <span className="font-bold text-lime">
-                          {formatVal(selectedCorrection.fiber)} g
-                        </span>
+                        <span className="font-bold text-lime">{formatVal(selectedCorrection.fiber)} g</span>
                       </div>
                     )}
+                    {selectedCorrection.polyols !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Polyols :</span>
+                        <span className="font-bold text-lime">{formatVal(selectedCorrection.polyols)} g</span>
+                      </div>
+                    )}
+                    {selectedCorrection.starch !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Amidon :</span>
+                        <span className="font-bold text-lime">{formatVal(selectedCorrection.starch)} g</span>
+                      </div>
+                    )}
+
+                    {/* Minerals */}
                     {selectedCorrection.salt !== undefined && (
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Sel :</span>
-                        <span className="font-bold text-lime">
-                          {formatVal(selectedCorrection.salt)} g
-                        </span>
+                        <span className="font-bold text-lime">{formatVal(selectedCorrection.salt)} g</span>
                       </div>
                     )}
+                    {selectedCorrection.potassium !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Potassium :</span>
+                        <span className="font-bold text-lime">{formatVal(selectedCorrection.potassium)} mg</span>
+                      </div>
+                    )}
+                    {selectedCorrection.calcium !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Calcium :</span>
+                        <span className="font-bold text-lime">{formatVal(selectedCorrection.calcium)} mg</span>
+                      </div>
+                    )}
+                    {selectedCorrection.magnesium !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Magnésium :</span>
+                        <span className="font-bold text-lime">{formatVal(selectedCorrection.magnesium)} mg</span>
+                      </div>
+                    )}
+                    {selectedCorrection.iron !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Fer :</span>
+                        <span className="font-bold text-lime">{formatVal(selectedCorrection.iron)} mg</span>
+                      </div>
+                    )}
+                    {selectedCorrection.zinc !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Zinc :</span>
+                        <span className="font-bold text-lime">{formatVal(selectedCorrection.zinc)} mg</span>
+                      </div>
+                    )}
+                    {selectedCorrection.phosphorus !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Phosphore :</span>
+                        <span className="font-bold text-lime">{formatVal(selectedCorrection.phosphorus)} mg</span>
+                      </div>
+                    )}
+
+                    {/* Vitamins */}
+                    {selectedCorrection.vitaminA !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Vitamine A :</span>
+                        <span className="font-bold text-lime">{formatVal(selectedCorrection.vitaminA)} µg</span>
+                      </div>
+                    )}
+                    {selectedCorrection.vitaminB1 !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Vitamine B1 :</span>
+                        <span className="font-bold text-lime">{formatVal(selectedCorrection.vitaminB1)} mg</span>
+                      </div>
+                    )}
+                    {selectedCorrection.vitaminB2 !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Vitamine B2 :</span>
+                        <span className="font-bold text-lime">{formatVal(selectedCorrection.vitaminB2)} mg</span>
+                      </div>
+                    )}
+                    {selectedCorrection.vitaminB3 !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Vitamine B3 :</span>
+                        <span className="font-bold text-lime">{formatVal(selectedCorrection.vitaminB3)} mg</span>
+                      </div>
+                    )}
+                    {selectedCorrection.vitaminB5 !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Vitamine B5 :</span>
+                        <span className="font-bold text-lime">{formatVal(selectedCorrection.vitaminB5)} mg</span>
+                      </div>
+                    )}
+                    {selectedCorrection.vitaminB6 !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Vitamine B6 :</span>
+                        <span className="font-bold text-lime">{formatVal(selectedCorrection.vitaminB6)} mg</span>
+                      </div>
+                    )}
+                    {selectedCorrection.vitaminB7 !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Vitamine B7 :</span>
+                        <span className="font-bold text-lime">{formatVal(selectedCorrection.vitaminB7)} µg</span>
+                      </div>
+                    )}
+                    {selectedCorrection.vitaminB9 !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Vitamine B9 :</span>
+                        <span className="font-bold text-lime">{formatVal(selectedCorrection.vitaminB9)} µg</span>
+                      </div>
+                    )}
+                    {selectedCorrection.vitaminB12 !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Vitamine B12 :</span>
+                        <span className="font-bold text-lime">{formatVal(selectedCorrection.vitaminB12)} µg</span>
+                      </div>
+                    )}
+                    {selectedCorrection.vitaminC !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Vitamine C :</span>
+                        <span className="font-bold text-lime">{formatVal(selectedCorrection.vitaminC)} mg</span>
+                      </div>
+                    )}
+                    {selectedCorrection.vitaminD !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Vitamine D :</span>
+                        <span className="font-bold text-lime">{formatVal(selectedCorrection.vitaminD)} µg</span>
+                      </div>
+                    )}
+                    {selectedCorrection.vitaminE !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Vitamine E :</span>
+                        <span className="font-bold text-lime">{formatVal(selectedCorrection.vitaminE)} mg</span>
+                      </div>
+                    )}
+                    {selectedCorrection.vitaminK !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Vitamine K :</span>
+                        <span className="font-bold text-lime">{formatVal(selectedCorrection.vitaminK)} µg</span>
+                      </div>
+                    )}
+
+                    {/* Others */}
+                    {selectedCorrection.water !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Eau :</span>
+                        <span className="font-bold text-lime">{formatVal(selectedCorrection.water)} g</span>
+                      </div>
+                    )}
+                    {selectedCorrection.alcohol !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Alcool :</span>
+                        <span className="font-bold text-lime">{formatVal(selectedCorrection.alcohol)} g</span>
+                      </div>
+                    )}
+                    {selectedCorrection.caffeine !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Caféine :</span>
+                        <span className="font-bold text-lime">{formatVal(selectedCorrection.caffeine)} mg</span>
+                      </div>
+                    )}
+
                     {selectedCorrection.servingSize !== undefined && (
                       <div className="flex justify-between border-t border-lime/20 pt-1 mt-1">
                         <span className="text-muted-foreground">Portion :</span>

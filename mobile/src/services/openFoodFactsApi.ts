@@ -52,6 +52,37 @@ interface OFFNutriments {
   sugars_100g?: number;
   fiber_100g?: number;
   "saturated-fat_100g"?: number;
+  "monounsaturated-fat_100g"?: number;
+  "polyunsaturated-fat_100g"?: number;
+  "trans-fat_100g"?: number;
+  cholesterol_100g?: number;
+  polyols_100g?: number;
+  starch_100g?: number;
+  alcohol_100g?: number;
+  caffeine_100g?: number;
+  water_100g?: number;
+  potassium_100g?: number;
+  calcium_100g?: number;
+  magnesium_100g?: number;
+  iron_100g?: number;
+  zinc_100g?: number;
+  phosphorus_100g?: number;
+  "vitamin-a_100g"?: number;
+  "vitamin-b1_100g"?: number;
+  "vitamin-b2_100g"?: number;
+  "vitamin-b3_100g"?: number;
+  "vitamin-pp_100g"?: number;
+  "vitamin-b5_100g"?: number;
+  "vitamin-b6_100g"?: number;
+  "vitamin-b7_100g"?: number;
+  biotin_100g?: number;
+  "vitamin-b9_100g"?: number;
+  folates_100g?: number;
+  "vitamin-b12_100g"?: number;
+  "vitamin-c_100g"?: number;
+  "vitamin-d_100g"?: number;
+  "vitamin-e_100g"?: number;
+  "vitamin-k_100g"?: number;
   salt_100g?: number;
   sodium_100g?: number;
 }
@@ -128,6 +159,12 @@ function safeNum(v: unknown): number {
   return Number.isFinite(n) && n >= 0 ? n : 0;
 }
 
+function optNum(v: unknown): number | undefined {
+  if (v === undefined || v === null || v === "") return undefined;
+  const n = Number(v);
+  return Number.isFinite(n) && n >= 0 ? n : undefined;
+}
+
 function pickName(p: OFFProduct, lang: "fr" | "en"): string {
   const text = (...values: unknown[]) =>
     values.find((value): value is string => typeof value === "string" && value.trim().length > 0)?.trim() ?? "";
@@ -185,9 +222,37 @@ function mapProduct(p: OFFProduct, lang: "fr" | "en", index: number): FoodItem |
     fat,
     brand: pickBrand(p),
     servingSize: pickServingSize(p),
-    sugars: p.nutriments?.sugars_100g != null ? safeNum(p.nutriments.sugars_100g) : undefined,
-    fiber: p.nutriments?.fiber_100g != null ? safeNum(p.nutriments.fiber_100g) : undefined,
-    saturatedFat: p.nutriments?.["saturated-fat_100g"] != null ? safeNum(p.nutriments["saturated-fat_100g"]) : undefined,
+    sugars: optNum(p.nutriments?.sugars_100g),
+    fiber: optNum(p.nutriments?.fiber_100g),
+    saturatedFat: optNum(p.nutriments?.["saturated-fat_100g"]),
+    monounsaturatedFat: optNum(p.nutriments?.["monounsaturated-fat_100g"]),
+    polyunsaturatedFat: optNum(p.nutriments?.["polyunsaturated-fat_100g"]),
+    transFat: optNum(p.nutriments?.["trans-fat_100g"]),
+    cholesterol: optNum(p.nutriments?.cholesterol_100g),
+    polyols: optNum(p.nutriments?.polyols_100g),
+    starch: optNum(p.nutriments?.starch_100g),
+    alcohol: optNum(p.nutriments?.alcohol_100g),
+    water: optNum(p.nutriments?.water_100g),
+    caffeine: optNum(p.nutriments?.caffeine_100g),
+    potassium: optNum(p.nutriments?.potassium_100g),
+    calcium: optNum(p.nutriments?.calcium_100g),
+    magnesium: optNum(p.nutriments?.magnesium_100g),
+    iron: optNum(p.nutriments?.iron_100g),
+    zinc: optNum(p.nutriments?.zinc_100g),
+    phosphorus: optNum(p.nutriments?.phosphorus_100g),
+    vitaminA: optNum(p.nutriments?.["vitamin-a_100g"]),
+    vitaminB1: optNum(p.nutriments?.["vitamin-b1_100g"]),
+    vitaminB2: optNum(p.nutriments?.["vitamin-b2_100g"]),
+    vitaminB3: optNum(p.nutriments?.["vitamin-b3_100g"] ?? p.nutriments?.["vitamin-pp_100g"]),
+    vitaminB5: optNum(p.nutriments?.["vitamin-b5_100g"]),
+    vitaminB6: optNum(p.nutriments?.["vitamin-b6_100g"]),
+    vitaminB7: optNum(p.nutriments?.["vitamin-b7_100g"] ?? p.nutriments?.biotin_100g),
+    vitaminB9: optNum(p.nutriments?.["vitamin-b9_100g"] ?? p.nutriments?.folates_100g),
+    vitaminB12: optNum(p.nutriments?.["vitamin-b12_100g"]),
+    vitaminC: optNum(p.nutriments?.["vitamin-c_100g"]),
+    vitaminD: optNum(p.nutriments?.["vitamin-d_100g"]),
+    vitaminE: optNum(p.nutriments?.["vitamin-e_100g"]),
+    vitaminK: optNum(p.nutriments?.["vitamin-k_100g"]),
     salt: p.nutriments?.salt_100g != null ? safeNum(p.nutriments.salt_100g) : (p.nutriments?.sodium_100g != null ? safeNum(p.nutriments.sodium_100g) * 2.5 : undefined),
     nutriScore: p.nutriscore_grade ? p.nutriscore_grade.toUpperCase() : undefined,
     novaGroup: p.nova_group ? Number(p.nova_group) : undefined,
