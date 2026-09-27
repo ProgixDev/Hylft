@@ -15,6 +15,13 @@ export interface FoodItem {
   fat: number;
   brand?: string;
   servingSize?: number; // grams in one serving/portion, when known
+  sugars?: number;
+  fiber?: number;
+  saturatedFat?: number;
+  salt?: number;
+  nutriScore?: string;
+  novaGroup?: number;
+  ecoScore?: string;
 }
 
 export interface FoodSearchResponse {

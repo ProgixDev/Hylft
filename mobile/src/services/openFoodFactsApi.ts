@@ -49,6 +49,11 @@ interface OFFNutriments {
   proteins_100g?: number;
   carbohydrates_100g?: number;
   fat_100g?: number;
+  sugars_100g?: number;
+  fiber_100g?: number;
+  "saturated-fat_100g"?: number;
+  salt_100g?: number;
+  sodium_100g?: number;
 }
 
 interface OFFProduct {
@@ -60,6 +65,9 @@ interface OFFProduct {
   serving_quantity?: number | string;
   serving_size?: string | number;
   nutriments?: OFFNutriments;
+  nutriscore_grade?: string;
+  nova_group?: number | string;
+  ecoscore_grade?: string;
   image_small_url?: string;
   image_front_small_url?: string;
   image_url?: string;
@@ -83,6 +91,9 @@ const FIELDS = [
   "serving_quantity",
   "serving_size",
   "nutriments",
+  "nutriscore_grade",
+  "nova_group",
+  "ecoscore_grade",
   "image_small_url",
   "image_front_small_url",
   "image_url",
@@ -174,6 +185,13 @@ function mapProduct(p: OFFProduct, lang: "fr" | "en", index: number): FoodItem |
     fat,
     brand: pickBrand(p),
     servingSize: pickServingSize(p),
+    sugars: p.nutriments?.sugars_100g != null ? safeNum(p.nutriments.sugars_100g) : undefined,
+    fiber: p.nutriments?.fiber_100g != null ? safeNum(p.nutriments.fiber_100g) : undefined,
+    saturatedFat: p.nutriments?.["saturated-fat_100g"] != null ? safeNum(p.nutriments["saturated-fat_100g"]) : undefined,
+    salt: p.nutriments?.salt_100g != null ? safeNum(p.nutriments.salt_100g) : (p.nutriments?.sodium_100g != null ? safeNum(p.nutriments.sodium_100g) * 2.5 : undefined),
+    nutriScore: p.nutriscore_grade ? p.nutriscore_grade.toUpperCase() : undefined,
+    novaGroup: p.nova_group ? Number(p.nova_group) : undefined,
+    ecoScore: p.ecoscore_grade ? p.ecoscore_grade.toUpperCase() : undefined,
   };
 }
 
