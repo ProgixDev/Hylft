@@ -2030,6 +2030,10 @@ function createStyles(theme: Theme) {
       fontSize: 16,
       color: theme.foreground.white,
     },
+    pickerOptionTextActive: {
+      color: theme.primary.main,
+      fontFamily: FONTS.bold,
+    },
     optionsDropdown: {
       position: "absolute",
       top: 50,
