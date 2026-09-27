@@ -291,6 +291,64 @@ export default function Alimentation() {
 
   const isTodaySelected = toISODate(new Date()) === selectedDate;
 
+  const formattedCardDate = useMemo(() => {
+    const daysFr = [
+      "DIMANCHE",
+      "LUNDI",
+      "MARDI",
+      "MERCREDI",
+      "JEUDI",
+      "VENDREDI",
+      "SAMEDI",
+    ];
+    const daysEn = [
+      "SUNDAY",
+      "MONDAY",
+      "TUESDAY",
+      "WEDNESDAY",
+      "THURSDAY",
+      "FRIDAY",
+      "SATURDAY",
+    ];
+    const monthsFr = [
+      "JANV",
+      "FÉVR",
+      "MARS",
+      "AVR",
+      "MAI",
+      "JUIN",
+      "JUIL",
+      "AOÛT",
+      "SEPT",
+      "OCT",
+      "NOV",
+      "DÉC",
+    ];
+    const monthsEn = [
+      "JAN",
+      "FEB",
+      "MAR",
+      "APR",
+      "MAY",
+      "JUN",
+      "JUL",
+      "AUG",
+      "SEP",
+      "OCT",
+      "NOV",
+      "DEC",
+    ];
+
+    const dayName = isFr
+      ? daysFr[selectedDateObj.getDay()]
+      : daysEn[selectedDateObj.getDay()];
+    const dayNum = selectedDateObj.getDate();
+    const monthName = isFr
+      ? monthsFr[selectedDateObj.getMonth()]
+      : monthsEn[selectedDateObj.getMonth()];
+    return `${dayName} · ${dayNum} ${monthName}`;
+  }, [selectedDateObj, isFr]);
+
   return (
     <AnimatedScreen style={styles.container}>
       {themeType === "female" && (
@@ -325,21 +383,30 @@ export default function Alimentation() {
           <View style={styles.headerActions}>
             <Pressable
               onPress={() => router.push("/alimentation-history" as any)}
-              style={styles.headerIconBtn}
+              style={({ pressed }) => [
+                styles.headerIconBtn,
+                pressed && { opacity: 0.8, transform: [{ scale: 0.95 }] },
+              ]}
               hitSlop={8}
             >
               <Ionicons name="time-outline" size={18} color="#FFFFFF" />
             </Pressable>
             <Pressable
               onPress={() => shiftDate(-1)}
-              style={styles.headerIconBtn}
+              style={({ pressed }) => [
+                styles.headerIconBtn,
+                pressed && { opacity: 0.8, transform: [{ scale: 0.95 }] },
+              ]}
               hitSlop={8}
             >
               <Ionicons name="chevron-back" size={18} color="#FFFFFF" />
             </Pressable>
             <Pressable
               onPress={() => shiftDate(1)}
-              style={styles.headerIconBtn}
+              style={({ pressed }) => [
+                styles.headerIconBtn,
+                pressed && { opacity: 0.8, transform: [{ scale: 0.95 }] },
+              ]}
               hitSlop={8}
             >
               <Ionicons name="chevron-forward" size={18} color="#FFFFFF" />
@@ -347,93 +414,134 @@ export default function Alimentation() {
           </View>
         </View>
 
-        {/* ── Résumé ─────────────────────────────────────────── */}
-        <View style={styles.summaryCard}>
-          <View style={styles.summaryTopRow}>
-            <View style={styles.summarySide}>
-              <Text style={styles.summarySideValue}>
-                {Math.round(caloriesEaten)}
-              </Text>
-              <Text style={styles.summarySideLabel}>
-                {isFr ? "Mangées" : "Eaten"}
-              </Text>
+        {/* ── Nouveau Résumé "Mes calories" ────────────────────── */}
+        <View style={styles.calorieCard}>
+          {/* Header de la carte */}
+          <View style={styles.calorieCardHeader}>
+            <Text style={styles.calorieCardTitle}>
+              {isFr ? "Mes calories" : "My calories"}
+            </Text>
+            <View style={styles.calorieCardDateWrap}>
+              <View style={styles.calorieCardGreenDot} />
+              <Text style={styles.calorieCardDateText}>{formattedCardDate}</Text>
             </View>
+          </View>
 
-            <View style={styles.summaryCenter}>
+          {/* Corps de la carte */}
+          <View style={styles.calorieCardBody}>
+            {/* Colonne Gauche : Cercle Jauge Restantes */}
+            <View style={styles.calorieGaugeWrap}>
               <Ring
                 pct={
-                  goals.calorieGoal > 0
-                    ? caloriesEaten / (goals.calorieGoal + caloriesBurned)
+                  goals.calorieGoal + caloriesBurned > 0
+                    ? Math.min(
+                        caloriesEaten / (goals.calorieGoal + caloriesBurned),
+                        1,
+                      )
                     : 0
                 }
-                size={130}
-                strokeWidth={10}
-                color={NAVY_CARD}
-                bgColor="rgba(10,22,40,0.18)"
+                size={126}
+                strokeWidth={11}
+                color="#F97316"
+                bgColor="#1A2F50"
               >
-                <Text style={styles.summaryCenterValue}>
+                <Text style={styles.calorieRingLabel}>
+                  {isFr ? "RESTANTES" : "REMAINING"}
+                </Text>
+                <Text style={styles.calorieRingValue}>
                   {Math.round(caloriesRemaining).toLocaleString(
                     isFr ? "fr-FR" : "en-US",
                   )}
                 </Text>
-                <Text style={styles.summaryCenterLabel}>
-                  {isFr ? "Restantes" : "Left"}
-                </Text>
+                <Text style={styles.calorieRingUnit}>kcal</Text>
               </Ring>
             </View>
 
-            <View style={styles.summarySide}>
-              <Text style={styles.summarySideValue}>
-                {Math.round(caloriesBurned)}
-              </Text>
-              <Text style={styles.summarySideLabel}>
-                {isFr ? "Brûlées" : "Burned"}
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.macroBarRow}>
-            {[
-              {
-                label: isFr ? "Glucides" : "Carbs",
-                current: todaySummary.totalCarbs,
-                goal: goals.carbsGoal,
-                color: NAVY_CARD,
-              },
-              {
-                label: isFr ? "Protéines" : "Protein",
-                current: todaySummary.totalProtein,
-                goal: goals.proteinGoal,
-                color: NAVY_CARD_LIGHT,
-              },
-              {
-                label: isFr ? "Lipides" : "Fat",
-                current: todaySummary.totalFat,
-                goal: goals.fatGoal,
-                color: NAVY_CARD_DEEP,
-              },
-            ].map((m) => {
-              const pct = m.goal > 0 ? Math.min(m.current / m.goal, 1) : 0;
-              return (
-                <View key={m.label} style={styles.macroBarItem}>
-                  <Text style={styles.macroBarLabel}>{m.label}</Text>
-                  <View style={styles.macroBarTrack}>
-                    <View
-                      style={[
-                        styles.macroBarFill,
-                        {
-                          width: `${pct * 100}%`,
-                          backgroundColor: m.color,
-                        },
-                      ]}
-                    />
-                  </View>
-                  <Text style={styles.macroBarValue}>
-                    {Math.round(m.current)} / {m.goal} g
+            {/* Colonne Droite : 2 Pilules Stat + 3 Lignes Macros */}
+            <View style={styles.calorieRightCol}>
+              {/* 2 Pilules Stat : Mangées & Brûlées */}
+              <View style={styles.calorieStatRow}>
+                {/* Pilule Mangées */}
+                <View style={styles.calorieStatPillEaten}>
+                  <Text style={styles.calorieStatValueEaten}>
+                    {Math.round(caloriesEaten)}
                   </Text>
+                  <View style={styles.calorieStatLabelRow}>
+                    <Text style={styles.calorieStatEmoji}>🍽️</Text>
+                    <Text style={styles.calorieStatLabel}>
+                      {isFr ? "MANGÉES" : "EATEN"}
+                    </Text>
+                  </View>
                 </View>
-              );
-            })}
+
+                {/* Pilule Brûlées */}
+                <View style={styles.calorieStatPillBurned}>
+                  <Text style={styles.calorieStatValueBurned}>
+                    {Math.round(caloriesBurned)}
+                  </Text>
+                  <View style={styles.calorieStatLabelRow}>
+                    <Text style={styles.calorieStatEmoji}>🔥</Text>
+                    <Text style={styles.calorieStatLabel}>
+                      {isFr ? "BRÛLÉES" : "BURNED"}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* 3 Lignes Macros : Protéines, Glucides, Lipides */}
+              <View style={styles.macroList}>
+                {[
+                  {
+                    key: "protein",
+                    label: isFr ? "Protéines" : "Protein",
+                    emoji: "💪",
+                    current: todaySummary.totalProtein,
+                    goal: goals.proteinGoal,
+                    color: "#8B5CF6",
+                  },
+                  {
+                    key: "carbs",
+                    label: isFr ? "Glucides" : "Carbs",
+                    emoji: "🌾",
+                    current: todaySummary.totalCarbs,
+                    goal: goals.carbsGoal,
+                    color: "#F59E0B",
+                  },
+                  {
+                    key: "fat",
+                    label: isFr ? "Lipides" : "Fat",
+                    emoji: "🥑",
+                    current: todaySummary.totalFat,
+                    goal: goals.fatGoal,
+                    color: "#EF4444",
+                  },
+                ].map((m) => {
+                  const pct = m.goal > 0 ? Math.min(m.current / m.goal, 1) : 0;
+                  return (
+                    <View key={m.key} style={styles.macroRow}>
+                      <View style={styles.macroRowLeft}>
+                        <Text style={styles.macroEmoji}>{m.emoji}</Text>
+                        <Text style={styles.macroLabel}>{m.label}</Text>
+                      </View>
+                      <View style={styles.macroBarTrack}>
+                        <View
+                          style={[
+                            styles.macroBarFill,
+                            {
+                              width: `${pct * 100}%`,
+                              backgroundColor: m.color,
+                            },
+                          ]}
+                        />
+                      </View>
+                      <Text style={styles.macroValueText}>
+                        {Math.round(m.current)} / {m.goal}g
+                      </Text>
+                    </View>
+                  );
+                })}
+              </View>
+            </View>
           </View>
         </View>
 
@@ -749,16 +857,21 @@ function createStyles(theme: Theme) {
       color: theme.foreground.gray,
       marginTop: 2,
     },
-    headerActions: { flexDirection: "row", gap: 6 },
+    headerActions: { flexDirection: "row", gap: 7 },
     headerIconBtn: {
-      width: 34,
-      height: 34,
-      borderRadius: 10,
-      backgroundColor: theme.background.accent,
+      width: 36,
+      height: 36,
+      borderRadius: 11,
+      backgroundColor: NAVY_CARD,
       borderWidth: 1,
-      borderColor: "rgba(255,255,255,0.14)",
+      borderColor: "rgba(255,255,255,0.12)",
       alignItems: "center",
       justifyContent: "center",
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.15,
+      shadowRadius: 4,
+      elevation: 2,
     },
 
     sectionHeader: {
@@ -780,79 +893,180 @@ function createStyles(theme: Theme) {
       color: theme.primary.light,
     },
 
-    summaryCard: {
-      marginHorizontal: 20,
-      padding: 18,
-      borderRadius: 12,
+    calorieCard: {
+      marginHorizontal: 16,
+      backgroundColor: NAVY_CARD,
+      borderRadius: 22,
+      paddingVertical: 18,
+      paddingHorizontal: 16,
+      borderWidth: 1,
+      borderColor: "rgba(255,255,255,0.12)",
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.25,
+      shadowRadius: 12,
+      elevation: 6,
     },
-    summaryTopRow: {
+    calorieCardHeader: {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
+      marginBottom: 16,
     },
-    summarySide: {
-      flex: 1,
+    calorieCardTitle: {
+      fontFamily: FONTS.bold,
+      fontSize: 19,
+      color: "#FFFFFF",
+    },
+    calorieCardDateWrap: {
+      flexDirection: "row",
       alignItems: "center",
+      gap: 6,
     },
-    summarySideValue: {
-      fontFamily: FONTS.extraBold,
-      fontSize: 22,
-      color: theme.foreground.white,
+    calorieCardGreenDot: {
+      width: 7,
+      height: 7,
+      borderRadius: 3.5,
+      backgroundColor: "#22C55E",
     },
-    summarySideLabel: {
-      fontFamily: FONTS.regular,
-      fontSize: 12,
-      color: theme.foreground.gray,
-      marginTop: 4,
+    calorieCardDateText: {
+      fontFamily: FONTS.bold,
+      fontSize: 11,
+      color: NAVY_TEXT_MUTED,
+      letterSpacing: 0.8,
+      textTransform: "uppercase",
     },
-    summaryCenter: {
+    calorieCardBody: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+    },
+    calorieGaugeWrap: {
+      width: 126,
+      height: 126,
       alignItems: "center",
       justifyContent: "center",
     },
-    summaryCenterValue: {
-      fontFamily: FONTS.extraBold,
-      fontSize: 28,
-      color: theme.foreground.white,
+    calorieRingLabel: {
+      fontFamily: FONTS.bold,
+      fontSize: 9.5,
+      color: NAVY_TEXT_MUTED,
+      letterSpacing: 0.8,
+      textTransform: "uppercase",
+      marginBottom: 1,
     },
-    summaryCenterLabel: {
-      fontFamily: FONTS.regular,
+    calorieRingValue: {
+      fontFamily: FONTS.extraBold,
+      fontSize: 24,
+      color: "#FFFFFF",
+      includeFontPadding: false,
+    },
+    calorieRingUnit: {
+      fontFamily: FONTS.semiBold,
       fontSize: 12,
-      color: theme.foreground.gray,
+      color: "#FB923C",
+      marginTop: -2,
+    },
+    calorieRightCol: {
+      flex: 1,
+      flexDirection: "column",
+      gap: 10,
+    },
+    calorieStatRow: {
+      flexDirection: "row",
+      gap: 8,
+    },
+    calorieStatPillEaten: {
+      flex: 1,
+      backgroundColor: NAVY_CARD_DEEP,
+      borderRadius: 12,
+      paddingVertical: 7,
+      paddingHorizontal: 6,
+      alignItems: "center",
+      justifyContent: "center",
+      borderWidth: 1,
+      borderColor: "rgba(255,255,255,0.08)",
+    },
+    calorieStatValueEaten: {
+      fontFamily: FONTS.extraBold,
+      fontSize: 17,
+      color: "#F97316",
+      includeFontPadding: false,
+    },
+    calorieStatPillBurned: {
+      flex: 1,
+      backgroundColor: NAVY_CARD_DEEP,
+      borderRadius: 12,
+      paddingVertical: 7,
+      paddingHorizontal: 6,
+      alignItems: "center",
+      justifyContent: "center",
+      borderWidth: 1,
+      borderColor: "rgba(255,255,255,0.08)",
+    },
+    calorieStatValueBurned: {
+      fontFamily: FONTS.extraBold,
+      fontSize: 17,
+      color: "#10B981",
+      includeFontPadding: false,
+    },
+    calorieStatLabelRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 3,
       marginTop: 2,
     },
-
-    macroBarRow: {
+    calorieStatEmoji: {
+      fontSize: 10,
+    },
+    calorieStatLabel: {
+      fontFamily: FONTS.bold,
+      fontSize: 9.5,
+      color: NAVY_TEXT_MUTED,
+      letterSpacing: 0.4,
+      textTransform: "uppercase",
+    },
+    macroList: {
+      flexDirection: "column",
+      gap: 7,
+    },
+    macroRow: {
       flexDirection: "row",
+      alignItems: "center",
       justifyContent: "space-between",
-      marginTop: 22,
-      gap: 14,
     },
-    macroBarItem: {
-      flex: 1,
+    macroRowLeft: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 5,
+      width: 72,
     },
-    macroBarLabel: {
-      fontFamily: FONTS.semiBold,
-      fontSize: 14,
-      color: theme.foreground.white,
-      marginBottom: 6,
-      textAlign: "center",
+    macroEmoji: {
+      fontSize: 12,
+    },
+    macroLabel: {
+      fontFamily: FONTS.medium,
+      fontSize: 11.5,
+      color: "#FFFFFF",
     },
     macroBarTrack: {
-      height: 10,
-      borderRadius: 6,
-      backgroundColor: theme.background.accent,
+      flex: 1,
+      height: 5,
+      borderRadius: 3,
+      backgroundColor: "rgba(255,255,255,0.12)",
+      marginHorizontal: 6,
       overflow: "hidden",
     },
     macroBarFill: {
       height: "100%",
-      borderRadius: 4,
+      borderRadius: 3,
     },
-    macroBarValue: {
-      fontFamily: FONTS.regular,
-      fontSize: 12,
-      color: theme.foreground.gray,
-      marginTop: 6,
-      textAlign: "center",
+    macroValueText: {
+      fontFamily: FONTS.semiBold,
+      fontSize: 11.5,
+      color: "#E4E4E7",
+      minWidth: 60,
+      textAlign: "right",
     },
 
     mealsBlock: {
