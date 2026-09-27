@@ -152,6 +152,7 @@ const FoodDetailSheet: React.FC<FoodDetailSheetProps> = ({
   } | null>(null);
 
   // Lazy-fetch full nutrition when the search result has no macros yet.
+  // Fetch full micronutrients from OFF for complete details.
   // Also check food_custom_values for user-corrected values.
   useEffect(() => {
     if (!visible || !food) return;
@@ -168,46 +169,29 @@ const FoodDetailSheet: React.FC<FoodDetailSheetProps> = ({
       return base;
     };
 
-    const hasMacros =
-      food.calories > 0 ||
-      food.protein > 0 ||
-      food.carbs > 0 ||
-      food.fat > 0;
+    // 1. Immediately show whatever we already have (from search)
+    applyCustomValues(food).then((initial) => {
+      if (!cancelled) setDetail(initial);
+    });
 
-    if (hasMacros) {
-      applyCustomValues(food).then((enriched) => {
-        if (!cancelled) {
-          setDetail(enriched);
-          setLoadingDetail(false);
-          setDetailError(false);
-        }
-      });
-      return;
-    }
-
-    setDetail(null);
-    setLoadingDetail(true);
-    setDetailError(false);
+    // 2. Always fetch full product details in the background to get all vitamins, minerals, and sub-macros
     api
       .getFoodDetails(food.id)
       .then(async (res: FoodItem | null) => {
         if (cancelled) return;
-        if (!res) {
-          setDetailError(true);
-        } else {
-          const base = {
+        if (res) {
+          const merged: FoodItem = {
+            ...food,
             ...res,
             name: res.name || food.name,
             brand: res.brand || food.brand,
             imageUrl: res.imageUrl || food.imageUrl,
           };
-          const enriched = await applyCustomValues(base);
+          const enriched = await applyCustomValues(merged);
           if (!cancelled) setDetail(enriched);
         }
       })
-      .catch(() => {
-        if (!cancelled) setDetailError(true);
-      })
+      .catch(() => {})
       .finally(() => {
         if (!cancelled) setLoadingDetail(false);
       });

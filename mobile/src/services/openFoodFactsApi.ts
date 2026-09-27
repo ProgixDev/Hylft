@@ -159,10 +159,29 @@ function safeNum(v: unknown): number {
   return Number.isFinite(n) && n >= 0 ? n : 0;
 }
 
-function optNum(v: unknown): number | undefined {
+function optGram(v: unknown): number | undefined {
   if (v === undefined || v === null || v === "") return undefined;
   const n = Number(v);
-  return Number.isFinite(n) && n >= 0 ? n : undefined;
+  if (!Number.isFinite(n) || n < 0) return undefined;
+  return Math.round(n * 100) / 100;
+}
+
+// OFF stores minerals & some vitamins in grams per 100g (e.g. 0.12 g -> 120 mg)
+function optMg(v: unknown): number | undefined {
+  if (v === undefined || v === null || v === "") return undefined;
+  const n = Number(v);
+  if (!Number.isFinite(n) || n < 0) return undefined;
+  const inMg = n * 1000;
+  return Math.round(inMg * 100) / 100;
+}
+
+// OFF stores vitamins like A, D, K, B7, B9, B12 in grams per 100g (e.g. 7.5e-7 g -> 0.75 µg)
+function optUg(v: unknown): number | undefined {
+  if (v === undefined || v === null || v === "") return undefined;
+  const n = Number(v);
+  if (!Number.isFinite(n) || n < 0) return undefined;
+  const inUg = n * 1000000;
+  return Math.round(inUg * 100) / 100;
 }
 
 function pickName(p: OFFProduct, lang: "fr" | "en"): string {
@@ -212,6 +231,8 @@ function mapProduct(p: OFFProduct, lang: "fr" | "en", index: number): FoodItem |
   const fat = safeNum(p.nutriments?.fat_100g);
   if (calories === 0 && protein === 0 && carbs === 0 && fat === 0) return null;
 
+  const n = (p.nutriments || {}) as any;
+
   return {
     id: p.code || `off-${Date.now()}-${index}`,
     name,
@@ -222,38 +243,38 @@ function mapProduct(p: OFFProduct, lang: "fr" | "en", index: number): FoodItem |
     fat,
     brand: pickBrand(p),
     servingSize: pickServingSize(p),
-    sugars: optNum(p.nutriments?.sugars_100g),
-    fiber: optNum(p.nutriments?.fiber_100g),
-    saturatedFat: optNum(p.nutriments?.["saturated-fat_100g"]),
-    monounsaturatedFat: optNum(p.nutriments?.["monounsaturated-fat_100g"]),
-    polyunsaturatedFat: optNum(p.nutriments?.["polyunsaturated-fat_100g"]),
-    transFat: optNum(p.nutriments?.["trans-fat_100g"]),
-    cholesterol: optNum(p.nutriments?.cholesterol_100g),
-    polyols: optNum(p.nutriments?.polyols_100g),
-    starch: optNum(p.nutriments?.starch_100g),
-    alcohol: optNum(p.nutriments?.alcohol_100g),
-    water: optNum(p.nutriments?.water_100g),
-    caffeine: optNum(p.nutriments?.caffeine_100g),
-    potassium: optNum(p.nutriments?.potassium_100g),
-    calcium: optNum(p.nutriments?.calcium_100g),
-    magnesium: optNum(p.nutriments?.magnesium_100g),
-    iron: optNum(p.nutriments?.iron_100g),
-    zinc: optNum(p.nutriments?.zinc_100g),
-    phosphorus: optNum(p.nutriments?.phosphorus_100g),
-    vitaminA: optNum(p.nutriments?.["vitamin-a_100g"]),
-    vitaminB1: optNum(p.nutriments?.["vitamin-b1_100g"]),
-    vitaminB2: optNum(p.nutriments?.["vitamin-b2_100g"]),
-    vitaminB3: optNum(p.nutriments?.["vitamin-b3_100g"] ?? p.nutriments?.["vitamin-pp_100g"]),
-    vitaminB5: optNum(p.nutriments?.["vitamin-b5_100g"]),
-    vitaminB6: optNum(p.nutriments?.["vitamin-b6_100g"]),
-    vitaminB7: optNum(p.nutriments?.["vitamin-b7_100g"] ?? p.nutriments?.biotin_100g),
-    vitaminB9: optNum(p.nutriments?.["vitamin-b9_100g"] ?? p.nutriments?.folates_100g),
-    vitaminB12: optNum(p.nutriments?.["vitamin-b12_100g"]),
-    vitaminC: optNum(p.nutriments?.["vitamin-c_100g"]),
-    vitaminD: optNum(p.nutriments?.["vitamin-d_100g"]),
-    vitaminE: optNum(p.nutriments?.["vitamin-e_100g"]),
-    vitaminK: optNum(p.nutriments?.["vitamin-k_100g"]),
-    salt: p.nutriments?.salt_100g != null ? safeNum(p.nutriments.salt_100g) : (p.nutriments?.sodium_100g != null ? safeNum(p.nutriments.sodium_100g) * 2.5 : undefined),
+    sugars: optGram(n.sugars_100g),
+    fiber: optGram(n.fiber_100g ?? n["dietary-fiber_100g"]),
+    saturatedFat: optGram(n["saturated-fat_100g"] ?? n.saturated_fat_100g),
+    monounsaturatedFat: optGram(n["monounsaturated-fat_100g"] ?? n.monounsaturated_fat_100g),
+    polyunsaturatedFat: optGram(n["polyunsaturated-fat_100g"] ?? n.polyunsaturated_fat_100g),
+    transFat: optGram(n["trans-fat_100g"] ?? n.trans_fat_100g),
+    cholesterol: optMg(n.cholesterol_100g),
+    polyols: optGram(n.polyols_100g),
+    starch: optGram(n.starch_100g),
+    alcohol: optGram(n.alcohol_100g),
+    water: optGram(n.water_100g),
+    caffeine: optMg(n.caffeine_100g),
+    potassium: optMg(n.potassium_100g),
+    calcium: optMg(n.calcium_100g),
+    magnesium: optMg(n.magnesium_100g),
+    iron: optMg(n.iron_100g),
+    zinc: optMg(n.zinc_100g),
+    phosphorus: optMg(n.phosphorus_100g),
+    vitaminA: optUg(n["vitamin-a_100g"]),
+    vitaminB1: optMg(n["vitamin-b1_100g"] ?? n.thiamin_100g),
+    vitaminB2: optMg(n["vitamin-b2_100g"] ?? n.riboflavin_100g),
+    vitaminB3: optMg(n["vitamin-b3_100g"] ?? n["vitamin-pp_100g"] ?? n.niacin_100g),
+    vitaminB5: optMg(n["vitamin-b5_100g"] ?? n["pantothenic-acid_100g"]),
+    vitaminB6: optMg(n["vitamin-b6_100g"]),
+    vitaminB7: optUg(n["vitamin-b7_100g"] ?? n.biotin_100g),
+    vitaminB9: optUg(n["vitamin-b9_100g"] ?? n.folates_100g ?? n["folic-acid_100g"]),
+    vitaminB12: optUg(n["vitamin-b12_100g"] ?? n.cobalamin_100g),
+    vitaminC: optMg(n["vitamin-c_100g"] ?? n["ascorbic-acid_100g"]),
+    vitaminD: optUg(n["vitamin-d_100g"] ?? n["vitamin-d3_100g"]),
+    vitaminE: optMg(n["vitamin-e_100g"] ?? n.tocopherol_100g),
+    vitaminK: optUg(n["vitamin-k_100g"] ?? n.phylloquinone_100g),
+    salt: n.salt_100g != null ? safeNum(n.salt_100g) : (n.sodium_100g != null ? safeNum(n.sodium_100g) * 2.5 : undefined),
     nutriScore: p.nutriscore_grade ? p.nutriscore_grade.toUpperCase() : undefined,
     novaGroup: p.nova_group ? Number(p.nova_group) : undefined,
     ecoScore: p.ecoscore_grade ? p.ecoscore_grade.toUpperCase() : undefined,
