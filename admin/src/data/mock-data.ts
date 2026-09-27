@@ -57,6 +57,38 @@ export interface Post {
   imageCount: number;
 }
 
+export interface FoodCorrection {
+  id: string;
+  userId: string;
+  userName: string;
+  userAvatar?: string;
+  foodId: string;
+  foodName: string;
+  brand?: string;
+  imageUrl?: string;
+  originalCalories: number;
+  originalProtein: number;
+  originalCarbs: number;
+  originalFat: number;
+  originalSugars?: number;
+  originalSaturatedFat?: number;
+  originalFiber?: number;
+  originalSalt?: number;
+  originalServingSize?: number;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  sugars?: number;
+  saturatedFat?: number;
+  fiber?: number;
+  salt?: number;
+  servingSize?: number;
+  status: "pending" | "approved" | "rejected";
+  rejectionReason?: string;
+  createdAt: string;
+}
+
 export interface DashboardStats {
   totalUsers: number;
   activeUsers: number;
@@ -1256,3 +1288,85 @@ export const mockRecentActivity: RecentActivity[] = [
     userName: "mike_runner",
   },
 ];
+
+export const mockFoodCorrections: FoodCorrection[] = [
+  {
+    id: "fc-1",
+    userId: "e775d027-3ab9-4d99-a451-94308de06c49",
+    userName: "alex_lifts",
+    userAvatar: "AL",
+    foodId: "3421557501302",
+    foodName: "Choco aux 3 céréales",
+    brand: "Terres et Céréales Bio",
+    imageUrl: "https://images.openfoodfacts.org/images/products/342/155/750/1302/front_fr.4.400.jpg",
+    originalCalories: 0,
+    originalProtein: 7,
+    originalCarbs: 84,
+    originalFat: 1.4,
+    calories: 390,
+    protein: 8.5,
+    carbs: 76,
+    fat: 4.2,
+    status: "pending",
+    createdAt: "2026-09-27T12:30:00Z",
+  },
+  {
+    id: "fc-2",
+    userId: "26deb357-d1e8-4aff-a38c-dc458e37eb52",
+    userName: "sarah_lifts",
+    userAvatar: "SL",
+    foodId: "3560070544521",
+    foodName: "Beurre de Cacahuète Creamy",
+    brand: "Bio Village",
+    originalCalories: 580,
+    originalProtein: 25,
+    originalCarbs: 14,
+    originalFat: 48,
+    calories: 620,
+    protein: 28,
+    carbs: 12,
+    fat: 50,
+    status: "pending",
+    createdAt: "2026-09-27T10:15:00Z",
+  },
+  {
+    id: "fc-3",
+    userId: "24e74136-d38f-48ae-a242-b71bbba53b7b",
+    userName: "marcus_fit",
+    userAvatar: "MF",
+    foodId: "5060746500123",
+    foodName: "Whey Isolate Vanille",
+    brand: "Optimum Nutrition",
+    originalCalories: 110,
+    originalProtein: 24,
+    originalCarbs: 1,
+    originalFat: 0.5,
+    calories: 116,
+    protein: 25,
+    carbs: 1.5,
+    fat: 0.8,
+    status: "approved",
+    createdAt: "2026-09-26T18:40:00Z",
+  },
+  {
+    id: "fc-4",
+    userId: "adb4e73d-8dc4-49e5-94e3-317bb0a2e6db",
+    userName: "elena_crossfit",
+    userAvatar: "EC",
+    foodId: "3038350021456",
+    foodName: "Flocons d'Avoine Bio",
+    brand: "Bjorg",
+    originalCalories: 360,
+    originalProtein: 12,
+    originalCarbs: 58,
+    originalFat: 7,
+    calories: 375,
+    protein: 13.5,
+    carbs: 60,
+    fat: 6.8,
+    status: "rejected",
+    rejectionReason: "Valeurs non conformes à l'emballage officiel",
+    createdAt: "2026-09-25T14:20:00Z",
+  },
+];
+

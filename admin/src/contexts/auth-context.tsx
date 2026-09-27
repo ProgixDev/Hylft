@@ -1,5 +1,7 @@
 "use client";
 
+import { supabase } from "@/lib/supabase";
+import type { User as SupabaseUser } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import {
   createContext,
@@ -9,7 +11,7 @@ import {
   useState,
 } from "react";
 
-interface AdminUser {
+export interface AdminUser {
   id: string;
   name: string;
   email: string;
@@ -17,25 +19,65 @@ interface AdminUser {
   avatar: string;
 }
 
+interface AuthResponse {
+  success: boolean;
+  error?: string;
+}
+
 interface AuthContextType {
   user: AdminUser | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
-  logout: () => void;
+  login: (email: string, password: string) => Promise<AuthResponse>;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-const MOCK_ADMIN: AdminUser = {
-  id: "admin-1",
-  name: "Admin",
-  email: "admin@admin.com",
-  role: "Super Admin",
-  avatar: "AD",
-};
+function getInitials(name: string): string {
+  const parts = name.trim().split(" ");
+  if (parts.length >= 2) {
+    return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+  }
+  return name.slice(0, 2).toUpperCase();
+}
 
-const STORAGE_KEY = "hylift_admin_auth";
+async function mapSupabaseUserToAdmin(
+  sbUser: SupabaseUser,
+): Promise<AdminUser> {
+  const email = sbUser.email ?? "admin@hylift.app";
+  let name = email.split("@")[0];
+  let avatar = "AD";
+
+  try {
+    const { data: profile } = await supabase
+      .from("user_profiles")
+      .select("display_name, first_name, last_name, avatar_url")
+      .eq("id", sbUser.id)
+      .maybeSingle();
+
+    if (profile) {
+      if (profile.display_name) {
+        name = profile.display_name;
+      } else if (profile.first_name) {
+        name = `${profile.first_name} ${profile.last_name ?? ""}`.trim();
+      }
+    }
+  } catch {
+    // If profile fetch fails, fallback gracefully to email
+  }
+
+  avatar = getInitials(name);
+  const role = (sbUser.user_metadata?.role as string) ?? "Super Admin";
+
+  return {
+    id: sbUser.id,
+    name,
+    email,
+    role,
+    avatar,
+  };
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AdminUser | null>(null);
@@ -43,35 +85,87 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        setUser(JSON.parse(stored));
-      } catch {
-        localStorage.removeItem(STORAGE_KEY);
+    let isMounted = true;
+
+    // 1. Check existing active session
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session?.user && isMounted) {
+        const adminUser = await mapSupabaseUserToAdmin(session.user);
+        if (isMounted) {
+          setUser(adminUser);
+        }
       }
-    }
-    setIsLoading(false);
+      if (isMounted) {
+        setIsLoading(false);
+      }
+    });
+
+    // 2. Listen for auth state changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        const adminUser = await mapSupabaseUserToAdmin(session.user);
+        if (isMounted) {
+          setUser(adminUser);
+        }
+      } else if (event === "SIGNED_OUT") {
+        if (isMounted) {
+          setUser(null);
+        }
+      }
+      if (isMounted) {
+        setIsLoading(false);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = useCallback(
-    async (email: string, password: string): Promise<boolean> => {
-      // Mock authentication
-      if (email === "admin@admin.com" && password === "admin123") {
-        setUser(MOCK_ADMIN);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(MOCK_ADMIN));
+    async (email: string, password: string): Promise<AuthResponse> => {
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (error) {
+          return {
+            success: false,
+            error: error.message || "Invalid email or password",
+          };
+        }
+
+        if (!data.user) {
+          return { success: false, error: "User not found" };
+        }
+
+        const adminUser = await mapSupabaseUserToAdmin(data.user);
+        setUser(adminUser);
         router.push("/dashboard");
-        return true;
+        return { success: true };
+      } catch (err: unknown) {
+        const message =
+          err instanceof Error ? err.message : "An unexpected error occurred";
+        return { success: false, error: message };
       }
-      return false;
     },
     [router],
   );
 
-  const logout = useCallback(() => {
-    setUser(null);
-    localStorage.removeItem(STORAGE_KEY);
-    router.push("/login");
+  const logout = useCallback(async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch {
+      // Ignore sign-out errors
+    } finally {
+      setUser(null);
+      router.push("/login");
+    }
   }, [router]);
 
   return (

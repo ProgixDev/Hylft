@@ -17,6 +17,7 @@ import {
   MessageSquare,
   Dumbbell,
   Users,
+  UtensilsCrossed,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -27,6 +28,7 @@ const navItems = [
   { label: "Users", href: "/dashboard/users", icon: Users },
   { label: "Workouts", href: "/dashboard/workouts", icon: Dumbbell },
   { label: "Routines", href: "/dashboard/routines", icon: ListChecks },
+  { label: "Food Moderation", href: "/dashboard/food-corrections", icon: UtensilsCrossed },
   { label: "Posts", href: "/dashboard/posts", icon: MessageSquare },
 ];
 
