@@ -35,6 +35,31 @@ export class SubmitFoodCorrectionDto {
   @Min(0)
   original_fat?: number;
 
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  original_sugars?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  original_saturated_fat?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  original_fiber?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  original_salt?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  original_serving_size?: number;
+
   @IsNumber()
   @Min(0)
   calories: number;
@@ -50,4 +75,29 @@ export class SubmitFoodCorrectionDto {
   @IsNumber()
   @Min(0)
   fat: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  sugars?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  saturated_fat?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  fiber?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  salt?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  serving_size?: number;
 }
