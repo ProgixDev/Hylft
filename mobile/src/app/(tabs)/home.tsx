@@ -308,6 +308,7 @@ export default function Home() {
   const [displayName, setDisplayName] = useState("");
   const [isProModalVisible, setIsProModalVisible] = useState(false);
   const [adminRoutines, setAdminRoutines] = useState<HomeRoutineGroup>({});
+  const [dailyStepsGoal, setDailyStepsGoal] = useState(10000);
 
   const now = new Date();
 
@@ -324,11 +325,16 @@ export default function Home() {
 
       const loadHome = async () => {
         try {
-          const [savedName, savedCarousel] = await Promise.all([
+          const [savedName, savedCarousel, savedStepsGoal] = await Promise.all([
             AsyncStorage.getItem(DISPLAY_NAME_KEY),
             AsyncStorage.getItem(HOME_CAROUSEL_ROUTINES_KEY),
+            AsyncStorage.getItem("@hylift_daily_steps_goal"),
           ]);
           if (isMounted && savedName) setDisplayName(savedName);
+          if (isMounted && savedStepsGoal) {
+            const parsed = parseInt(savedStepsGoal, 10);
+            if (!isNaN(parsed) && parsed > 0) setDailyStepsGoal(parsed);
+          }
           if (isMounted && savedCarousel) {
             try {
               const parsed = JSON.parse(savedCarousel);
@@ -758,7 +764,7 @@ export default function Home() {
               image: genderedImages.health.steps,
               label: t("home.steps", "Pas"),
               value: todaySteps || 0,
-              goal: 10000,
+              goal: dailyStepsGoal,
               unit: "",
             },
             {

@@ -1,19 +1,24 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Animated,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
+  TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "../../components/ui/ScaledText";
 import ChipButton from "../../components/ui/ChipButton";
 import SignupProgress from "../../components/ui/SignupProgress";
 import { FONTS } from "../../constants/fonts";
 import { useTheme } from "../../contexts/ThemeContext";
+import { api } from "../../services/api";
 
 const BG_SCREEN = "#F8F9FC";
 const BG_CARD = "#FFFFFF";
@@ -106,10 +111,25 @@ function DayRow({
 
 export default function WorkoutFrequency() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ flow?: string }>();
+  const insets = useSafeAreaInsets();
+  const params = useLocalSearchParams<{ flow?: string; mode?: string }>();
   const isSignupFlow = params.flow === "signup";
-  const { t } = useTranslation();
+  const isUpdate = params.mode === "update";
+  const { t, i18n } = useTranslation();
+  const isFr = i18n.language?.startsWith("fr");
   const [selected, setSelected] = useState<string[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    AsyncStorage.getItem("@hylift_workout_days").then((val) => {
+      if (val) {
+        try {
+          const parsed = JSON.parse(val);
+          if (Array.isArray(parsed)) setSelected(parsed);
+        } catch {}
+      }
+    });
+  }, []);
 
   const handleSelect = (id: WeekdayOption["id"]) => {
     setSelected((prev) =>
@@ -118,35 +138,87 @@ export default function WorkoutFrequency() {
   };
 
   const handleContinue = async () => {
-    if (selected.length === 0) return;
-    const selectedDayIndices = WEEKDAYS.map((day, index) =>
-      selected.includes(day.id) ? index : -1,
-    ).filter((index) => index >= 0);
-    await AsyncStorage.multiSet([
-      ["@hylift_workout_days", JSON.stringify(selected)],
-      ["@hylift_workout_frequency", selected.length.toString()],
-      ["@hylift_home_weekly_objective", selected.length.toString()],
-      ["@hylift_home_weekly_objective_days", JSON.stringify(selectedDayIndices)],
-    ]);
-    if (isSignupFlow) {
-      router.navigate("/get-started/ready");
-    } else {
-      router.navigate("/get-started/focus-areas");
+    if (selected.length === 0 || isSaving) return;
+    setIsSaving(true);
+    try {
+      const selectedDayIndices = WEEKDAYS.map((day, index) =>
+        selected.includes(day.id) ? index : -1,
+      ).filter((index) => index >= 0);
+
+      const count = selected.length;
+      const activityLevel =
+        count >= 6
+          ? "very_active"
+          : count >= 4
+            ? "active"
+            : count >= 2
+              ? "moderate"
+              : "light";
+
+      await AsyncStorage.multiSet([
+        ["@hylift_workout_days", JSON.stringify(selected)],
+        ["@hylift_workout_frequency", count.toString()],
+        ["@hylift_home_weekly_objective", count.toString()],
+        ["@hylift_home_weekly_objective_days", JSON.stringify(selectedDayIndices)],
+        ["@hylift_activity_level", activityLevel],
+      ]);
+
+      if (isUpdate) {
+        try {
+          await api.updateProfile({ activity_level: activityLevel });
+        } catch {}
+        router.back();
+      } else {
+        if (isSignupFlow) {
+          router.navigate("/get-started/ready");
+        } else {
+          router.navigate("/get-started/focus-areas");
+        }
+      }
+    } finally {
+      setIsSaving(false);
     }
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: BG_SCREEN }]}>
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: BG_SCREEN,
+          paddingTop: isUpdate
+            ? insets.top + (Platform.OS === "android" ? 12 : 6)
+            : 0,
+        },
+      ]}
+    >
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <SignupProgress current={9} total={13} />
-
-        <Text style={[styles.title, { color: TEXT_TITLE }]}>
-          {t("onboarding.workoutFrequency.title")}
-        </Text>
+        {isUpdate ? (
+          <View style={styles.updateHeader}>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              style={styles.backBtn}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="arrow-back" size={24} color={TEXT_TITLE} />
+            </TouchableOpacity>
+            <Text style={styles.updateHeaderTitle}>
+              {t("onboarding.workoutFrequency.title")}
+            </Text>
+          </View>
+        ) : (
+          <>
+            <SignupProgress current={9} total={13} />
+            <Text style={[styles.title, { color: TEXT_TITLE }]}>
+              {t("onboarding.workoutFrequency.title")}
+            </Text>
+          </>
+        )}
 
         <View style={styles.list}>
           {WEEKDAYS.map((day) => {
@@ -167,15 +239,24 @@ export default function WorkoutFrequency() {
         </View>
       </ScrollView>
 
-      <ChipButton
-        threeD
-        title={t("common.continue")}
-        onPress={handleContinue}
-        variant="primary"
-        size="lg"
-        fullWidth
-        disabled={selected.length === 0}
-      />
+      <View style={{ paddingBottom: Math.max(16, insets.bottom) }}>
+        <ChipButton
+          threeD
+          title={
+            isUpdate
+              ? isFr
+                ? "Mettre à jour"
+                : "Update"
+              : t("common.continue")
+          }
+          onPress={handleContinue}
+          variant="primary"
+          size="lg"
+          fullWidth
+          disabled={selected.length === 0}
+          loading={isSaving}
+        />
+      </View>
     </View>
   );
 }
@@ -188,6 +269,22 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 16,
+  },
+  updateHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 20,
+    paddingTop: 8,
+  },
+  backBtn: {
+    padding: 6,
+    marginRight: 10,
+  },
+  updateHeaderTitle: {
+    fontSize: 22,
+    fontFamily: FONTS.bold,
+    color: TEXT_TITLE,
+    flex: 1,
   },
   title: {
     fontSize: 26,

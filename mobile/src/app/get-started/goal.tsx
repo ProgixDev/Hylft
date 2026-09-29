@@ -1,19 +1,24 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Animated,
   Easing,
+  Platform,
   Pressable,
   StyleSheet,
+  TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "../../components/ui/ScaledText";
+import ChipButton from "../../components/ui/ChipButton";
 import SignupProgress from "../../components/ui/SignupProgress";
 import { FONTS } from "../../constants/fonts";
 import { useTheme } from "../../contexts/ThemeContext";
-
+import { api } from "../../services/api";
 
 const GOALS: {
   id: "lose_weight" | "maintain" | "gain_weight" | "build_muscle";
@@ -129,12 +134,27 @@ function GoalCard({
 
 export default function GoalScreen() {
   const router = useRouter();
-  const { t } = useTranslation();
+  const { mode } = useLocalSearchParams<{ mode?: string }>();
+  const isUpdate = mode === "update";
+  const { t, i18n } = useTranslation();
+  const isFr = i18n.language?.startsWith("fr");
+  const insets = useSafeAreaInsets();
   const [selected, setSelected] = useState<string>("");
   const [isNavigating, setIsNavigating] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const fade = useRef(new Animated.Value(0)).current;
   const slide = useRef(new Animated.Value(28)).current;
+
+  useEffect(() => {
+    AsyncStorage.getItem("@hylift_goal").then((val) => {
+      if (val) {
+        setSelected(val);
+      } else if (isUpdate) {
+        setSelected("lose_weight");
+      }
+    });
+  }, [isUpdate]);
 
   useEffect(() => {
     Animated.parallel([
@@ -153,27 +173,72 @@ export default function GoalScreen() {
     ]).start();
   }, [fade, slide]);
 
-  const handleSelect = async (id: string) => {
-    if (isNavigating) return;
-    setSelected(id);
-    setIsNavigating(true);
+  const handlePressCard = (id: string) => {
+    if (isUpdate) {
+      setSelected(id);
+    } else {
+      if (isNavigating) return;
+      setSelected(id);
+      setIsNavigating(true);
+      AsyncStorage.setItem("@hylift_goal", id).finally(() => {
+        router.push("/get-started/habits");
+      });
+    }
+  };
+
+  const handleUpdate = async () => {
+    if (!selected || isSaving) return;
+    setIsSaving(true);
     try {
-      await AsyncStorage.setItem("@hylift_goal", id);
+      await AsyncStorage.setItem("@hylift_goal", selected);
+      try {
+        await api.updateProfile({ fitness_goal: selected });
+      } catch {
+        // swallow
+      }
+      router.back();
     } finally {
-      router.push("/get-started/habits");
+      setIsSaving(false);
     }
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: "#F8F9FC" }]}>
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: "#F8F9FC",
+          paddingTop: isUpdate
+            ? insets.top + (Platform.OS === "android" ? 12 : 6)
+            : 0,
+        },
+      ]}
+    >
       <Animated.View
         style={{ flex: 1, opacity: fade, transform: [{ translateY: slide }] }}
       >
-        <SignupProgress current={2} total={13} />
-
-        <View style={styles.header}>
-          <Text style={styles.title}>{t("onboarding.goalFlow.title")}</Text>
-        </View>
+        {isUpdate ? (
+          <View style={styles.updateHeader}>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              style={styles.backBtn}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="arrow-back" size={24} color="#102b4a" />
+            </TouchableOpacity>
+            <Text style={styles.updateHeaderTitle}>
+              {t("onboarding.goalFlow.title")}
+            </Text>
+          </View>
+        ) : (
+          <>
+            <SignupProgress current={2} total={13} />
+            <View style={styles.header}>
+              <Text style={styles.title}>{t("onboarding.goalFlow.title")}</Text>
+            </View>
+          </>
+        )}
 
         <View style={styles.list}>
           {GOALS.map((g, index) => (
@@ -182,12 +247,32 @@ export default function GoalScreen() {
               g={g}
               index={index}
               isSelected={selected === g.id}
-              onPress={() => void handleSelect(g.id)}
+              onPress={() => handlePressCard(g.id)}
               t={t}
             />
           ))}
         </View>
       </Animated.View>
+
+      {isUpdate && (
+        <View
+          style={[
+            styles.bottomBar,
+            { paddingBottom: Math.max(16, insets.bottom + 8) },
+          ]}
+        >
+          <ChipButton
+            threeD
+            title={isFr ? "Mettre à jour" : "Update"}
+            onPress={handleUpdate}
+            variant="primary"
+            size="lg"
+            fullWidth
+            loading={isSaving}
+            disabled={!selected}
+          />
+        </View>
+      )}
     </View>
   );
 }
@@ -206,6 +291,22 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.extraBold,
     lineHeight: 32,
     color: "#102b4a",
+  },
+  updateHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 24,
+    paddingVertical: 8,
+  },
+  backBtn: {
+    padding: 6,
+    marginRight: 12,
+  },
+  updateHeaderTitle: {
+    fontSize: 22,
+    fontFamily: FONTS.bold,
+    color: "#102b4a",
+    flex: 1,
   },
   list: {
     gap: 12,
@@ -252,5 +353,8 @@ const styles = StyleSheet.create({
     borderRadius: 11,
     flexShrink: 0,
     marginLeft: 12,
+  },
+  bottomBar: {
+    paddingTop: 12,
   },
 });

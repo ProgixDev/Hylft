@@ -251,6 +251,10 @@ function AppContent() {
         <Stack.Screen name="settings/about" />
         <Stack.Screen name="settings/terms" />
         <Stack.Screen name="settings/privacy" />
+        <Stack.Screen name="settings/goals" />
+        <Stack.Screen name="settings/calorie-goal" />
+        <Stack.Screen name="settings/calorie-distribution" />
+        <Stack.Screen name="settings/nutrition-goals" />
         <Stack.Screen name="dev/routes" />
         <Stack.Screen name="user/follows/[id]" />
         <Stack.Screen name="schedule/[date]" />
