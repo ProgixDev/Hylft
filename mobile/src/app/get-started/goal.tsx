@@ -1,21 +1,18 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Animated,
   Easing,
-  Platform,
   Pressable,
   StyleSheet,
-  TouchableOpacity,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "../../components/ui/ScaledText";
 import ChipButton from "../../components/ui/ChipButton";
-import SignupProgress from "../../components/ui/SignupProgress";
+import { SignupProgress } from "../../components/ui/SignupProgress";
 import { FONTS } from "../../constants/fonts";
 import { useTheme } from "../../contexts/ThemeContext";
 import { api } from "../../services/api";
@@ -202,43 +199,24 @@ export default function GoalScreen() {
     }
   };
 
+  const handleBack = () => router.back();
+
   return (
     <View
       style={[
         styles.container,
         {
           backgroundColor: "#F8F9FC",
-          paddingTop: isUpdate
-            ? insets.top + (Platform.OS === "android" ? 12 : 6)
-            : 0,
         },
       ]}
     >
       <Animated.View
         style={{ flex: 1, opacity: fade, transform: [{ translateY: slide }] }}
       >
-        {isUpdate ? (
-          <View style={styles.updateHeader}>
-            <TouchableOpacity
-              onPress={() => router.back()}
-              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-              style={styles.backBtn}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="arrow-back" size={24} color="#102b4a" />
-            </TouchableOpacity>
-            <Text style={styles.updateHeaderTitle}>
-              {t("onboarding.goalFlow.title")}
-            </Text>
-          </View>
-        ) : (
-          <>
-            <SignupProgress current={2} total={13} />
-            <View style={styles.header}>
-              <Text style={styles.title}>{t("onboarding.goalFlow.title")}</Text>
-            </View>
-          </>
-        )}
+        {!isUpdate && <SignupProgress current={2} total={13} />}
+        <View style={[styles.header, isUpdate && styles.updateHeader]}>
+          <Text style={styles.title}>{t("onboarding.goalFlow.title")}</Text>
+        </View>
 
         <View style={styles.list}>
           {GOALS.map((g, index) => (
@@ -261,16 +239,29 @@ export default function GoalScreen() {
             { paddingBottom: Math.max(16, insets.bottom + 8) },
           ]}
         >
-          <ChipButton
-            threeD
-            title={isFr ? "Mettre à jour" : "Update"}
-            onPress={handleUpdate}
-            variant="primary"
-            size="lg"
-            fullWidth
-            loading={isSaving}
-            disabled={!selected}
-          />
+          <View style={styles.actionRow}>
+            <View style={styles.actionButton}>
+              <ChipButton
+                title={isFr ? "Annuler" : "Cancel"}
+                onPress={handleBack}
+                variant="secondary"
+                size="lg"
+                fullWidth
+              />
+            </View>
+            <View style={styles.actionButton}>
+              <ChipButton
+                threeD
+                title={isFr ? "Mettre à jour" : "Update"}
+                onPress={handleUpdate}
+                variant="primary"
+                size="lg"
+                fullWidth
+                loading={isSaving}
+                disabled={!selected}
+              />
+            </View>
+          </View>
         </View>
       )}
     </View>
@@ -286,28 +277,23 @@ const styles = StyleSheet.create({
   header: {
     marginBottom: 24,
   },
+  updateHeader: {
+    marginTop: 24,
+  },
   title: {
     fontSize: 26,
     fontFamily: FONTS.extraBold,
     lineHeight: 32,
     color: "#102b4a",
   },
-  updateHeader: {
+  actionRow: {
     flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 24,
-    paddingVertical: 8,
+    gap: 12,
   },
-  backBtn: {
-    padding: 6,
-    marginRight: 12,
-  },
-  updateHeaderTitle: {
-    fontSize: 22,
-    fontFamily: FONTS.bold,
-    color: "#102b4a",
+  actionButton: {
     flex: 1,
   },
+
   list: {
     gap: 12,
   },

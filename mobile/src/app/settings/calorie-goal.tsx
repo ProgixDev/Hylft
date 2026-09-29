@@ -16,6 +16,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "../../components/ui/ScaledText";
+import AppBar from "../../components/ui/AppBar";
 import { FONTS } from "../../constants/fonts";
 import { Theme } from "../../constants/themes";
 import { useAuth } from "../../contexts/AuthContext";
@@ -45,64 +46,125 @@ function createStyles(theme: Theme) {
       flex: 1,
       backgroundColor: theme.background.dark,
     },
-    header: {
+
+    content: {
+      paddingHorizontal: 20,
+      paddingTop: 20,
+    },
+    heroCard: {
+      backgroundColor: theme.primary.main,
+      borderRadius: 16,
+      padding: 20,
+      marginBottom: 20,
+      overflow: "hidden",
+    },
+    heroTopRow: {
       flexDirection: "row",
       alignItems: "center",
-      backgroundColor: theme.background.dark,
-      paddingHorizontal: 16,
-      paddingBottom: 14,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.background.accent,
+      justifyContent: "space-between",
     },
-    backBtn: {
-      padding: 6,
+    heroLabel: {
+      fontSize: 12,
+      fontFamily: FONTS.semiBold,
+      color: "rgba(255,255,255,0.72)",
+      letterSpacing: 0.7,
+      textTransform: "uppercase",
+    },
+    heroEdit: {
+      width: 34,
+      height: 34,
+      borderRadius: 17,
+      backgroundColor: "rgba(255,255,255,0.14)",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    heroValue: {
+      fontSize: 36,
+      fontFamily: FONTS.extraBold,
+      color: "#FFFFFF",
+      marginTop: 8,
+      letterSpacing: -0.8,
+    },
+    heroSupport: {
+      fontSize: 13,
+      fontFamily: FONTS.medium,
+      color: "rgba(255,255,255,0.78)",
+      marginTop: 4,
+    },
+    heroFooter: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginTop: 18,
+      paddingTop: 14,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: "rgba(255,255,255,0.28)",
+    },
+    heroFooterText: {
+      flex: 1,
+      fontSize: 12,
+      fontFamily: FONTS.medium,
+      color: "rgba(255,255,255,0.85)",
+    },
+    sectionLabel: {
+      fontSize: 12,
+      fontFamily: FONTS.bold,
+      color: theme.foreground.gray,
+      letterSpacing: 0.7,
+      textTransform: "uppercase",
+      marginBottom: 10,
+    },
+    settingsStack: {
+      gap: 10,
+    },
+    settingCard: {
+      borderTopWidth: 1.5,
+      borderRightWidth: 1.5,
+      borderBottomWidth: 1.5,
+      borderLeftWidth: 1.5,
+      borderColor: isDark ? "#3A424D" : "#CBD5E1",
+      backgroundColor: isDark ? "#14191F" : "#FFFFFF",
+      borderRadius: 12,
+      padding: 14,
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    settingIcon: {
+      width: 42,
+      height: 42,
+      borderRadius: 12,
+      alignItems: "center",
+      justifyContent: "center",
       marginRight: 12,
     },
-    headerTitle: {
-      fontSize: 20,
+    settingCopy: {
+      flex: 1,
+    },
+    settingTitle: {
+      fontSize: 15,
       fontFamily: FONTS.bold,
       color: theme.foreground.white,
-      letterSpacing: 0.2,
     },
-    content: {
-      paddingHorizontal: 18,
-      paddingTop: 16,
-    },
-    infoCard: {
-      borderWidth: 1.5,
-      borderColor: "#0284C7", // Cyan/blue border as shown in screenshot
-      backgroundColor: isDark ? "#0A1B28" : "#F0F9FF",
-      borderRadius: 14,
-      padding: 16,
-      marginBottom: 14,
-    },
-    infoText: {
-      fontSize: 14,
+    settingValue: {
+      fontSize: 12,
       fontFamily: FONTS.medium,
-      color: theme.foreground.white,
-      lineHeight: 20,
-      textAlign: "center",
-    },
-    listSection: {
-      marginTop: 10,
-    },
-    itemRow: {
-      paddingVertical: 18,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: theme.background.accent,
-    },
-    itemTitle: {
-      fontSize: 17,
-      fontFamily: FONTS.semiBold,
-      color: theme.foreground.white,
-      lineHeight: 22,
-    },
-    itemValue: {
-      fontSize: 14,
-      fontFamily: FONTS.regular,
       color: theme.foreground.gray,
-      marginTop: 4,
-      lineHeight: 20,
+      marginTop: 3,
+    },
+    tipCard: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      backgroundColor: isDark ? "#14191F" : theme.background.darker,
+      borderRadius: 12,
+      padding: 14,
+      marginTop: 20,
+    },
+    tipText: {
+      flex: 1,
+      fontSize: 12,
+      fontFamily: FONTS.medium,
+      color: theme.foreground.gray,
+      lineHeight: 18,
+      marginLeft: 9,
     },
     modalOverlay: {
       flex: 1,
@@ -316,24 +378,10 @@ export default function CalorieGoalScreen() {
       <StatusBar style={isDark ? "light" : "dark"} />
 
       {/* Header */}
-      <View
-        style={[
-          styles.header,
-          { paddingTop: insets.top + (Platform.OS === "android" ? 12 : 6) },
-        ]}
-      >
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.backBtn}
-          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="arrow-back" size={24} color={theme.foreground.white} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>
-          {isFr ? "Objectif calorique" : "Calorie Goal"}
-        </Text>
-      </View>
+      <AppBar
+        title={isFr ? "Objectif calorique" : "Calorie Goal"}
+        bordered
+      />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -342,70 +390,99 @@ export default function CalorieGoalScreen() {
           { paddingBottom: Math.max(40, insets.bottom + 24) },
         ]}
       >
-        {/* Info Cards */}
-        <View style={styles.infoCard}>
-          <Text style={styles.infoText}>
-            {isFr
-              ? "Sachez que le fait de lancer un décompte de jeûne peut affecter votre objectif calorique."
-              : "Starting a fasting timer may affect your calorie target."}
-          </Text>
-        </View>
-
-        <View style={styles.infoCard}>
-          <Text style={styles.infoText}>
-            {isFr
-              ? "Activez les calories du week-end si vous souhaitez manger plus pendant le week-end."
-              : "Enable weekend calories if you wish to eat more during weekends."}
-          </Text>
-        </View>
-
-        {/* List Section */}
-        <View style={styles.listSection}>
-          {/* 1. Objectif calorique */}
-          <TouchableOpacity
-            style={styles.itemRow}
-            activeOpacity={0.7}
-            onPress={handleOpenCalorieModal}
-          >
-            <Text style={styles.itemTitle}>
-              {isFr ? "Objectif calorique" : "Calorie goal"}
+        <TouchableOpacity
+          style={styles.heroCard}
+          activeOpacity={0.86}
+          onPress={handleOpenCalorieModal}
+        >
+          <View style={styles.heroTopRow}>
+            <Text style={styles.heroLabel}>
+              {isFr ? "Votre objectif quotidien" : "Your daily target"}
             </Text>
-            <Text style={styles.itemValue}>{currentCalorieDisplay}</Text>
-          </TouchableOpacity>
+            <View style={styles.heroEdit}>
+              <Ionicons name="pencil" size={16} color="#FFFFFF" />
+            </View>
+          </View>
+          <Text style={styles.heroValue}>{currentCalorieDisplay}</Text>
+          <Text style={styles.heroSupport}>
+            {isFr ? "Touchez pour ajuster votre objectif" : "Tap to adjust your target"}
+          </Text>
+          <View style={styles.heroFooter}>
+            <Ionicons name="flame-outline" size={16} color="#FFFFFF" />
+            <Text style={styles.heroFooterText}>
+              {isFr ? "Plan nutritionnel personnalisé" : "Personalized nutrition plan"}
+            </Text>
+            <Ionicons name="chevron-forward" size={17} color="#FFFFFF" />
+          </View>
+        </TouchableOpacity>
 
-          {/* 2. Recalculer objectif calo. */}
+        <Text style={styles.sectionLabel}>
+          {isFr ? "Personnaliser" : "Personalize"}
+        </Text>
+        <View style={styles.settingsStack}>
           <TouchableOpacity
-            style={styles.itemRow}
+            style={styles.settingCard}
             activeOpacity={0.7}
             onPress={handleOpenRecalculate}
           >
-            <Text style={styles.itemTitle}>
-              {isFr ? "Recalculer objectif calo." : "Recalculate calorie goal"}
-            </Text>
+            <View style={[styles.settingIcon, { backgroundColor: theme.primary.main + "18" }]}>
+              <Ionicons name="refresh" size={21} color={theme.primary.main} />
+            </View>
+            <View style={styles.settingCopy}>
+              <Text style={styles.settingTitle}>
+                {isFr ? "Recalculer l'objectif" : "Recalculate target"}
+              </Text>
+              <Text style={styles.settingValue}>
+                {isFr ? "À partir de vos données actuelles" : "Using your current profile"}
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={theme.foreground.gray} />
           </TouchableOpacity>
 
-          {/* 3. Calories du week-end */}
           <TouchableOpacity
-            style={styles.itemRow}
+            style={styles.settingCard}
             activeOpacity={0.7}
             onPress={() => setIsWeekendModalVisible(true)}
           >
-            <Text style={styles.itemTitle}>
-              {isFr ? "Calories du week-end" : "Weekend calories"}
-            </Text>
-            <Text style={styles.itemValue}>{currentWeekendLabel}</Text>
+            <View style={[styles.settingIcon, { backgroundColor: theme.primary.main + "18" }]}>
+              <Ionicons name="sunny-outline" size={21} color={theme.primary.main} />
+            </View>
+            <View style={styles.settingCopy}>
+              <Text style={styles.settingTitle}>
+                {isFr ? "Flexibilité le week-end" : "Weekend flexibility"}
+              </Text>
+              <Text style={styles.settingValue}>{currentWeekendLabel}</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={theme.foreground.gray} />
           </TouchableOpacity>
 
-          {/* 4. Répartition des calories */}
           <TouchableOpacity
-            style={[styles.itemRow, { borderBottomWidth: 0 }]}
+            style={styles.settingCard}
             activeOpacity={0.7}
             onPress={() => router.push("/settings/calorie-distribution")}
           >
-            <Text style={styles.itemTitle}>
-              {isFr ? "Répartition des calories" : "Calorie distribution"}
-            </Text>
+            <View style={[styles.settingIcon, { backgroundColor: theme.primary.main + "18" }]}>
+              <Ionicons name="pie-chart-outline" size={21} color={theme.primary.main} />
+            </View>
+            <View style={styles.settingCopy}>
+              <Text style={styles.settingTitle}>
+                {isFr ? "Répartition des calories" : "Calorie distribution"}
+              </Text>
+              <Text style={styles.settingValue}>
+                {isFr ? "Répartir vos calories sur la journée" : "Plan your calories across the day"}
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={theme.foreground.gray} />
           </TouchableOpacity>
+        </View>
+
+        <View style={styles.tipCard}>
+          <Ionicons name="information-circle-outline" size={18} color={theme.foreground.gray} />
+          <Text style={styles.tipText}>
+            {isFr
+              ? "Un décompte de jeûne peut modifier votre objectif calorique."
+              : "Starting a fasting timer may affect your calorie target."}
+          </Text>
         </View>
       </ScrollView>
 

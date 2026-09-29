@@ -1,11 +1,9 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Image,
-  Platform,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
@@ -16,9 +14,8 @@ import { Text } from "../../components/ui/ScaledText";
 import RulerPicker from "../../components/ui/RulerPicker";
 import { FONTS } from "../../constants/fonts";
 import { useAuth } from "../../contexts/AuthContext";
-import { useTheme } from "../../contexts/ThemeContext";
 import ChipButton from "../../components/ui/ChipButton";
-import SignupProgress from "../../components/ui/SignupProgress";
+import { SignupProgress } from "../../components/ui/SignupProgress";
 import { api } from "../../services/api";
 
 export default function TargetWeightScreen() {
@@ -26,7 +23,6 @@ export default function TargetWeightScreen() {
   const params = useLocalSearchParams<{ flow?: string; mode?: string }>();
   const isSignupFlow = params.flow === "signup";
   const isUpdate = params.mode === "update";
-  const { theme } = useTheme();
   const { userProfile, refreshUserProfile } = useAuth();
   const { t, i18n } = useTranslation();
   const isFr = i18n.language?.startsWith("fr");
@@ -103,50 +99,27 @@ export default function TargetWeightScreen() {
     }
   };
 
+  const handleBack = () => router.back();
+
   const diff = Math.abs(currentWeight - value);
   const caloriesToBurn = Math.round(diff * 7700);
   const isLosing = value < currentWeight;
   const weeks = diff > 0 ? Math.round(diff / 0.5) : 0;
 
   return (
-    <View
-      style={[
-        s.container,
-        {
-          paddingTop: isUpdate
-            ? insets.top + (Platform.OS === "android" ? 12 : 6)
-            : 0,
-        },
-      ]}
-    >
+    <View style={s.container}>
       <ScrollView
+        style={s.scrollView}
         contentContainerStyle={[
           s.scrollContent,
+          isUpdate && s.updateScrollContent,
           { paddingBottom: Math.max(24, insets.bottom + 12) },
         ]}
         showsVerticalScrollIndicator={false}
       >
         <View style={{ flex: 1 }}>
-          {isUpdate ? (
-            <View style={s.updateHeader}>
-              <TouchableOpacity
-                onPress={() => router.back()}
-                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                style={s.backBtn}
-                activeOpacity={0.7}
-              >
-                <Ionicons name="arrow-back" size={24} color="#102b4a" />
-              </TouchableOpacity>
-              <Text style={s.updateHeaderTitle}>
-                {t("onboarding.targetWeight.title")}
-              </Text>
-            </View>
-          ) : (
-            <>
-              <SignupProgress current={8} total={13} />
-              <Text style={s.title}>{t("onboarding.targetWeight.title")}</Text>
-            </>
-          )}
+          {!isUpdate && <SignupProgress current={8} total={13} />}
+          <Text style={s.title}>{t("onboarding.targetWeight.title")}</Text>
 
           <View style={s.journeyCard}>
             <Image
@@ -212,21 +185,36 @@ export default function TargetWeightScreen() {
           )}
         </View>
 
-        <ChipButton
-          threeD
-          title={
-            isUpdate
-              ? isFr
-                ? "Mettre à jour"
-                : "Update"
-              : t("common.next")
-          }
-          onPress={handleContinue}
-          variant="primary"
-          size="lg"
-          fullWidth
-          loading={isSaving}
-        />
+      </ScrollView>
+      <View style={[s.bottomActions, { paddingBottom: Math.max(16, insets.bottom) }]}>
+        <View style={s.actionRow}>
+          <View style={s.actionButton}>
+            <ChipButton
+              title={isUpdate ? t("common.cancel") : t("common.back")}
+              onPress={handleBack}
+              variant="secondary"
+              size="lg"
+              fullWidth
+            />
+          </View>
+          <View style={s.actionButton}>
+            <ChipButton
+              threeD
+              title={
+                isUpdate
+                  ? isFr
+                    ? "Mettre à jour"
+                    : "Update"
+                  : t("common.next")
+              }
+              onPress={handleContinue}
+              variant="primary"
+              size="lg"
+              fullWidth
+              loading={isSaving}
+            />
+          </View>
+        </View>
         {!isUpdate && (
           <TouchableOpacity
             style={s.skipButton}
@@ -236,7 +224,7 @@ export default function TargetWeightScreen() {
             <Text style={s.skipButtonText}>{t("common.skip")}</Text>
           </TouchableOpacity>
         )}
-      </ScrollView>
+      </View>
     </View>
   );
 }
@@ -251,33 +239,35 @@ const s = StyleSheet.create({
     paddingBottom: 24,
     flexGrow: 1,
   },
+  updateScrollContent: {
+    paddingTop: 24,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  bottomActions: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+  },
   title: {
     fontSize: 26,
     fontFamily: FONTS.extraBold,
     color: "#102b4a",
     marginBottom: 18,
   },
-  updateHeader: {
+  actionRow: {
     flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 24,
-    paddingVertical: 8,
+    gap: 12,
   },
-  backBtn: {
-    padding: 6,
-    marginRight: 12,
-  },
-  updateHeaderTitle: {
-    fontSize: 22,
-    fontFamily: FONTS.bold,
-    color: "#102b4a",
+  actionButton: {
     flex: 1,
   },
+
   journeyCard: {
     borderRadius: 8,
     overflow: "hidden",
     backgroundColor: "#102b4a",
-    marginBottom: 20,
+    marginBottom: 10,
   },
   journeyBgImage: {
     position: "absolute",
@@ -289,35 +279,35 @@ const s = StyleSheet.create({
     opacity: 0.7,
   },
   journeyContent: {
-    padding: 16,
+    padding: 12,
   },
   journeyRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 14,
+    marginBottom: 8,
   },
   journeyPoint: {
     gap: 2,
   },
   journeyPointLabel: {
-    fontSize: 12,
+    fontSize: 11,
     fontFamily: FONTS.medium,
     color: "rgba(255,255,255,0.7)",
   },
   journeyPointValue: {
-    fontSize: 18,
+    fontSize: 16,
     fontFamily: FONTS.bold,
     color: "#FFFFFF",
   },
   journeyArrow: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
     borderRadius: 20,
     backgroundColor: "rgba(255,255,255,0.15)",
   },
   journeyArrowText: {
-    fontSize: 12,
+    fontSize: 11,
     fontFamily: FONTS.bold,
     color: "#FFFFFF",
   },
@@ -325,7 +315,7 @@ const s = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-around",
     alignItems: "center",
-    paddingTop: 12,
+    paddingTop: 8,
     borderTopWidth: 1,
     borderTopColor: "rgba(255,255,255,0.15)",
   },
@@ -334,26 +324,26 @@ const s = StyleSheet.create({
     gap: 2,
   },
   journeyStatValue: {
-    fontSize: 16,
+    fontSize: 15,
     fontFamily: FONTS.bold,
     color: "#FFFFFF",
   },
   journeyStatLabel: {
-    fontSize: 11,
+    fontSize: 10,
     fontFamily: FONTS.medium,
     color: "rgba(255,255,255,0.7)",
   },
   journeyStatDivider: {
     width: 1,
-    height: 24,
+    height: 20,
     backgroundColor: "rgba(255,255,255,0.15)",
   },
   pickerCard: {
     backgroundColor: "#FFFFFF",
     borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 20,
-    marginBottom: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginBottom: 10,
     borderWidth: 1,
     borderColor: "#E5E7EB",
   },

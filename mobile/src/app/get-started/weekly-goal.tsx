@@ -6,7 +6,6 @@ import { useTranslation } from "react-i18next";
 import {
   Animated,
   Easing,
-  Platform,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
@@ -15,7 +14,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "../../components/ui/ScaledText";
 import ChipButton from "../../components/ui/ChipButton";
-import SignupProgress from "../../components/ui/SignupProgress";
+import { SignupProgress } from "../../components/ui/SignupProgress";
 import { FONTS } from "../../constants/fonts";
 import { useTheme } from "../../contexts/ThemeContext";
 
@@ -199,8 +198,8 @@ export default function WeeklyGoalScreen() {
         : "What's your weekly gain goal?";
     if (goal === "maintain")
       return isFr
-        ? "Confirmez votre objectif hebdo"
-        : "Confirm your weekly goal";
+        ? "Quel est votre objectif hebdomadaire ?"
+        : "What's your weekly goal?";
     return isFr
       ? "Quel est votre objectif de perte hebdo ?"
       : "What's your weekly loss goal?";
@@ -232,48 +231,26 @@ export default function WeeklyGoalScreen() {
     }
   };
 
+  const handleBack = () => router.back();
+
   return (
-    <View
-      style={[
-        s.container,
-        {
-          paddingTop: isUpdate
-            ? insets.top + (Platform.OS === "android" ? 12 : 6)
-            : 0,
-        },
-      ]}
-    >
+    <View style={s.container}>
       <Animated.View
         style={{ flex: 1, opacity: fade, transform: [{ translateY: slide }] }}
       >
-        {isUpdate ? (
-          <View style={s.updateHeader}>
-            <TouchableOpacity
-              onPress={() => router.back()}
-              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-              style={s.backBtn}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="arrow-back" size={24} color="#102b4a" />
-            </TouchableOpacity>
-            <Text style={s.updateHeaderTitle}>
-              {isFr ? "Objectif hebdomadaire" : "Weekly Goal"}
-            </Text>
-          </View>
-        ) : (
-          <SignupProgress current={9} total={13} />
-        )}
+        {!isUpdate && <SignupProgress current={9} total={13} />}
 
         <ScrollView
           style={{ flex: 1 }}
-          contentContainerStyle={{ paddingBottom: 16 }}
+          contentContainerStyle={[
+            { paddingBottom: 16 },
+            isUpdate && { paddingTop: 24 },
+          ]}
           showsVerticalScrollIndicator={false}
         >
-          {!isUpdate && (
-            <View style={s.header}>
-              <Text style={s.title}>{headline}</Text>
-            </View>
-          )}
+          <View style={s.header}>
+            <Text style={s.title}>{headline}</Text>
+          </View>
 
           <View style={s.list}>
             {options.map((o) => {
@@ -340,7 +317,7 @@ export default function WeeklyGoalScreen() {
                           </Text>
                         </View>
                       </View>
-                      <Text style={s.cardDesc}>
+                      <Text style={s.cardDesc} numberOfLines={1}>
                         {isFr ? o.subFr : o.subEn}
                       </Text>
                     </View>
@@ -366,25 +343,38 @@ export default function WeeklyGoalScreen() {
         </ScrollView>
       </Animated.View>
 
-      <View style={{ paddingBottom: Math.max(16, insets.bottom) }}>
-        <ChipButton
-          threeD
-          title={
-            isUpdate
-              ? isFr
-                ? "Mettre à jour"
-                : "Update"
-              : isFr
-                ? "Continuer"
-                : "Continue"
-          }
-          onPress={handleContinue}
-          variant="primary"
-          size="lg"
-          fullWidth
-          disabled={!selected}
-          loading={isSaving}
-        />
+      <View style={{ paddingTop: 12, paddingBottom: Math.max(16, insets.bottom) }}>
+        <View style={s.actionRow}>
+          <View style={s.actionButton}>
+            <ChipButton
+              title={isUpdate ? (isFr ? "Annuler" : "Cancel") : isFr ? "Retour" : "Back"}
+              onPress={handleBack}
+              variant="secondary"
+              size="lg"
+              fullWidth
+            />
+          </View>
+          <View style={s.actionButton}>
+            <ChipButton
+              threeD
+              title={
+                isUpdate
+                  ? isFr
+                    ? "Mettre à jour"
+                    : "Update"
+                  : isFr
+                    ? "Continuer"
+                    : "Continue"
+              }
+              onPress={handleContinue}
+              variant="primary"
+              size="lg"
+              fullWidth
+              disabled={!selected}
+              loading={isSaving}
+            />
+          </View>
+        </View>
       </View>
     </View>
   );
@@ -397,24 +387,9 @@ const s = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 16,
   },
-  updateHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 20,
-    paddingTop: 8,
-  },
-  backBtn: {
-    padding: 6,
-    marginRight: 10,
-  },
-  updateHeaderTitle: {
-    fontSize: 22,
-    fontFamily: FONTS.bold,
-    color: "#102b4a",
-    flex: 1,
-  },
+
   header: {
-    marginBottom: 20,
+    marginBottom: 24,
   },
   title: {
     fontSize: 26,
@@ -422,21 +397,30 @@ const s = StyleSheet.create({
     color: "#102b4a",
     lineHeight: 32,
   },
-  list: {
+  actionRow: {
+    flexDirection: "row",
     gap: 12,
   },
+  actionButton: {
+    flex: 1,
+  },
+  list: {
+    gap: 8,
+  },
   card: {
+    height: 72,
     flexDirection: "row",
     alignItems: "center",
-    gap: 14,
+    gap: 12,
     borderWidth: 1.5,
     borderRadius: 8,
-    padding: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
   },
   iconWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: 10,
+    width: 38,
+    height: 38,
+    borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -444,17 +428,17 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    marginBottom: 4,
+    marginBottom: 2,
   },
   cardTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontFamily: FONTS.bold,
   },
   paceTag: {
     borderWidth: 1,
     borderRadius: 100,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
+    paddingHorizontal: 7,
+    paddingVertical: 1,
   },
   paceTagText: {
     fontSize: 10,
@@ -462,8 +446,8 @@ const s = StyleSheet.create({
     letterSpacing: 0.5,
   },
   cardDesc: {
-    fontSize: 13,
-    lineHeight: 18,
+    fontSize: 12,
+    lineHeight: 16,
     color: "#64748B",
   },
   check: {

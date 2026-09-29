@@ -1,13 +1,10 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  Platform,
   ScrollView,
   StyleSheet,
-  TouchableOpacity,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -15,7 +12,7 @@ import { Text } from "../../components/ui/ScaledText";
 import BmiGauge from "../../components/ui/BmiGauge";
 import ChipButton from "../../components/ui/ChipButton";
 import RulerPicker from "../../components/ui/RulerPicker";
-import SignupProgress from "../../components/ui/SignupProgress";
+import { SignupProgress } from "../../components/ui/SignupProgress";
 import { FONTS } from "../../constants/fonts";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -94,44 +91,21 @@ export default function WeightScreen() {
     }
   };
 
+  const handleBack = () => router.back();
+
   return (
-    <View
-      style={[
-        s.container,
-        {
-          paddingTop: isUpdate
-            ? insets.top + (Platform.OS === "android" ? 12 : 6)
-            : 0,
-        },
-      ]}
-    >
+    <View style={s.container}>
       <ScrollView
+        style={s.scrollView}
         contentContainerStyle={[
           s.scrollContent,
+          isUpdate && s.updateScrollContent,
           { paddingBottom: Math.max(32, insets.bottom + 16) },
         ]}
         showsVerticalScrollIndicator={false}
       >
-        {isUpdate ? (
-          <View style={s.updateHeader}>
-            <TouchableOpacity
-              onPress={() => router.back()}
-              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-              style={s.backBtn}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="arrow-back" size={24} color="#102b4a" />
-            </TouchableOpacity>
-            <Text style={s.updateHeaderTitle}>
-              {t("onboarding.weight.title")}
-            </Text>
-          </View>
-        ) : (
-          <>
-            <SignupProgress current={isSignupFlow ? 9 : 7} total={13} />
-            <Text style={s.title}>{t("onboarding.weight.title")}</Text>
-          </>
-        )}
+        {!isUpdate && <SignupProgress current={isSignupFlow ? 9 : 7} total={13} />}
+        <Text style={s.title}>{t("onboarding.weight.title")}</Text>
 
         {/* Ruler picker card */}
         {loaded && (
@@ -154,24 +128,37 @@ export default function WeightScreen() {
           </View>
         )}
 
-        <View style={s.buttonWrap}>
-          <ChipButton
-            threeD
-            title={
-              isUpdate
-                ? isFr
-                  ? "Mettre à jour"
-                  : "Update"
-                : t("common.next")
-            }
-            onPress={handleContinue}
-            variant="primary"
-            size="lg"
-            fullWidth
-            loading={isSaving}
-          />
-        </View>
       </ScrollView>
+      <View style={[s.bottomActions, { paddingBottom: Math.max(16, insets.bottom) }]}>
+        <View style={s.actionRow}>
+          <View style={s.actionButton}>
+            <ChipButton
+              title={isUpdate ? t("common.cancel") : t("common.back")}
+              onPress={handleBack}
+              variant="secondary"
+              size="lg"
+              fullWidth
+            />
+          </View>
+          <View style={s.actionButton}>
+            <ChipButton
+              threeD
+              title={
+                isUpdate
+                  ? isFr
+                    ? "Mettre à jour"
+                    : "Update"
+                  : t("common.next")
+              }
+              onPress={handleContinue}
+              variant="primary"
+              size="lg"
+              fullWidth
+              loading={isSaving}
+            />
+          </View>
+        </View>
+      </View>
     </View>
   );
 }
@@ -183,40 +170,39 @@ const s = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 16,
-    paddingBottom: 32,
+    paddingBottom: 16,
+  },
+  updateScrollContent: {
+    paddingTop: 24,
+  },
+  scrollView: {
+    flex: 1,
   },
   title: {
     fontSize: 26,
     fontFamily: FONTS.extraBold,
-    marginBottom: 20,
+    marginBottom: 16,
     color: "#102b4a",
   },
-  updateHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 24,
-    paddingVertical: 8,
-  },
-  backBtn: {
-    padding: 6,
-    marginRight: 12,
-  },
-  updateHeaderTitle: {
-    fontSize: 22,
-    fontFamily: FONTS.bold,
-    color: "#102b4a",
-    flex: 1,
-  },
+
   card: {
     backgroundColor: "#FFFFFF",
     borderRadius: 8,
     paddingHorizontal: 16,
-    paddingVertical: 24,
-    marginBottom: 20,
+    paddingVertical: 14,
+    marginBottom: 12,
     borderWidth: 1,
     borderColor: "#E5E7EB",
   },
-  buttonWrap: {
-    marginTop: 8,
+  bottomActions: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+  },
+  actionRow: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  actionButton: {
+    flex: 1,
   },
 });

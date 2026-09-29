@@ -5,17 +5,15 @@ import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Animated,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
-  TouchableOpacity,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "../../components/ui/ScaledText";
 import ChipButton from "../../components/ui/ChipButton";
-import SignupProgress from "../../components/ui/SignupProgress";
+import { SignupProgress } from "../../components/ui/SignupProgress";
 import { FONTS } from "../../constants/fonts";
 import { useTheme } from "../../contexts/ThemeContext";
 import { api } from "../../services/api";
@@ -24,6 +22,15 @@ const BG_SCREEN = "#F8F9FC";
 const BG_CARD = "#FFFFFF";
 const TEXT_TITLE = "#102b4a";
 const TEXT_BODY = "#6B7280";
+
+const ACTIVITY_LEVELS = {
+  light: { rank: 1, color: "#3B82F6" },
+  moderate: { rank: 2, color: "#14B8A6" },
+  active: { rank: 3, color: "#F59E0B" },
+  very_active: { rank: 4, color: "#F97316" },
+} as const;
+
+type ActivityLevel = keyof typeof ACTIVITY_LEVELS;
 
 interface WeekdayOption {
   id:
@@ -137,6 +144,16 @@ export default function WorkoutFrequency() {
     );
   };
 
+  const activityLevel: ActivityLevel =
+    selected.length >= 6
+      ? "very_active"
+      : selected.length >= 4
+        ? "active"
+        : selected.length >= 2
+          ? "moderate"
+          : "light";
+  const activityStyle = ACTIVITY_LEVELS[activityLevel];
+
   const handleContinue = async () => {
     if (selected.length === 0 || isSaving) return;
     setIsSaving(true);
@@ -180,44 +197,70 @@ export default function WorkoutFrequency() {
     }
   };
 
+  const handleBack = () => router.back();
+
   return (
     <View
       style={[
         styles.container,
         {
           backgroundColor: BG_SCREEN,
-          paddingTop: isUpdate
-            ? insets.top + (Platform.OS === "android" ? 12 : 6)
-            : 0,
         },
       ]}
     >
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          isUpdate && styles.updateScrollContent,
+        ]}
         showsVerticalScrollIndicator={false}
       >
-        {isUpdate ? (
-          <View style={styles.updateHeader}>
-            <TouchableOpacity
-              onPress={() => router.back()}
-              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-              style={styles.backBtn}
-              activeOpacity={0.7}
+        {!isUpdate && <SignupProgress current={9} total={13} />}
+        <Text style={[styles.title, { color: TEXT_TITLE }]}>
+          {t("onboarding.workoutFrequency.title")}
+        </Text>
+
+        {selected.length > 0 && (
+          <View
+            style={[
+              styles.activityCard,
+              {
+                backgroundColor: activityStyle.color + "12",
+                borderColor: activityStyle.color + "38",
+              },
+            ]}
+          >
+            <View
+              style={[
+                styles.activityIcon,
+                { backgroundColor: activityStyle.color + "20" },
+              ]}
             >
-              <Ionicons name="arrow-back" size={24} color={TEXT_TITLE} />
-            </TouchableOpacity>
-            <Text style={styles.updateHeaderTitle}>
-              {t("onboarding.workoutFrequency.title")}
-            </Text>
+              <Ionicons name="pulse" size={20} color={activityStyle.color} />
+            </View>
+            <View style={styles.activityCopy}>
+              <Text style={[styles.activityLabel, { color: activityStyle.color }]}>
+                {t(`onboarding.activityLevel.options.${activityLevel}.label`)}
+              </Text>
+              <Text style={styles.activityDescription} numberOfLines={1}>
+                {t(`onboarding.activityLevel.options.${activityLevel}.description`)}
+              </Text>
+            </View>
+            <View style={styles.activityMeter} accessibilityLabel={activityLevel}>
+              {[1, 2, 3, 4].map((level) => (
+                <View
+                  key={level}
+                  style={[
+                    styles.meterBar,
+                    level <= activityStyle.rank && {
+                      backgroundColor: activityStyle.color,
+                    },
+                  ]}
+                />
+              ))}
+            </View>
           </View>
-        ) : (
-          <>
-            <SignupProgress current={9} total={13} />
-            <Text style={[styles.title, { color: TEXT_TITLE }]}>
-              {t("onboarding.workoutFrequency.title")}
-            </Text>
-          </>
         )}
 
         <View style={styles.list}>
@@ -239,23 +282,36 @@ export default function WorkoutFrequency() {
         </View>
       </ScrollView>
 
-      <View style={{ paddingBottom: Math.max(16, insets.bottom) }}>
-        <ChipButton
-          threeD
-          title={
-            isUpdate
-              ? isFr
-                ? "Mettre à jour"
-                : "Update"
-              : t("common.continue")
-          }
-          onPress={handleContinue}
-          variant="primary"
-          size="lg"
-          fullWidth
-          disabled={selected.length === 0}
-          loading={isSaving}
-        />
+      <View style={{ paddingTop: 12, paddingBottom: Math.max(16, insets.bottom) }}>
+        <View style={styles.actionRow}>
+          <View style={styles.actionButton}>
+            <ChipButton
+              title={isUpdate ? t("common.cancel") : t("common.back")}
+              onPress={handleBack}
+              variant="secondary"
+              size="lg"
+              fullWidth
+            />
+          </View>
+          <View style={styles.actionButton}>
+            <ChipButton
+              threeD
+              title={
+                isUpdate
+                  ? isFr
+                    ? "Mettre à jour"
+                    : "Update"
+                  : t("common.continue")
+              }
+              onPress={handleContinue}
+              variant="primary"
+              size="lg"
+              fullWidth
+              disabled={selected.length === 0}
+              loading={isSaving}
+            />
+          </View>
+        </View>
       </View>
     </View>
   );
@@ -270,26 +326,64 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: 16,
   },
-  updateHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 20,
-    paddingTop: 8,
+  updateScrollContent: {
+    paddingTop: 24,
   },
-  backBtn: {
-    padding: 6,
-    marginRight: 10,
-  },
-  updateHeaderTitle: {
-    fontSize: 22,
-    fontFamily: FONTS.bold,
-    color: TEXT_TITLE,
-    flex: 1,
-  },
+
   title: {
     fontSize: 26,
     fontFamily: FONTS.extraBold,
     marginBottom: 24,
+  },
+  activityCard: {
+    minHeight: 72,
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    marginTop: -10,
+    marginBottom: 16,
+  },
+  activityIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 11,
+  },
+  activityCopy: {
+    flex: 1,
+  },
+  activityLabel: {
+    fontSize: 14,
+    fontFamily: FONTS.bold,
+    marginBottom: 3,
+  },
+  activityDescription: {
+    fontSize: 11,
+    fontFamily: FONTS.medium,
+    color: TEXT_BODY,
+  },
+  activityMeter: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    gap: 3,
+    marginLeft: 10,
+  },
+  meterBar: {
+    width: 5,
+    height: 10,
+    borderRadius: 3,
+    backgroundColor: "#D8E0EA",
+  },
+  actionRow: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  actionButton: {
+    flex: 1,
   },
   list: {
     gap: 0,
