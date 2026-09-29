@@ -31,7 +31,7 @@ export default function WeightScreen() {
   const isFr = i18n.language?.startsWith("fr");
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
-  const { refreshUserProfile } = useAuth();
+  const { userProfile, refreshUserProfile } = useAuth();
 
   const [value, setValue] = useState(75);
   const [initialValue, setInitialValue] = useState(75);
@@ -46,17 +46,18 @@ export default function WeightScreen() {
       AsyncStorage.getItem("@hylift_weight"),
     ]).then(([h, fcw, w]) => {
       if (h) setHeightCm(parseFloat(h));
-      const savedWeight = fcw || w;
-      if (savedWeight) {
-        const parsed = parseFloat(savedWeight);
-        if (!isNaN(parsed) && parsed > 0) {
-          setValue(parsed);
-          setInitialValue(parsed);
-        }
+      const strVal = fcw || w;
+      const parsedStr = strVal ? parseFloat(strVal) : null;
+      const savedWeight =
+        userProfile?.weight_kg ??
+        (parsedStr && !isNaN(parsedStr) ? parsedStr : null);
+      if (savedWeight && savedWeight > 0) {
+        setValue(savedWeight);
+        setInitialValue(savedWeight);
       }
       setLoaded(true);
     });
-  }, []);
+  }, [userProfile]);
 
   const bmi =
     heightCm && heightCm > 0 ? value / (heightCm / 100) ** 2 : null;
@@ -65,11 +66,15 @@ export default function WeightScreen() {
     if (isSaving) return;
     setIsSaving(true);
     try {
+      const today = new Date().toISOString().split("T")[0];
       await Promise.all([
         AsyncStorage.setItem("@hylift_weight", value.toString()),
         AsyncStorage.setItem("@hylift_food_weight_current", value.toString()),
+        WeightHistory.log(value),
+        api
+          .upsertAlimentationDaily({ date: today, weight_kg: value })
+          .catch(() => {}),
       ]);
-      void WeightHistory.log(value);
 
       if (isUpdate) {
         try {

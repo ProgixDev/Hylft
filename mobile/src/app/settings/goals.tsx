@@ -361,6 +361,9 @@ export default function GoalsScreen() {
     ? `${nutritionGoals.calorieGoal.toLocaleString(isFr ? "fr-FR" : "en-US")} kcal`
     : "2 000 kcal";
 
+  const displayedCurrentWeight = userProfile?.weight_kg ?? currentWeight;
+  const displayedTargetWeight = userProfile?.target_weight_kg ?? targetWeight;
+
   const goals: GoalItem[] = [
     {
       id: "objective",
@@ -369,13 +372,13 @@ export default function GoalsScreen() {
     },
     {
       id: "starting_weight",
-      title: isFr ? "Poids de départ" : "Starting weight",
-      value: formatWeight(currentWeight, isFr ? "89,0 kg" : "89.0 kg"),
+      title: isFr ? "Poids actuel" : "Starting weight",
+      value: formatWeight(displayedCurrentWeight, isFr ? "70,0 kg" : "70.0 kg"),
     },
     {
       id: "target_weight",
       title: isFr ? "Poids cible" : "Target weight",
-      value: formatWeight(targetWeight, isFr ? "75,0 kg" : "75.0 kg"),
+      value: formatWeight(displayedTargetWeight, isFr ? "65,0 kg" : "65.0 kg"),
     },
     {
       id: "activity_level",

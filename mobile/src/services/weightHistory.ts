@@ -61,18 +61,22 @@ export const WeightHistory = {
   },
 
   /** Add or update today's weight entry */
-  async log(weight: number): Promise<void> {
-    const today = new Date().toISOString().split("T")[0];
+  async log(weight: number, date?: string): Promise<void> {
+    const entryDate = date || new Date().toISOString().split("T")[0];
     try {
-      await api.upsertWeightEntry({ entry_date: today, weight_kg: weight });
+      await Promise.all([
+        api.upsertWeightEntry({ entry_date: entryDate, weight_kg: weight }),
+        AsyncStorage.setItem("@hylift_weight", String(weight)),
+        AsyncStorage.setItem("@hylift_food_weight_current", String(weight)),
+      ]);
     } catch {
       /* swallow; cache update below still makes the UI responsive */
     }
 
     const entries = await readCache();
-    const idx = entries.findIndex((e) => e.date === today);
+    const idx = entries.findIndex((e) => e.date === entryDate);
     if (idx >= 0) entries[idx].weight = weight;
-    else entries.push({ date: today, weight });
+    else entries.push({ date: entryDate, weight });
     const sorted = entries
       .sort((a, b) => a.date.localeCompare(b.date))
       .slice(-365);

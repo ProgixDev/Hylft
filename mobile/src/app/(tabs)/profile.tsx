@@ -300,7 +300,7 @@ export default function Profile() {
           AsyncStorage.getItem("@hylift_target_weight"),
         ]);
         const latestWeightFromHistory = wh.length > 0 ? wh[wh.length - 1].weight : null;
-        const resolvedW = latestWeightFromHistory ?? userProfile?.weight_kg ?? (w ? Number(w) : null) ?? (altW ? Number(altW) : null);
+        const resolvedW = userProfile?.weight_kg ?? latestWeightFromHistory ?? (w ? Number(w) : null) ?? (altW ? Number(altW) : null);
         if (resolvedW != null && !isNaN(resolvedW) && resolvedW > 0) setWeight(resolvedW);
         const resolvedTw = userProfile?.target_weight_kg ?? (tw ? Number(tw) : null) ?? (altTw ? Number(altTw) : null);
         if (resolvedTw != null && !isNaN(resolvedTw) && resolvedTw > 0) setTargetWeight(resolvedTw);
@@ -343,7 +343,7 @@ export default function Profile() {
           /* fallback to defaults */
         }
       })();
-    }, [activityPeriod])
+    }, [activityPeriod, userProfile])
   );
 
   // Refetch daily progress when period changes
@@ -356,23 +356,28 @@ export default function Profile() {
     })();
   }, [activityPeriod]);
 
-  const bmi = calcBMI(weight, height);
+  const displayedWeight = userProfile?.weight_kg ?? weight;
+  const displayedTarget = userProfile?.target_weight_kg ?? targetWeight;
+
+  const bmi = calcBMI(displayedWeight, height);
   const bmiData = bmiInfo(bmi);
-  const bmr = calcBMR(weight, height, age, gender);
+  const bmr = calcBMR(displayedWeight, height, age, gender);
 
   // ── Weight delta + daily progress from server ──
   const weightDelta = dailyProgress?.weight_delta ?? null;
   const dailyProgressPct = dailyProgress?.progress_pct ?? 0;
 
   // ── Weight goal calculations ──
+  const initialWeight =
+    weightHistory.length > 0 ? weightHistory[0].weight : displayedWeight;
   const isGainGoal =
+    displayedTarget > initialWeight ||
     userGoal === "gain_weight" ||
-    userGoal === "build_muscle" ||
-    targetWeight > (weightHistory.length > 0 ? weightHistory[0].weight : weight);
+    (userGoal === "build_muscle" && displayedTarget > displayedWeight);
   const isGoalReached = isGainGoal
-    ? weight >= targetWeight
-    : weight <= targetWeight;
-  const diffFromTarget = Math.abs(weight - targetWeight);
+    ? displayedWeight >= displayedTarget
+    : displayedWeight <= displayedTarget;
+  const diffFromTarget = Math.abs(displayedWeight - displayedTarget);
 
   // ── Body measurements (latest values) ──
   const latestMeasurements = useMemo(() => {
@@ -428,6 +433,17 @@ export default function Profile() {
     const sorted = [...weightHistory].sort((a, b) =>
       a.date.localeCompare(b.date),
     );
+    const todayStr = new Date().toISOString().split("T")[0];
+    if (displayedWeight > 0) {
+      const lastEntry = sorted[sorted.length - 1];
+      if (!lastEntry) {
+        sorted.push({ date: todayStr, weight: displayedWeight });
+      } else if (lastEntry.date === todayStr) {
+        lastEntry.weight = displayedWeight;
+      } else if (lastEntry.date < todayStr && lastEntry.weight !== displayedWeight) {
+        sorted.push({ date: todayStr, weight: displayedWeight });
+      }
+    }
     const fmt = (iso: string) => {
       const d = new Date(iso);
       return `${d.getDate()}/${d.getMonth() + 1}`;
@@ -435,16 +451,16 @@ export default function Profile() {
     return sorted
       .slice(-14)
       .map((e) => ({ value: e.weight, label: fmt(e.date) }));
-  }, [weightHistory]);
+  }, [weightHistory, displayedWeight]);
 
   const weightChartBounds = useMemo(() => {
     const values = weightChart.map((p) => p.value);
     if (values.length === 0) return { min: 0, max: 100 };
-    const lo = Math.min(...values, targetWeight);
-    const hi = Math.max(...values, targetWeight);
+    const lo = Math.min(...values, displayedTarget);
+    const hi = Math.max(...values, displayedTarget);
     const pad = Math.max(1, (hi - lo) * 0.4);
     return { min: Math.floor(lo - pad), max: Math.ceil(hi + pad) };
-  }, [weightChart, targetWeight]);
+  }, [weightChart, displayedTarget]);
 
   return (
     <AnimatedScreen style={styles.container}>
@@ -500,9 +516,9 @@ export default function Profile() {
         <View style={styles.chartCard}>
           <View style={styles.weightHeader}>
             <View>
-              <Text style={styles.weightCurrent}>{weight} <Text style={styles.weightUnit}>kg</Text></Text>
+              <Text style={styles.weightCurrent}>{displayedWeight} <Text style={styles.weightUnit}>kg</Text></Text>
               <Text style={styles.weightTarget}>
-                {isFr ? "Objectif" : "Goal"}: {targetWeight} kg
+                {isFr ? "Objectif" : "Goal"}: {displayedTarget} kg
               </Text>
             </View>
             <View style={{ alignItems: "flex-end", gap: 6 }}>
@@ -554,7 +570,7 @@ export default function Profile() {
                 data={weightChart}
                 secondaryData={weightChart.map((p) => ({
                   ...p,
-                  value: targetWeight,
+                  value: displayedTarget,
                 }))}
                 color={theme.primary.main}
                 secondaryLineConfig={{

@@ -43,6 +43,25 @@ export class WeightEntriesService {
       .select()
       .single();
     if (error) throw error;
+
+    await Promise.all([
+      this.supabase
+        .from('user_profiles')
+        .update({ weight_kg: dto.weight_kg })
+        .eq('id', userId),
+      this.supabase
+        .from('alimentation_daily')
+        .upsert(
+          {
+            user_id: userId,
+            date: dto.entry_date,
+            weight_kg: dto.weight_kg,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'user_id,date' },
+        ),
+    ]).catch(() => {});
+
     return data;
   }
 

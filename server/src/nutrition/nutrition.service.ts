@@ -132,6 +132,26 @@ export class NutritionService {
       .single();
 
     if (error) throw error;
+
+    if (dto.weight_kg !== undefined && dto.weight_kg !== null) {
+      await Promise.all([
+        this.supabase
+          .from('user_profiles')
+          .update({ weight_kg: dto.weight_kg })
+          .eq('id', userId),
+        this.supabase
+          .from('weight_entries')
+          .upsert(
+            {
+              user_id: userId,
+              entry_date: dto.date,
+              weight_kg: dto.weight_kg,
+            },
+            { onConflict: 'user_id,entry_date' },
+          ),
+      ]).catch(() => {});
+    }
+
     return data;
   }
 

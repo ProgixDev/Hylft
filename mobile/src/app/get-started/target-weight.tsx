@@ -27,7 +27,7 @@ export default function TargetWeightScreen() {
   const isSignupFlow = params.flow === "signup";
   const isUpdate = params.mode === "update";
   const { theme } = useTheme();
-  const { refreshUserProfile } = useAuth();
+  const { userProfile, refreshUserProfile } = useAuth();
   const { t, i18n } = useTranslation();
   const isFr = i18n.language?.startsWith("fr");
   const insets = useSafeAreaInsets();
@@ -45,30 +45,29 @@ export default function TargetWeightScreen() {
       AsyncStorage.getItem("@hylift_food_weight_target"),
       AsyncStorage.getItem("@hylift_target_weight"),
     ]).then(([fcw, w, ftw, tw]) => {
-      const current = fcw || w;
-      if (current) {
-        const parsedCurrent = parseFloat(current);
-        if (!isNaN(parsedCurrent) && parsedCurrent > 0) {
-          setCurrentWeight(parsedCurrent);
-        }
+      const strCur = fcw || w;
+      const parsedCur = strCur ? parseFloat(strCur) : null;
+      const current =
+        userProfile?.weight_kg ??
+        (parsedCur && !isNaN(parsedCur) ? parsedCur : null);
+      if (current && current > 0) {
+        setCurrentWeight(current);
       }
-      const target = ftw || tw;
-      if (target) {
-        const parsedTarget = parseFloat(target);
-        if (!isNaN(parsedTarget) && parsedTarget > 0) {
-          setValue(parsedTarget);
-          setInitialValue(parsedTarget);
-        }
-      } else if (current) {
-        const parsedCurrent = parseFloat(current);
-        if (!isNaN(parsedCurrent) && parsedCurrent > 0) {
-          setValue(parsedCurrent);
-          setInitialValue(parsedCurrent);
-        }
+      const strTarget = ftw || tw;
+      const parsedTarget = strTarget ? parseFloat(strTarget) : null;
+      const target =
+        userProfile?.target_weight_kg ??
+        (parsedTarget && !isNaN(parsedTarget) ? parsedTarget : null);
+      if (target && target > 0) {
+        setValue(target);
+        setInitialValue(target);
+      } else if (current && current > 0) {
+        setValue(current);
+        setInitialValue(current);
       }
       setLoaded(true);
     });
-  }, []);
+  }, [userProfile]);
 
   const handleContinue = async () => {
     if (isSaving) return;

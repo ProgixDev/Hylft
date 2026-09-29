@@ -18,9 +18,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "../../components/ui/ScaledText";
 import { FONTS } from "../../constants/fonts";
 import { Theme } from "../../constants/themes";
+import { useAuth } from "../../contexts/AuthContext";
 import { useNutrition } from "../../contexts/NutritionContext";
 import { useTheme } from "../../contexts/ThemeContext";
-import { computeNutritionGoals } from "../../utils/nutritionGoals";
+import { ageFromDateOfBirth, computeNutritionGoals } from "../../utils/nutritionGoals";
 
 const WEEKEND_CALORIE_OPTIONS = [
   { id: "sat_sun", labelFr: "Samedi et dimanche", labelEn: "Saturday and Sunday" },
@@ -200,6 +201,7 @@ export default function CalorieGoalScreen() {
   const isFr = i18n.language?.startsWith("fr");
   const isDark = theme.background.dark === "#0B0D0E";
   const { goals: nutritionGoals, updateGoals } = useNutrition();
+  const { userProfile } = useAuth();
 
   // Dialogs state
   const [isCalorieModalVisible, setIsCalorieModalVisible] = useState(false);
@@ -248,8 +250,9 @@ export default function CalorieGoalScreen() {
   };
 
   const handleOpenRecalculate = async () => {
-    const [w, h, a, g, act, freq, goal] = await Promise.all([
+    const [fcw, altW, h, a, g, act, freq, goal] = await Promise.all([
       AsyncStorage.getItem("@hylift_food_weight_current"),
+      AsyncStorage.getItem("@hylift_weight"),
       AsyncStorage.getItem("@hylift_height"),
       AsyncStorage.getItem("@hylift_age"),
       AsyncStorage.getItem("@hylift_gender"),
@@ -258,14 +261,18 @@ export default function CalorieGoalScreen() {
       AsyncStorage.getItem("@hylift_goal"),
     ]);
 
+    const resolvedWeight =
+      userProfile?.weight_kg ??
+      (fcw ? parseFloat(fcw) : altW ? parseFloat(altW) : 75);
+
     const computed = computeNutritionGoals({
-      weightKg: w ? parseFloat(w) : 75,
-      heightCm: h ? parseFloat(h) : 175,
-      age: a ? parseInt(a, 10) : 25,
-      gender: g || "male",
+      weightKg: resolvedWeight,
+      heightCm: userProfile?.height_cm ?? (h ? parseFloat(h) : 175),
+      age: ageFromDateOfBirth(userProfile?.date_of_birth) ?? (a ? parseInt(a, 10) : 25),
+      gender: userProfile?.gender || g || "male",
       activityLevel: act || "moderate",
-      workoutFrequency: freq ? parseInt(freq, 10) : 3,
-      weightGoal: goal || "lose_weight",
+      workoutFrequency: userProfile?.workout_frequency ?? (freq ? parseInt(freq, 10) : 3),
+      weightGoal: userProfile?.fitness_goal || goal || "lose_weight",
     });
 
     setCalculatedKcal(computed.calorieGoal);

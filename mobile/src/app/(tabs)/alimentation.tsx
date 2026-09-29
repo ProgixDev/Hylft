@@ -239,13 +239,13 @@ export default function Alimentation() {
 
   const waterMl = daily.waterMl;
   const weightCurrent =
-    daily.weightKg ?? userProfile?.weight_kg ?? localWeight ?? DEFAULT_WEIGHT_KG;
+    userProfile?.weight_kg ?? localWeight ?? daily.weightKg ?? DEFAULT_WEIGHT_KG;
   const dailyNotes = daily.notes;
 
   const waterGoalMl = useMemo(
     () =>
       computeWaterGoalMl({
-        weightKg: daily.weightKg ?? userProfile?.weight_kg ?? localWeight,
+        weightKg: userProfile?.weight_kg ?? localWeight ?? daily.weightKg,
         heightCm: userProfile?.height_cm,
         age: ageFromDateOfBirth(userProfile?.date_of_birth),
         gender: userProfile?.gender,
@@ -253,7 +253,7 @@ export default function Alimentation() {
         workoutFrequency: userProfile?.workout_frequency,
         weightGoal: userProfile?.fitness_goal,
       }) || DEFAULT_WATER_GOAL_ML,
-    [daily.weightKg, userProfile, localWeight],
+    [userProfile, localWeight, daily.weightKg],
   );
   const totalGlasses = Math.max(
     DEFAULT_TOTAL_GLASSES,

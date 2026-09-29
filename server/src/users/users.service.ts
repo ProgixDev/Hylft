@@ -79,6 +79,30 @@ export class UsersService {
       if (error.code === '23505') throw new ConflictException('Username already taken');
       throw error;
     }
+
+    if (dto.weight_kg !== undefined && dto.weight_kg !== null) {
+      const today = new Date().toISOString().split('T')[0];
+      await Promise.all([
+        this.supabase.from('weight_entries').upsert(
+          {
+            user_id: userId,
+            entry_date: today,
+            weight_kg: dto.weight_kg,
+          },
+          { onConflict: 'user_id,entry_date' },
+        ),
+        this.supabase.from('alimentation_daily').upsert(
+          {
+            user_id: userId,
+            date: today,
+            weight_kg: dto.weight_kg,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'user_id,date' },
+        ),
+      ]).catch(() => {});
+    }
+
     return withDerivedFields(data);
   }
 
