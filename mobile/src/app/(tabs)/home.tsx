@@ -362,11 +362,13 @@ export default function Home() {
         try {
           const today = new Date();
           today.setHours(0, 0, 0, 0);
-          const start = new Date(today);
-          start.setDate(today.getDate() - 6);
-          const end = new Date(today);
-          const startStr = start.toISOString().slice(0, 10);
-          const endStr = end.toISOString().slice(0, 10);
+          const dayOfWeek = (today.getDay() + 6) % 7; // 0 = Monday, ..., 6 = Sunday
+          const monday = new Date(today);
+          monday.setDate(today.getDate() - dayOfWeek);
+          const sunday = new Date(monday);
+          sunday.setDate(monday.getDate() + 6);
+          const startStr = `${monday.getFullYear()}-${String(monday.getMonth() + 1).padStart(2, "0")}-${String(monday.getDate()).padStart(2, "0")}`;
+          const endStr = `${sunday.getFullYear()}-${String(sunday.getMonth() + 1).padStart(2, "0")}-${String(sunday.getDate()).padStart(2, "0")}`;
           const res = await api.getWorkoutsRange(startStr, endStr);
           if (!isMounted) return;
           const list = Array.isArray(res)
@@ -430,19 +432,20 @@ export default function Home() {
 
   const todayKey = useMemo(() => {
     const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    return d.toISOString().slice(0, 10);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   }, []);
 
-  const centeredDays = useMemo(() => {
+  const weekDays = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    const dayOfWeek = (today.getDay() + 6) % 7; // 0 = Monday, ..., 6 = Sunday
+    const monday = new Date(today);
+    monday.setDate(today.getDate() - dayOfWeek);
+
     return Array.from({ length: 7 }, (_, i) => {
-      const offset = i - 3;
-      const date = new Date(today);
-      date.setDate(today.getDate() + offset);
-      const dayIdx = (date.getDay() + 6) % 7;
-      const key = date.toISOString().slice(0, 10);
+      const date = new Date(monday);
+      date.setDate(monday.getDate() + i);
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
       const isFuture = key > todayKey;
       const isToday = key === todayKey;
       const state: DayState = trainedDayKeys.has(key)
@@ -453,8 +456,8 @@ export default function Home() {
       return {
         key,
         shortLabel: t(
-          `onboarding.workoutFrequency.shortDays.${DAY_SHORT_KEYS[dayIdx]}`,
-          DAY_LABELS_SHORT[dayIdx],
+          `onboarding.workoutFrequency.shortDays.${DAY_SHORT_KEYS[i]}`,
+          DAY_LABELS_SHORT[i],
         ),
         dayOfMonth: date.getDate(),
         isToday,
@@ -874,7 +877,7 @@ export default function Home() {
             </View>
 
             <View style={styles.weekChipsRow}>
-              {centeredDays.map((day) => (
+              {weekDays.map((day) => (
                 <WeekDayChip
                   key={day.key}
                   shortLabel={day.shortLabel}
