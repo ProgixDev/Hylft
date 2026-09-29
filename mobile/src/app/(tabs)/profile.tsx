@@ -52,6 +52,7 @@ const KEYS = {
   gender: "@hylift_gender",
   fitnessGoals: "@hylift_fitness_goals",
   displayName: "@hylift_display_name",
+  goal: "@hylift_goal",
 };
 
 type Period = "daily" | "weekly" | "monthly";
@@ -65,6 +66,22 @@ function bmiInfo(bmi: number) {
 }
 function calcBMR(w: number, h: number, age: number, g: string) {
   return g === "female" ? 10 * w + 6.25 * h - 5 * age - 161 : 10 * w + 6.25 * h - 5 * age + 5;
+}
+
+function getMacroPlanLabel(plan: string | null, isFr: boolean) {
+  switch (plan) {
+    case "high_protein":
+      return isFr ? "Riche en protéines" : "High protein";
+    case "low_carb":
+      return isFr ? "Faible en glucides" : "Low carb";
+    case "keto":
+      return isFr ? "Cétogène" : "Keto";
+    case "custom":
+      return isFr ? "Personnalisé" : "Custom";
+    case "balanced":
+    default:
+      return isFr ? "Par défaut" : "Default";
+  }
 }
 
 // ── Ring component ─────────────────────────────────────────────────────────
@@ -110,7 +127,7 @@ export default function Profile() {
   const insets = useSafeAreaInsets();
   const styles = createStyles(theme);
   const isFr = i18n.language?.startsWith("fr");
-  const { user } = useAuth();
+  const { user, userProfile, refreshUserProfile } = useAuth();
   const cachedForUser = getProfileCache(user?.id);
   const cachedProfile = cachedForUser?.profile ?? null;
   const cachedStats = cachedForUser?.stats ?? DEFAULT_USER_STATS;
@@ -134,7 +151,7 @@ export default function Profile() {
     requestPermissions: healthRequestPermissions,
     refreshData: healthRefreshData,
   } = useHealth();
-  const { daily } = useNutrition();
+  const { daily, goals: nutritionGoals } = useNutrition();
   const [healthBusy, setHealthBusy] = useState(false);
 
   const handleConnectHealth = useCallback(async () => {
@@ -168,6 +185,10 @@ export default function Profile() {
   const [age, setAge] = useState(25);
   const [gender, setGender] = useState("male");
   const [fitnessGoals, setFitnessGoals] = useState<string[]>([]);
+  const [userGoal, setUserGoal] = useState("lose_weight");
+  const [macroPlan, setMacroPlan] = useState<string | null>(null);
+  const [dailyStepsGoal, setDailyStepsGoal] = useState<number>(10000);
+  const [calorieGoal, setCalorieGoal] = useState<number>(2000);
   const [displayName, setDisplayName] = useState("");
   const [weightHistory, setWeightHistory] = useState<WeightEntry[]>([]);
   const [activityPeriod, setActivityPeriod] = useState<Period>("weekly");
@@ -245,20 +266,69 @@ export default function Profile() {
   useFocusEffect(
     useCallback(() => {
       (async () => {
-        const [w, tw, h, a, g, fg, dn, wh, bm] = await Promise.all([
-          AsyncStorage.getItem(KEYS.weight), AsyncStorage.getItem(KEYS.targetWeight),
-          AsyncStorage.getItem(KEYS.height), AsyncStorage.getItem(KEYS.age),
-          AsyncStorage.getItem(KEYS.gender), AsyncStorage.getItem(KEYS.fitnessGoals),
-          AsyncStorage.getItem(KEYS.displayName), WeightHistory.getLastDays(30),
+        const [
+          w,
+          tw,
+          h,
+          a,
+          g,
+          fg,
+          dn,
+          wh,
+          bm,
+          ug,
+          plan,
+          steps,
+          savedCal,
+          altW,
+          altTw,
+        ] = await Promise.all([
+          AsyncStorage.getItem(KEYS.weight),
+          AsyncStorage.getItem(KEYS.targetWeight),
+          AsyncStorage.getItem(KEYS.height),
+          AsyncStorage.getItem(KEYS.age),
+          AsyncStorage.getItem(KEYS.gender),
+          AsyncStorage.getItem(KEYS.fitnessGoals),
+          AsyncStorage.getItem(KEYS.displayName),
+          WeightHistory.getLastDays(30),
           BodyMeasurements.getAll(),
+          AsyncStorage.getItem(KEYS.goal),
+          AsyncStorage.getItem("@hylift_macro_plan"),
+          AsyncStorage.getItem("@hylift_daily_steps_goal"),
+          AsyncStorage.getItem("@hylift_calorie_goal"),
+          AsyncStorage.getItem("@hylift_weight"),
+          AsyncStorage.getItem("@hylift_target_weight"),
         ]);
-        if (w) setWeight(Number(w) || 70);
-        if (tw) setTargetWeight(Number(tw) || 65);
+        const latestWeightFromHistory = wh.length > 0 ? wh[wh.length - 1].weight : null;
+        const resolvedW = latestWeightFromHistory ?? userProfile?.weight_kg ?? (w ? Number(w) : null) ?? (altW ? Number(altW) : null);
+        if (resolvedW != null && !isNaN(resolvedW) && resolvedW > 0) setWeight(resolvedW);
+        const resolvedTw = userProfile?.target_weight_kg ?? (tw ? Number(tw) : null) ?? (altTw ? Number(altTw) : null);
+        if (resolvedTw != null && !isNaN(resolvedTw) && resolvedTw > 0) setTargetWeight(resolvedTw);
         if (h) setHeight(Number(h) || 175);
         if (a) setAge(Number(a) || 25);
         if (g) setGender(g);
-        if (fg) { try { setFitnessGoals(JSON.parse(fg)); } catch { /* */ } }
+        if (fg) {
+          try {
+            setFitnessGoals(JSON.parse(fg));
+          } catch {
+            /* */
+          }
+        }
         if (dn) setDisplayName(dn);
+        if (ug) setUserGoal(ug);
+        if (plan) setMacroPlan(plan);
+        if (steps) {
+          const parsedSteps = parseInt(steps, 10);
+          if (!isNaN(parsedSteps) && parsedSteps > 0) {
+            setDailyStepsGoal(parsedSteps);
+          }
+        }
+        if (savedCal) {
+          const parsedCal = parseInt(savedCal, 10);
+          if (!isNaN(parsedCal) && parsedCal > 0) {
+            setCalorieGoal(parsedCal);
+          }
+        }
         setWeightHistory(wh);
         setBodyMeasurements(bm);
         // Fetch server-computed stats
@@ -269,9 +339,11 @@ export default function Profile() {
           ]);
           setProgressionScore(scoreRes.score);
           setDailyProgress(progressRes);
-        } catch { /* fallback to defaults */ }
+        } catch {
+          /* fallback to defaults */
+        }
       })();
-    }, [])
+    }, [activityPeriod])
   );
 
   // Refetch daily progress when period changes
@@ -291,6 +363,16 @@ export default function Profile() {
   // ── Weight delta + daily progress from server ──
   const weightDelta = dailyProgress?.weight_delta ?? null;
   const dailyProgressPct = dailyProgress?.progress_pct ?? 0;
+
+  // ── Weight goal calculations ──
+  const isGainGoal =
+    userGoal === "gain_weight" ||
+    userGoal === "build_muscle" ||
+    targetWeight > (weightHistory.length > 0 ? weightHistory[0].weight : weight);
+  const isGoalReached = isGainGoal
+    ? weight >= targetWeight
+    : weight <= targetWeight;
+  const diffFromTarget = Math.abs(weight - targetWeight);
 
   // ── Body measurements (latest values) ──
   const latestMeasurements = useMemo(() => {
@@ -425,17 +507,17 @@ export default function Profile() {
             </View>
             <View style={{ alignItems: "flex-end", gap: 6 }}>
               <View style={[styles.weightBadge, {
-                backgroundColor: weight <= targetWeight ? "#34C75920" : `${theme.primary.main}20`,
+                backgroundColor: isGoalReached ? "#34C75920" : `${theme.primary.main}20`,
               }]}>
                 <Ionicons
-                  name={weight <= targetWeight ? "trending-down" : "trending-up"}
+                  name={isGoalReached ? "checkmark-circle" : (isGainGoal ? "trending-up" : "trending-down")}
                   size={16}
-                  color={weight <= targetWeight ? "#34C759" : theme.primary.main}
+                  color={isGoalReached ? "#34C759" : theme.primary.main}
                 />
                 <Text style={[styles.weightBadgeText, {
-                  color: weight <= targetWeight ? "#34C759" : theme.primary.main,
+                  color: isGoalReached ? "#34C759" : theme.primary.main,
                 }]}>
-                  {+Math.abs(weight - targetWeight).toFixed(1)} kg {weight <= targetWeight ? (isFr ? "atteint" : "reached") : (isFr ? "restant" : "left")}
+                  {+diffFromTarget.toFixed(1)} kg {isGoalReached ? (isFr ? "atteint" : "reached") : (isFr ? "restant" : "left")}
                 </Text>
               </View>
               {weightDelta !== null && (
@@ -518,6 +600,94 @@ export default function Profile() {
               />
             </View>
           )}
+        </View>
+
+        {/* ── Mes objectifs ─────────────────────────────────────── */}
+        <View style={styles.goalsHeader}>
+          <Text style={styles.goalsSectionTitle}>
+            {isFr ? "Mes objectifs" : "My Goals"}
+          </Text>
+          <Pressable
+            hitSlop={8}
+            onPress={() => router.push("/settings/goals" as any)}
+          >
+            <Text style={styles.goalsEditButton}>
+              {isFr ? "Editer" : "Edit"}
+            </Text>
+          </Pressable>
+        </View>
+
+        <View style={styles.goalsCard}>
+          <View style={styles.goalRow}>
+            <View style={styles.goalDot} />
+            <Text style={styles.goalText}>
+              {isFr
+                ? `Alimentation: ${getMacroPlanLabel(macroPlan, true)}`
+                : `Diet: ${getMacroPlanLabel(macroPlan, false)}`}
+            </Text>
+          </View>
+          <View style={styles.goalDivider} />
+
+          <View style={styles.goalRow}>
+            <View style={styles.goalDot} />
+            <Text style={styles.goalText}>
+              {(() => {
+                const map: Record<string, { fr: string; en: string }> = {
+                  lose_weight: { fr: "Perdre du poids", en: "Lose weight" },
+                  maintain: { fr: "Maintenir son poids", en: "Maintain weight" },
+                  gain_weight: { fr: "Prendre du poids", en: "Gain weight" },
+                  build_muscle: { fr: "Prendre du muscle", en: "Build muscle" },
+                };
+                const label =
+                  map[userGoal]?.[isFr ? "fr" : "en"] ||
+                  (isFr ? "Perdre du poids" : "Lose weight");
+                return isFr ? `Objectif: ${label}` : `Goal: ${label}`;
+              })()}
+            </Text>
+          </View>
+          <View style={styles.goalDivider} />
+
+          <View style={styles.goalRow}>
+            <View style={styles.goalDot} />
+            <Text style={styles.goalText}>
+              {(() => {
+                const displayWeight = targetWeight || weight || 75;
+                const formatted = displayWeight
+                  .toFixed(1)
+                  .replace(".", isFr ? "," : ".");
+                return isFr ? `Poids: ${formatted} kg` : `Weight: ${formatted} kg`;
+              })()}
+            </Text>
+          </View>
+          <View style={styles.goalDivider} />
+
+          <View style={styles.goalRow}>
+            <View style={styles.goalDot} />
+            <Text style={styles.goalText}>
+              {(() => {
+                const cal = nutritionGoals?.calorieGoal || calorieGoal || 2000;
+                const formatted = cal.toLocaleString(isFr ? "fr-FR" : "en-US");
+                return isFr
+                  ? `Calories: ${formatted} kcal`
+                  : `Calories: ${formatted} kcal`;
+              })()}
+            </Text>
+          </View>
+          <View style={styles.goalDivider} />
+
+          <View style={styles.goalRow}>
+            <View style={styles.goalDot} />
+            <Text style={styles.goalText}>
+              {(() => {
+                const formatted = dailyStepsGoal.toLocaleString(
+                  isFr ? "fr-FR" : "en-US"
+                );
+                return isFr
+                  ? `Nombre de pas: ${formatted}`
+                  : `Daily steps: ${formatted}`;
+              })()}
+            </Text>
+          </View>
         </View>
 
         {/* ── Santé connectée (Health Connect / HealthKit) ─────── */}
@@ -936,6 +1106,22 @@ function ProfileSkeleton() {
         <Shimmer style={styles.skeletonChart} baseColor={base} highlightColor={highlight} />
       </View>
 
+      <View style={styles.goalsHeader}>
+        <Shimmer style={{ width: 140, height: 24, borderRadius: 8 }} baseColor={base} highlightColor={highlight} />
+        <Shimmer style={{ width: 60, height: 20, borderRadius: 6 }} baseColor={base} highlightColor={highlight} />
+      </View>
+      <View style={styles.goalsCard}>
+        {Array.from({ length: 5 }).map((_, index) => (
+          <React.Fragment key={index}>
+            <View style={styles.goalRow}>
+              <Shimmer style={{ width: 8, height: 8, borderRadius: 4, marginRight: 14 }} baseColor={base} highlightColor={highlight} />
+              <Shimmer style={{ width: index % 2 === 0 ? 180 : 140, height: 16, borderRadius: 6 }} baseColor={base} highlightColor={highlight} />
+            </View>
+            {index < 4 && <View style={styles.goalDivider} />}
+          </React.Fragment>
+        ))}
+      </View>
+
       <Shimmer style={styles.skeletonSectionTitle} baseColor={base} highlightColor={highlight} />
       <View style={styles.chartCard}>
         <Shimmer style={styles.skeletonMetricLarge} baseColor={base} highlightColor={highlight} />
@@ -1176,6 +1362,57 @@ function createStyles(theme: Theme) {
     },
     healthConnectSubtitle: {
       fontFamily: FONTS.medium, fontSize: 12, color: theme.foreground.gray, marginTop: 2,
+    },
+
+    // Goals section (Mes objectifs)
+    goalsHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginHorizontal: 20,
+      marginTop: 20,
+      marginBottom: 12,
+    },
+    goalsSectionTitle: {
+      fontFamily: FONTS.extraBold,
+      fontSize: 22,
+      color: theme.foreground.white,
+    },
+    goalsEditButton: {
+      fontFamily: FONTS.bold,
+      fontSize: 16,
+      color: theme.primary.main,
+    },
+    goalsCard: {
+      marginHorizontal: 20,
+      marginBottom: 16,
+      borderRadius: 16,
+      backgroundColor: theme.background.darker,
+      borderWidth: 1,
+      borderColor: theme.background.accent,
+      overflow: "hidden",
+    },
+    goalRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+    },
+    goalDot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: theme.primary.main,
+      marginRight: 14,
+    },
+    goalText: {
+      fontFamily: FONTS.semiBold,
+      fontSize: 15,
+      color: theme.foreground.white,
+    },
+    goalDivider: {
+      height: 1,
+      backgroundColor: theme.background.accent,
     },
 
     // Period segmented control (iOS glass)

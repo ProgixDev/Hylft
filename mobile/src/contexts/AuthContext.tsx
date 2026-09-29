@@ -72,6 +72,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         "@hylift_food_weight_target",
         String(profile.target_weight_kg),
       ]);
+      writes.push([
+        "@hylift_target_weight",
+        String(profile.target_weight_kg),
+      ]);
     }
     if (profile.gender) writes.push(["@hylift_gender", profile.gender]);
     if (profile.date_of_birth) {

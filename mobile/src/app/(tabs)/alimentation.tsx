@@ -1,6 +1,7 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import React, { useMemo, useRef, useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Animated,
@@ -206,17 +207,45 @@ export default function Alimentation() {
       }),
     ]).start();
   };
-  const [weightTarget] = useState(DEFAULT_WEIGHT_TARGET); // UI only, out of scope for backend
+  const [localWeight, setLocalWeight] = useState<number | null>(null);
+  const [localTargetWeight, setLocalTargetWeight] = useState<number | null>(null);
   const [isSavingWeight, setIsSavingWeight] = useState(false);
 
+  useFocusEffect(
+    useCallback(() => {
+      refreshUserProfile().catch(() => {});
+      Promise.all([
+        AsyncStorage.getItem("@hylift_food_weight_current"),
+        AsyncStorage.getItem("@hylift_weight"),
+        AsyncStorage.getItem("@hylift_food_weight_target"),
+        AsyncStorage.getItem("@hylift_target_weight"),
+      ]).then(([fcw, w, ftw, tw]) => {
+        const resolvedW = fcw || w;
+        if (resolvedW) {
+          const parsedW = parseFloat(resolvedW);
+          if (!isNaN(parsedW) && parsedW > 0) setLocalWeight(parsedW);
+        }
+        const resolvedTw = ftw || tw;
+        if (resolvedTw) {
+          const parsedTw = parseFloat(resolvedTw);
+          if (!isNaN(parsedTw) && parsedTw > 0) setLocalTargetWeight(parsedTw);
+        }
+      });
+    }, [refreshUserProfile])
+  );
+
+  const weightTarget =
+    userProfile?.target_weight_kg ?? localTargetWeight ?? DEFAULT_WEIGHT_TARGET;
+
   const waterMl = daily.waterMl;
-  const weightCurrent = daily.weightKg ?? DEFAULT_WEIGHT_KG;
+  const weightCurrent =
+    daily.weightKg ?? userProfile?.weight_kg ?? localWeight ?? DEFAULT_WEIGHT_KG;
   const dailyNotes = daily.notes;
 
   const waterGoalMl = useMemo(
     () =>
       computeWaterGoalMl({
-        weightKg: daily.weightKg ?? userProfile?.weight_kg,
+        weightKg: daily.weightKg ?? userProfile?.weight_kg ?? localWeight,
         heightCm: userProfile?.height_cm,
         age: ageFromDateOfBirth(userProfile?.date_of_birth),
         gender: userProfile?.gender,
@@ -224,7 +253,7 @@ export default function Alimentation() {
         workoutFrequency: userProfile?.workout_frequency,
         weightGoal: userProfile?.fitness_goal,
       }) || DEFAULT_WATER_GOAL_ML,
-    [daily.weightKg, userProfile],
+    [daily.weightKg, userProfile, localWeight],
   );
   const totalGlasses = Math.max(
     DEFAULT_TOTAL_GLASSES,
@@ -260,11 +289,14 @@ export default function Alimentation() {
   const adjustWeight = async (nextWeight: number) => {
     const rounded = Math.round(nextWeight * 10) / 10;
     setIsSavingWeight(true);
+    setLocalWeight(rounded);
     try {
       setWeight(rounded);
       await Promise.all([
         api.updateProfile({ weight_kg: rounded }),
         WeightHistory.log(rounded),
+        AsyncStorage.setItem("@hylift_weight", String(rounded)),
+        AsyncStorage.setItem("@hylift_food_weight_current", String(rounded)),
       ]);
       await refreshUserProfile();
     } catch (err) {
