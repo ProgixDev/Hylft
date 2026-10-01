@@ -16,6 +16,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "../../components/ui/ScaledText";
+import AppBar from "../../components/ui/AppBar";
 import { FONTS } from "../../constants/fonts";
 import { Theme } from "../../constants/themes";
 import { useNutrition } from "../../contexts/NutritionContext";
@@ -42,33 +43,8 @@ function createStyles(theme: Theme) {
       flex: 1,
       backgroundColor: theme.background.dark,
     },
-    header: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-      backgroundColor: theme.background.dark,
-      paddingHorizontal: 16,
-      paddingBottom: 14,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.background.accent,
-    },
-    headerLeft: {
-      flexDirection: "row",
-      alignItems: "center",
-      flex: 1,
-    },
-    backBtn: {
-      padding: 6,
-      marginRight: 12,
-    },
     resetBtn: {
       padding: 6,
-    },
-    headerTitle: {
-      fontSize: 20,
-      fontFamily: FONTS.bold,
-      color: theme.foreground.white,
-      letterSpacing: 0.2,
     },
     content: {
       paddingHorizontal: 18,
@@ -297,39 +273,20 @@ export default function CalorieDistributionScreen() {
       <StatusBar style={isDark ? "light" : "dark"} />
 
       {/* Header */}
-      <View
-        style={[
-          styles.header,
-          { paddingTop: insets.top + (Platform.OS === "android" ? 12 : 6) },
-        ]}
-      >
-        <View style={styles.headerLeft}>
+      <AppBar
+        title={isFr ? "Répartition des calories" : "Calorie Distribution"}
+        bordered
+        actions={
           <TouchableOpacity
-            onPress={() => router.back()}
-            style={styles.backBtn}
+            onPress={handleReset}
+            style={styles.resetBtn}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             activeOpacity={0.7}
           >
-            <Ionicons
-              name="arrow-back"
-              size={24}
-              color={theme.foreground.white}
-            />
+            <Ionicons name="refresh" size={22} color={theme.foreground.white} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>
-            {isFr ? "Répartition des calories" : "Calorie Distribution"}
-          </Text>
-        </View>
-
-        <TouchableOpacity
-          onPress={handleReset}
-          style={styles.resetBtn}
-          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="refresh" size={22} color={theme.foreground.white} />
-        </TouchableOpacity>
-      </View>
+        }
+      />
 
       <ScrollView
         showsVerticalScrollIndicator={false}

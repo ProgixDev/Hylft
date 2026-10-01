@@ -109,7 +109,7 @@ export default function AllRoutines() {
         showsVerticalScrollIndicator={false}
       >
         {/* Hero */}
-        <View style={[styles.hero, { paddingTop: insets.top + 18 }]}>
+        <View style={[styles.hero, { paddingTop: 18 }]}>
           <LinearGradient
             colors={[theme.primary.main, theme.primary.light]}
             start={{ x: 0, y: 0 }}

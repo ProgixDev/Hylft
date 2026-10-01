@@ -191,15 +191,15 @@ const styles = StyleSheet.create({
   unitText: {
     fontSize: 18,
     fontFamily: FONTS.bold,
-    marginBottom: 30,
+    marginBottom: 16,
   },
   rulerWrapper: {
-    height: 80,
+    height: 70,
     width: "100%",
     position: "relative",
   },
   rulerLayout: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
   },
   centerIndicator: {
     position: "absolute",

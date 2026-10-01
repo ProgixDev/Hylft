@@ -16,6 +16,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "../../components/ui/ScaledText";
+import AppBar from "../../components/ui/AppBar";
 import { FONTS } from "../../constants/fonts";
 import { Theme } from "../../constants/themes";
 import { useAuth } from "../../contexts/AuthContext";
@@ -131,49 +132,31 @@ function createStyles(theme: Theme) {
       flex: 1,
       backgroundColor: theme.background.dark,
     },
-    header: {
-      flexDirection: "row",
-      alignItems: "center",
-      backgroundColor: theme.background.dark,
-      paddingHorizontal: 16,
-      paddingBottom: 14,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.background.accent,
-    },
-    backBtn: {
-      padding: 6,
-      marginRight: 12,
-    },
-    headerTitle: {
-      fontSize: 20,
-      fontFamily: FONTS.bold,
-      color: theme.foreground.white,
-      letterSpacing: 0.2,
-    },
+
     listContent: {
-      paddingTop: 8,
+      paddingTop: 2,
     },
     itemRow: {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      paddingHorizontal: 20,
-      paddingVertical: 16,
+      paddingHorizontal: 18,
+      paddingVertical: 12,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: theme.background.accent,
     },
     itemTitle: {
-      fontSize: 16,
+      fontSize: 15,
       fontFamily: FONTS.semiBold,
       color: theme.foreground.white,
-      lineHeight: 22,
+      lineHeight: 20,
     },
     itemValue: {
-      fontSize: 14,
+      fontSize: 13,
       fontFamily: FONTS.regular,
       color: theme.foreground.gray,
-      marginTop: 4,
-      lineHeight: 20,
+      marginTop: 2,
+      lineHeight: 18,
     },
     modalOverlay: {
       flex: 1,
@@ -412,24 +395,10 @@ export default function GoalsScreen() {
       <StatusBar style={isDark ? "light" : "dark"} />
 
       {/* Header */}
-      <View
-        style={[
-          styles.header,
-          { paddingTop: insets.top + (Platform.OS === "android" ? 12 : 6) },
-        ]}
-      >
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.backBtn}
-          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="arrow-back" size={24} color={theme.foreground.white} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>
-          {isFr ? "Mes objectifs" : "My Goals"}
-        </Text>
-      </View>
+      <AppBar
+        title={isFr ? "Mes objectifs" : "My Goals"}
+        bordered
+      />
 
       {/* Goals list */}
       <ScrollView

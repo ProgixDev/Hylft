@@ -12,12 +12,12 @@ const BMI_MAX = 44;
 const BMI_RANGE = BMI_MAX - BMI_MIN;
 
 /* ── SVG layout ── */
-const W = 260;
-const H = 148;
+const W = 240;
+const H = 124;
 const CX = W / 2;
 const CY = H - 8;
-const R = 108;
-const ARC_W = 14;
+const R = 92;
+const ARC_W = 12;
 const GAP = (1.8 * Math.PI) / 180;
 
 const SEGMENTS = [
@@ -134,7 +134,7 @@ const s = StyleSheet.create({
   },
   gaugeWrap: {
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 6,
   },
   header: {
     flexDirection: "row",
@@ -175,16 +175,16 @@ const s = StyleSheet.create({
     fontSize: 12,
     fontFamily: FONTS.medium,
     color: "#6B7280",
-    lineHeight: 18,
+    lineHeight: 17,
     textAlign: "center",
     marginTop: 2,
-    marginBottom: 14,
+    marginBottom: 8,
   },
   legend: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 8,
-    rowGap: 8,
+    gap: 6,
+    rowGap: 6,
     justifyContent: "center",
   },
   legendItem: {

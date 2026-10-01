@@ -16,6 +16,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "../../components/ui/ScaledText";
+import AppBar from "../../components/ui/AppBar";
 import ChipButton from "../../components/ui/ChipButton";
 import { FONTS } from "../../constants/fonts";
 import { Theme } from "../../constants/themes";
@@ -87,25 +88,7 @@ function createStyles(theme: Theme) {
       flex: 1,
       backgroundColor: theme.background.dark,
     },
-    header: {
-      flexDirection: "row",
-      alignItems: "center",
-      backgroundColor: theme.background.dark,
-      paddingHorizontal: 16,
-      paddingBottom: 14,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.background.accent,
-    },
-    backBtn: {
-      padding: 6,
-      marginRight: 12,
-    },
-    headerTitle: {
-      fontSize: 20,
-      fontFamily: FONTS.bold,
-      color: theme.foreground.white,
-      letterSpacing: 0.2,
-    },
+
     content: {
       paddingHorizontal: 20,
       paddingTop: 16,
@@ -405,24 +388,10 @@ export default function NutritionGoalsScreen() {
       <StatusBar style={isDark ? "light" : "dark"} />
 
       {/* Header */}
-      <View
-        style={[
-          styles.header,
-          { paddingTop: insets.top + (Platform.OS === "android" ? 12 : 6) },
-        ]}
-      >
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.backBtn}
-          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="arrow-back" size={24} color={theme.foreground.white} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>
-          {isFr ? "Objectifs nutritionnels" : "Nutrition Goals"}
-        </Text>
-      </View>
+      <AppBar
+        title={isFr ? "Objectifs nutritionnels" : "Nutrition Goals"}
+        bordered
+      />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
