@@ -108,18 +108,26 @@ export default function TargetWeightScreen() {
 
   return (
     <View style={s.container}>
+      {isUpdate && (
+        <Text style={[s.title, { marginTop: 16, marginHorizontal: 20 }]}>
+          {t("onboarding.targetWeight.title")}
+        </Text>
+      )}
       <ScrollView
         style={s.scrollView}
         contentContainerStyle={[
           s.scrollContent,
-          isUpdate && s.updateScrollContent,
           { paddingBottom: Math.max(24, insets.bottom + 12) },
         ]}
         showsVerticalScrollIndicator={false}
       >
         <View style={{ flex: 1 }}>
-          {!isUpdate && <SignupProgress current={8} total={13} />}
-          <Text style={s.title}>{t("onboarding.targetWeight.title")}</Text>
+          {!isUpdate && (
+            <>
+              <SignupProgress current={8} total={13} />
+              <Text style={s.title}>{t("onboarding.targetWeight.title")}</Text>
+            </>
+          )}
 
           <View style={s.journeyCard}>
             <Image
@@ -267,7 +275,7 @@ const s = StyleSheet.create({
     borderRadius: 8,
     overflow: "hidden",
     backgroundColor: "#102b4a",
-    marginBottom: 10,
+    marginBottom: 20,
   },
   journeyBgImage: {
     position: "absolute",
@@ -279,71 +287,70 @@ const s = StyleSheet.create({
     opacity: 0.7,
   },
   journeyContent: {
-    padding: 12,
+    padding: 16,
   },
   journeyRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: 14,
   },
-  journeyPoint: {
-    gap: 2,
-  },
+  journeyPoint: {},
   journeyPointLabel: {
     fontSize: 11,
     fontFamily: FONTS.medium,
-    color: "rgba(255,255,255,0.7)",
+    color: "rgba(255,255,255,0.65)",
+    marginBottom: 2,
   },
   journeyPointValue: {
-    fontSize: 16,
-    fontFamily: FONTS.bold,
+    fontSize: 20,
+    fontFamily: FONTS.extraBold,
     color: "#FFFFFF",
   },
   journeyArrow: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 20,
-    backgroundColor: "rgba(255,255,255,0.15)",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 10,
+    backgroundColor: "rgba(255,255,255,0.18)",
   },
   journeyArrowText: {
-    fontSize: 11,
+    fontSize: 12,
     fontFamily: FONTS.bold,
     color: "#FFFFFF",
   },
   journeyStats: {
     flexDirection: "row",
-    justifyContent: "space-around",
     alignItems: "center",
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: "rgba(255,255,255,0.15)",
+    backgroundColor: "rgba(255,255,255,0.1)",
+    borderRadius: 10,
+    padding: 12,
   },
   journeyStat: {
+    flex: 1,
     alignItems: "center",
-    gap: 2,
   },
   journeyStatValue: {
-    fontSize: 15,
-    fontFamily: FONTS.bold,
+    fontSize: 18,
+    fontFamily: FONTS.extraBold,
     color: "#FFFFFF",
   },
   journeyStatLabel: {
     fontSize: 10,
     fontFamily: FONTS.medium,
-    color: "rgba(255,255,255,0.7)",
+    color: "rgba(255,255,255,0.65)",
+    marginTop: 2,
   },
   journeyStatDivider: {
     width: 1,
-    height: 20,
-    backgroundColor: "rgba(255,255,255,0.15)",
+    height: 28,
+    backgroundColor: "rgba(255,255,255,0.2)",
   },
   pickerCard: {
     backgroundColor: "#FFFFFF",
     borderRadius: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    marginBottom: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    marginBottom: 16,
     borderWidth: 1,
     borderColor: "#E5E7EB",
   },

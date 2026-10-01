@@ -637,16 +637,6 @@ export default function Profile() {
           <View style={styles.goalRow}>
             <View style={styles.goalDot} />
             <Text style={styles.goalText}>
-              {isFr
-                ? `Alimentation: ${getMacroPlanLabel(macroPlan, true)}`
-                : `Diet: ${getMacroPlanLabel(macroPlan, false)}`}
-            </Text>
-          </View>
-          <View style={styles.goalDivider} />
-
-          <View style={styles.goalRow}>
-            <View style={styles.goalDot} />
-            <Text style={styles.goalText}>
               {(() => {
                 const map: Record<string, { fr: string; en: string }> = {
                   lose_weight: { fr: "Perdre du poids", en: "Lose weight" },
@@ -667,11 +657,25 @@ export default function Profile() {
             <View style={styles.goalDot} />
             <Text style={styles.goalText}>
               {(() => {
-                const displayWeight = targetWeight || weight || 75;
-                const formatted = displayWeight
+                const formatted = displayedWeight
                   .toFixed(1)
                   .replace(".", isFr ? "," : ".");
                 return isFr ? `Poids: ${formatted} kg` : `Weight: ${formatted} kg`;
+              })()}
+            </Text>
+          </View>
+          <View style={styles.goalDivider} />
+
+          <View style={styles.goalRow}>
+            <View style={styles.goalDot} />
+            <Text style={styles.goalText}>
+              {(() => {
+                const formatted = displayedTarget
+                  .toFixed(1)
+                  .replace(".", isFr ? "," : ".");
+                return isFr
+                  ? `Poids cible: ${formatted} kg`
+                  : `Target weight: ${formatted} kg`;
               })()}
             </Text>
           </View>
