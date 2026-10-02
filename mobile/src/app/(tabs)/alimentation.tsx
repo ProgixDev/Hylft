@@ -239,13 +239,13 @@ export default function Alimentation() {
 
   const waterMl = daily.waterMl;
   const weightCurrent =
-    userProfile?.weight_kg ?? localWeight ?? daily.weightKg ?? DEFAULT_WEIGHT_KG;
+    localWeight ?? userProfile?.weight_kg ?? daily.weightKg ?? DEFAULT_WEIGHT_KG;
   const dailyNotes = daily.notes;
 
   const waterGoalMl = useMemo(
     () =>
       computeWaterGoalMl({
-        weightKg: userProfile?.weight_kg ?? localWeight ?? daily.weightKg,
+        weightKg: localWeight ?? userProfile?.weight_kg ?? daily.weightKg,
         heightCm: userProfile?.height_cm,
         age: ageFromDateOfBirth(userProfile?.date_of_birth),
         gender: userProfile?.gender,
@@ -286,24 +286,34 @@ export default function Alimentation() {
       `/food-search?mealType=${mealType}&date=${selectedDate}` as any,
     );
 
-  const adjustWeight = async (nextWeight: number) => {
+  const saveWeightDebouncedRef = useRef<NodeJS.Timeout | null>(null);
+
+  const adjustWeight = (nextWeight: number) => {
     const rounded = Math.round(nextWeight * 10) / 10;
-    setIsSavingWeight(true);
-    setLocalWeight(rounded);
-    try {
-      setWeight(rounded);
-      await Promise.all([
-        api.updateProfile({ weight_kg: rounded }),
-        WeightHistory.log(rounded),
-        AsyncStorage.setItem("@hylift_weight", String(rounded)),
-        AsyncStorage.setItem("@hylift_food_weight_current", String(rounded)),
-      ]);
-      await refreshUserProfile();
-    } catch (err) {
-      console.warn("[Alimentation] updateProfile(weight) failed:", err);
-    } finally {
-      setIsSavingWeight(false);
+    const clamped = Math.min(300, Math.max(30, rounded));
+    setLocalWeight(clamped);
+    setWeight(clamped);
+
+    if (saveWeightDebouncedRef.current) {
+      clearTimeout(saveWeightDebouncedRef.current);
     }
+
+    saveWeightDebouncedRef.current = setTimeout(async () => {
+      try {
+        setIsSavingWeight(true);
+        await Promise.all([
+          api.updateProfile({ weight_kg: clamped }),
+          WeightHistory.log(clamped),
+          AsyncStorage.setItem("@hylift_weight", String(clamped)),
+          AsyncStorage.setItem("@hylift_food_weight_current", String(clamped)),
+        ]);
+        await refreshUserProfile();
+      } catch (err) {
+        console.warn("[Alimentation] updateProfile(weight) failed:", err);
+      } finally {
+        setIsSavingWeight(false);
+      }
+    }, 500);
   };
 
   const handleAddNote = () => {
@@ -719,21 +729,27 @@ export default function Alimentation() {
           </Text>
           <View style={styles.weightRow}>
             <Pressable
-              style={styles.weightBtn}
-              disabled={isSavingWeight}
-              onPress={() => void adjustWeight(Math.max(30, weightCurrent - 0.1))}
+              style={({ pressed }) => [
+                styles.weightBtn,
+                pressed && { opacity: 0.6, transform: [{ scale: 0.92 }] },
+              ]}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              onPress={() => adjustWeight(Math.max(30, weightCurrent - 0.1))}
             >
               <Ionicons
                 name="remove-circle-outline"
                 size={32}
-                color={theme.foreground.gray}
+                color="#FFFFFF"
               />
             </Pressable>
             <Text style={styles.weightValue}>{weightCurrent.toFixed(1)} kg</Text>
             <Pressable
-              style={styles.weightBtn}
-              disabled={isSavingWeight}
-              onPress={() => void adjustWeight(Math.min(300, weightCurrent + 0.1))}
+              style={({ pressed }) => [
+                styles.weightBtn,
+                pressed && { opacity: 0.6, transform: [{ scale: 0.92 }] },
+              ]}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              onPress={() => adjustWeight(Math.min(300, weightCurrent + 0.1))}
             >
               <Ionicons name="add-circle-outline" size={32} color="#FFFFFF" />
             </Pressable>
@@ -1287,7 +1303,14 @@ function createStyles(theme: Theme) {
       borderWidth: 1,
       borderColor: "rgba(255,255,255,0.14)",
     },
-    weightBtn: {},
+    weightBtn: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: "rgba(255,255,255,0.06)",
+      alignItems: "center",
+      justifyContent: "center",
+    },
     weightSaveBtn: {
       flexDirection: "row",
       alignItems: "center",

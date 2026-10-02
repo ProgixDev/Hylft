@@ -100,7 +100,6 @@ export default function WorkoutCompletionView({
             <FeelButton
               effort="hard"
               selected={effort === "hard"}
-              layers={3}
               label={t("workoutPlayer.feelHard", "Hard")}
               theme={theme}
               onPress={() => setEffort("hard")}
@@ -108,7 +107,6 @@ export default function WorkoutCompletionView({
             <FeelButton
               effort="right"
               selected={effort === "right"}
-              layers={2}
               label={t("workoutPlayer.feelRight", "Just right")}
               theme={theme}
               onPress={() => setEffort("right")}
@@ -116,7 +114,6 @@ export default function WorkoutCompletionView({
             <FeelButton
               effort="easy"
               selected={effort === "easy"}
-              layers={1}
               label={t("workoutPlayer.feelEasy", "Easy")}
               theme={theme}
               onPress={() => setEffort("easy")}
@@ -136,6 +133,31 @@ export default function WorkoutCompletionView({
   );
 }
 
+const EFFORT_CONFIG: Record<
+  Effort,
+  {
+    color: string;
+    bg: string;
+    layers: number;
+  }
+> = {
+  hard: {
+    color: "#EF4444",
+    bg: "rgba(239, 68, 68, 0.22)",
+    layers: 3,
+  },
+  right: {
+    color: "#10B981",
+    bg: "rgba(16, 185, 129, 0.22)",
+    layers: 2,
+  },
+  easy: {
+    color: "#38BDF8",
+    bg: "rgba(56, 189, 248, 0.22)",
+    layers: 1,
+  },
+};
+
 function CompletionStat({
   value,
   label,
@@ -153,26 +175,62 @@ function CompletionStat({
 }
 
 function FeelButton({
+  effort,
   selected,
-  layers,
   label,
   theme,
   onPress,
 }: {
   effort: Effort;
   selected: boolean;
-  layers: number;
   label: string;
   theme: Theme;
   onPress: () => void;
 }) {
   const styles = statStyles(theme);
+  const cfg = EFFORT_CONFIG[effort];
+
   return (
     <Pressable style={styles.feelItem} onPress={onPress}>
-      <View style={[styles.feelCircle, selected && styles.feelCircleSelected]}>
-        <LayerIcon layers={layers} color={TEXT_WHITE} />
+      <View
+        style={[
+          styles.feelCircle,
+          selected
+            ? {
+                borderColor: cfg.color,
+                backgroundColor: cfg.bg,
+                borderWidth: 2.5,
+                shadowColor: cfg.color,
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.45,
+                shadowRadius: 10,
+                elevation: 8,
+              }
+            : {
+                borderColor: "rgba(255,255,255,0.08)",
+                backgroundColor: "rgba(255,255,255,0.05)",
+                borderWidth: 1,
+              },
+        ]}
+      >
+        <LayerIcon
+          layers={cfg.layers}
+          color={selected ? cfg.color : "rgba(255,255,255,0.35)"}
+        />
+        {selected && (
+          <View style={[styles.checkBadge, { backgroundColor: cfg.color }]}>
+            <Ionicons name="checkmark" size={11} color="#FFFFFF" />
+          </View>
+        )}
       </View>
-      <Text style={[styles.feelLabel, selected && styles.feelLabelSelected]}>
+      <Text
+        style={[
+          styles.feelLabel,
+          selected
+            ? { color: cfg.color, fontFamily: FONTS.extraBold }
+            : { color: "rgba(255,255,255,0.45)", fontFamily: FONTS.medium },
+        ]}
+      >
         {label}
       </Text>
     </Pressable>
@@ -316,25 +374,25 @@ const statStyles = (theme?: Theme) =>
       width: 72,
       height: 72,
       borderRadius: 36,
-      backgroundColor: SURFACE_DARK,
       alignItems: "center",
       justifyContent: "center",
-      borderWidth: 1,
-      borderColor: "transparent",
     },
-    feelCircleSelected: {
-      borderColor: theme?.primary.main ?? BLUE,
-      backgroundColor: SURFACE_SELECTED,
+    checkBadge: {
+      position: "absolute",
+      top: -2,
+      right: -2,
+      width: 20,
+      height: 20,
+      borderRadius: 10,
+      alignItems: "center",
+      justifyContent: "center",
+      borderWidth: 2,
+      borderColor: SCREEN_BLACK,
     },
     feelLabel: {
-      color: "rgba(255,255,255,0.7)",
       fontSize: 15,
-      fontFamily: FONTS.medium,
       marginTop: 10,
       textAlign: "center",
-    },
-    feelLabelSelected: {
-      color: TEXT_WHITE,
     },
   });
 
