@@ -3,7 +3,7 @@ import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { Text } from "./ScaledText";
 import Svg, { Circle } from "react-native-svg";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { usePathname, useRouter } from "expo-router";
 import { createAudioPlayer } from "expo-audio";
 import { FONTS } from "../../constants/fonts";
 import { useActiveWorkout } from "../../contexts/ActiveWorkoutContext";
@@ -21,6 +21,8 @@ export default function MiniRestTimer() {
   const { theme } = useTheme();
   const { guidedPlayer, stopPlayerRest, setRestTimerMinimized } = useActiveWorkout();
   const router = useRouter();
+  const pathname = usePathname();
+  const isOnPlayer = pathname?.includes("workout-player");
 
   const endsAt = guidedPlayer?.restEndsAt;
   const totalSeconds = guidedPlayer?.restTotalSeconds ?? 60;
@@ -30,9 +32,9 @@ export default function MiniRestTimer() {
   const [finished, setFinished] = useState(false);
   const tickPlayerRef = useRef<ReturnType<typeof createAudioPlayer> | null>(null);
 
-  // Ticking clock sound for last 10 seconds
+  // Ticking clock sound for last 5 seconds (only when not on workout player)
   useEffect(() => {
-    if (remaining === 10) {
+    if (!isOnPlayer && hasTimer && remaining === 5) {
       try {
         tickPlayerRef.current?.release();
         const tick = createAudioPlayer(TIMER_TICK_SOUND);
@@ -41,11 +43,11 @@ export default function MiniRestTimer() {
         tickPlayerRef.current = tick;
       } catch {}
     }
-    if (remaining <= 0) {
+    if (!hasTimer || remaining <= 0) {
       try { tickPlayerRef.current?.release(); } catch {}
       tickPlayerRef.current = null;
     }
-  }, [remaining]);
+  }, [isOnPlayer, hasTimer, remaining]);
   useEffect(() => {
     return () => { try { tickPlayerRef.current?.release(); } catch {} };
   }, []);
@@ -64,16 +66,18 @@ export default function MiniRestTimer() {
         done = true;
         clearInterval(id);
         setFinished(true);
-        try {
-          const player = createAudioPlayer(TIMER_DONE_SOUND);
-          player.volume = 1;
-          player.play();
-          setTimeout(() => { try { player.release(); } catch {} }, 2000);
-        } catch {}
+        if (!isOnPlayer) {
+          try {
+            const player = createAudioPlayer(TIMER_DONE_SOUND);
+            player.volume = 1;
+            player.play();
+            setTimeout(() => { try { player.release(); } catch {} }, 2000);
+          } catch {}
+        }
       }
     }, 250);
     return () => clearInterval(id);
-  }, [hasTimer, endsAt]);
+  }, [isOnPlayer, hasTimer, endsAt]);
 
   // No guided player at all → hide
   if (!guidedPlayer) return null;

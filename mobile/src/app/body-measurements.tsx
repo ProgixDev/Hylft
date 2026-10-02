@@ -24,8 +24,10 @@ const METRICS: Metric[] = [
   { id: "waist", fr: "Tour de taille", en: "Waist", icon: "resize-outline", unit: "cm" },
   { id: "hips", fr: "Tour de hanches", en: "Hips", icon: "resize-outline", unit: "cm" },
   { id: "chest", fr: "Tour de poitrine", en: "Chest", icon: "resize-outline", unit: "cm" },
+  { id: "shoulders", fr: "Tour d'épaules", en: "Shoulders", icon: "resize-outline", unit: "cm" },
   { id: "thigh", fr: "Tour de cuisse", en: "Thigh", icon: "resize-outline", unit: "cm" },
   { id: "arm", fr: "Tour de bras", en: "Arm", icon: "resize-outline", unit: "cm" },
+  { id: "calves", fr: "Tour de mollets", en: "Calves", icon: "resize-outline", unit: "cm" },
 ];
 
 export default function BodyMeasurements() {

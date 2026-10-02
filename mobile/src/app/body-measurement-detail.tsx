@@ -36,8 +36,10 @@ const METRICS: Record<string, Metric> = {
   waist: { id: "waist", fr: "Tour de taille", en: "Waist", icon: "resize-outline", unit: "cm" },
   hips: { id: "hips", fr: "Tour de hanches", en: "Hips", icon: "resize-outline", unit: "cm" },
   chest: { id: "chest", fr: "Tour de poitrine", en: "Chest", icon: "resize-outline", unit: "cm" },
+  shoulders: { id: "shoulders", fr: "Tour d'épaules", en: "Shoulders", icon: "resize-outline", unit: "cm" },
   thigh: { id: "thigh", fr: "Tour de cuisse", en: "Thigh", icon: "resize-outline", unit: "cm" },
   arm: { id: "arm", fr: "Tour de bras", en: "Arm", icon: "resize-outline", unit: "cm" },
+  calves: { id: "calves", fr: "Tour de mollets", en: "Calves", icon: "resize-outline", unit: "cm" },
 };
 
 function formatDate(dateStr: string, isFr: boolean): string {

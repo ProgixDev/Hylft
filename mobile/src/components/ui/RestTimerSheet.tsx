@@ -94,10 +94,10 @@ export default function RestTimerSheet({
     outputRange: [CIRCUMFERENCE, 0],
   });
 
-  // ── Ticking clock sound for last 10 seconds ────────────────────────
+  // ── Ticking clock sound for last 5 seconds ─────────────────────────
   const tickPlayerRef = useRef<ReturnType<typeof createAudioPlayer> | null>(null);
   useEffect(() => {
-    if (visible && remaining === 10) {
+    if (visible && remaining === 5) {
       try {
         tickPlayerRef.current?.release();
         const tick = createAudioPlayer(TIMER_TICK_SOUND);
@@ -115,7 +115,7 @@ export default function RestTimerSheet({
     return () => { try { tickPlayerRef.current?.release(); } catch {} };
   }, []);
 
-  // ── Blink animation for last 10 seconds ────────────────────────────
+  // ── Blink animation for last 5 seconds ────────────────────────────
   const blinkAnim = useRef(new Animated.Value(1)).current;
   const [showGo, setShowGo] = useState(false);
 
@@ -125,7 +125,7 @@ export default function RestTimerSheet({
       blinkAnim.setValue(1);
       return;
     }
-    if (remaining > 0 && remaining <= 10) {
+    if (remaining > 0 && remaining <= 5) {
       const loop = Animated.loop(
         Animated.sequence([
           Animated.timing(blinkAnim, {
@@ -146,7 +146,7 @@ export default function RestTimerSheet({
       return () => loop.stop();
     }
     blinkAnim.setValue(1);
-  }, [visible, remaining <= 10 && remaining > 0, blinkAnim]);
+  }, [visible, remaining <= 5 && remaining > 0, blinkAnim]);
 
   // ── Timer label tick ───────────────────────────────────────────────
   useEffect(() => {

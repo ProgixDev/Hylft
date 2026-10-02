@@ -381,11 +381,27 @@ export default function Profile() {
 
   // ── Body measurements (latest values) ──
   const latestMeasurements = useMemo(() => {
-    const keys = ["waist", "hips", "chest", "thigh", "arm"];
+    const keys = ["waist", "hips", "chest", "shoulders", "thigh", "arm"];
+    const defaults: Record<string, number> = {
+      waist: 80,
+      hips: 50,
+      chest: 30,
+      shoulders: 45,
+      thigh: 35,
+      arm: 30,
+    };
     const result: { id: string; value: number; date: string }[] = [];
     for (const k of keys) {
       const entries = bodyMeasurements[k];
-      if (entries?.length) result.push({ id: k, ...entries[entries.length - 1] });
+      if (entries?.length) {
+        result.push({ id: k, ...entries[entries.length - 1] });
+      } else if (defaults[k] !== undefined) {
+        result.push({
+          id: k,
+          value: defaults[k],
+          date: new Date().toISOString().split("T")[0],
+        });
+      }
     }
     return result;
   }, [bodyMeasurements]);
@@ -918,52 +934,80 @@ export default function Profile() {
         </View>
 
         {/* ── Mensurations ───────────────────────────────────────── */}
-        <Text style={styles.sectionTitle}>
-          {isFr ? "Mensurations" : "Body Measurements"}
-        </Text>
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginHorizontal: 20, marginTop: 16, marginBottom: 12 }}>
+          <Text style={{ fontFamily: FONTS.extraBold, fontSize: 18, color: theme.foreground.white }}>
+            {isFr ? "Mensurations" : "Body Measurements"}
+          </Text>
+          {latestMeasurements.length > 0 && (
+            <Pressable
+              onPress={() => router.push("/body-measurements" as any)}
+              style={{ flexDirection: "row", alignItems: "center", gap: 3, paddingVertical: 4, paddingHorizontal: 6 }}
+            >
+              <Text style={{ fontFamily: FONTS.bold, fontSize: 12, color: "#38BDF8" }}>
+                {isFr ? "Voir tout" : "View all"}
+              </Text>
+              <Ionicons name="chevron-forward" size={14} color="#38BDF8" />
+            </Pressable>
+          )}
+        </View>
         <Pressable
           style={styles.navySectionCard}
           onPress={() => router.push("/body-measurements" as any)}
         >
           {latestMeasurements.length === 0 ? (
-            <View style={{ alignItems: "center", paddingVertical: 16 }}>
-              <MaterialCommunityIcons name="human-male-height" size={32} color={NAVY_TEXT_MUTED} />
-              <Text style={{ fontFamily: FONTS.regular, fontSize: 13, color: NAVY_TEXT_MUTED, marginTop: 8, textAlign: "center" }}>
-                {isFr ? "Aucune mesure enregistrée.\nAppuyez pour ajouter." : "No measurements recorded.\nTap to add."}
+            <View style={{ alignItems: "center", paddingVertical: 18 }}>
+              <View style={styles.emptyIconBadge}>
+                <MaterialCommunityIcons name="tape-measure" size={28} color="#38BDF8" />
+              </View>
+              <Text style={{ fontFamily: FONTS.semiBold, fontSize: 14, color: "#FFFFFF", marginTop: 10 }}>
+                {isFr ? "Aucune mesure enregistrée" : "No measurements recorded"}
               </Text>
+              <Text style={{ fontFamily: FONTS.regular, fontSize: 12, color: NAVY_TEXT_MUTED, marginTop: 4, textAlign: "center" }}>
+                {isFr ? "Suivez l'évolution de votre corps en ajoutant vos mesures" : "Track your body changes by adding measurements"}
+              </Text>
+              <View style={styles.addMeasurementPill}>
+                <Ionicons name="add" size={15} color="#38BDF8" />
+                <Text style={{ fontFamily: FONTS.bold, fontSize: 12, color: "#38BDF8" }}>
+                  {isFr ? "Ajouter une mesure" : "Add measurement"}
+                </Text>
+              </View>
             </View>
           ) : (
-            <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "space-around", gap: 12 }}>
-              {latestMeasurements.map(m => {
-                const labels: Record<string, { fr: string; en: string }> = {
-                  waist: { fr: "Taille", en: "Waist" },
-                  hips: { fr: "Hanches", en: "Hips" },
-                  chest: { fr: "Poitrine", en: "Chest" },
-                  thigh: { fr: "Cuisse", en: "Thigh" },
-                  arm: { fr: "Bras", en: "Arm" },
+            <View style={styles.measurementsGrid}>
+              {latestMeasurements.map((m) => {
+                const config: Record<
+                  string,
+                  { label: { fr: string; en: string }; icon: keyof typeof MaterialCommunityIcons.glyphMap }
+                > = {
+                  waist: { label: { fr: "Taille", en: "Waist" }, icon: "tape-measure" },
+                  hips: { label: { fr: "Hanches", en: "Hips" }, icon: "human-handsdown" },
+                  chest: { label: { fr: "Poitrine", en: "Chest" }, icon: "tshirt-crew-outline" },
+                  shoulders: { label: { fr: "Épaules", en: "Shoulders" }, icon: "arrow-expand-horizontal" },
+                  thigh: { label: { fr: "Cuisse", en: "Thigh" }, icon: "run" },
+                  arm: { label: { fr: "Bras", en: "Arm" }, icon: "arm-flex" },
+                  calves: { label: { fr: "Mollets", en: "Calves" }, icon: "walk" },
+                };
+                const item = config[m.id] ?? {
+                  label: { fr: m.id, en: m.id },
+                  icon: "ruler" as const,
                 };
                 return (
-                  <View key={m.id} style={{ alignItems: "center", minWidth: 56 }}>
-                    <Text style={{ fontFamily: FONTS.extraBold, fontSize: 18, color: "#FFFFFF" }}>
-                      {m.value}
-                    </Text>
-                    <Text style={{ fontFamily: FONTS.regular, fontSize: 11, color: NAVY_TEXT_SOFT }}>
-                      cm
-                    </Text>
-                    <Text style={{ fontFamily: FONTS.bold, fontSize: 10, color: NAVY_TEXT_MUTED, marginTop: 2 }}>
-                      {isFr ? labels[m.id]?.fr : labels[m.id]?.en}
+                  <View key={m.id} style={styles.measurementItemCard}>
+                    <View style={styles.measurementIconCircle}>
+                      <MaterialCommunityIcons name={item.icon} size={15} color="#38BDF8" />
+                    </View>
+                    <View style={styles.measurementValueRow}>
+                      <Text style={styles.measurementValue}>{m.value}</Text>
+                      <Text style={styles.measurementUnit}>cm</Text>
+                    </View>
+                    <Text style={styles.measurementItemLabel} numberOfLines={1}>
+                      {isFr ? item.label.fr : item.label.en}
                     </Text>
                   </View>
                 );
               })}
             </View>
           )}
-          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", marginTop: 12, gap: 4 }}>
-            <Text style={{ fontFamily: FONTS.bold, fontSize: 12, color: "#38BDF8" }}>
-              {isFr ? "Voir tout" : "View all"}
-            </Text>
-            <Ionicons name="chevron-forward" size={14} color="#38BDF8" />
-          </View>
         </Pressable>
 
         {/* ── Composition corporelle ──────────────────────────────── */}
@@ -1464,6 +1508,75 @@ function createStyles(theme: Theme) {
       shadowOpacity: 0.18,
       shadowRadius: 8,
       elevation: 4,
+    },
+
+    // Mensurations Redesign Styles
+    measurementsGrid: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 10,
+    },
+    measurementItemCard: {
+      flexGrow: 1,
+      flexBasis: "29%",
+      maxWidth: "32%",
+      backgroundColor: "rgba(255,255,255,0.04)",
+      borderRadius: 14,
+      paddingVertical: 12,
+      paddingHorizontal: 6,
+      borderWidth: 1,
+      borderColor: "rgba(255,255,255,0.07)",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    measurementIconCircle: {
+      width: 28,
+      height: 28,
+      borderRadius: 8,
+      backgroundColor: "rgba(56,189,248,0.12)",
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 6,
+    },
+    measurementValueRow: {
+      flexDirection: "row",
+      alignItems: "baseline",
+      gap: 2,
+    },
+    measurementValue: {
+      fontFamily: FONTS.extraBold,
+      fontSize: 16,
+      color: "#FFFFFF",
+    },
+    measurementUnit: {
+      fontFamily: FONTS.medium,
+      fontSize: 10,
+      color: NAVY_TEXT_SOFT,
+    },
+    measurementItemLabel: {
+      fontFamily: FONTS.semiBold,
+      fontSize: 11,
+      color: NAVY_TEXT_MUTED,
+      marginTop: 3,
+      textAlign: "center",
+    },
+    emptyIconBadge: {
+      width: 48,
+      height: 48,
+      borderRadius: 16,
+      backgroundColor: "rgba(56,189,248,0.10)",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    addMeasurementPill: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      backgroundColor: "rgba(56,189,248,0.12)",
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 20,
+      marginTop: 12,
     },
 
     devRoutesButton: {

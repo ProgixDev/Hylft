@@ -723,10 +723,10 @@ function MiniRestTimerBar({
   );
   const [finished, setFinished] = useState(false);
 
-  // Ticking clock sound for last 10 seconds
+  // Ticking clock sound for last 5 seconds
   const tickPlayerRef = useRef<any>(null);
   useEffect(() => {
-    if (remaining === 10) {
+    if (remaining === 5) {
       try {
         tickPlayerRef.current?.release();
         const { createAudioPlayer } = require("expo-audio");
@@ -769,7 +769,7 @@ function MiniRestTimerBar({
   const progress = totalSeconds > 0 ? remaining / totalSeconds : 0;
   const minutes = Math.floor(remaining / 60);
   const seconds = remaining % 60;
-  const isUrgent = remaining <= 10 && remaining > 0;
+  const isUrgent = remaining <= 5 && remaining > 0;
 
   return (
     <TouchableOpacity
