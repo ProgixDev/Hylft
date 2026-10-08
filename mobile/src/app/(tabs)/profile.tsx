@@ -1088,8 +1088,8 @@ export default function Profile() {
               barBorderRadius={activityPeriod === "monthly" ? 2 : 4}
               isAnimated height={130} width={SCREEN_WIDTH - 80}
               renderTooltip={(item: any) => (
-                <View style={[styles.barChartTooltip, { borderColor: `${theme.primary.main}45` }]}>
-                  <Text style={[styles.barChartTooltipValue, { color: theme.primary.main }]}>
+                <View style={styles.barChartTooltip}>
+                  <Text style={styles.barChartTooltipValue}>
                     {item.value.toLocaleString(isFr ? "fr-FR" : "en-US")} {activityPeriod === "weekly" || activityPeriod === "monthly" ? (isFr ? "pas" : "steps") : (isFr ? "pas/j" : "steps/d")}
                   </Text>
                   {item.dateFormatted ? (
@@ -1167,8 +1167,8 @@ export default function Profile() {
               barBorderRadius={activityPeriod === "monthly" ? 2 : 4}
               isAnimated height={130} width={SCREEN_WIDTH - 80}
               renderTooltip={(item: any) => (
-                <View style={[styles.barChartTooltip, { borderColor: `${theme.primary.main}45` }]}>
-                  <Text style={[styles.barChartTooltipValue, { color: theme.primary.main }]}>
+                <View style={styles.barChartTooltip}>
+                  <Text style={styles.barChartTooltipValue}>
                     {item.value.toLocaleString(isFr ? "fr-FR" : "en-US")} {activityPeriod === "weekly" || activityPeriod === "monthly" ? "kcal" : (isFr ? "kcal/j" : "kcal/d")}
                   </Text>
                   {item.dateFormatted ? (
@@ -1246,8 +1246,8 @@ export default function Profile() {
               barBorderRadius={activityPeriod === "monthly" ? 2 : 4}
               isAnimated height={130} width={SCREEN_WIDTH - 80}
               renderTooltip={(item: any) => (
-                <View style={[styles.barChartTooltip, { borderColor: `${theme.primary.main}45` }]}>
-                  <Text style={[styles.barChartTooltipValue, { color: theme.primary.main }]}>
+                <View style={styles.barChartTooltip}>
+                  <Text style={styles.barChartTooltipValue}>
                     {item.value.toLocaleString(isFr ? "fr-FR" : "en-US")} {activityPeriod === "weekly" || activityPeriod === "monthly" ? "kcal" : (isFr ? "kcal/j" : "kcal/d")}
                   </Text>
                   {item.dateFormatted ? (
@@ -2078,32 +2078,34 @@ function createStyles(theme: Theme) {
       marginTop: 1,
     },
     barChartTooltip: {
-      backgroundColor: "#161B22",
-      paddingHorizontal: 10,
-      paddingVertical: 6,
-      borderRadius: 9,
+      backgroundColor: "#0F172A",
+      paddingHorizontal: 12,
+      paddingVertical: 7,
+      borderRadius: 10,
       borderWidth: 1,
-      borderColor: "rgba(255,255,255,0.20)",
+      borderColor: "rgba(255,255,255,0.22)",
       alignItems: "center",
       justifyContent: "center",
       shadowColor: "#000",
       shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.45,
-      shadowRadius: 6,
-      elevation: 12,
+      shadowOpacity: 0.5,
+      shadowRadius: 8,
+      elevation: 14,
       zIndex: 9999,
       marginBottom: 6,
     },
     barChartTooltipValue: {
-      fontFamily: FONTS.bold,
+      fontFamily: FONTS.extraBold,
       fontSize: 13,
       color: "#FFFFFF",
+      textAlign: "center",
     },
     barChartTooltipDate: {
-      fontFamily: FONTS.medium,
+      fontFamily: FONTS.semiBold,
       fontSize: 10,
-      color: "rgba(255,255,255,0.65)",
+      color: "rgba(255,255,255,0.80)",
       marginTop: 2,
+      textAlign: "center",
     },
 
     // Navy Section Cards (Progression du jour, Mensurations, Composition corporelle, Score de progression)
