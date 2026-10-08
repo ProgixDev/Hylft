@@ -160,6 +160,7 @@ function computePeriodBars({
       maxValue,
       barWidth: 26,
       spacing: 16,
+      initialSpacing: 16,
       isWeek: true,
       periodLabel: isFr ? "Cette semaine" : "This week",
     };
@@ -217,6 +218,7 @@ function computePeriodBars({
       maxValue,
       barWidth: 5,
       spacing: 4,
+      initialSpacing: 8,
       isWeek: false,
       periodLabel: isFr ? "Ce mois-ci" : "This month",
     };
@@ -276,8 +278,9 @@ function computePeriodBars({
     const average = Math.round(totalAll / Math.max(1, totalDays));
     const maxVal = Math.max(...bars.map((d) => d.value), 0);
     const maxValue = computeNiceYMax(maxVal, 3, minDefault);
-    const barWidth = numMonths === 3 ? 44 : 26;
-    const spacing = numMonths === 3 ? 44 : 18;
+    const barWidth = numMonths === 3 ? 36 : 22;
+    const spacing = numMonths === 3 ? 48 : 20;
+    const initialSpacing = numMonths === 3 ? 32 : 16;
     return {
       bars,
       total: totalAll,
@@ -285,12 +288,13 @@ function computePeriodBars({
       maxValue,
       barWidth,
       spacing,
+      initialSpacing,
       isWeek: false,
       periodLabel: period === "3months" ? (isFr ? "3 derniers mois" : "Last 3 months") : (isFr ? "6 derniers mois" : "Last 6 months"),
     };
   }
 
-  return { bars: [], total: 0, average: 0, maxValue: 100, barWidth: 26, spacing: 16, isWeek: true, periodLabel: "" };
+  return { bars: [], total: 0, average: 0, maxValue: 100, barWidth: 26, spacing: 16, initialSpacing: 16, isWeek: true, periodLabel: "" };
 }
 
 function calcBMI(w: number, h: number) { return h > 0 ? w / ((h / 100) ** 2) : 0; }
@@ -731,7 +735,8 @@ export default function Profile() {
     const stepsMap: Record<string, number> = {};
     const sourceSteps = periodSteps.length > 0 ? periodSteps : weeklySteps;
     sourceSteps.forEach((s) => {
-      stepsMap[s.date] = (stepsMap[s.date] || 0) + s.count;
+      const cleanDate = typeof s.date === "string" ? s.date.split("T")[0] : toLocalDateString(new Date(s.date));
+      stepsMap[cleanDate] = (stepsMap[cleanDate] || 0) + s.count;
     });
 
     const result = computePeriodBars({
@@ -756,7 +761,10 @@ export default function Profile() {
     const targetKcal = nutritionGoals?.calorieGoal || calorieGoal || 2000;
     const nutritionMap: Record<string, number> = {};
     periodNutrition.forEach((n) => {
-      if (n.date) nutritionMap[n.date] = Number(n.calories) || 0;
+      if (n.date) {
+        const cleanDate = typeof n.date === "string" ? n.date.split("T")[0] : toLocalDateString(new Date(n.date));
+        nutritionMap[cleanDate] = Number(n.calories) || 0;
+      }
     });
     const todayStr = toLocalDateString(new Date());
     if (todaySummary?.totalCalories && !nutritionMap[todayStr]) {
@@ -786,7 +794,8 @@ export default function Profile() {
     const burnedMap: Record<string, number> = {};
     const sourceBurned = periodCaloriesBurned.length > 0 ? periodCaloriesBurned : weeklyCaloriesBurned;
     sourceBurned.forEach((b) => {
-      burnedMap[b.date] = (burnedMap[b.date] || 0) + b.totalCalories;
+      const cleanDate = typeof b.date === "string" ? b.date.split("T")[0] : toLocalDateString(new Date(b.date));
+      burnedMap[cleanDate] = (burnedMap[cleanDate] || 0) + b.totalCalories;
     });
 
     const result = computePeriodBars({
@@ -1077,9 +1086,11 @@ export default function Profile() {
           </View>
           <View style={styles.chartWrap}>
             <BarChart
+              key={`steps-barchart-${activityPeriod}-${stepsMetrics.chartData.length}-${stepsMetrics.maxValue}`}
               data={stepsMetrics.chartData}
               barWidth={stepsMetrics.barWidth}
               spacing={stepsMetrics.spacing}
+              initialSpacing={stepsMetrics.initialSpacing}
               roundedTop roundedBottom
               noOfSections={3}
               maxValue={stepsMetrics.maxValue}
@@ -1154,9 +1165,11 @@ export default function Profile() {
           </View>
           <View style={styles.chartWrap}>
             <BarChart
+              key={`nutrition-barchart-${activityPeriod}-${nutritionMetrics.chartData.length}-${nutritionMetrics.maxValue}`}
               data={nutritionMetrics.chartData}
               barWidth={nutritionMetrics.barWidth}
               spacing={nutritionMetrics.spacing}
+              initialSpacing={nutritionMetrics.initialSpacing}
               roundedTop roundedBottom
               noOfSections={3}
               maxValue={nutritionMetrics.maxValue}
@@ -1231,9 +1244,11 @@ export default function Profile() {
           </View>
           <View style={styles.chartWrap}>
             <BarChart
+              key={`burned-barchart-${activityPeriod}-${caloriesBurnedMetrics.chartData.length}-${caloriesBurnedMetrics.maxValue}`}
               data={caloriesBurnedMetrics.chartData}
               barWidth={caloriesBurnedMetrics.barWidth}
               spacing={caloriesBurnedMetrics.spacing}
+              initialSpacing={caloriesBurnedMetrics.initialSpacing}
               roundedTop roundedBottom
               noOfSections={3}
               maxValue={caloriesBurnedMetrics.maxValue}
