@@ -73,6 +73,28 @@ function getLocalMonday(d: Date): Date {
   return date;
 }
 
+function computeNiceYMax(maxVal: number, sections: number = 3, minDefault: number = 60): number {
+  if (maxVal <= 0) return minDefault;
+  // Give ~15% headroom above the highest bar so tooltips fit comfortably
+  const target = maxVal * 1.15;
+  const rawStep = target / sections;
+
+  const mag = Math.pow(10, Math.floor(Math.log10(Math.max(1, rawStep))));
+  const norm = rawStep / mag;
+
+  const steps = [1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6, 7.5, 8, 10];
+  let chosenMult = 10;
+  for (const s of steps) {
+    if (norm <= s) {
+      chosenMult = s;
+      break;
+    }
+  }
+  const cleanStep = chosenMult * mag;
+  const result = Math.round(cleanStep * sections);
+  return Math.max(result, minDefault);
+}
+
 function computePeriodBars({
   period,
   dateMap,
@@ -80,8 +102,7 @@ function computePeriodBars({
   primaryColor,
   mutedColor,
   todayValue = 0,
-  goalOrTarget = 0,
-  minMax = 100,
+  minDefault = 60,
 }: {
   period: "weekly" | "monthly" | "3months" | "6months";
   dateMap: Record<string, number>;
@@ -89,8 +110,7 @@ function computePeriodBars({
   primaryColor: string;
   mutedColor: string;
   todayValue?: number;
-  goalOrTarget?: number;
-  minMax?: number;
+  minDefault?: number;
 }) {
   const now = new Date();
 
@@ -113,8 +133,8 @@ function computePeriodBars({
     }
     const total = bars.reduce((s, b) => s + b.value, 0);
     const average = Math.round(total / 7);
-    const maxVal = Math.max(...bars.map((d) => d.value), goalOrTarget, minMax);
-    const maxValue = Math.ceil(maxVal * 1.35);
+    const maxVal = Math.max(...bars.map((d) => d.value), 0);
+    const maxValue = computeNiceYMax(maxVal, 3, minDefault);
     return {
       bars,
       total,
@@ -154,8 +174,8 @@ function computePeriodBars({
     }
 
     const average = Math.round(totalAll / 28);
-    const maxVal = Math.max(...bars.map((d) => d.value), goalOrTarget, minMax);
-    const maxValue = Math.ceil(maxVal * 1.35);
+    const maxVal = Math.max(...bars.map((d) => d.value), 0);
+    const maxValue = computeNiceYMax(maxVal, 3, minDefault);
     return {
       bars,
       total: totalAll,
@@ -207,8 +227,8 @@ function computePeriodBars({
     }
 
     const average = Math.round(totalAll / Math.max(1, totalDays));
-    const maxVal = Math.max(...bars.map((d) => d.value), goalOrTarget, minMax);
-    const maxValue = Math.ceil(maxVal * 1.35);
+    const maxVal = Math.max(...bars.map((d) => d.value), 0);
+    const maxValue = computeNiceYMax(maxVal, 3, minDefault);
     const barWidth = numMonths === 3 ? 44 : 26;
     const spacing = numMonths === 3 ? 44 : 18;
     return {
@@ -674,15 +694,14 @@ export default function Profile() {
       primaryColor: theme.primary.main,
       mutedColor: `${theme.foreground.gray}40`,
       todayValue: todaySteps,
-      goalOrTarget: dailyStepsGoal,
-      minMax: 1000,
+      minDefault: 300,
     });
 
     return {
       ...result,
       chartData: result.bars,
     };
-  }, [activityPeriod, periodSteps, weeklySteps, todaySteps, theme, isFr, dailyStepsGoal]);
+  }, [activityPeriod, periodSteps, weeklySteps, todaySteps, theme, isFr]);
 
   // ── Nutrition metrics (Daily bars in Week, Week avg bars in Month, Month avg bars in 3m/6m) ──
   const nutritionMetrics = useMemo(() => {
@@ -703,8 +722,7 @@ export default function Profile() {
       primaryColor: "#FF6B00",
       mutedColor: `${theme.foreground.gray}40`,
       todayValue: todaySummary?.totalCalories || 0,
-      goalOrTarget: targetKcal,
-      minMax: 1000,
+      minDefault: 150,
     });
 
     return {
@@ -729,8 +747,7 @@ export default function Profile() {
       primaryColor: "#F5A623",
       mutedColor: `${theme.foreground.gray}40`,
       todayValue: todayCaloriesBurned,
-      goalOrTarget: 400,
-      minMax: 500,
+      minDefault: 90,
     });
 
     return {
@@ -1020,6 +1037,12 @@ export default function Profile() {
               yAxisThickness={0} xAxisThickness={0}
               xAxisLabelTextStyle={{ color: theme.foreground.gray, fontSize: 10, fontFamily: FONTS.semiBold }}
               yAxisTextStyle={{ color: theme.foreground.gray, fontSize: 9 }}
+              formatYLabel={(val: string) => {
+                const num = Math.round(Number(val));
+                if (isNaN(num)) return val;
+                if (num >= 10000) return `${Math.round(num / 1000)}k`;
+                return num.toLocaleString(isFr ? "fr-FR" : "en-US");
+              }}
               hideRules barBorderRadius={6}
               isAnimated height={130} width={SCREEN_WIDTH - 80}
               renderTooltip={(item: any) => (
@@ -1087,6 +1110,12 @@ export default function Profile() {
               yAxisThickness={0} xAxisThickness={0}
               xAxisLabelTextStyle={{ color: theme.foreground.gray, fontSize: 10, fontFamily: FONTS.semiBold }}
               yAxisTextStyle={{ color: theme.foreground.gray, fontSize: 9 }}
+              formatYLabel={(val: string) => {
+                const num = Math.round(Number(val));
+                if (isNaN(num)) return val;
+                if (num >= 10000) return `${Math.round(num / 1000)}k`;
+                return num.toLocaleString(isFr ? "fr-FR" : "en-US");
+              }}
               hideRules barBorderRadius={6}
               isAnimated height={130} width={SCREEN_WIDTH - 80}
               renderTooltip={(item: any) => (
@@ -1154,6 +1183,12 @@ export default function Profile() {
               yAxisThickness={0} xAxisThickness={0}
               xAxisLabelTextStyle={{ color: theme.foreground.gray, fontSize: 10, fontFamily: FONTS.semiBold }}
               yAxisTextStyle={{ color: theme.foreground.gray, fontSize: 9 }}
+              formatYLabel={(val: string) => {
+                const num = Math.round(Number(val));
+                if (isNaN(num)) return val;
+                if (num >= 10000) return `${Math.round(num / 1000)}k`;
+                return num.toLocaleString(isFr ? "fr-FR" : "en-US");
+              }}
               hideRules barBorderRadius={6}
               isAnimated height={130} width={SCREEN_WIDTH - 80}
               renderTooltip={(item: any) => (
