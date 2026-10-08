@@ -323,9 +323,17 @@ export class UsersService {
     let periodStart: string;
     if (period === 'daily') {
       periodStart = today;
-    } else if (period === 'monthly') {
+    } else if (period === 'monthly' || period === '1m') {
       const d = new Date(now);
       d.setMonth(d.getMonth() - 1);
+      periodStart = d.toISOString().split('T')[0];
+    } else if (period === '3months' || period === '3m') {
+      const d = new Date(now);
+      d.setMonth(d.getMonth() - 3);
+      periodStart = d.toISOString().split('T')[0];
+    } else if (period === '6months' || period === '6m') {
+      const d = new Date(now);
+      d.setMonth(d.getMonth() - 6);
       periodStart = d.toISOString().split('T')[0];
     } else {
       const d = new Date(now);

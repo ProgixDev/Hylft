@@ -29,6 +29,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useHealth } from "../../contexts/HealthContext";
 import { useNutrition } from "../../contexts/NutritionContext";
 import { useTheme } from "../../contexts/ThemeContext";
+import { HealthService, type DailySteps, type DailyCaloriesBurned } from "../../services/healthService";
 import { api } from "../../services/api";
 import {
   DEFAULT_USER_STATS,
@@ -55,7 +56,22 @@ const KEYS = {
   goal: "@hylift_goal",
 };
 
-type Period = "daily" | "weekly" | "monthly";
+type Period = "weekly" | "monthly" | "3months" | "6months";
+
+function toLocalDateString(d: Date): string {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function getLocalMonday(d: Date): Date {
+  const date = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const day = date.getDay();
+  const diff = (day + 6) % 7; // 0 for Mon, 1 for Tue, ..., 6 for Sun
+  date.setDate(date.getDate() - diff);
+  return date;
+}
 
 function calcBMI(w: number, h: number) { return h > 0 ? w / ((h / 100) ** 2) : 0; }
 function bmiInfo(bmi: number) {
@@ -112,9 +128,10 @@ const PERIOD_ACTIVE_NAVY = "#0A1628";
 
 function buildPeriodItems(isFr: boolean): { value: Period; label: string }[] {
   return [
-    { value: "daily", label: isFr ? "Jour" : "Today" },
     { value: "weekly", label: isFr ? "Semaine" : "Week" },
     { value: "monthly", label: isFr ? "Mois" : "Month" },
+    { value: "3months", label: isFr ? "3 mois" : "3 Months" },
+    { value: "6months", label: isFr ? "6 mois" : "6 Months" },
   ];
 }
 
@@ -151,8 +168,15 @@ export default function Profile() {
     requestPermissions: healthRequestPermissions,
     refreshData: healthRefreshData,
   } = useHealth();
-  const { daily, goals: nutritionGoals } = useNutrition();
+  const { daily, goals: nutritionGoals, todaySummary } = useNutrition();
   const [healthBusy, setHealthBusy] = useState(false);
+
+  // ── Period history states (for weekly, monthly, 3months, 6months) ──
+  const [periodWorkouts, setPeriodWorkouts] = useState<any[]>([]);
+  const [periodNutrition, setPeriodNutrition] = useState<any[]>([]);
+  const [periodSteps, setPeriodSteps] = useState<DailySteps[]>([]);
+  const [periodCaloriesBurned, setPeriodCaloriesBurned] = useState<DailyCaloriesBurned[]>([]);
+  const [isPeriodLoading, setIsPeriodLoading] = useState(false);
 
   const handleConnectHealth = useCallback(async () => {
     if (healthBusy) return;
@@ -202,6 +226,61 @@ export default function Profile() {
     water: { value: number; goal: number; pct: number };
     weight_delta: number | null;
   } | null>(null);
+
+  const periodDateRange = useMemo(() => {
+    const end = new Date();
+    const start = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+    if (activityPeriod === "weekly") {
+      const day = end.getDay();
+      start.setDate(end.getDate() - ((day + 6) % 7));
+    } else if (activityPeriod === "monthly") {
+      start.setMonth(start.getMonth() - 1);
+    } else if (activityPeriod === "3months") {
+      start.setMonth(start.getMonth() - 3);
+    } else if (activityPeriod === "6months") {
+      start.setMonth(start.getMonth() - 6);
+    }
+    const startStr = toLocalDateString(start);
+    const endStr = toLocalDateString(end);
+    return { start, end, startStr, endStr };
+  }, [activityPeriod]);
+
+  // Fetch period data (workouts, nutrition, steps, calories burned)
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      setIsPeriodLoading(true);
+      try {
+        const { start, end, startStr, endStr } = periodDateRange;
+        const [workoutsRes, nutritionRes, stepsRes, calsBurnedRes] = await Promise.all([
+          api.getWorkoutsRange(startStr, endStr).catch((e) => {
+            console.warn("[Profile] getWorkoutsRange:", e);
+            return [];
+          }),
+          api.getAlimentationHistory(startStr, endStr).catch((e) => {
+            console.warn("[Profile] getAlimentationHistory:", e);
+            return [];
+          }),
+          healthGranted ? HealthService.getSteps(start, end).catch(() => []) : Promise.resolve([]),
+          healthGranted ? HealthService.getCaloriesBurned(start, end).catch(() => []) : Promise.resolve([]),
+        ]);
+
+        if (!active) return;
+
+        setPeriodWorkouts(Array.isArray(workoutsRes) ? workoutsRes : []);
+        setPeriodNutrition(Array.isArray(nutritionRes) ? nutritionRes : []);
+        setPeriodSteps(Array.isArray(stepsRes) ? stepsRes : []);
+        setPeriodCaloriesBurned(Array.isArray(calsBurnedRes) ? calsBurnedRes : []);
+      } catch (err) {
+        console.warn("[Profile] Failed to load period metrics:", err);
+      } finally {
+        if (active) setIsPeriodLoading(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [periodDateRange, healthGranted]);
 
   const loadProfileAndStats = useCallback(async () => {
     if (!user?.id) {
@@ -428,23 +507,131 @@ export default function Profile() {
 
   const dayLabels = isFr ? ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"] : ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const todayIdx = (new Date().getDay() + 6) % 7;
+  const stepsMetrics = useMemo(() => {
+    const isWeek = activityPeriod === "weekly";
+    const stepsMap: Record<string, number> = {};
+    const sourceSteps = periodSteps.length > 0 ? periodSteps : weeklySteps;
+    sourceSteps.forEach((s) => {
+      stepsMap[s.date] = (stepsMap[s.date] || 0) + s.count;
+    });
 
-  const caloriesChart = useMemo(() => {
-    if (activityPeriod === "daily") {
-      return [{ value: Math.round(todayCaloriesBurned), label: isFr ? "Auj" : "Today", frontColor: theme.primary.main }];
+    if (isWeek) {
+      const days = [];
+      const monday = getLocalMonday(new Date());
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i);
+        const dStr = toLocalDateString(d);
+        const count = stepsMap[dStr] || (i === todayIdx ? todaySteps : 0);
+        days.push({
+          value: count,
+          label: dayLabels[i],
+          frontColor: i === todayIdx ? theme.primary.main : `${theme.foreground.gray}40`,
+        });
+      }
+      const total = days.reduce((sum, d) => sum + d.value, 0);
+      const avg = Math.round(total / 7);
+      return { isWeek: true, chartData: days, total, average: avg };
+    } else {
+      const total = Object.values(stepsMap).reduce((s, c) => s + c, 0) || todaySteps;
+      const countDays = Math.max(1, Object.keys(stepsMap).length || (activityPeriod === "monthly" ? 30 : activityPeriod === "3months" ? 90 : 180));
+      const avg = Math.round(total / countDays);
+      return { isWeek: false, total, average: avg };
     }
-    return dayLabels.map((label, i) => ({
-      value: weeklyCaloriesBurned[i] ? Math.round(weeklyCaloriesBurned[i].totalCalories) : 0,
-      label,
-      frontColor: i === todayIdx ? theme.primary.main : `${theme.foreground.gray}40`,
-    }));
-  }, [activityPeriod, todayCaloriesBurned, weeklyCaloriesBurned, theme, dayLabels, todayIdx, isFr]);
+  }, [activityPeriod, periodSteps, weeklySteps, todayIdx, todaySteps, dayLabels, theme]);
 
-  const totalBurned = activityPeriod === "daily"
-    ? Math.round(todayCaloriesBurned)
-    : weeklyCaloriesBurned.reduce((s, d) => s + Math.round(d.totalCalories), 0);
+  // ── Nutrition metrics (Daily bars in Week, Average & Total in Month/3m/6m) ──
+  const nutritionMetrics = useMemo(() => {
+    const isWeek = activityPeriod === "weekly";
+    const targetKcal = nutritionGoals?.calorieGoal || calorieGoal || 2000;
+    const nutritionMap: Record<string, number> = {};
+    periodNutrition.forEach((n) => {
+      if (n.date) nutritionMap[n.date] = Number(n.calories) || 0;
+    });
+    const todayStr = toLocalDateString(new Date());
+    if (todaySummary?.totalCalories && !nutritionMap[todayStr]) {
+      nutritionMap[todayStr] = todaySummary.totalCalories;
+    }
 
-  // Weight chart data — driven entirely by the real WeightHistory log.
+    if (isWeek) {
+      const days = [];
+      const monday = getLocalMonday(new Date());
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i);
+        const dStr = toLocalDateString(d);
+        const val = Math.round(nutritionMap[dStr] || 0);
+        days.push({
+          value: val,
+          label: dayLabels[i],
+          frontColor: i === todayIdx ? "#FF6B00" : `${theme.foreground.gray}40`,
+        });
+      }
+      const total = days.reduce((s, d) => s + d.value, 0);
+      const avg = Math.round(total / 7);
+      return { isWeek: true, chartData: days, total, average: avg, targetKcal };
+    } else {
+      const total = Object.values(nutritionMap).reduce((s, c) => s + c, 0);
+      const loggedDays = Math.max(1, Object.keys(nutritionMap).length || 1);
+      const avg = Math.round(total / loggedDays);
+      return { isWeek: false, total, average: avg, targetKcal };
+    }
+  }, [activityPeriod, periodNutrition, todaySummary, todayIdx, dayLabels, theme, nutritionGoals, calorieGoal]);
+
+  // ── Calories burned metrics (Daily bars in Week, Average & Total in Month/3m/6m) ──
+  const caloriesBurnedMetrics = useMemo(() => {
+    const isWeek = activityPeriod === "weekly";
+    const burnedMap: Record<string, number> = {};
+    const sourceBurned = periodCaloriesBurned.length > 0 ? periodCaloriesBurned : weeklyCaloriesBurned;
+    sourceBurned.forEach((b) => {
+      burnedMap[b.date] = (burnedMap[b.date] || 0) + b.totalCalories;
+    });
+
+    if (isWeek) {
+      const days = [];
+      const monday = getLocalMonday(new Date());
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i);
+        const dStr = toLocalDateString(d);
+        const val = Math.round(burnedMap[dStr] || (i === todayIdx ? todayCaloriesBurned : 0));
+        days.push({
+          value: val,
+          label: dayLabels[i],
+          frontColor: i === todayIdx ? theme.primary.main : `${theme.foreground.gray}40`,
+        });
+      }
+      const total = days.reduce((s, d) => s + d.value, 0);
+      const avg = Math.round(total / 7);
+      return { isWeek: true, chartData: days, total, average: avg };
+    } else {
+      const total = Math.round(Object.values(burnedMap).reduce((s, c) => s + c, 0) || todayCaloriesBurned);
+      const countDays = Math.max(1, Object.keys(burnedMap).length || (activityPeriod === "monthly" ? 30 : activityPeriod === "3months" ? 90 : 180));
+      const avg = Math.round(total / countDays);
+      return { isWeek: false, total, average: avg };
+    }
+  }, [activityPeriod, periodCaloriesBurned, weeklyCaloriesBurned, todayIdx, todayCaloriesBurned, dayLabels, theme]);
+
+  // ── Workouts & activity time metrics (counts, durations like 30min, 40min...) ──
+  const workoutMetrics = useMemo(() => {
+    const count = periodWorkouts.length;
+    const totalMinutes = periodWorkouts.reduce((s, w) => s + (Number(w.duration_minutes) || 0), 0);
+    const avgMinutes = count > 0 ? Math.round(totalMinutes / count) : 0;
+    const totalHours = Math.floor(totalMinutes / 60);
+    const remMins = totalMinutes % 60;
+    const durationFormatted = totalHours > 0 ? `${totalHours}h ${remMins}m` : `${remMins} min`;
+
+    const sortedWorkouts = [...periodWorkouts].sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+
+    return {
+      count,
+      totalMinutes,
+      avgMinutes,
+      durationFormatted,
+      workouts: sortedWorkouts,
+    };
+  }, [periodWorkouts]);
+
+  const totalBurned = caloriesBurnedMetrics.total;
+
+  // Weight chart data — driven entirely by the real WeightHistory log and filtered by activityPeriod
   const weightChart = useMemo(() => {
     const sorted = [...weightHistory].sort((a, b) =>
       a.date.localeCompare(b.date),
@@ -460,14 +647,29 @@ export default function Profile() {
         sorted.push({ date: todayStr, weight: displayedWeight });
       }
     }
+
+    const now = new Date();
+    const cutoff = new Date(now);
+    if (activityPeriod === "weekly") {
+      cutoff.setDate(cutoff.getDate() - 7);
+    } else if (activityPeriod === "monthly") {
+      cutoff.setMonth(cutoff.getMonth() - 1);
+    } else if (activityPeriod === "3months") {
+      cutoff.setMonth(cutoff.getMonth() - 3);
+    } else if (activityPeriod === "6months") {
+      cutoff.setMonth(cutoff.getMonth() - 6);
+    }
+    const cutoffStr = cutoff.toISOString().split("T")[0];
+    const filtered = sorted.filter((e) => e.date >= cutoffStr);
+    const listToDisplay = filtered.length > 0 ? filtered : sorted.slice(-14);
+
     const fmt = (iso: string) => {
       const d = new Date(iso);
       return `${d.getDate()}/${d.getMonth() + 1}`;
     };
-    return sorted
-      .slice(-14)
+    return listToDisplay
       .map((e) => ({ value: e.weight, label: fmt(e.date) }));
-  }, [weightHistory, displayedWeight]);
+  }, [weightHistory, displayedWeight, activityPeriod]);
 
   const weightChartBounds = useMemo(() => {
     const values = weightChart.map((p) => p.value);
@@ -522,6 +724,7 @@ export default function Profile() {
           value={activityPeriod}
           onChange={setActivityPeriod}
           items={buildPeriodItems(!!isFr)}
+          itemWidth={Math.min(84, Math.floor((SCREEN_WIDTH - 48) / 4))}
           theme={theme}
           themeType={themeType as "dark" | "light"}
         />
@@ -634,164 +837,307 @@ export default function Profile() {
           )}
         </View>
 
-        {/* ── Mes objectifs ─────────────────────────────────────── */}
-        <View style={styles.goalsHeader}>
-          <Text style={styles.goalsSectionTitle}>
-            {isFr ? "Mes objectifs" : "My Goals"}
-          </Text>
-          <Pressable
-            hitSlop={8}
-            onPress={() => router.push("/settings/goals" as any)}
-          >
-            <Text style={styles.goalsEditButton}>
-              {isFr ? "Editer" : "Edit"}
-            </Text>
-          </Pressable>
+        {/* ── 2. Steps (Pas) ────────────────────────────────────── */}
+        <Text style={styles.sectionTitle}>{isFr ? "Pas" : "Steps"}</Text>
+        <View style={styles.chartCard}>
+          {stepsMetrics.isWeek ? (
+            <>
+              <View style={styles.cardMetricsHeader}>
+                <View>
+                  <Text style={styles.chartTotal}>
+                    {stepsMetrics.total.toLocaleString(isFr ? "fr-FR" : "en-US")}{" "}
+                    <Text style={styles.chartTotalUnit}>{isFr ? "pas" : "steps"}</Text>
+                  </Text>
+                  <Text style={styles.chartSubLabel}>
+                    {isFr ? "Moyenne" : "Average"}: {stepsMetrics.average.toLocaleString(isFr ? "fr-FR" : "en-US")} {isFr ? "pas/jour" : "steps/day"}
+                  </Text>
+                </View>
+                <View style={styles.goalTag}>
+                  <MaterialCommunityIcons name="shoe-print" size={14} color={theme.primary.main} />
+                  <Text style={styles.goalTagText}>
+                    {isFr ? "Obj." : "Goal"}: {dailyStepsGoal.toLocaleString(isFr ? "fr-FR" : "en-US")}
+                  </Text>
+                </View>
+              </View>
+              <View style={styles.chartWrap}>
+                <BarChart
+                  data={stepsMetrics.chartData}
+                  barWidth={26}
+                  spacing={16}
+                  roundedTop roundedBottom
+                  noOfSections={3}
+                  yAxisThickness={0} xAxisThickness={0}
+                  xAxisLabelTextStyle={{ color: theme.foreground.gray, fontSize: 10, fontFamily: FONTS.semiBold }}
+                  yAxisTextStyle={{ color: theme.foreground.gray, fontSize: 9 }}
+                  hideRules barBorderRadius={6}
+                  isAnimated height={130} width={SCREEN_WIDTH - 80}
+                />
+              </View>
+            </>
+          ) : (
+            <View style={styles.averageHeroWrap}>
+              <View style={styles.averageHeroRow}>
+                <View style={[styles.averageIconBadge, { backgroundColor: `${theme.primary.main}18` }]}>
+                  <MaterialCommunityIcons name="shoe-print" size={28} color={theme.primary.main} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.averageHeroValue}>
+                    {stepsMetrics.average.toLocaleString(isFr ? "fr-FR" : "en-US")}{" "}
+                    <Text style={styles.averageHeroUnit}>{isFr ? "pas/jour" : "steps/day"}</Text>
+                  </Text>
+                  <Text style={styles.averageHeroSubtitle}>
+                    {isFr ? "Moyenne quotidienne sur la période" : "Daily average over the period"}
+                  </Text>
+                </View>
+              </View>
+              <View style={styles.heroStatsDivider} />
+              <View style={styles.heroStatsGrid}>
+                <View style={styles.heroStatItem}>
+                  <Text style={styles.heroStatItemLabel}>{isFr ? "Total cumulé" : "Total steps"}</Text>
+                  <Text style={styles.heroStatItemValue}>
+                    {stepsMetrics.total.toLocaleString(isFr ? "fr-FR" : "en-US")}
+                  </Text>
+                </View>
+                <View style={styles.heroStatItem}>
+                  <Text style={styles.heroStatItemLabel}>{isFr ? "Objectif / jour" : "Daily goal"}</Text>
+                  <Text style={styles.heroStatItemValue}>
+                    {dailyStepsGoal.toLocaleString(isFr ? "fr-FR" : "en-US")}
+                  </Text>
+                </View>
+                <View style={styles.heroStatItem}>
+                  <Text style={styles.heroStatItemLabel}>{isFr ? "Atteinte" : "Completion"}</Text>
+                  <Text style={[styles.heroStatItemValue, { color: stepsMetrics.average >= dailyStepsGoal ? "#34C759" : theme.primary.main }]}>
+                    {Math.round((stepsMetrics.average / Math.max(1, dailyStepsGoal)) * 100)}%
+                  </Text>
+                </View>
+              </View>
+            </View>
+          )}
         </View>
 
-        <View style={styles.goalsCard}>
-          <View style={styles.goalRow}>
-            <View style={styles.goalDot} />
-            <Text style={styles.goalText}>
-              {(() => {
-                const map: Record<string, { fr: string; en: string }> = {
-                  lose_weight: { fr: "Perdre du poids", en: "Lose weight" },
-                  maintain: { fr: "Maintenir son poids", en: "Maintain weight" },
-                  gain_weight: { fr: "Prendre du poids", en: "Gain weight" },
-                  build_muscle: { fr: "Prendre du muscle", en: "Build muscle" },
-                };
-                const label =
-                  map[userGoal]?.[isFr ? "fr" : "en"] ||
-                  (isFr ? "Perdre du poids" : "Lose weight");
-                return isFr ? `Objectif: ${label}` : `Goal: ${label}`;
-              })()}
-            </Text>
-          </View>
-          <View style={styles.goalDivider} />
-
-          <View style={styles.goalRow}>
-            <View style={styles.goalDot} />
-            <Text style={styles.goalText}>
-              {(() => {
-                const formatted = displayedWeight
-                  .toFixed(1)
-                  .replace(".", isFr ? "," : ".");
-                return isFr ? `Poids: ${formatted} kg` : `Weight: ${formatted} kg`;
-              })()}
-            </Text>
-          </View>
-          <View style={styles.goalDivider} />
-
-          <View style={styles.goalRow}>
-            <View style={styles.goalDot} />
-            <Text style={styles.goalText}>
-              {(() => {
-                const formatted = displayedTarget
-                  .toFixed(1)
-                  .replace(".", isFr ? "," : ".");
-                return isFr
-                  ? `Poids cible: ${formatted} kg`
-                  : `Target weight: ${formatted} kg`;
-              })()}
-            </Text>
-          </View>
-          <View style={styles.goalDivider} />
-
-          <View style={styles.goalRow}>
-            <View style={styles.goalDot} />
-            <Text style={styles.goalText}>
-              {(() => {
-                const cal = nutritionGoals?.calorieGoal || calorieGoal || 2000;
-                const formatted = cal.toLocaleString(isFr ? "fr-FR" : "en-US");
-                return isFr
-                  ? `Calories: ${formatted} kcal`
-                  : `Calories: ${formatted} kcal`;
-              })()}
-            </Text>
-          </View>
-          <View style={styles.goalDivider} />
-
-          <View style={styles.goalRow}>
-            <View style={styles.goalDot} />
-            <Text style={styles.goalText}>
-              {(() => {
-                const formatted = dailyStepsGoal.toLocaleString(
-                  isFr ? "fr-FR" : "en-US"
-                );
-                return isFr
-                  ? `Nombre de pas: ${formatted}`
-                  : `Daily steps: ${formatted}`;
-              })()}
-            </Text>
-          </View>
+        {/* ── 3. Calories Consumed (Calories consommées) ─────────── */}
+        <Text style={styles.sectionTitle}>{isFr ? "Calories consommées" : "Calories Consumed"}</Text>
+        <View style={styles.chartCard}>
+          {nutritionMetrics.isWeek ? (
+            <>
+              <View style={styles.cardMetricsHeader}>
+                <View>
+                  <Text style={styles.chartTotal}>
+                    {nutritionMetrics.total.toLocaleString(isFr ? "fr-FR" : "en-US")}{" "}
+                    <Text style={styles.chartTotalUnit}>kcal</Text>
+                  </Text>
+                  <Text style={styles.chartSubLabel}>
+                    {isFr ? "Moyenne" : "Average"}: {nutritionMetrics.average.toLocaleString(isFr ? "fr-FR" : "en-US")} {isFr ? "kcal/jour" : "kcal/day"}
+                  </Text>
+                </View>
+                <View style={[styles.goalTag, { backgroundColor: "rgba(255,107,0,0.15)" }]}>
+                  <MaterialCommunityIcons name="silverware-fork-knife" size={14} color="#FF6B00" />
+                  <Text style={[styles.goalTagText, { color: "#FF6B00" }]}>
+                    {isFr ? "Obj." : "Goal"}: {nutritionMetrics.targetKcal.toLocaleString(isFr ? "fr-FR" : "en-US")}
+                  </Text>
+                </View>
+              </View>
+              <View style={styles.chartWrap}>
+                <BarChart
+                  data={nutritionMetrics.chartData}
+                  barWidth={26}
+                  spacing={16}
+                  roundedTop roundedBottom
+                  noOfSections={3}
+                  yAxisThickness={0} xAxisThickness={0}
+                  xAxisLabelTextStyle={{ color: theme.foreground.gray, fontSize: 10, fontFamily: FONTS.semiBold }}
+                  yAxisTextStyle={{ color: theme.foreground.gray, fontSize: 9 }}
+                  hideRules barBorderRadius={6}
+                  isAnimated height={130} width={SCREEN_WIDTH - 80}
+                />
+              </View>
+            </>
+          ) : (
+            <View style={styles.averageHeroWrap}>
+              <View style={styles.averageHeroRow}>
+                <View style={[styles.averageIconBadge, { backgroundColor: "rgba(255,107,0,0.15)" }]}>
+                  <MaterialCommunityIcons name="silverware-fork-knife" size={28} color="#FF6B00" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.averageHeroValue}>
+                    {nutritionMetrics.average.toLocaleString(isFr ? "fr-FR" : "en-US")}{" "}
+                    <Text style={styles.averageHeroUnit}>{isFr ? "kcal/jour" : "kcal/day"}</Text>
+                  </Text>
+                  <Text style={styles.averageHeroSubtitle}>
+                    {isFr ? "Moyenne consommée par jour" : "Daily average consumed"}
+                  </Text>
+                </View>
+              </View>
+              <View style={styles.heroStatsDivider} />
+              <View style={styles.heroStatsGrid}>
+                <View style={styles.heroStatItem}>
+                  <Text style={styles.heroStatItemLabel}>{isFr ? "Total consommé" : "Total eaten"}</Text>
+                  <Text style={styles.heroStatItemValue}>
+                    {nutritionMetrics.total.toLocaleString(isFr ? "fr-FR" : "en-US")} kcal
+                  </Text>
+                </View>
+                <View style={styles.heroStatItem}>
+                  <Text style={styles.heroStatItemLabel}>{isFr ? "Objectif / jour" : "Daily target"}</Text>
+                  <Text style={styles.heroStatItemValue}>
+                    {nutritionMetrics.targetKcal.toLocaleString(isFr ? "fr-FR" : "en-US")} kcal
+                  </Text>
+                </View>
+                <View style={styles.heroStatItem}>
+                  <Text style={styles.heroStatItemLabel}>{isFr ? "Adhérence" : "Target %"}</Text>
+                  <Text style={[styles.heroStatItemValue, { color: "#FF6B00" }]}>
+                    {Math.round((nutritionMetrics.average / Math.max(1, nutritionMetrics.targetKcal)) * 100)}%
+                  </Text>
+                </View>
+              </View>
+            </View>
+          )}
         </View>
 
-        {/* ── Santé connectée (Health Connect / HealthKit) ─────── */}
-        <Text style={styles.sectionTitle}>
-          {isFr ? "Santé connectée" : "Connected Health"}
-        </Text>
-        <Pressable
-          style={styles.healthConnectRow}
-          onPress={handleConnectHealth}
-          disabled={healthBusy || (healthAvailable && healthGranted)}
-        >
-          <View style={styles.healthConnectIcon}>
-            <MaterialCommunityIcons
-              name={Platform.OS === "ios" ? "heart-pulse" : "google-fit"}
-              size={22}
-              color={theme.primary.main}
-            />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.healthConnectTitle}>
-              {Platform.OS === "ios" ? "Apple Health" : "Health Connect"}
-            </Text>
-            <Text style={styles.healthConnectSubtitle}>
-              {healthAvailable && healthGranted
-                ? isFr
-                  ? "Connecté · pas et calories synchronisés"
-                  : "Connected · steps & calories syncing"
-                : healthAvailable
-                  ? isFr
-                    ? "Disponible · appuyez pour autoriser"
-                    : "Available · tap to grant permission"
-                  : isFr
-                    ? "Appuyez pour vérifier la disponibilité"
-                    : "Tap to check availability"}
-            </Text>
-          </View>
-          <Ionicons
-            name={
-              healthAvailable && healthGranted
-                ? "checkmark-circle"
-                : "chevron-forward"
-            }
-            size={22}
-            color={
-              healthAvailable && healthGranted
-                ? "#34C759"
-                : theme.foreground.gray
-            }
-          />
-        </Pressable>
-
-        {/* ── Calories Brûlées (Bar Chart) ────────────────────── */}
+        {/* ── 4. Calories Burned (Calories brûlées) ─────────────── */}
         <Text style={styles.sectionTitle}>{isFr ? "Calories brûlées" : "Calories Burned"}</Text>
         <View style={styles.chartCard}>
-          <Text style={styles.chartTotal}>{totalBurned} <Text style={styles.chartTotalUnit}>kcal</Text></Text>
-          <View style={styles.chartWrap}>
-            <BarChart
-              data={caloriesChart}
-              barWidth={28}
-              spacing={14}
-              roundedTop roundedBottom
-              noOfSections={3}
-              yAxisThickness={0} xAxisThickness={0}
-              xAxisLabelTextStyle={{ color: theme.foreground.gray, fontSize: 10, fontFamily: FONTS.semiBold }}
-              yAxisTextStyle={{ color: theme.foreground.gray, fontSize: 9 }}
-              hideRules barBorderRadius={6}
-              isAnimated height={130} width={SCREEN_WIDTH - 80}
-            />
+          {caloriesBurnedMetrics.isWeek ? (
+            <>
+              <View style={styles.cardMetricsHeader}>
+                <View>
+                  <Text style={styles.chartTotal}>
+                    {caloriesBurnedMetrics.total.toLocaleString(isFr ? "fr-FR" : "en-US")}{" "}
+                    <Text style={styles.chartTotalUnit}>kcal</Text>
+                  </Text>
+                  <Text style={styles.chartSubLabel}>
+                    {isFr ? "Moyenne" : "Average"}: {caloriesBurnedMetrics.average.toLocaleString(isFr ? "fr-FR" : "en-US")} {isFr ? "kcal/jour" : "kcal/day"}
+                  </Text>
+                </View>
+                <View style={[styles.goalTag, { backgroundColor: "rgba(245,166,35,0.15)" }]}>
+                  <MaterialCommunityIcons name="fire" size={14} color="#F5A623" />
+                  <Text style={[styles.goalTagText, { color: "#F5A623" }]}>
+                    {isFr ? "Activité" : "Activity"}
+                  </Text>
+                </View>
+              </View>
+              <View style={styles.chartWrap}>
+                <BarChart
+                  data={caloriesBurnedMetrics.chartData}
+                  barWidth={26}
+                  spacing={16}
+                  roundedTop roundedBottom
+                  noOfSections={3}
+                  yAxisThickness={0} xAxisThickness={0}
+                  xAxisLabelTextStyle={{ color: theme.foreground.gray, fontSize: 10, fontFamily: FONTS.semiBold }}
+                  yAxisTextStyle={{ color: theme.foreground.gray, fontSize: 9 }}
+                  hideRules barBorderRadius={6}
+                  isAnimated height={130} width={SCREEN_WIDTH - 80}
+                />
+              </View>
+            </>
+          ) : (
+            <View style={styles.averageHeroWrap}>
+              <View style={styles.averageHeroRow}>
+                <View style={[styles.averageIconBadge, { backgroundColor: "rgba(245,166,35,0.15)" }]}>
+                  <MaterialCommunityIcons name="fire" size={28} color="#F5A623" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.averageHeroValue}>
+                    {caloriesBurnedMetrics.average.toLocaleString(isFr ? "fr-FR" : "en-US")}{" "}
+                    <Text style={styles.averageHeroUnit}>{isFr ? "kcal/jour" : "kcal/day"}</Text>
+                  </Text>
+                  <Text style={styles.averageHeroSubtitle}>
+                    {isFr ? "Moyenne brûlée par jour" : "Daily average burned"}
+                  </Text>
+                </View>
+              </View>
+              <View style={styles.heroStatsDivider} />
+              <View style={styles.heroStatsGrid}>
+                <View style={styles.heroStatItem}>
+                  <Text style={styles.heroStatItemLabel}>{isFr ? "Total brûlé" : "Total burned"}</Text>
+                  <Text style={styles.heroStatItemValue}>
+                    {caloriesBurnedMetrics.total.toLocaleString(isFr ? "fr-FR" : "en-US")} kcal
+                  </Text>
+                </View>
+                <View style={styles.heroStatItem}>
+                  <Text style={styles.heroStatItemLabel}>{isFr ? "Période" : "Period"}</Text>
+                  <Text style={styles.heroStatItemValue}>
+                    {activityPeriod === "monthly" ? "30 j" : activityPeriod === "3months" ? "90 j" : "180 j"}
+                  </Text>
+                </View>
+                <View style={styles.heroStatItem}>
+                  <Text style={styles.heroStatItemLabel}>{isFr ? "Intensité" : "Rate"}</Text>
+                  <Text style={[styles.heroStatItemValue, { color: "#F5A623" }]}>
+                    {caloriesBurnedMetrics.average > 400 ? (isFr ? "Élevée" : "High") : (isFr ? "Modérée" : "Moderate")}
+                  </Text>
+                </View>
+              </View>
+            </View>
+          )}
+        </View>
+
+        {/* ── 5. Activities & Workouts (Activités & Séances) ─────── */}
+        <Text style={styles.sectionTitle}>{isFr ? "Activités & Séances" : "Activities & Workouts"}</Text>
+        <View style={styles.chartCard}>
+          <View style={styles.activityStatsRow}>
+            <View style={styles.activityStatPill}>
+              <MaterialCommunityIcons name="dumbbell" size={18} color={theme.primary.main} />
+              <Text style={styles.activityStatValue}>{workoutMetrics.count}</Text>
+              <Text style={styles.activityStatLabel}>{isFr ? "Séances" : "Workouts"}</Text>
+            </View>
+            <View style={styles.activityStatPill}>
+              <MaterialCommunityIcons name="timer-outline" size={18} color="#38BDF8" />
+              <Text style={styles.activityStatValue}>{workoutMetrics.avgMinutes} <Text style={{ fontSize: 11 }}>min</Text></Text>
+              <Text style={styles.activityStatLabel}>{isFr ? "Moy. / séance" : "Avg / session"}</Text>
+            </View>
+            <View style={styles.activityStatPill}>
+              <MaterialCommunityIcons name="clock-time-four-outline" size={18} color="#A78BFA" />
+              <Text style={styles.activityStatValue}>{workoutMetrics.durationFormatted}</Text>
+              <Text style={styles.activityStatLabel}>{isFr ? "Temps total" : "Total time"}</Text>
+            </View>
+          </View>
+
+          <View style={{ marginTop: 14 }}>
+            <Text style={styles.historyListTitle}>
+              {isFr ? "Historique des séances" : "Workout History"} ({workoutMetrics.workouts.length})
+            </Text>
+
+            {workoutMetrics.workouts.length === 0 ? (
+              <View style={styles.emptyWorkoutsWrap}>
+                <MaterialCommunityIcons name="dumbbell" size={32} color={`${theme.foreground.gray}40`} />
+                <Text style={styles.emptyWorkoutsText}>
+                  {isFr
+                    ? "Aucune séance enregistrée sur cette période.\nDémarrez un entraînement pour remplir votre historique !"
+                    : "No workouts recorded for this period.\nStart a workout to track your progress!"}
+                </Text>
+              </View>
+            ) : (
+              workoutMetrics.workouts.slice(0, 5).map((w, idx) => {
+                const dateStr = w.date ? new Date(w.date).toLocaleDateString(isFr ? "fr-FR" : "en-US", { day: "numeric", month: "short" }) : "";
+                const durMin = w.duration_minutes || 0;
+                return (
+                  <View key={w.id || idx} style={styles.workoutRow}>
+                    <View style={styles.workoutRowLeft}>
+                      <View style={styles.workoutIconWrap}>
+                        <MaterialCommunityIcons
+                          name={w.workout_type === "running" ? "run" : "dumbbell"}
+                          size={18}
+                          color={theme.primary.main}
+                        />
+                      </View>
+                      <View>
+                        <Text style={styles.workoutRowName}>{w.name || (isFr ? "Entraînement" : "Workout")}</Text>
+                        <Text style={styles.workoutRowDate}>{dateStr}</Text>
+                      </View>
+                    </View>
+                    <View style={{ alignItems: "flex-end", gap: 3 }}>
+                      <View style={styles.durationPill}>
+                        <MaterialCommunityIcons name="lightning-bolt" size={12} color="#38BDF8" />
+                        <Text style={styles.durationPillText}>{durMin} min</Text>
+                      </View>
+                      {w.calories_burned ? (
+                        <Text style={styles.workoutBurnedText}>🔥 {Math.round(w.calories_burned)} kcal</Text>
+                      ) : null}
+                    </View>
+                  </View>
+                );
+              })
+            )}
           </View>
         </View>
 
@@ -1616,6 +1962,201 @@ function createStyles(theme: Theme) {
     // Chart total
     chartTotal: { fontFamily: FONTS.extraBold, fontSize: 24, color: theme.foreground.white, marginBottom: 8 },
     chartTotalUnit: { fontSize: 14, color: theme.foreground.gray },
+
+    // Activity metric card headers & stats
+    cardMetricsHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "flex-start",
+      marginBottom: 12,
+    },
+    chartSubLabel: {
+      fontFamily: FONTS.medium,
+      fontSize: 12,
+      color: theme.foreground.gray,
+      marginTop: 2,
+    },
+    goalTag: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 5,
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      borderRadius: 10,
+      backgroundColor: `${theme.primary.main}18`,
+    },
+    goalTagText: {
+      fontFamily: FONTS.bold,
+      fontSize: 11,
+      color: theme.primary.main,
+    },
+
+    // Average hero card (for month, 3m, 6m tabs)
+    averageHeroWrap: {
+      paddingVertical: 4,
+    },
+    averageHeroRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 14,
+      marginBottom: 16,
+    },
+    averageIconBadge: {
+      width: 52,
+      height: 52,
+      borderRadius: 14,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    averageHeroValue: {
+      fontFamily: FONTS.extraBold,
+      fontSize: 24,
+      color: theme.foreground.white,
+    },
+    averageHeroUnit: {
+      fontSize: 13,
+      fontFamily: FONTS.medium,
+      color: theme.foreground.gray,
+    },
+    averageHeroSubtitle: {
+      fontFamily: FONTS.regular,
+      fontSize: 12,
+      color: theme.foreground.gray,
+      marginTop: 2,
+    },
+    heroStatsDivider: {
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: "rgba(255,255,255,0.12)",
+      marginBottom: 12,
+    },
+    heroStatsGrid: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      gap: 8,
+    },
+    heroStatItem: {
+      flex: 1,
+      backgroundColor: "rgba(255,255,255,0.04)",
+      paddingVertical: 10,
+      paddingHorizontal: 8,
+      borderRadius: 10,
+      alignItems: "center",
+    },
+    heroStatItemLabel: {
+      fontFamily: FONTS.medium,
+      fontSize: 10,
+      color: theme.foreground.gray,
+      marginBottom: 4,
+      textAlign: "center",
+    },
+    heroStatItemValue: {
+      fontFamily: FONTS.extraBold,
+      fontSize: 13,
+      color: theme.foreground.white,
+      textAlign: "center",
+    },
+
+    // Activity summary & workout history
+    activityStatsRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      gap: 8,
+      marginBottom: 4,
+    },
+    activityStatPill: {
+      flex: 1,
+      backgroundColor: "rgba(255,255,255,0.05)",
+      borderRadius: 12,
+      paddingVertical: 10,
+      paddingHorizontal: 6,
+      alignItems: "center",
+      gap: 3,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: "rgba(255,255,255,0.10)",
+    },
+    activityStatValue: {
+      fontFamily: FONTS.extraBold,
+      fontSize: 15,
+      color: theme.foreground.white,
+      marginTop: 2,
+    },
+    activityStatLabel: {
+      fontFamily: FONTS.semiBold,
+      fontSize: 10,
+      color: theme.foreground.gray,
+      textAlign: "center",
+    },
+    historyListTitle: {
+      fontFamily: FONTS.bold,
+      fontSize: 13,
+      color: theme.foreground.white,
+      marginBottom: 10,
+    },
+    emptyWorkoutsWrap: {
+      alignItems: "center",
+      justifyContent: "center",
+      paddingVertical: 20,
+      gap: 8,
+    },
+    emptyWorkoutsText: {
+      fontFamily: FONTS.regular,
+      fontSize: 12,
+      color: theme.foreground.gray,
+      textAlign: "center",
+      lineHeight: 18,
+    },
+    workoutRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingVertical: 10,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: "rgba(255,255,255,0.08)",
+    },
+    workoutRowLeft: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+      flex: 1,
+    },
+    workoutIconWrap: {
+      width: 36,
+      height: 36,
+      borderRadius: 10,
+      backgroundColor: `${theme.primary.main}18`,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    workoutRowName: {
+      fontFamily: FONTS.bold,
+      fontSize: 13,
+      color: theme.foreground.white,
+    },
+    workoutRowDate: {
+      fontFamily: FONTS.regular,
+      fontSize: 11,
+      color: theme.foreground.gray,
+      marginTop: 2,
+    },
+    durationPill: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 8,
+      backgroundColor: "rgba(56,189,248,0.14)",
+    },
+    durationPillText: {
+      fontFamily: FONTS.bold,
+      fontSize: 11,
+      color: "#38BDF8",
+    },
+    workoutBurnedText: {
+      fontFamily: FONTS.medium,
+      fontSize: 10,
+      color: "#F5A623",
+    },
 
     // Summary header with switch
     summaryHeader: {
