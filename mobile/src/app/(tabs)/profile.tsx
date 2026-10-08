@@ -101,6 +101,7 @@ function computePeriodBars({
   isFr,
   primaryColor,
   mutedColor,
+  labelColor = "#8E8E93",
   todayValue = 0,
   minDefault = 60,
 }: {
@@ -109,6 +110,7 @@ function computePeriodBars({
   isFr: boolean;
   primaryColor: string;
   mutedColor: string;
+  labelColor?: string;
   todayValue?: number;
   minDefault?: number;
 }) {
@@ -135,6 +137,13 @@ function computePeriodBars({
       bars.push({
         value: val,
         label: dayLabels[i],
+        labelComponent: () => (
+          <View style={{ width: 32, marginLeft: -3, alignItems: "center" }}>
+            <Text style={{ fontSize: 10, fontFamily: FONTS.semiBold, color: labelColor }}>
+              {dayLabels[i]}
+            </Text>
+          </View>
+        ),
         frontColor: isToday ? primaryColor : (val > 0 ? primaryColor : mutedColor),
         dateFormatted,
         isToday,
@@ -178,12 +187,20 @@ function computePeriodBars({
         year: "numeric",
       });
 
-      // Show key milestone labels matching the design: 1, 7, 14, 21, 28
+      // Show clear milestone numbers: 1, 7, 14, 21, 28
       const showLabel = day === 1 || day === 7 || day === 14 || day === 21 || day === 28;
 
       bars.push({
         value: val,
         label: showLabel ? String(day) : "",
+        labelWidth: showLabel ? 26 : 0,
+        labelComponent: showLabel ? () => (
+          <View style={{ width: 30, marginLeft: -12.5, alignItems: "center" }}>
+            <Text style={{ fontSize: 10, fontFamily: FONTS.semiBold, color: labelColor }}>
+              {String(day)}
+            </Text>
+          </View>
+        ) : undefined,
         frontColor: isToday ? primaryColor : (val > 0 ? primaryColor : mutedColor),
         dateFormatted,
         isToday,
@@ -243,6 +260,13 @@ function computePeriodBars({
       bars.push({
         value: monthAvg,
         label: monthNames[month],
+        labelComponent: () => (
+          <View style={{ width: 36, marginLeft: -5, alignItems: "center" }}>
+            <Text style={{ fontSize: 10, fontFamily: FONTS.semiBold, color: labelColor }}>
+              {monthNames[month]}
+            </Text>
+          </View>
+        ),
         frontColor: isCurrentMonth ? primaryColor : (monthAvg > 0 ? primaryColor : mutedColor),
         dateFormatted,
         isCurrentMonth,
@@ -716,6 +740,7 @@ export default function Profile() {
       isFr,
       primaryColor: theme.primary.main,
       mutedColor: `${theme.foreground.gray}40`,
+      labelColor: theme.foreground.gray,
       todayValue: todaySteps,
       minDefault: 300,
     });
@@ -744,6 +769,7 @@ export default function Profile() {
       isFr,
       primaryColor: "#FF6B00",
       mutedColor: `${theme.foreground.gray}40`,
+      labelColor: theme.foreground.gray,
       todayValue: todaySummary?.totalCalories || 0,
       minDefault: 150,
     });
@@ -769,6 +795,7 @@ export default function Profile() {
       isFr,
       primaryColor: "#F5A623",
       mutedColor: `${theme.foreground.gray}40`,
+      labelColor: theme.foreground.gray,
       todayValue: todayCaloriesBurned,
       minDefault: 90,
     });
