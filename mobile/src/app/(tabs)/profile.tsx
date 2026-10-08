@@ -755,7 +755,7 @@ export default function Profile() {
       period: activityPeriod,
       dateMap: nutritionMap,
       isFr,
-      primaryColor: "#FF6B00",
+      primaryColor: theme.primary.main,
       mutedColor: `${theme.foreground.gray}40`,
       labelColor: theme.foreground.gray,
       todayValue: todaySummary?.totalCalories || 0,
@@ -782,7 +782,7 @@ export default function Profile() {
       period: activityPeriod,
       dateMap: burnedMap,
       isFr,
-      primaryColor: "#F5A623",
+      primaryColor: theme.primary.main,
       mutedColor: `${theme.foreground.gray}40`,
       labelColor: theme.foreground.gray,
       todayValue: todayCaloriesBurned,
@@ -1136,9 +1136,9 @@ export default function Profile() {
                 {isFr ? "Total consommé" : "Total eaten"}: {nutritionMetrics.total.toLocaleString(isFr ? "fr-FR" : "en-US")} kcal
               </Text>
             </View>
-            <View style={[styles.goalTag, { backgroundColor: "rgba(255,107,0,0.15)" }]}>
-              <MaterialCommunityIcons name="silverware-fork-knife" size={14} color="#FF6B00" />
-              <Text style={[styles.goalTagText, { color: "#FF6B00" }]}>
+            <View style={[styles.goalTag, { backgroundColor: `${theme.primary.main}18` }]}>
+              <MaterialCommunityIcons name="silverware-fork-knife" size={14} color={theme.primary.main} />
+              <Text style={[styles.goalTagText, { color: theme.primary.main }]}>
                 {isFr ? "Obj." : "Goal"}: {nutritionMetrics.targetKcal.toLocaleString(isFr ? "fr-FR" : "en-US")}
               </Text>
             </View>
@@ -1167,8 +1167,8 @@ export default function Profile() {
               barBorderRadius={activityPeriod === "monthly" ? 2 : 4}
               isAnimated height={130} width={SCREEN_WIDTH - 80}
               renderTooltip={(item: any) => (
-                <View style={[styles.barChartTooltip, { borderColor: "rgba(255,107,0,0.40)" }]}>
-                  <Text style={[styles.barChartTooltipValue, { color: "#FF6B00" }]}>
+                <View style={[styles.barChartTooltip, { borderColor: `${theme.primary.main}45` }]}>
+                  <Text style={[styles.barChartTooltipValue, { color: theme.primary.main }]}>
                     {item.value.toLocaleString(isFr ? "fr-FR" : "en-US")} {activityPeriod === "weekly" || activityPeriod === "monthly" ? "kcal" : (isFr ? "kcal/j" : "kcal/d")}
                   </Text>
                   {item.dateFormatted ? (
@@ -1195,7 +1195,7 @@ export default function Profile() {
             </View>
             <View style={styles.heroStatItem}>
               <Text style={styles.heroStatItemLabel}>{isFr ? "Adhérence" : "Target %"}</Text>
-              <Text style={[styles.heroStatItemValue, { color: "#FF6B00" }]}>
+              <Text style={[styles.heroStatItemValue, { color: theme.primary.main }]}>
                 {Math.round((nutritionMetrics.average / Math.max(1, nutritionMetrics.targetKcal)) * 100)}%
               </Text>
             </View>
@@ -1215,9 +1215,9 @@ export default function Profile() {
                 {isFr ? "Total brûlé" : "Total burned"}: {caloriesBurnedMetrics.total.toLocaleString(isFr ? "fr-FR" : "en-US")} kcal
               </Text>
             </View>
-            <View style={[styles.goalTag, { backgroundColor: "rgba(245,166,35,0.15)" }]}>
-              <MaterialCommunityIcons name="fire" size={14} color="#F5A623" />
-              <Text style={[styles.goalTagText, { color: "#F5A623" }]}>
+            <View style={[styles.goalTag, { backgroundColor: `${theme.primary.main}18` }]}>
+              <MaterialCommunityIcons name="fire" size={14} color={theme.primary.main} />
+              <Text style={[styles.goalTagText, { color: theme.primary.main }]}>
                 {isFr ? "Activité" : "Activity"}
               </Text>
             </View>
@@ -1246,8 +1246,8 @@ export default function Profile() {
               barBorderRadius={activityPeriod === "monthly" ? 2 : 4}
               isAnimated height={130} width={SCREEN_WIDTH - 80}
               renderTooltip={(item: any) => (
-                <View style={[styles.barChartTooltip, { borderColor: "rgba(245,166,35,0.40)" }]}>
-                  <Text style={[styles.barChartTooltipValue, { color: "#F5A623" }]}>
+                <View style={[styles.barChartTooltip, { borderColor: `${theme.primary.main}45` }]}>
+                  <Text style={[styles.barChartTooltipValue, { color: theme.primary.main }]}>
                     {item.value.toLocaleString(isFr ? "fr-FR" : "en-US")} {activityPeriod === "weekly" || activityPeriod === "monthly" ? "kcal" : (isFr ? "kcal/j" : "kcal/d")}
                   </Text>
                   {item.dateFormatted ? (
@@ -1274,7 +1274,7 @@ export default function Profile() {
             </View>
             <View style={styles.heroStatItem}>
               <Text style={styles.heroStatItemLabel}>{isFr ? "Intensité" : "Rate"}</Text>
-              <Text style={[styles.heroStatItemValue, { color: "#F5A623" }]}>
+              <Text style={[styles.heroStatItemValue, { color: theme.primary.main }]}>
                 {caloriesBurnedMetrics.average > 400 ? (isFr ? "Élevée" : "High") : (isFr ? "Modérée" : "Moderate")}
               </Text>
             </View>
