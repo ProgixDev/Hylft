@@ -396,7 +396,8 @@ function createStyles(theme: ReturnType<typeof useTheme>["theme"]) {
     chartWrap: {
       marginTop: 4,
       borderRadius: 14,
-      overflow: "hidden",
+      overflow: "visible",
+      paddingTop: 8,
     },
     chartPointerTooltip: {
       backgroundColor: "#0F1E36",
@@ -404,14 +405,15 @@ function createStyles(theme: ReturnType<typeof useTheme>["theme"]) {
       paddingVertical: 5,
       borderRadius: 8,
       borderWidth: 1,
-      borderColor: "rgba(255,255,255,0.18)",
+      borderColor: "rgba(255,255,255,0.25)",
       alignItems: "center",
       justifyContent: "center",
       shadowColor: "#000",
       shadowOffset: { width: 0, height: 3 },
-      shadowOpacity: 0.35,
+      shadowOpacity: 0.4,
       shadowRadius: 5,
-      elevation: 6,
+      elevation: 10,
+      zIndex: 9999,
     },
     chartPointerTooltipValue: {
       fontFamily: FONTS.bold,

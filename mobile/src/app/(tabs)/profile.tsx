@@ -530,14 +530,16 @@ export default function Profile() {
       }
       const total = days.reduce((sum, d) => sum + d.value, 0);
       const avg = Math.round(total / 7);
-      return { isWeek: true, chartData: days, total, average: avg };
+      const maxVal = Math.max(...days.map((d) => d.value), dailyStepsGoal, 1000);
+      const maxValue = Math.ceil(maxVal * 1.35);
+      return { isWeek: true, chartData: days, total, average: avg, maxValue };
     } else {
       const total = Object.values(stepsMap).reduce((s, c) => s + c, 0) || todaySteps;
       const countDays = Math.max(1, Object.keys(stepsMap).length || (activityPeriod === "monthly" ? 30 : activityPeriod === "3months" ? 90 : 180));
       const avg = Math.round(total / countDays);
       return { isWeek: false, total, average: avg };
     }
-  }, [activityPeriod, periodSteps, weeklySteps, todayIdx, todaySteps, dayLabels, theme]);
+  }, [activityPeriod, periodSteps, weeklySteps, todayIdx, todaySteps, dayLabels, theme, dailyStepsGoal]);
 
   // ── Nutrition metrics (Daily bars in Week, Average & Total in Month/3m/6m) ──
   const nutritionMetrics = useMemo(() => {
@@ -567,7 +569,9 @@ export default function Profile() {
       }
       const total = days.reduce((s, d) => s + d.value, 0);
       const avg = Math.round(total / 7);
-      return { isWeek: true, chartData: days, total, average: avg, targetKcal };
+      const maxVal = Math.max(...days.map((d) => d.value), targetKcal, 1000);
+      const maxValue = Math.ceil(maxVal * 1.35);
+      return { isWeek: true, chartData: days, total, average: avg, targetKcal, maxValue };
     } else {
       const total = Object.values(nutritionMap).reduce((s, c) => s + c, 0);
       const loggedDays = Math.max(1, Object.keys(nutritionMap).length || 1);
@@ -600,7 +604,9 @@ export default function Profile() {
       }
       const total = days.reduce((s, d) => s + d.value, 0);
       const avg = Math.round(total / 7);
-      return { isWeek: true, chartData: days, total, average: avg };
+      const maxVal = Math.max(...days.map((d) => d.value), 500);
+      const maxValue = Math.ceil(maxVal * 1.35);
+      return { isWeek: true, chartData: days, total, average: avg, maxValue };
     } else {
       const total = Math.round(Object.values(burnedMap).reduce((s, c) => s + c, 0) || todayCaloriesBurned);
       const countDays = Math.max(1, Object.keys(burnedMap).length || (activityPeriod === "monthly" ? 30 : activityPeriod === "3months" ? 90 : 180));
@@ -887,6 +893,8 @@ export default function Profile() {
                   spacing={16}
                   roundedTop roundedBottom
                   noOfSections={3}
+                  maxValue={stepsMetrics.maxValue}
+                  overflowTop={30}
                   yAxisThickness={0} xAxisThickness={0}
                   xAxisLabelTextStyle={{ color: theme.foreground.gray, fontSize: 10, fontFamily: FONTS.semiBold }}
                   yAxisTextStyle={{ color: theme.foreground.gray, fontSize: 9 }}
@@ -973,6 +981,8 @@ export default function Profile() {
                   spacing={16}
                   roundedTop roundedBottom
                   noOfSections={3}
+                  maxValue={nutritionMetrics.maxValue}
+                  overflowTop={30}
                   yAxisThickness={0} xAxisThickness={0}
                   xAxisLabelTextStyle={{ color: theme.foreground.gray, fontSize: 10, fontFamily: FONTS.semiBold }}
                   yAxisTextStyle={{ color: theme.foreground.gray, fontSize: 9 }}
@@ -1059,6 +1069,8 @@ export default function Profile() {
                   spacing={16}
                   roundedTop roundedBottom
                   noOfSections={3}
+                  maxValue={caloriesBurnedMetrics.maxValue}
+                  overflowTop={30}
                   yAxisThickness={0} xAxisThickness={0}
                   xAxisLabelTextStyle={{ color: theme.foreground.gray, fontSize: 10, fontFamily: FONTS.semiBold }}
                   yAxisTextStyle={{ color: theme.foreground.gray, fontSize: 9 }}
@@ -1882,22 +1894,24 @@ function createStyles(theme: Theme) {
     chartCard: {
       marginHorizontal: 20, marginBottom: 8, padding: 16,
       borderRadius: 12, backgroundColor: theme.background.darker,
+      overflow: "visible",
     },
-    chartWrap: { alignItems: "center", overflow: "hidden" },
+    chartWrap: { alignItems: "center", overflow: "visible", paddingTop: 8 },
     chartPointerTooltip: {
       backgroundColor: "#0F1E36",
       paddingHorizontal: 8,
       paddingVertical: 5,
       borderRadius: 8,
       borderWidth: 1,
-      borderColor: "rgba(255,255,255,0.18)",
+      borderColor: "rgba(255,255,255,0.25)",
       alignItems: "center",
       justifyContent: "center",
       shadowColor: "#000",
       shadowOffset: { width: 0, height: 3 },
-      shadowOpacity: 0.35,
+      shadowOpacity: 0.4,
       shadowRadius: 5,
-      elevation: 6,
+      elevation: 10,
+      zIndex: 9999,
     },
     chartPointerTooltipValue: {
       fontFamily: FONTS.extraBold,
@@ -1916,14 +1930,15 @@ function createStyles(theme: Theme) {
       paddingVertical: 4,
       borderRadius: 7,
       borderWidth: 1,
-      borderColor: "rgba(255,255,255,0.18)",
+      borderColor: "rgba(255,255,255,0.25)",
       alignItems: "center",
       justifyContent: "center",
       shadowColor: "#000",
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.3,
+      shadowOpacity: 0.35,
       shadowRadius: 4,
-      elevation: 5,
+      elevation: 10,
+      zIndex: 9999,
       marginBottom: 6,
     },
     barChartTooltipValue: {
