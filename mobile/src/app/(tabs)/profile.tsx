@@ -137,13 +137,6 @@ function computePeriodBars({
       bars.push({
         value: val,
         label: dayLabels[i],
-        labelComponent: () => (
-          <View style={{ width: 40, marginLeft: -12, alignItems: "center" }}>
-            <Text style={{ fontSize: 10, fontFamily: FONTS.semiBold, color: labelColor }}>
-              {dayLabels[i]}
-            </Text>
-          </View>
-        ),
         frontColor: isToday ? primaryColor : (val > 0 ? primaryColor : mutedColor),
         dateFormatted,
         isToday,
@@ -194,14 +187,7 @@ function computePeriodBars({
       bars.push({
         value: val,
         label: showLabel ? String(day) : "",
-        labelWidth: showLabel ? 26 : 0,
-        labelComponent: showLabel ? () => (
-          <View style={{ width: 30, marginLeft: -13, alignItems: "center" }}>
-            <Text style={{ fontSize: 10, fontFamily: FONTS.semiBold, color: labelColor }}>
-              {String(day)}
-            </Text>
-          </View>
-        ) : undefined,
+        labelWidth: showLabel ? 20 : 0,
         frontColor: isToday ? primaryColor : (val > 0 ? primaryColor : mutedColor),
         dateFormatted,
         isToday,
@@ -266,13 +252,6 @@ function computePeriodBars({
       bars.push({
         value: monthAvg,
         label: monthNames[month],
-        labelComponent: () => (
-          <View style={{ width: 50, marginLeft: -(50 - barWidth) / 2, alignItems: "center" }}>
-            <Text style={{ fontSize: 10, fontFamily: FONTS.semiBold, color: labelColor }}>
-              {monthNames[month]}
-            </Text>
-          </View>
-        ),
         frontColor: isCurrentMonth ? primaryColor : (monthAvg > 0 ? primaryColor : mutedColor),
         dateFormatted,
         isCurrentMonth,
