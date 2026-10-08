@@ -198,6 +198,29 @@ export default function BodyMeasurementDetail() {
                 startOpacity={0.6}
                 endOpacity={0.05}
                 areaChart
+                pointerConfig={{
+                  pointerStripHeight: 140,
+                  pointerStripColor: `${theme.primary.main}50`,
+                  pointerStripWidth: 2,
+                  pointerColor: theme.primary.main,
+                  radius: 5,
+                  pointerLabelWidth: 80,
+                  pointerLabelHeight: 46,
+                  activatePointersOnLongPress: false,
+                  autoAdjustPointerLabelPosition: true,
+                  pointerLabelComponent: (items: any[]) => {
+                    const item = items?.[0];
+                    if (!item) return null;
+                    return (
+                      <View style={styles.chartPointerTooltip}>
+                        <Text style={styles.chartPointerTooltipValue}>
+                          {item.value} {metric.unit}
+                        </Text>
+                        <Text style={styles.chartPointerTooltipLabel}>{item.label}</Text>
+                      </View>
+                    );
+                  },
+                }}
               />
             </View>
           ) : chartData.length === 1 ? (
@@ -374,6 +397,32 @@ function createStyles(theme: ReturnType<typeof useTheme>["theme"]) {
       marginTop: 4,
       borderRadius: 14,
       overflow: "hidden",
+    },
+    chartPointerTooltip: {
+      backgroundColor: "#0F1E36",
+      paddingHorizontal: 8,
+      paddingVertical: 5,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: "rgba(255,255,255,0.18)",
+      alignItems: "center",
+      justifyContent: "center",
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 3 },
+      shadowOpacity: 0.35,
+      shadowRadius: 5,
+      elevation: 6,
+    },
+    chartPointerTooltipValue: {
+      fontFamily: FONTS.bold,
+      fontSize: 12,
+      color: "#FFFFFF",
+    },
+    chartPointerTooltipLabel: {
+      fontFamily: FONTS.semiBold,
+      fontSize: 9,
+      color: theme.foreground.gray,
+      marginTop: 1,
     },
     chartEmpty: {
       alignItems: "center",

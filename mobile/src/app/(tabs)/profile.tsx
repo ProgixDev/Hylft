@@ -832,6 +832,27 @@ export default function Profile() {
                 startOpacity={0.6}
                 endOpacity={0.05}
                 areaChart
+                pointerConfig={{
+                  pointerStripHeight: 140,
+                  pointerStripColor: `${theme.primary.main}50`,
+                  pointerStripWidth: 2,
+                  pointerColor: theme.primary.main,
+                  radius: 5,
+                  pointerLabelWidth: 80,
+                  pointerLabelHeight: 46,
+                  activatePointersOnLongPress: false,
+                  autoAdjustPointerLabelPosition: true,
+                  pointerLabelComponent: (items: any[]) => {
+                    const item = items?.[0];
+                    if (!item) return null;
+                    return (
+                      <View style={styles.chartPointerTooltip}>
+                        <Text style={styles.chartPointerTooltipValue}>{item.value} kg</Text>
+                        <Text style={styles.chartPointerTooltipLabel}>{item.label}</Text>
+                      </View>
+                    );
+                  },
+                }}
               />
             </View>
           )}
@@ -871,6 +892,14 @@ export default function Profile() {
                   yAxisTextStyle={{ color: theme.foreground.gray, fontSize: 9 }}
                   hideRules barBorderRadius={6}
                   isAnimated height={130} width={SCREEN_WIDTH - 80}
+                  renderTooltip={(item: any) => (
+                    <View style={styles.barChartTooltip}>
+                      <Text style={styles.barChartTooltipValue}>
+                        {item.value.toLocaleString(isFr ? "fr-FR" : "en-US")} {isFr ? "pas" : "steps"}
+                      </Text>
+                    </View>
+                  )}
+                  autoCenterTooltip
                 />
               </View>
             </>
@@ -949,6 +978,14 @@ export default function Profile() {
                   yAxisTextStyle={{ color: theme.foreground.gray, fontSize: 9 }}
                   hideRules barBorderRadius={6}
                   isAnimated height={130} width={SCREEN_WIDTH - 80}
+                  renderTooltip={(item: any) => (
+                    <View style={[styles.barChartTooltip, { borderColor: "rgba(255,107,0,0.35)" }]}>
+                      <Text style={[styles.barChartTooltipValue, { color: "#FF6B00" }]}>
+                        {item.value.toLocaleString(isFr ? "fr-FR" : "en-US")} kcal
+                      </Text>
+                    </View>
+                  )}
+                  autoCenterTooltip
                 />
               </View>
             </>
@@ -1027,6 +1064,14 @@ export default function Profile() {
                   yAxisTextStyle={{ color: theme.foreground.gray, fontSize: 9 }}
                   hideRules barBorderRadius={6}
                   isAnimated height={130} width={SCREEN_WIDTH - 80}
+                  renderTooltip={(item: any) => (
+                    <View style={[styles.barChartTooltip, { borderColor: "rgba(245,166,35,0.35)" }]}>
+                      <Text style={[styles.barChartTooltipValue, { color: "#F5A623" }]}>
+                        {item.value.toLocaleString(isFr ? "fr-FR" : "en-US")} kcal
+                      </Text>
+                    </View>
+                  )}
+                  autoCenterTooltip
                 />
               </View>
             </>
@@ -1839,6 +1884,53 @@ function createStyles(theme: Theme) {
       borderRadius: 12, backgroundColor: theme.background.darker,
     },
     chartWrap: { alignItems: "center", overflow: "hidden" },
+    chartPointerTooltip: {
+      backgroundColor: "#0F1E36",
+      paddingHorizontal: 8,
+      paddingVertical: 5,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: "rgba(255,255,255,0.18)",
+      alignItems: "center",
+      justifyContent: "center",
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 3 },
+      shadowOpacity: 0.35,
+      shadowRadius: 5,
+      elevation: 6,
+    },
+    chartPointerTooltipValue: {
+      fontFamily: FONTS.extraBold,
+      fontSize: 12,
+      color: "#FFFFFF",
+    },
+    chartPointerTooltipLabel: {
+      fontFamily: FONTS.semiBold,
+      fontSize: 9,
+      color: NAVY_TEXT_MUTED,
+      marginTop: 1,
+    },
+    barChartTooltip: {
+      backgroundColor: "#0F1E36",
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 7,
+      borderWidth: 1,
+      borderColor: "rgba(255,255,255,0.18)",
+      alignItems: "center",
+      justifyContent: "center",
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.3,
+      shadowRadius: 4,
+      elevation: 5,
+      marginBottom: 6,
+    },
+    barChartTooltipValue: {
+      fontFamily: FONTS.bold,
+      fontSize: 11,
+      color: "#FFFFFF",
+    },
 
     // Navy Section Cards (Progression du jour, Mensurations, Composition corporelle, Score de progression)
     navySectionCard: {
