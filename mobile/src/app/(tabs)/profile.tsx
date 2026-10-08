@@ -73,6 +73,159 @@ function getLocalMonday(d: Date): Date {
   return date;
 }
 
+function computePeriodBars({
+  period,
+  dateMap,
+  isFr,
+  primaryColor,
+  mutedColor,
+  todayValue = 0,
+  goalOrTarget = 0,
+  minMax = 100,
+}: {
+  period: "weekly" | "monthly" | "3months" | "6months";
+  dateMap: Record<string, number>;
+  isFr: boolean;
+  primaryColor: string;
+  mutedColor: string;
+  todayValue?: number;
+  goalOrTarget?: number;
+  minMax?: number;
+}) {
+  const now = new Date();
+
+  if (period === "weekly") {
+    const dayLabels = isFr
+      ? ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"]
+      : ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    const todayIdx = (now.getDay() + 6) % 7;
+    const monday = getLocalMonday(now);
+    const bars = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i);
+      const dStr = toLocalDateString(d);
+      const val = Math.round(dateMap[dStr] || (i === todayIdx ? todayValue : 0));
+      bars.push({
+        value: val,
+        label: dayLabels[i],
+        frontColor: i === todayIdx ? primaryColor : mutedColor,
+      });
+    }
+    const total = bars.reduce((s, b) => s + b.value, 0);
+    const average = Math.round(total / 7);
+    const maxVal = Math.max(...bars.map((d) => d.value), goalOrTarget, minMax);
+    const maxValue = Math.ceil(maxVal * 1.35);
+    return {
+      bars,
+      total,
+      average,
+      maxValue,
+      barWidth: 26,
+      spacing: 16,
+      isWeek: true,
+      periodLabel: isFr ? "Cette semaine" : "This week",
+    };
+  }
+
+  if (period === "monthly") {
+    const weekLabels = isFr ? ["S1", "S2", "S3", "S4"] : ["W1", "W2", "W3", "W4"];
+    const bars = [];
+    let totalAll = 0;
+
+    for (let w = 0; w < 4; w++) {
+      let weekSum = 0;
+      // 4 chunks of 7 days: w=0 is oldest (28-22 days ago), w=3 is current (7-1 days ago + today)
+      const startDayOffset = 28 - w * 7;
+      const endDayOffset = 28 - (w + 1) * 7;
+      for (let i = startDayOffset; i > endDayOffset; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (i - 1));
+        const dStr = toLocalDateString(d);
+        const isToday = i === 1;
+        const val = dateMap[dStr] || (isToday ? todayValue : 0);
+        weekSum += val;
+      }
+      totalAll += weekSum;
+      const weekAvg = Math.round(weekSum / 7);
+      bars.push({
+        value: weekAvg,
+        label: weekLabels[w],
+        frontColor: w === 3 ? primaryColor : mutedColor,
+      });
+    }
+
+    const average = Math.round(totalAll / 28);
+    const maxVal = Math.max(...bars.map((d) => d.value), goalOrTarget, minMax);
+    const maxValue = Math.ceil(maxVal * 1.35);
+    return {
+      bars,
+      total: totalAll,
+      average,
+      maxValue,
+      barWidth: 36,
+      spacing: 32,
+      isWeek: false,
+      periodLabel: isFr ? "30 derniers jours" : "Last 30 days",
+    };
+  }
+
+  if (period === "3months" || period === "6months") {
+    const numMonths = period === "3months" ? 3 : 6;
+    const monthsFr = ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", "Sep", "Oct", "Nov", "Déc"];
+    const monthsEn = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const monthNames = isFr ? monthsFr : monthsEn;
+
+    const bars = [];
+    let totalAll = 0;
+    let totalDays = 0;
+
+    for (let m = numMonths - 1; m >= 0; m--) {
+      const targetMonthDate = new Date(now.getFullYear(), now.getMonth() - m, 1);
+      const year = targetMonthDate.getFullYear();
+      const month = targetMonthDate.getMonth();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const isCurrentMonth = m === 0;
+      const daysCount = isCurrentMonth ? now.getDate() : daysInMonth;
+
+      let monthSum = 0;
+      for (let day = 1; day <= daysCount; day++) {
+        const d = new Date(year, month, day);
+        const dStr = toLocalDateString(d);
+        const isToday = isCurrentMonth && day === now.getDate();
+        const val = dateMap[dStr] || (isToday ? todayValue : 0);
+        monthSum += val;
+      }
+
+      totalAll += monthSum;
+      totalDays += daysCount;
+      const monthAvg = Math.round(monthSum / Math.max(1, daysCount));
+
+      bars.push({
+        value: monthAvg,
+        label: monthNames[month],
+        frontColor: isCurrentMonth ? primaryColor : mutedColor,
+      });
+    }
+
+    const average = Math.round(totalAll / Math.max(1, totalDays));
+    const maxVal = Math.max(...bars.map((d) => d.value), goalOrTarget, minMax);
+    const maxValue = Math.ceil(maxVal * 1.35);
+    const barWidth = numMonths === 3 ? 44 : 26;
+    const spacing = numMonths === 3 ? 44 : 18;
+    return {
+      bars,
+      total: totalAll,
+      average,
+      maxValue,
+      barWidth,
+      spacing,
+      isWeek: false,
+      periodLabel: period === "3months" ? (isFr ? "3 derniers mois" : "Last 3 months") : (isFr ? "6 derniers mois" : "Last 6 months"),
+    };
+  }
+
+  return { bars: [], total: 0, average: 0, maxValue: 100, barWidth: 26, spacing: 16, isWeek: true, periodLabel: "" };
+}
+
 function calcBMI(w: number, h: number) { return h > 0 ? w / ((h / 100) ** 2) : 0; }
 function bmiInfo(bmi: number) {
   if (bmi < 18.5) return { label: "Insuffisant", color: "#4A90D9" };
@@ -508,42 +661,31 @@ export default function Profile() {
   const dayLabels = isFr ? ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"] : ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const todayIdx = (new Date().getDay() + 6) % 7;
   const stepsMetrics = useMemo(() => {
-    const isWeek = activityPeriod === "weekly";
     const stepsMap: Record<string, number> = {};
     const sourceSteps = periodSteps.length > 0 ? periodSteps : weeklySteps;
     sourceSteps.forEach((s) => {
       stepsMap[s.date] = (stepsMap[s.date] || 0) + s.count;
     });
 
-    if (isWeek) {
-      const days = [];
-      const monday = getLocalMonday(new Date());
-      for (let i = 0; i < 7; i++) {
-        const d = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i);
-        const dStr = toLocalDateString(d);
-        const count = stepsMap[dStr] || (i === todayIdx ? todaySteps : 0);
-        days.push({
-          value: count,
-          label: dayLabels[i],
-          frontColor: i === todayIdx ? theme.primary.main : `${theme.foreground.gray}40`,
-        });
-      }
-      const total = days.reduce((sum, d) => sum + d.value, 0);
-      const avg = Math.round(total / 7);
-      const maxVal = Math.max(...days.map((d) => d.value), dailyStepsGoal, 1000);
-      const maxValue = Math.ceil(maxVal * 1.35);
-      return { isWeek: true, chartData: days, total, average: avg, maxValue };
-    } else {
-      const total = Object.values(stepsMap).reduce((s, c) => s + c, 0) || todaySteps;
-      const countDays = Math.max(1, Object.keys(stepsMap).length || (activityPeriod === "monthly" ? 30 : activityPeriod === "3months" ? 90 : 180));
-      const avg = Math.round(total / countDays);
-      return { isWeek: false, total, average: avg };
-    }
-  }, [activityPeriod, periodSteps, weeklySteps, todayIdx, todaySteps, dayLabels, theme, dailyStepsGoal]);
+    const result = computePeriodBars({
+      period: activityPeriod,
+      dateMap: stepsMap,
+      isFr,
+      primaryColor: theme.primary.main,
+      mutedColor: `${theme.foreground.gray}40`,
+      todayValue: todaySteps,
+      goalOrTarget: dailyStepsGoal,
+      minMax: 1000,
+    });
 
-  // ── Nutrition metrics (Daily bars in Week, Average & Total in Month/3m/6m) ──
+    return {
+      ...result,
+      chartData: result.bars,
+    };
+  }, [activityPeriod, periodSteps, weeklySteps, todaySteps, theme, isFr, dailyStepsGoal]);
+
+  // ── Nutrition metrics (Daily bars in Week, Week avg bars in Month, Month avg bars in 3m/6m) ──
   const nutritionMetrics = useMemo(() => {
-    const isWeek = activityPeriod === "weekly";
     const targetKcal = nutritionGoals?.calorieGoal || calorieGoal || 2000;
     const nutritionMap: Record<string, number> = {};
     periodNutrition.forEach((n) => {
@@ -554,66 +696,48 @@ export default function Profile() {
       nutritionMap[todayStr] = todaySummary.totalCalories;
     }
 
-    if (isWeek) {
-      const days = [];
-      const monday = getLocalMonday(new Date());
-      for (let i = 0; i < 7; i++) {
-        const d = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i);
-        const dStr = toLocalDateString(d);
-        const val = Math.round(nutritionMap[dStr] || 0);
-        days.push({
-          value: val,
-          label: dayLabels[i],
-          frontColor: i === todayIdx ? "#FF6B00" : `${theme.foreground.gray}40`,
-        });
-      }
-      const total = days.reduce((s, d) => s + d.value, 0);
-      const avg = Math.round(total / 7);
-      const maxVal = Math.max(...days.map((d) => d.value), targetKcal, 1000);
-      const maxValue = Math.ceil(maxVal * 1.35);
-      return { isWeek: true, chartData: days, total, average: avg, targetKcal, maxValue };
-    } else {
-      const total = Object.values(nutritionMap).reduce((s, c) => s + c, 0);
-      const loggedDays = Math.max(1, Object.keys(nutritionMap).length || 1);
-      const avg = Math.round(total / loggedDays);
-      return { isWeek: false, total, average: avg, targetKcal };
-    }
-  }, [activityPeriod, periodNutrition, todaySummary, todayIdx, dayLabels, theme, nutritionGoals, calorieGoal]);
+    const result = computePeriodBars({
+      period: activityPeriod,
+      dateMap: nutritionMap,
+      isFr,
+      primaryColor: "#FF6B00",
+      mutedColor: `${theme.foreground.gray}40`,
+      todayValue: todaySummary?.totalCalories || 0,
+      goalOrTarget: targetKcal,
+      minMax: 1000,
+    });
 
-  // ── Calories burned metrics (Daily bars in Week, Average & Total in Month/3m/6m) ──
+    return {
+      ...result,
+      chartData: result.bars,
+      targetKcal,
+    };
+  }, [activityPeriod, periodNutrition, todaySummary, theme, isFr, nutritionGoals, calorieGoal]);
+
+  // ── Calories burned metrics (Daily bars in Week, Week avg bars in Month, Month avg bars in 3m/6m) ──
   const caloriesBurnedMetrics = useMemo(() => {
-    const isWeek = activityPeriod === "weekly";
     const burnedMap: Record<string, number> = {};
     const sourceBurned = periodCaloriesBurned.length > 0 ? periodCaloriesBurned : weeklyCaloriesBurned;
     sourceBurned.forEach((b) => {
       burnedMap[b.date] = (burnedMap[b.date] || 0) + b.totalCalories;
     });
 
-    if (isWeek) {
-      const days = [];
-      const monday = getLocalMonday(new Date());
-      for (let i = 0; i < 7; i++) {
-        const d = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i);
-        const dStr = toLocalDateString(d);
-        const val = Math.round(burnedMap[dStr] || (i === todayIdx ? todayCaloriesBurned : 0));
-        days.push({
-          value: val,
-          label: dayLabels[i],
-          frontColor: i === todayIdx ? theme.primary.main : `${theme.foreground.gray}40`,
-        });
-      }
-      const total = days.reduce((s, d) => s + d.value, 0);
-      const avg = Math.round(total / 7);
-      const maxVal = Math.max(...days.map((d) => d.value), 500);
-      const maxValue = Math.ceil(maxVal * 1.35);
-      return { isWeek: true, chartData: days, total, average: avg, maxValue };
-    } else {
-      const total = Math.round(Object.values(burnedMap).reduce((s, c) => s + c, 0) || todayCaloriesBurned);
-      const countDays = Math.max(1, Object.keys(burnedMap).length || (activityPeriod === "monthly" ? 30 : activityPeriod === "3months" ? 90 : 180));
-      const avg = Math.round(total / countDays);
-      return { isWeek: false, total, average: avg };
-    }
-  }, [activityPeriod, periodCaloriesBurned, weeklyCaloriesBurned, todayIdx, todayCaloriesBurned, dayLabels, theme]);
+    const result = computePeriodBars({
+      period: activityPeriod,
+      dateMap: burnedMap,
+      isFr,
+      primaryColor: "#F5A623",
+      mutedColor: `${theme.foreground.gray}40`,
+      todayValue: todayCaloriesBurned,
+      goalOrTarget: 400,
+      minMax: 500,
+    });
+
+    return {
+      ...result,
+      chartData: result.bars,
+    };
+  }, [activityPeriod, periodCaloriesBurned, weeklyCaloriesBurned, todayCaloriesBurned, theme, isFr]);
 
   // ── Workouts & activity time metrics (counts, durations like 30min, 40min...) ──
   const workoutMetrics = useMemo(() => {
@@ -867,265 +991,202 @@ export default function Profile() {
         {/* ── 2. Steps (Pas) ────────────────────────────────────── */}
         <Text style={styles.sectionTitle}>{isFr ? "Pas" : "Steps"}</Text>
         <View style={styles.chartCard}>
-          {stepsMetrics.isWeek ? (
-            <>
-              <View style={styles.cardMetricsHeader}>
-                <View>
-                  <Text style={styles.chartTotal}>
-                    {stepsMetrics.total.toLocaleString(isFr ? "fr-FR" : "en-US")}{" "}
-                    <Text style={styles.chartTotalUnit}>{isFr ? "pas" : "steps"}</Text>
-                  </Text>
-                  <Text style={styles.chartSubLabel}>
-                    {isFr ? "Moyenne" : "Average"}: {stepsMetrics.average.toLocaleString(isFr ? "fr-FR" : "en-US")} {isFr ? "pas/jour" : "steps/day"}
-                  </Text>
-                </View>
-                <View style={styles.goalTag}>
-                  <MaterialCommunityIcons name="shoe-print" size={14} color={theme.primary.main} />
-                  <Text style={styles.goalTagText}>
-                    {isFr ? "Obj." : "Goal"}: {dailyStepsGoal.toLocaleString(isFr ? "fr-FR" : "en-US")}
-                  </Text>
-                </View>
-              </View>
-              <View style={styles.chartWrap}>
-                <BarChart
-                  data={stepsMetrics.chartData}
-                  barWidth={26}
-                  spacing={16}
-                  roundedTop roundedBottom
-                  noOfSections={3}
-                  maxValue={stepsMetrics.maxValue}
-                  overflowTop={30}
-                  yAxisThickness={0} xAxisThickness={0}
-                  xAxisLabelTextStyle={{ color: theme.foreground.gray, fontSize: 10, fontFamily: FONTS.semiBold }}
-                  yAxisTextStyle={{ color: theme.foreground.gray, fontSize: 9 }}
-                  hideRules barBorderRadius={6}
-                  isAnimated height={130} width={SCREEN_WIDTH - 80}
-                  renderTooltip={(item: any) => (
-                    <View style={styles.barChartTooltip}>
-                      <Text style={styles.barChartTooltipValue}>
-                        {item.value.toLocaleString(isFr ? "fr-FR" : "en-US")} {isFr ? "pas" : "steps"}
-                      </Text>
-                    </View>
-                  )}
-                  autoCenterTooltip
-                />
-              </View>
-            </>
-          ) : (
-            <View style={styles.averageHeroWrap}>
-              <View style={styles.averageHeroRow}>
-                <View style={[styles.averageIconBadge, { backgroundColor: `${theme.primary.main}18` }]}>
-                  <MaterialCommunityIcons name="shoe-print" size={28} color={theme.primary.main} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.averageHeroValue}>
-                    {stepsMetrics.average.toLocaleString(isFr ? "fr-FR" : "en-US")}{" "}
-                    <Text style={styles.averageHeroUnit}>{isFr ? "pas/jour" : "steps/day"}</Text>
-                  </Text>
-                  <Text style={styles.averageHeroSubtitle}>
-                    {isFr ? "Moyenne quotidienne sur la période" : "Daily average over the period"}
-                  </Text>
-                </View>
-              </View>
-              <View style={styles.heroStatsDivider} />
-              <View style={styles.heroStatsGrid}>
-                <View style={styles.heroStatItem}>
-                  <Text style={styles.heroStatItemLabel}>{isFr ? "Total cumulé" : "Total steps"}</Text>
-                  <Text style={styles.heroStatItemValue}>
-                    {stepsMetrics.total.toLocaleString(isFr ? "fr-FR" : "en-US")}
-                  </Text>
-                </View>
-                <View style={styles.heroStatItem}>
-                  <Text style={styles.heroStatItemLabel}>{isFr ? "Objectif / jour" : "Daily goal"}</Text>
-                  <Text style={styles.heroStatItemValue}>
-                    {dailyStepsGoal.toLocaleString(isFr ? "fr-FR" : "en-US")}
-                  </Text>
-                </View>
-                <View style={styles.heroStatItem}>
-                  <Text style={styles.heroStatItemLabel}>{isFr ? "Atteinte" : "Completion"}</Text>
-                  <Text style={[styles.heroStatItemValue, { color: stepsMetrics.average >= dailyStepsGoal ? "#34C759" : theme.primary.main }]}>
-                    {Math.round((stepsMetrics.average / Math.max(1, dailyStepsGoal)) * 100)}%
-                  </Text>
-                </View>
-              </View>
+          <View style={styles.cardMetricsHeader}>
+            <View>
+              <Text style={styles.chartTotal}>
+                {stepsMetrics.average.toLocaleString(isFr ? "fr-FR" : "en-US")}{" "}
+                <Text style={styles.chartTotalUnit}>{isFr ? "pas/jour" : "steps/day"}</Text>
+              </Text>
+              <Text style={styles.chartSubLabel}>
+                {isFr ? "Total" : "Total"}: {stepsMetrics.total.toLocaleString(isFr ? "fr-FR" : "en-US")} {isFr ? "pas" : "steps"}
+              </Text>
             </View>
-          )}
+            <View style={styles.goalTag}>
+              <MaterialCommunityIcons name="shoe-print" size={14} color={theme.primary.main} />
+              <Text style={styles.goalTagText}>
+                {isFr ? "Obj." : "Goal"}: {dailyStepsGoal.toLocaleString(isFr ? "fr-FR" : "en-US")}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.chartWrap}>
+            <BarChart
+              data={stepsMetrics.chartData}
+              barWidth={stepsMetrics.barWidth}
+              spacing={stepsMetrics.spacing}
+              roundedTop roundedBottom
+              noOfSections={3}
+              maxValue={stepsMetrics.maxValue}
+              overflowTop={30}
+              yAxisThickness={0} xAxisThickness={0}
+              xAxisLabelTextStyle={{ color: theme.foreground.gray, fontSize: 10, fontFamily: FONTS.semiBold }}
+              yAxisTextStyle={{ color: theme.foreground.gray, fontSize: 9 }}
+              hideRules barBorderRadius={6}
+              isAnimated height={130} width={SCREEN_WIDTH - 80}
+              renderTooltip={(item: any) => (
+                <View style={styles.barChartTooltip}>
+                  <Text style={styles.barChartTooltipValue}>
+                    {item.value.toLocaleString(isFr ? "fr-FR" : "en-US")} {activityPeriod === "weekly" ? (isFr ? "pas" : "steps") : (isFr ? "pas/j" : "steps/d")}
+                  </Text>
+                </View>
+              )}
+              autoCenterTooltip
+            />
+          </View>
+          <View style={styles.heroStatsDivider} />
+          <View style={styles.heroStatsGrid}>
+            <View style={styles.heroStatItem}>
+              <Text style={styles.heroStatItemLabel}>{isFr ? "Total cumulé" : "Total steps"}</Text>
+              <Text style={styles.heroStatItemValue}>
+                {stepsMetrics.total.toLocaleString(isFr ? "fr-FR" : "en-US")}
+              </Text>
+            </View>
+            <View style={styles.heroStatItem}>
+              <Text style={styles.heroStatItemLabel}>{isFr ? "Objectif / jour" : "Daily goal"}</Text>
+              <Text style={styles.heroStatItemValue}>
+                {dailyStepsGoal.toLocaleString(isFr ? "fr-FR" : "en-US")}
+              </Text>
+            </View>
+            <View style={styles.heroStatItem}>
+              <Text style={styles.heroStatItemLabel}>{isFr ? "Atteinte" : "Completion"}</Text>
+              <Text style={[styles.heroStatItemValue, { color: stepsMetrics.average >= dailyStepsGoal ? "#34C759" : theme.primary.main }]}>
+                {Math.round((stepsMetrics.average / Math.max(1, dailyStepsGoal)) * 100)}%
+              </Text>
+            </View>
+          </View>
         </View>
 
         {/* ── 3. Calories Consumed (Calories consommées) ─────────── */}
         <Text style={styles.sectionTitle}>{isFr ? "Calories consommées" : "Calories Consumed"}</Text>
         <View style={styles.chartCard}>
-          {nutritionMetrics.isWeek ? (
-            <>
-              <View style={styles.cardMetricsHeader}>
-                <View>
-                  <Text style={styles.chartTotal}>
-                    {nutritionMetrics.total.toLocaleString(isFr ? "fr-FR" : "en-US")}{" "}
-                    <Text style={styles.chartTotalUnit}>kcal</Text>
-                  </Text>
-                  <Text style={styles.chartSubLabel}>
-                    {isFr ? "Moyenne" : "Average"}: {nutritionMetrics.average.toLocaleString(isFr ? "fr-FR" : "en-US")} {isFr ? "kcal/jour" : "kcal/day"}
-                  </Text>
-                </View>
-                <View style={[styles.goalTag, { backgroundColor: "rgba(255,107,0,0.15)" }]}>
-                  <MaterialCommunityIcons name="silverware-fork-knife" size={14} color="#FF6B00" />
-                  <Text style={[styles.goalTagText, { color: "#FF6B00" }]}>
-                    {isFr ? "Obj." : "Goal"}: {nutritionMetrics.targetKcal.toLocaleString(isFr ? "fr-FR" : "en-US")}
-                  </Text>
-                </View>
-              </View>
-              <View style={styles.chartWrap}>
-                <BarChart
-                  data={nutritionMetrics.chartData}
-                  barWidth={26}
-                  spacing={16}
-                  roundedTop roundedBottom
-                  noOfSections={3}
-                  maxValue={nutritionMetrics.maxValue}
-                  overflowTop={30}
-                  yAxisThickness={0} xAxisThickness={0}
-                  xAxisLabelTextStyle={{ color: theme.foreground.gray, fontSize: 10, fontFamily: FONTS.semiBold }}
-                  yAxisTextStyle={{ color: theme.foreground.gray, fontSize: 9 }}
-                  hideRules barBorderRadius={6}
-                  isAnimated height={130} width={SCREEN_WIDTH - 80}
-                  renderTooltip={(item: any) => (
-                    <View style={[styles.barChartTooltip, { borderColor: "rgba(255,107,0,0.35)" }]}>
-                      <Text style={[styles.barChartTooltipValue, { color: "#FF6B00" }]}>
-                        {item.value.toLocaleString(isFr ? "fr-FR" : "en-US")} kcal
-                      </Text>
-                    </View>
-                  )}
-                  autoCenterTooltip
-                />
-              </View>
-            </>
-          ) : (
-            <View style={styles.averageHeroWrap}>
-              <View style={styles.averageHeroRow}>
-                <View style={[styles.averageIconBadge, { backgroundColor: "rgba(255,107,0,0.15)" }]}>
-                  <MaterialCommunityIcons name="silverware-fork-knife" size={28} color="#FF6B00" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.averageHeroValue}>
-                    {nutritionMetrics.average.toLocaleString(isFr ? "fr-FR" : "en-US")}{" "}
-                    <Text style={styles.averageHeroUnit}>{isFr ? "kcal/jour" : "kcal/day"}</Text>
-                  </Text>
-                  <Text style={styles.averageHeroSubtitle}>
-                    {isFr ? "Moyenne consommée par jour" : "Daily average consumed"}
-                  </Text>
-                </View>
-              </View>
-              <View style={styles.heroStatsDivider} />
-              <View style={styles.heroStatsGrid}>
-                <View style={styles.heroStatItem}>
-                  <Text style={styles.heroStatItemLabel}>{isFr ? "Total consommé" : "Total eaten"}</Text>
-                  <Text style={styles.heroStatItemValue}>
-                    {nutritionMetrics.total.toLocaleString(isFr ? "fr-FR" : "en-US")} kcal
-                  </Text>
-                </View>
-                <View style={styles.heroStatItem}>
-                  <Text style={styles.heroStatItemLabel}>{isFr ? "Objectif / jour" : "Daily target"}</Text>
-                  <Text style={styles.heroStatItemValue}>
-                    {nutritionMetrics.targetKcal.toLocaleString(isFr ? "fr-FR" : "en-US")} kcal
-                  </Text>
-                </View>
-                <View style={styles.heroStatItem}>
-                  <Text style={styles.heroStatItemLabel}>{isFr ? "Adhérence" : "Target %"}</Text>
-                  <Text style={[styles.heroStatItemValue, { color: "#FF6B00" }]}>
-                    {Math.round((nutritionMetrics.average / Math.max(1, nutritionMetrics.targetKcal)) * 100)}%
-                  </Text>
-                </View>
-              </View>
+          <View style={styles.cardMetricsHeader}>
+            <View>
+              <Text style={styles.chartTotal}>
+                {nutritionMetrics.average.toLocaleString(isFr ? "fr-FR" : "en-US")}{" "}
+                <Text style={styles.chartTotalUnit}>{isFr ? "kcal/jour" : "kcal/day"}</Text>
+              </Text>
+              <Text style={styles.chartSubLabel}>
+                {isFr ? "Total consommé" : "Total eaten"}: {nutritionMetrics.total.toLocaleString(isFr ? "fr-FR" : "en-US")} kcal
+              </Text>
             </View>
-          )}
+            <View style={[styles.goalTag, { backgroundColor: "rgba(255,107,0,0.15)" }]}>
+              <MaterialCommunityIcons name="silverware-fork-knife" size={14} color="#FF6B00" />
+              <Text style={[styles.goalTagText, { color: "#FF6B00" }]}>
+                {isFr ? "Obj." : "Goal"}: {nutritionMetrics.targetKcal.toLocaleString(isFr ? "fr-FR" : "en-US")}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.chartWrap}>
+            <BarChart
+              data={nutritionMetrics.chartData}
+              barWidth={nutritionMetrics.barWidth}
+              spacing={nutritionMetrics.spacing}
+              roundedTop roundedBottom
+              noOfSections={3}
+              maxValue={nutritionMetrics.maxValue}
+              overflowTop={30}
+              yAxisThickness={0} xAxisThickness={0}
+              xAxisLabelTextStyle={{ color: theme.foreground.gray, fontSize: 10, fontFamily: FONTS.semiBold }}
+              yAxisTextStyle={{ color: theme.foreground.gray, fontSize: 9 }}
+              hideRules barBorderRadius={6}
+              isAnimated height={130} width={SCREEN_WIDTH - 80}
+              renderTooltip={(item: any) => (
+                <View style={[styles.barChartTooltip, { borderColor: "rgba(255,107,0,0.35)" }]}>
+                  <Text style={[styles.barChartTooltipValue, { color: "#FF6B00" }]}>
+                    {item.value.toLocaleString(isFr ? "fr-FR" : "en-US")} {activityPeriod === "weekly" ? "kcal" : (isFr ? "kcal/j" : "kcal/d")}
+                  </Text>
+                </View>
+              )}
+              autoCenterTooltip
+            />
+          </View>
+          <View style={styles.heroStatsDivider} />
+          <View style={styles.heroStatsGrid}>
+            <View style={styles.heroStatItem}>
+              <Text style={styles.heroStatItemLabel}>{isFr ? "Total consommé" : "Total eaten"}</Text>
+              <Text style={styles.heroStatItemValue}>
+                {nutritionMetrics.total.toLocaleString(isFr ? "fr-FR" : "en-US")} kcal
+              </Text>
+            </View>
+            <View style={styles.heroStatItem}>
+              <Text style={styles.heroStatItemLabel}>{isFr ? "Objectif / jour" : "Daily target"}</Text>
+              <Text style={styles.heroStatItemValue}>
+                {nutritionMetrics.targetKcal.toLocaleString(isFr ? "fr-FR" : "en-US")} kcal
+              </Text>
+            </View>
+            <View style={styles.heroStatItem}>
+              <Text style={styles.heroStatItemLabel}>{isFr ? "Adhérence" : "Target %"}</Text>
+              <Text style={[styles.heroStatItemValue, { color: "#FF6B00" }]}>
+                {Math.round((nutritionMetrics.average / Math.max(1, nutritionMetrics.targetKcal)) * 100)}%
+              </Text>
+            </View>
+          </View>
         </View>
 
         {/* ── 4. Calories Burned (Calories brûlées) ─────────────── */}
         <Text style={styles.sectionTitle}>{isFr ? "Calories brûlées" : "Calories Burned"}</Text>
         <View style={styles.chartCard}>
-          {caloriesBurnedMetrics.isWeek ? (
-            <>
-              <View style={styles.cardMetricsHeader}>
-                <View>
-                  <Text style={styles.chartTotal}>
-                    {caloriesBurnedMetrics.total.toLocaleString(isFr ? "fr-FR" : "en-US")}{" "}
-                    <Text style={styles.chartTotalUnit}>kcal</Text>
-                  </Text>
-                  <Text style={styles.chartSubLabel}>
-                    {isFr ? "Moyenne" : "Average"}: {caloriesBurnedMetrics.average.toLocaleString(isFr ? "fr-FR" : "en-US")} {isFr ? "kcal/jour" : "kcal/day"}
-                  </Text>
-                </View>
-                <View style={[styles.goalTag, { backgroundColor: "rgba(245,166,35,0.15)" }]}>
-                  <MaterialCommunityIcons name="fire" size={14} color="#F5A623" />
-                  <Text style={[styles.goalTagText, { color: "#F5A623" }]}>
-                    {isFr ? "Activité" : "Activity"}
-                  </Text>
-                </View>
-              </View>
-              <View style={styles.chartWrap}>
-                <BarChart
-                  data={caloriesBurnedMetrics.chartData}
-                  barWidth={26}
-                  spacing={16}
-                  roundedTop roundedBottom
-                  noOfSections={3}
-                  maxValue={caloriesBurnedMetrics.maxValue}
-                  overflowTop={30}
-                  yAxisThickness={0} xAxisThickness={0}
-                  xAxisLabelTextStyle={{ color: theme.foreground.gray, fontSize: 10, fontFamily: FONTS.semiBold }}
-                  yAxisTextStyle={{ color: theme.foreground.gray, fontSize: 9 }}
-                  hideRules barBorderRadius={6}
-                  isAnimated height={130} width={SCREEN_WIDTH - 80}
-                  renderTooltip={(item: any) => (
-                    <View style={[styles.barChartTooltip, { borderColor: "rgba(245,166,35,0.35)" }]}>
-                      <Text style={[styles.barChartTooltipValue, { color: "#F5A623" }]}>
-                        {item.value.toLocaleString(isFr ? "fr-FR" : "en-US")} kcal
-                      </Text>
-                    </View>
-                  )}
-                  autoCenterTooltip
-                />
-              </View>
-            </>
-          ) : (
-            <View style={styles.averageHeroWrap}>
-              <View style={styles.averageHeroRow}>
-                <View style={[styles.averageIconBadge, { backgroundColor: "rgba(245,166,35,0.15)" }]}>
-                  <MaterialCommunityIcons name="fire" size={28} color="#F5A623" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.averageHeroValue}>
-                    {caloriesBurnedMetrics.average.toLocaleString(isFr ? "fr-FR" : "en-US")}{" "}
-                    <Text style={styles.averageHeroUnit}>{isFr ? "kcal/jour" : "kcal/day"}</Text>
-                  </Text>
-                  <Text style={styles.averageHeroSubtitle}>
-                    {isFr ? "Moyenne brûlée par jour" : "Daily average burned"}
-                  </Text>
-                </View>
-              </View>
-              <View style={styles.heroStatsDivider} />
-              <View style={styles.heroStatsGrid}>
-                <View style={styles.heroStatItem}>
-                  <Text style={styles.heroStatItemLabel}>{isFr ? "Total brûlé" : "Total burned"}</Text>
-                  <Text style={styles.heroStatItemValue}>
-                    {caloriesBurnedMetrics.total.toLocaleString(isFr ? "fr-FR" : "en-US")} kcal
-                  </Text>
-                </View>
-                <View style={styles.heroStatItem}>
-                  <Text style={styles.heroStatItemLabel}>{isFr ? "Période" : "Period"}</Text>
-                  <Text style={styles.heroStatItemValue}>
-                    {activityPeriod === "monthly" ? "30 j" : activityPeriod === "3months" ? "90 j" : "180 j"}
-                  </Text>
-                </View>
-                <View style={styles.heroStatItem}>
-                  <Text style={styles.heroStatItemLabel}>{isFr ? "Intensité" : "Rate"}</Text>
-                  <Text style={[styles.heroStatItemValue, { color: "#F5A623" }]}>
-                    {caloriesBurnedMetrics.average > 400 ? (isFr ? "Élevée" : "High") : (isFr ? "Modérée" : "Moderate")}
-                  </Text>
-                </View>
-              </View>
+          <View style={styles.cardMetricsHeader}>
+            <View>
+              <Text style={styles.chartTotal}>
+                {caloriesBurnedMetrics.average.toLocaleString(isFr ? "fr-FR" : "en-US")}{" "}
+                <Text style={styles.chartTotalUnit}>{isFr ? "kcal/jour" : "kcal/day"}</Text>
+              </Text>
+              <Text style={styles.chartSubLabel}>
+                {isFr ? "Total brûlé" : "Total burned"}: {caloriesBurnedMetrics.total.toLocaleString(isFr ? "fr-FR" : "en-US")} kcal
+              </Text>
             </View>
-          )}
+            <View style={[styles.goalTag, { backgroundColor: "rgba(245,166,35,0.15)" }]}>
+              <MaterialCommunityIcons name="fire" size={14} color="#F5A623" />
+              <Text style={[styles.goalTagText, { color: "#F5A623" }]}>
+                {isFr ? "Activité" : "Activity"}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.chartWrap}>
+            <BarChart
+              data={caloriesBurnedMetrics.chartData}
+              barWidth={caloriesBurnedMetrics.barWidth}
+              spacing={caloriesBurnedMetrics.spacing}
+              roundedTop roundedBottom
+              noOfSections={3}
+              maxValue={caloriesBurnedMetrics.maxValue}
+              overflowTop={30}
+              yAxisThickness={0} xAxisThickness={0}
+              xAxisLabelTextStyle={{ color: theme.foreground.gray, fontSize: 10, fontFamily: FONTS.semiBold }}
+              yAxisTextStyle={{ color: theme.foreground.gray, fontSize: 9 }}
+              hideRules barBorderRadius={6}
+              isAnimated height={130} width={SCREEN_WIDTH - 80}
+              renderTooltip={(item: any) => (
+                <View style={[styles.barChartTooltip, { borderColor: "rgba(245,166,35,0.35)" }]}>
+                  <Text style={[styles.barChartTooltipValue, { color: "#F5A623" }]}>
+                    {item.value.toLocaleString(isFr ? "fr-FR" : "en-US")} {activityPeriod === "weekly" ? "kcal" : (isFr ? "kcal/j" : "kcal/d")}
+                  </Text>
+                </View>
+              )}
+              autoCenterTooltip
+            />
+          </View>
+          <View style={styles.heroStatsDivider} />
+          <View style={styles.heroStatsGrid}>
+            <View style={styles.heroStatItem}>
+              <Text style={styles.heroStatItemLabel}>{isFr ? "Total brûlé" : "Total burned"}</Text>
+              <Text style={styles.heroStatItemValue}>
+                {caloriesBurnedMetrics.total.toLocaleString(isFr ? "fr-FR" : "en-US")} kcal
+              </Text>
+            </View>
+            <View style={styles.heroStatItem}>
+              <Text style={styles.heroStatItemLabel}>{isFr ? "Période" : "Period"}</Text>
+              <Text style={styles.heroStatItemValue}>
+                {activityPeriod === "weekly" ? "7 j" : activityPeriod === "monthly" ? "30 j" : activityPeriod === "3months" ? "90 j" : "180 j"}
+              </Text>
+            </View>
+            <View style={styles.heroStatItem}>
+              <Text style={styles.heroStatItemLabel}>{isFr ? "Intensité" : "Rate"}</Text>
+              <Text style={[styles.heroStatItemValue, { color: "#F5A623" }]}>
+                {caloriesBurnedMetrics.average > 400 ? (isFr ? "Élevée" : "High") : (isFr ? "Modérée" : "Moderate")}
+              </Text>
+            </View>
+          </View>
         </View>
 
         {/* ── 5. Activities & Workouts (Activités & Séances) ─────── */}
