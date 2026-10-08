@@ -138,7 +138,7 @@ function computePeriodBars({
         value: val,
         label: dayLabels[i],
         labelComponent: () => (
-          <View style={{ width: 32, marginLeft: -3, alignItems: "center" }}>
+          <View style={{ width: 40, marginLeft: -12, alignItems: "center" }}>
             <Text style={{ fontSize: 10, fontFamily: FONTS.semiBold, color: labelColor }}>
               {dayLabels[i]}
             </Text>
@@ -158,9 +158,9 @@ function computePeriodBars({
       total,
       average,
       maxValue,
-      barWidth: 26,
-      spacing: 16,
-      initialSpacing: 16,
+      barWidth: 16,
+      spacing: 22,
+      initialSpacing: 18,
       isWeek: true,
       periodLabel: isFr ? "Cette semaine" : "This week",
     };
@@ -196,7 +196,7 @@ function computePeriodBars({
         label: showLabel ? String(day) : "",
         labelWidth: showLabel ? 26 : 0,
         labelComponent: showLabel ? () => (
-          <View style={{ width: 30, marginLeft: -12.5, alignItems: "center" }}>
+          <View style={{ width: 30, marginLeft: -13, alignItems: "center" }}>
             <Text style={{ fontSize: 10, fontFamily: FONTS.semiBold, color: labelColor }}>
               {String(day)}
             </Text>
@@ -216,8 +216,8 @@ function computePeriodBars({
       total: totalAll,
       average,
       maxValue,
-      barWidth: 5,
-      spacing: 4,
+      barWidth: 4,
+      spacing: 4.5,
       initialSpacing: 8,
       isWeek: false,
       periodLabel: isFr ? "Ce mois-ci" : "This month",
@@ -229,6 +229,10 @@ function computePeriodBars({
     const monthsFr = ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", "Sep", "Oct", "Nov", "Déc"];
     const monthsEn = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const monthNames = isFr ? monthsFr : monthsEn;
+
+    const barWidth = numMonths === 3 ? 20 : 14;
+    const spacing = numMonths === 3 ? 65 : 28;
+    const initialSpacing = numMonths === 3 ? 42 : 18;
 
     const bars = [];
     let totalAll = 0;
@@ -263,7 +267,7 @@ function computePeriodBars({
         value: monthAvg,
         label: monthNames[month],
         labelComponent: () => (
-          <View style={{ width: 36, marginLeft: -5, alignItems: "center" }}>
+          <View style={{ width: 50, marginLeft: -(50 - barWidth) / 2, alignItems: "center" }}>
             <Text style={{ fontSize: 10, fontFamily: FONTS.semiBold, color: labelColor }}>
               {monthNames[month]}
             </Text>
@@ -278,9 +282,6 @@ function computePeriodBars({
     const average = Math.round(totalAll / Math.max(1, totalDays));
     const maxVal = Math.max(...bars.map((d) => d.value), 0);
     const maxValue = computeNiceYMax(maxVal, 3, minDefault);
-    const barWidth = numMonths === 3 ? 36 : 22;
-    const spacing = numMonths === 3 ? 48 : 20;
-    const initialSpacing = numMonths === 3 ? 32 : 16;
     return {
       bars,
       total: totalAll,
@@ -1091,7 +1092,7 @@ export default function Profile() {
               barWidth={stepsMetrics.barWidth}
               spacing={stepsMetrics.spacing}
               initialSpacing={stepsMetrics.initialSpacing}
-              roundedTop roundedBottom
+              roundedTop
               noOfSections={3}
               maxValue={stepsMetrics.maxValue}
               overflowTop={30}
@@ -1105,7 +1106,7 @@ export default function Profile() {
                 return num.toLocaleString(isFr ? "fr-FR" : "en-US");
               }}
               hideRules
-              barBorderRadius={activityPeriod === "monthly" ? 2.5 : 6}
+              barBorderRadius={activityPeriod === "monthly" ? 2 : 4}
               isAnimated height={130} width={SCREEN_WIDTH - 80}
               renderTooltip={(item: any) => (
                 <View style={[styles.barChartTooltip, { borderColor: `${theme.primary.main}45` }]}>
@@ -1170,7 +1171,7 @@ export default function Profile() {
               barWidth={nutritionMetrics.barWidth}
               spacing={nutritionMetrics.spacing}
               initialSpacing={nutritionMetrics.initialSpacing}
-              roundedTop roundedBottom
+              roundedTop
               noOfSections={3}
               maxValue={nutritionMetrics.maxValue}
               overflowTop={30}
@@ -1184,7 +1185,7 @@ export default function Profile() {
                 return num.toLocaleString(isFr ? "fr-FR" : "en-US");
               }}
               hideRules
-              barBorderRadius={activityPeriod === "monthly" ? 2.5 : 6}
+              barBorderRadius={activityPeriod === "monthly" ? 2 : 4}
               isAnimated height={130} width={SCREEN_WIDTH - 80}
               renderTooltip={(item: any) => (
                 <View style={[styles.barChartTooltip, { borderColor: "rgba(255,107,0,0.40)" }]}>
@@ -1249,7 +1250,7 @@ export default function Profile() {
               barWidth={caloriesBurnedMetrics.barWidth}
               spacing={caloriesBurnedMetrics.spacing}
               initialSpacing={caloriesBurnedMetrics.initialSpacing}
-              roundedTop roundedBottom
+              roundedTop
               noOfSections={3}
               maxValue={caloriesBurnedMetrics.maxValue}
               overflowTop={30}
@@ -1263,7 +1264,7 @@ export default function Profile() {
                 return num.toLocaleString(isFr ? "fr-FR" : "en-US");
               }}
               hideRules
-              barBorderRadius={activityPeriod === "monthly" ? 2.5 : 6}
+              barBorderRadius={activityPeriod === "monthly" ? 2 : 4}
               isAnimated height={130} width={SCREEN_WIDTH - 80}
               renderTooltip={(item: any) => (
                 <View style={[styles.barChartTooltip, { borderColor: "rgba(245,166,35,0.40)" }]}>
