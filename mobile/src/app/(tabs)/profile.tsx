@@ -1470,8 +1470,8 @@ export default function Profile() {
                 </Text>
               </View>
               <View style={{ alignItems: "center" }}>
-                <ProgressRing pct={dailyProgress?.calories.pct ?? 0} size={44} color="#F5A623" strokeWidth={4}>
-                  <MaterialCommunityIcons name="fire" size={16} color="#F5A623" />
+                <ProgressRing pct={dailyProgress?.calories.pct ?? 0} size={44} color={theme.primary.main} strokeWidth={4}>
+                  <MaterialCommunityIcons name="fire" size={16} color={theme.primary.main} />
                 </ProgressRing>
                 <Text style={{ fontFamily: FONTS.bold, fontSize: 10, color: NAVY_TEXT_MUTED, marginTop: 4 }}>
                   Calories
@@ -1587,7 +1587,7 @@ export default function Profile() {
                 <ProgressRing
                   pct={bodyComposition.bodyFat ? Math.min(bodyComposition.bodyFat.value / 40, 1) : 0}
                   size={80}
-                  color="#F5A623"
+                  color={theme.primary.main}
                   strokeWidth={7}
                 >
                   <Text style={{ fontFamily: FONTS.extraBold, fontSize: 16, color: "#FFFFFF" }}>
@@ -2421,7 +2421,7 @@ function createStyles(theme: Theme) {
     workoutBurnedText: {
       fontFamily: FONTS.medium,
       fontSize: 10,
-      color: "#F5A623",
+      color: theme.primary.main,
     },
 
     // Summary header with switch
