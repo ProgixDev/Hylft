@@ -124,15 +124,24 @@ function computePeriodBars({
     for (let i = 0; i < 7; i++) {
       const d = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i);
       const dStr = toLocalDateString(d);
-      const val = Math.round(dateMap[dStr] || (i === todayIdx ? todayValue : 0));
+      const isToday = i === todayIdx;
+      const isFuture = i > todayIdx;
+      const val = isFuture ? 0 : Math.round(dateMap[dStr] || (isToday ? todayValue : 0));
+      const dateFormatted = d.toLocaleDateString(isFr ? "fr-FR" : "en-US", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
       bars.push({
         value: val,
         label: dayLabels[i],
-        frontColor: i === todayIdx ? primaryColor : mutedColor,
+        frontColor: isToday ? primaryColor : (val > 0 ? primaryColor : mutedColor),
+        dateFormatted,
+        isToday,
       });
     }
     const total = bars.reduce((s, b) => s + b.value, 0);
-    const average = Math.round(total / 7);
+    const average = Math.round(total / (todayIdx + 1));
     const maxVal = Math.max(...bars.map((d) => d.value), 0);
     const maxValue = computeNiceYMax(maxVal, 3, minDefault);
     return {
@@ -148,32 +157,40 @@ function computePeriodBars({
   }
 
   if (period === "monthly") {
-    const weekLabels = isFr ? ["S1", "S2", "S3", "S4"] : ["W1", "W2", "W3", "W4"];
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const todayDate = now.getDate();
     const bars = [];
     let totalAll = 0;
 
-    for (let w = 0; w < 4; w++) {
-      let weekSum = 0;
-      // 4 chunks of 7 days: w=0 is oldest (28-22 days ago), w=3 is current (7-1 days ago + today)
-      const startDayOffset = 28 - w * 7;
-      const endDayOffset = 28 - (w + 1) * 7;
-      for (let i = startDayOffset; i > endDayOffset; i--) {
-        const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (i - 1));
-        const dStr = toLocalDateString(d);
-        const isToday = i === 1;
-        const val = dateMap[dStr] || (isToday ? todayValue : 0);
-        weekSum += val;
-      }
-      totalAll += weekSum;
-      const weekAvg = Math.round(weekSum / 7);
+    for (let day = 1; day <= daysInMonth; day++) {
+      const d = new Date(year, month, day);
+      const dStr = toLocalDateString(d);
+      const isToday = day === todayDate;
+      const isFuture = day > todayDate;
+      const val = isFuture ? 0 : Math.round(dateMap[dStr] || (isToday ? todayValue : 0));
+      totalAll += val;
+
+      const dateFormatted = d.toLocaleDateString(isFr ? "fr-FR" : "en-US", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
+
+      // Show key milestone labels matching the design: 1, 7, 14, 21, 28
+      const showLabel = day === 1 || day === 7 || day === 14 || day === 21 || day === 28;
+
       bars.push({
-        value: weekAvg,
-        label: weekLabels[w],
-        frontColor: w === 3 ? primaryColor : mutedColor,
+        value: val,
+        label: showLabel ? String(day) : "",
+        frontColor: isToday ? primaryColor : (val > 0 ? primaryColor : mutedColor),
+        dateFormatted,
+        isToday,
       });
     }
 
-    const average = Math.round(totalAll / 28);
+    const average = Math.round(totalAll / Math.max(1, todayDate));
     const maxVal = Math.max(...bars.map((d) => d.value), 0);
     const maxValue = computeNiceYMax(maxVal, 3, minDefault);
     return {
@@ -181,10 +198,10 @@ function computePeriodBars({
       total: totalAll,
       average,
       maxValue,
-      barWidth: 36,
-      spacing: 32,
+      barWidth: 5,
+      spacing: 4,
       isWeek: false,
-      periodLabel: isFr ? "30 derniers jours" : "Last 30 days",
+      periodLabel: isFr ? "Ce mois-ci" : "This month",
     };
   }
 
@@ -218,11 +235,17 @@ function computePeriodBars({
       totalAll += monthSum;
       totalDays += daysCount;
       const monthAvg = Math.round(monthSum / Math.max(1, daysCount));
+      const dateFormatted = targetMonthDate.toLocaleDateString(isFr ? "fr-FR" : "en-US", {
+        month: "long",
+        year: "numeric",
+      });
 
       bars.push({
         value: monthAvg,
         label: monthNames[month],
-        frontColor: isCurrentMonth ? primaryColor : mutedColor,
+        frontColor: isCurrentMonth ? primaryColor : (monthAvg > 0 ? primaryColor : mutedColor),
+        dateFormatted,
+        isCurrentMonth,
       });
     }
 
@@ -1043,13 +1066,17 @@ export default function Profile() {
                 if (num >= 10000) return `${Math.round(num / 1000)}k`;
                 return num.toLocaleString(isFr ? "fr-FR" : "en-US");
               }}
-              hideRules barBorderRadius={6}
+              hideRules
+              barBorderRadius={activityPeriod === "monthly" ? 2.5 : 6}
               isAnimated height={130} width={SCREEN_WIDTH - 80}
               renderTooltip={(item: any) => (
-                <View style={styles.barChartTooltip}>
-                  <Text style={styles.barChartTooltipValue}>
-                    {item.value.toLocaleString(isFr ? "fr-FR" : "en-US")} {activityPeriod === "weekly" ? (isFr ? "pas" : "steps") : (isFr ? "pas/j" : "steps/d")}
+                <View style={[styles.barChartTooltip, { borderColor: `${theme.primary.main}45` }]}>
+                  <Text style={[styles.barChartTooltipValue, { color: theme.primary.main }]}>
+                    {item.value.toLocaleString(isFr ? "fr-FR" : "en-US")} {activityPeriod === "weekly" || activityPeriod === "monthly" ? (isFr ? "pas" : "steps") : (isFr ? "pas/j" : "steps/d")}
                   </Text>
+                  {item.dateFormatted ? (
+                    <Text style={styles.barChartTooltipDate}>{item.dateFormatted}</Text>
+                  ) : null}
                 </View>
               )}
               autoCenterTooltip
@@ -1116,13 +1143,17 @@ export default function Profile() {
                 if (num >= 10000) return `${Math.round(num / 1000)}k`;
                 return num.toLocaleString(isFr ? "fr-FR" : "en-US");
               }}
-              hideRules barBorderRadius={6}
+              hideRules
+              barBorderRadius={activityPeriod === "monthly" ? 2.5 : 6}
               isAnimated height={130} width={SCREEN_WIDTH - 80}
               renderTooltip={(item: any) => (
-                <View style={[styles.barChartTooltip, { borderColor: "rgba(255,107,0,0.35)" }]}>
+                <View style={[styles.barChartTooltip, { borderColor: "rgba(255,107,0,0.40)" }]}>
                   <Text style={[styles.barChartTooltipValue, { color: "#FF6B00" }]}>
-                    {item.value.toLocaleString(isFr ? "fr-FR" : "en-US")} {activityPeriod === "weekly" ? "kcal" : (isFr ? "kcal/j" : "kcal/d")}
+                    {item.value.toLocaleString(isFr ? "fr-FR" : "en-US")} {activityPeriod === "weekly" || activityPeriod === "monthly" ? "kcal" : (isFr ? "kcal/j" : "kcal/d")}
                   </Text>
+                  {item.dateFormatted ? (
+                    <Text style={styles.barChartTooltipDate}>{item.dateFormatted}</Text>
+                  ) : null}
                 </View>
               )}
               autoCenterTooltip
@@ -1189,13 +1220,17 @@ export default function Profile() {
                 if (num >= 10000) return `${Math.round(num / 1000)}k`;
                 return num.toLocaleString(isFr ? "fr-FR" : "en-US");
               }}
-              hideRules barBorderRadius={6}
+              hideRules
+              barBorderRadius={activityPeriod === "monthly" ? 2.5 : 6}
               isAnimated height={130} width={SCREEN_WIDTH - 80}
               renderTooltip={(item: any) => (
-                <View style={[styles.barChartTooltip, { borderColor: "rgba(245,166,35,0.35)" }]}>
+                <View style={[styles.barChartTooltip, { borderColor: "rgba(245,166,35,0.40)" }]}>
                   <Text style={[styles.barChartTooltipValue, { color: "#F5A623" }]}>
-                    {item.value.toLocaleString(isFr ? "fr-FR" : "en-US")} {activityPeriod === "weekly" ? "kcal" : (isFr ? "kcal/j" : "kcal/d")}
+                    {item.value.toLocaleString(isFr ? "fr-FR" : "en-US")} {activityPeriod === "weekly" || activityPeriod === "monthly" ? "kcal" : (isFr ? "kcal/j" : "kcal/d")}
                   </Text>
+                  {item.dateFormatted ? (
+                    <Text style={styles.barChartTooltipDate}>{item.dateFormatted}</Text>
+                  ) : null}
                 </View>
               )}
               autoCenterTooltip
@@ -2021,26 +2056,32 @@ function createStyles(theme: Theme) {
       marginTop: 1,
     },
     barChartTooltip: {
-      backgroundColor: "#0F1E36",
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-      borderRadius: 7,
+      backgroundColor: "#161B22",
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      borderRadius: 9,
       borderWidth: 1,
-      borderColor: "rgba(255,255,255,0.25)",
+      borderColor: "rgba(255,255,255,0.20)",
       alignItems: "center",
       justifyContent: "center",
       shadowColor: "#000",
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.35,
-      shadowRadius: 4,
-      elevation: 10,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.45,
+      shadowRadius: 6,
+      elevation: 12,
       zIndex: 9999,
       marginBottom: 6,
     },
     barChartTooltipValue: {
       fontFamily: FONTS.bold,
-      fontSize: 11,
+      fontSize: 13,
       color: "#FFFFFF",
+    },
+    barChartTooltipDate: {
+      fontFamily: FONTS.medium,
+      fontSize: 10,
+      color: "rgba(255,255,255,0.65)",
+      marginTop: 2,
     },
 
     // Navy Section Cards (Progression du jour, Mensurations, Composition corporelle, Score de progression)
