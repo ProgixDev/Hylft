@@ -256,6 +256,24 @@ export default function FoodSearchScreen() {
           const seen = new Set(prev.map((it) => it.id));
           return [...prev, ...res.items.filter((it) => !seen.has(it.id))];
         });
+
+        // After rendering the API results, silently override with the user's
+        // saved values from food_custom_values (database). DB always wins over API.
+        const allIds = res.items.map((it) => it.id);
+        if (allIds.length > 0) {
+          api.getFoodCustomValuesBatch(allIds)
+            .then((customMap: Record<string, { calories: number; protein: number; carbs: number; fat: number }>) => {
+              if (requestId !== requestIdRef.current) return; // stale
+              if (!customMap || !Object.keys(customMap).length) return;
+              setItems((prev) =>
+                prev.map((item) => {
+                  const custom = customMap[item.id];
+                  return custom ? { ...item, ...custom } : item;
+                }),
+              );
+            })
+            .catch(() => {});
+        }
       } catch (error) {
         console.error("[Food Search] Search failed:", error);
         if (requestId === requestIdRef.current && isFirstPage) {
@@ -664,8 +682,8 @@ export default function FoodSearchScreen() {
             style={styles.searchInput}
             placeholder={
               isFr
-                ? "Rechercher en anglais (chicken, rice, milk...)"
-                : "Search food (chicken, rice, milk...)"
+                ? "Rechercher un aliment (poulet, riz, œuf...)"
+                : "Search food (chicken, rice, egg...)"
             }
             placeholderTextColor={theme.foreground.gray}
             value={query}

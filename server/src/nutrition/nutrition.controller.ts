@@ -121,6 +121,15 @@ export class NutritionController {
     return this.nutritionService.getFoodCustomValues(user.id, foodId);
   }
 
+  @Get('food-custom-values-batch')
+  getFoodCustomValuesBatch(
+    @CurrentUser() user: AuthUser,
+    @Query('ids') ids: string,
+  ) {
+    const foodIds = (ids || '').split(',').map((id) => id.trim()).filter(Boolean);
+    return this.nutritionService.getFoodCustomValuesBatch(user.id, foodIds);
+  }
+
   @Post('food-custom-values')
   upsertFoodCustomValues(
     @CurrentUser() user: AuthUser,

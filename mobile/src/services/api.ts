@@ -125,6 +125,8 @@ export const api = {
   // ── Custom food values & corrections ───────────────────
   getFoodCustomValues: (foodId: string) =>
     authFetch(`/nutrition/food-custom-values/${encodeURIComponent(foodId)}`),
+  getFoodCustomValuesBatch: (foodIds: string[]) =>
+    authFetch(`/nutrition/food-custom-values-batch?ids=${foodIds.map(encodeURIComponent).join(',')}`),
   upsertFoodCustomValues: (data: {
     food_id: string;
     food_name: string;

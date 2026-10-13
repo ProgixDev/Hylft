@@ -356,6 +356,31 @@ export class NutritionService {
     };
   }
 
+  async getFoodCustomValuesBatch(userId: string, foodIds: string[]) {
+    if (!foodIds.length) return {};
+    const { data, error } = await this.supabase
+      .from('food_custom_values')
+      .select('*')
+      .eq('user_id', userId)
+      .in('food_id', foodIds);
+
+    if (error) throw error;
+    if (!data) return {};
+
+    // Return a map of foodId -> values for easy lookup on the client
+    return Object.fromEntries(
+      data.map((row) => [
+        row.food_id,
+        {
+          calories: Number(row.calories) || 0,
+          protein: Number(row.protein) || 0,
+          carbs: Number(row.carbs) || 0,
+          fat: Number(row.fat) || 0,
+        },
+      ]),
+    );
+  }
+
   async upsertFoodCustomValues(userId: string, dto: UpsertFoodCustomValuesDto) {
     const { error } = await this.supabase.from('food_custom_values').upsert(
       {
