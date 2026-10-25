@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { Text } from "./ScaledText";
 import Svg, { Circle } from "react-native-svg";
@@ -9,7 +9,6 @@ import { FONTS } from "../../constants/fonts";
 import { useActiveWorkout } from "../../contexts/ActiveWorkoutContext";
 import { useTheme } from "../../contexts/ThemeContext";
 
-const TIMER_TICK_SOUND = require("../../../assets/timer-tick-countdown.mp3");
 const TIMER_DONE_SOUND = require("../../../assets/timer-done.wav");
 
 const RING_SIZE = 40;
@@ -30,27 +29,6 @@ export default function MiniRestTimer() {
 
   const [remaining, setRemaining] = useState(0);
   const [finished, setFinished] = useState(false);
-  const tickPlayerRef = useRef<ReturnType<typeof createAudioPlayer> | null>(null);
-
-  // Ticking clock sound for last 5 seconds (only when not on workout player)
-  useEffect(() => {
-    if (!isOnPlayer && hasTimer && remaining === 5) {
-      try {
-        tickPlayerRef.current?.release();
-        const tick = createAudioPlayer(TIMER_TICK_SOUND);
-        tick.volume = 0.5;
-        tick.play();
-        tickPlayerRef.current = tick;
-      } catch {}
-    }
-    if (!hasTimer || remaining <= 0) {
-      try { tickPlayerRef.current?.release(); } catch {}
-      tickPlayerRef.current = null;
-    }
-  }, [isOnPlayer, hasTimer, remaining]);
-  useEffect(() => {
-    return () => { try { tickPlayerRef.current?.release(); } catch {} };
-  }, []);
 
   useEffect(() => {
     if (!hasTimer || !endsAt) {

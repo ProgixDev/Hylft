@@ -723,28 +723,6 @@ function MiniRestTimerBar({
   );
   const [finished, setFinished] = useState(false);
 
-  // Ticking clock sound for last 5 seconds
-  const tickPlayerRef = useRef<any>(null);
-  useEffect(() => {
-    if (remaining === 5) {
-      try {
-        tickPlayerRef.current?.release();
-        const { createAudioPlayer } = require("expo-audio");
-        const tick = createAudioPlayer(require("../../../assets/timer-tick-countdown.mp3"));
-        tick.volume = 0.5;
-        tick.play();
-        tickPlayerRef.current = tick;
-      } catch {}
-    }
-    if (remaining <= 0) {
-      try { tickPlayerRef.current?.release(); } catch {}
-      tickPlayerRef.current = null;
-    }
-  }, [remaining]);
-  useEffect(() => {
-    return () => { try { tickPlayerRef.current?.release(); } catch {} };
-  }, []);
-
   useEffect(() => {
     let done = false;
     const id = setInterval(() => {
