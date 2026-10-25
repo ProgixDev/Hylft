@@ -11,6 +11,10 @@ const API_KEYS = {
 const ENTITLEMENT_ID = "pro";
 
 export function initRevenueCat() {
+  // Development emulators often lack store billing. Offerings are disabled in
+  // dev too, so leave the native billing SDK unconfigured for these sessions.
+  if (__DEV__) return;
+
   Purchases.setLogLevel(Purchases.LOG_LEVEL.WARN);
   if (Platform.OS === 'ios') {
     Purchases.configure({ apiKey: API_KEYS.apple });
@@ -20,6 +24,8 @@ export function initRevenueCat() {
 }
 
 export async function hasProEntitlement(userId: string) {
+  if (__DEV__) return false;
+
   try {
     const customerInfo = await Purchases.getCustomerInfo();
     return typeof customerInfo.entitlements.active[ENTITLEMENT_ID] !== "undefined";
@@ -49,6 +55,8 @@ export async function loadOfferings() {
 }
 
 export async function purchasePackage(packageToBuy: PurchasesPackage) {
+  if (__DEV__) return false;
+
   try {
     const { customerInfo } = await Purchases.purchasePackage(packageToBuy);
     return typeof customerInfo.entitlements.active[ENTITLEMENT_ID] !== "undefined";
@@ -62,6 +70,8 @@ export async function purchasePackage(packageToBuy: PurchasesPackage) {
 }
 
 export async function restorePurchases() {
+  if (__DEV__) return false;
+
   try {
     const customerInfo = await Purchases.restorePurchases();
     return typeof customerInfo.entitlements.active[ENTITLEMENT_ID] !== "undefined";
@@ -72,6 +82,8 @@ export async function restorePurchases() {
 }
 
 export async function clearProEntitlement(userId: string) {
+  if (__DEV__) return;
+
   try {
       await Purchases.logOut();
   } catch (e) {
@@ -80,6 +92,8 @@ export async function clearProEntitlement(userId: string) {
 }
 
 export async function markProEntitled(userId: string) {
+  if (__DEV__) return;
+
   try {
       await Purchases.logIn(userId);
   } catch (e) {

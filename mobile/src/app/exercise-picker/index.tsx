@@ -43,6 +43,7 @@ export default function ExercisePicker() {
   const [searchQuery, setSearchQuery] = useState("");
   const [exercises, setExercises] = useState<ExerciseDbExercise[]>([]);
   const [loading, setLoading] = useState(false);
+  const [searchError, setSearchError] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [cursor, setCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
@@ -143,7 +144,12 @@ export default function ExercisePicker() {
   // body-part / equipment filters, so apply them client-side on the result set.
   useEffect(() => {
     if (searchTimeout.current) clearTimeout(searchTimeout.current);
-    if (!searchQuery.trim()) return;
+    if (!searchQuery.trim()) {
+      setSearchError(false);
+      return;
+    }
+
+    setSearchError(false);
 
     searchTimeout.current = setTimeout(async () => {
       setLoading(true);
@@ -167,6 +173,7 @@ export default function ExercisePicker() {
         setHasMore(false);
       } catch {
         setExercises([]);
+        setSearchError(true);
       } finally {
         setLoading(false);
       }
@@ -498,7 +505,13 @@ export default function ExercisePicker() {
               size={36}
               color={theme.foreground.gray}
             />
-            <Text style={styles.emptyText}>{t("exercisePicker.noExercisesFound")}</Text>
+            <Text style={styles.emptyText}>
+              {t(
+                searchError
+                  ? "exercisePicker.searchFailed"
+                  : "exercisePicker.noExercisesFound",
+              )}
+            </Text>
             {hasActiveFilters && (
               <TouchableOpacity
                 style={styles.emptyResetButton}

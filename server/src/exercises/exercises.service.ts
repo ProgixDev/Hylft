@@ -25,7 +25,26 @@ export class ExercisesService {
     if (q.body_part) query = query.eq('body_part', q.body_part);
     if (q.equipment) query = query.eq('equipment', q.equipment);
     if (q.difficulty) query = query.eq('difficulty', q.difficulty);
-    if (q.search) query = query.ilike('name', `%${q.search}%`);
+    if (q.search) {
+      // Keep user input from changing PostgREST's `.or()` filter syntax.
+      const searchTerm = q.search
+        .trim()
+        .replace(/[,%*()[\]{}"\\]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      if (!searchTerm) return { items: [], next_cursor: null };
+
+      const pattern = `%${searchTerm}%`;
+      query = query.or(
+        [
+          `name.ilike.${pattern}`,
+          `equipment.ilike.${pattern}`,
+          `body_part.ilike.${pattern}`,
+          `target_muscle.ilike.${pattern}`,
+        ].join(','),
+      );
+    }
     if (q.cursor) query = query.gt('name', q.cursor);
 
     const { data, error } = await query;

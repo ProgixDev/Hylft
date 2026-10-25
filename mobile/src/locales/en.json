@@ -1057,6 +1057,7 @@
   "exercisePicker": {
     "searchExercise": "Search exercise",
     "noExercisesFound": "No exercises found",
+    "searchFailed": "Couldn't load exercises. Check your connection and try again.",
     "clearFilters": "Clear filters",
     "addSelected": "Add {{count}} selected"
   },

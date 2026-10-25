@@ -243,7 +243,7 @@ export async function searchExercisesExerciseDb(
     return setCached(key, exercises);
   } catch (err) {
     console.error("search exercises failed:", err);
-    return [];
+    throw err;
   }
 }
 
