@@ -7,6 +7,10 @@ import { UpsertDailyDto } from './dto/upsert-daily.dto';
 import { RecordFoodHistoryDto } from './dto/record-food-history.dto';
 import { UpsertFoodCustomValuesDto } from './dto/upsert-food-custom-values.dto';
 import {
+  CreateUserFoodDto,
+  USER_FOOD_NUTRIENT_KEYS,
+} from './dto/create-user-food.dto';
+import {
   ageFromDateOfBirth,
   computeNutritionGoals,
 } from './nutrition.utils';
@@ -16,6 +20,21 @@ import { ReviewFoodCorrectionDto } from './dto/review-food-correction.dto';
 
 function genId(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+
+// Keep only known nutrient keys with finite, non-negative numeric values.
+function sanitizeNutrients(
+  input: Record<string, unknown> | undefined,
+): Record<string, number> {
+  const out: Record<string, number> = {};
+  if (!input) return out;
+  for (const key of USER_FOOD_NUTRIENT_KEYS) {
+    const value = input[key];
+    if (typeof value === 'number' && Number.isFinite(value) && value >= 0) {
+      out[key] = value;
+    }
+  }
+  return out;
 }
 
 @Injectable()
@@ -398,6 +417,61 @@ export class NutritionService {
 
     if (error) throw error;
     return { ok: true };
+  }
+
+  // ── User foods (private, user-created products) ───────────────────────
+
+  async getUserFoods(userId: string, q?: string, barcode?: string) {
+    let query = this.supabase
+      .from('user_foods')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(200);
+
+    if (barcode) query = query.eq('barcode', barcode);
+    if (q?.trim()) {
+      // Escape LIKE wildcards so user input is matched literally.
+      const escaped = q.trim().replace(/[\\%_]/g, (c) => `\\${c}`);
+      query = query.ilike('name', `%${escaped}%`);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return data ?? [];
+  }
+
+  async createUserFood(userId: string, dto: CreateUserFoodDto) {
+    const { data, error } = await this.supabase
+      .from('user_foods')
+      .insert({
+        user_id: userId,
+        name: dto.name.trim(),
+        brand: dto.brand?.trim() || null,
+        barcode: dto.barcode?.trim() || null,
+        serving_size_g: dto.serving_size_g ?? null,
+        calories: dto.calories,
+        protein: dto.protein,
+        carbs: dto.carbs,
+        fat: dto.fat,
+        nutrients: sanitizeNutrients(dto.nutrients),
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  async deleteUserFood(userId: string, foodId: string) {
+    const { error } = await this.supabase
+      .from('user_foods')
+      .delete()
+      .eq('id', foodId)
+      .eq('user_id', userId);
+
+    if (error) throw error;
+    return { deleted: true };
   }
 
   // ── Food Corrections & Moderation ─────────────────────────────────────

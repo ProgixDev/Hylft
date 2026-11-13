@@ -21,6 +21,7 @@ import { UpdateGoalsDto } from './dto/update-goals.dto';
 import { UpsertDailyDto } from './dto/upsert-daily.dto';
 import { RecordFoodHistoryDto } from './dto/record-food-history.dto';
 import { UpsertFoodCustomValuesDto } from './dto/upsert-food-custom-values.dto';
+import { CreateUserFoodDto } from './dto/create-user-food.dto';
 import { SubmitFoodCorrectionDto } from './dto/submit-food-correction.dto';
 import { ReviewFoodCorrectionDto } from './dto/review-food-correction.dto';
 
@@ -136,6 +137,30 @@ export class NutritionController {
     @Body() dto: UpsertFoodCustomValuesDto,
   ) {
     return this.nutritionService.upsertFoodCustomValues(user.id, dto);
+  }
+
+  // ── User foods (private, user-created products) ───────────────────────
+
+  @Get('user-foods')
+  getUserFoods(
+    @CurrentUser() user: AuthUser,
+    @Query('q') q?: string,
+    @Query('barcode') barcode?: string,
+  ) {
+    return this.nutritionService.getUserFoods(user.id, q, barcode);
+  }
+
+  @Post('user-foods')
+  createUserFood(
+    @CurrentUser() user: AuthUser,
+    @Body() dto: CreateUserFoodDto,
+  ) {
+    return this.nutritionService.createUserFood(user.id, dto);
+  }
+
+  @Delete('user-foods/:id')
+  deleteUserFood(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.nutritionService.deleteUserFood(user.id, id);
   }
 
   // ── Food Corrections & Moderation ─────────────────────────────────────
