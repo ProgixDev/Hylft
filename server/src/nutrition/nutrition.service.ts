@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { randomUUID } from 'crypto';
 import { ConfigService } from '@nestjs/config';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { CreateMealDto } from './dto/create-meal.dto';
@@ -17,6 +18,9 @@ import {
 
 import { SubmitFoodCorrectionDto } from './dto/submit-food-correction.dto';
 import { ReviewFoodCorrectionDto } from './dto/review-food-correction.dto';
+
+const FOOD_IMAGES_BUCKET = 'food-images';
+const ALLOWED_IMAGE_EXTS = ['jpg', 'jpeg', 'png', 'webp', 'heic'] as const;
 
 function genId(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
@@ -41,10 +45,12 @@ function sanitizeNutrients(
 export class NutritionService {
   private readonly logger = new Logger(NutritionService.name);
   private supabase: SupabaseClient;
+  private supabaseUrl: string;
 
   constructor(config: ConfigService) {
+    this.supabaseUrl = config.get<string>('SUPABASE_URL')!;
     this.supabase = createClient(
-      config.get<string>('SUPABASE_URL')!,
+      this.supabaseUrl,
       config.get<string>('SUPABASE_SERVICE_ROLE_KEY')!,
     );
   }
@@ -450,6 +456,7 @@ export class NutritionService {
         brand: dto.brand?.trim() || null,
         barcode: dto.barcode?.trim() || null,
         serving_size_g: dto.serving_size_g ?? null,
+        image_url: this.ownFoodImageUrl(userId, dto.image_url),
         calories: dto.calories,
         protein: dto.protein,
         carbs: dto.carbs,
@@ -461,6 +468,36 @@ export class NutritionService {
 
     if (error) throw error;
     return data;
+  }
+
+  async signUserFoodImageUpload(userId: string, ext?: string) {
+    const finalExt = (ext ?? 'jpg').toLowerCase();
+    if (
+      !ALLOWED_IMAGE_EXTS.includes(
+        finalExt as (typeof ALLOWED_IMAGE_EXTS)[number],
+      )
+    ) {
+      throw new BadRequestException('Unsupported image extension');
+    }
+    const storage_path = `user/${userId}/${Date.now()}-${randomUUID()}.${finalExt}`;
+    const { data, error } = await this.supabase.storage
+      .from(FOOD_IMAGES_BUCKET)
+      .createSignedUploadUrl(storage_path);
+    if (error) throw error;
+    return {
+      bucket: FOOD_IMAGES_BUCKET,
+      storage_path,
+      signed_url: data.signedUrl,
+      token: data.token,
+      public_url: `${this.supabaseUrl}/storage/v1/object/public/${FOOD_IMAGES_BUCKET}/${storage_path}`,
+    };
+  }
+
+  // Only accept images this user uploaded through signUserFoodImageUpload.
+  private ownFoodImageUrl(userId: string, url?: string): string | null {
+    if (!url) return null;
+    const prefix = `${this.supabaseUrl}/storage/v1/object/public/${FOOD_IMAGES_BUCKET}/user/${userId}/`;
+    return url.startsWith(prefix) ? url : null;
   }
 
   async deleteUserFood(userId: string, foodId: string) {

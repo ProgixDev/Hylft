@@ -30,6 +30,12 @@ export class CreateUserFoodDto {
   @Min(0)
   serving_size_g?: number;
 
+  // Public URL returned by POST /nutrition/user-foods/image/sign-upload.
+  @IsString()
+  @IsOptional()
+  @MaxLength(500)
+  image_url?: string;
+
   @IsNumber()
   @Min(0)
   calories: number;

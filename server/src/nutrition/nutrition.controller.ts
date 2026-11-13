@@ -158,6 +158,14 @@ export class NutritionController {
     return this.nutritionService.createUserFood(user.id, dto);
   }
 
+  @Post('user-foods/image/sign-upload')
+  signUserFoodImageUpload(
+    @CurrentUser() user: AuthUser,
+    @Body() body: { ext?: string },
+  ) {
+    return this.nutritionService.signUserFoodImageUpload(user.id, body?.ext);
+  }
+
   @Delete('user-foods/:id')
   deleteUserFood(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.nutritionService.deleteUserFood(user.id, id);
