@@ -125,7 +125,7 @@ const createStyles = (theme: Theme, itemWidth: number) =>
       backgroundColor: ACTIVE_NAVY,
     },
     indicatorOverlay: {
-      ...StyleSheet.absoluteFillObject,
+      ...StyleSheet.absoluteFill,
       borderRadius: 10,
       backgroundColor: ACTIVE_NAVY,
       borderWidth: StyleSheet.hairlineWidth,

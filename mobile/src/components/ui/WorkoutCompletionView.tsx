@@ -271,7 +271,7 @@ const createStyles = (theme: Theme, topInset: number, bottomInset: number) =>
       overflow: "hidden",
     },
     heroImage: {
-      ...StyleSheet.absoluteFillObject,
+      ...StyleSheet.absoluteFill,
       width: "100%",
       height: "100%",
     },

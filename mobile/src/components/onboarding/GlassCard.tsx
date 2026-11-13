@@ -39,7 +39,7 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   tint: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: colors.glassBg,
   },
   inner: {

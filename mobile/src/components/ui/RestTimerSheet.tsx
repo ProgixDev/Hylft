@@ -307,7 +307,7 @@ export default function RestTimerSheet({
 
 const styles = StyleSheet.create({
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: "transparent",
     justifyContent: "flex-end",
   },

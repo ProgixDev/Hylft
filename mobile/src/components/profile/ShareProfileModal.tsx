@@ -134,7 +134,20 @@ export default function ShareProfileModal({
             pointerEvents="none"
           />
 
-          <View style={styles.handle} />
+          <View style={styles.dragHandle} />
+
+          <Pressable
+            style={({ pressed }) => [
+              styles.closeBtn,
+              pressed && { opacity: 0.7 },
+            ]}
+            onPress={onClose}
+            hitSlop={10}
+            accessibilityRole="button"
+            accessibilityLabel="Fermer"
+          >
+            <Ionicons name="close" size={20} color={theme.foreground.white} />
+          </Pressable>
 
           <View style={styles.header}>
             <Text style={styles.title}>Partager le profil</Text>
@@ -215,7 +228,7 @@ function createStyles(theme: Theme) {
   return StyleSheet.create({
     root: { flex: 1, justifyContent: "flex-end" },
     backdrop: {
-      ...StyleSheet.absoluteFillObject,
+      ...StyleSheet.absoluteFill,
       backgroundColor: "rgba(0,0,0,0.55)",
     },
     sheet: {
@@ -227,13 +240,26 @@ function createStyles(theme: Theme) {
       paddingBottom: 28,
       overflow: "hidden",
     },
-    handle: {
+    dragHandle: {
       alignSelf: "center",
       width: 44,
       height: 5,
       borderRadius: 3,
-      backgroundColor: "rgba(255,255,255,0.2)",
+      backgroundColor: theme.foreground.gray,
+      opacity: 0.4,
       marginTop: 10,
+    },
+    closeBtn: {
+      position: "absolute",
+      top: 14,
+      right: 16,
+      zIndex: 2,
+      width: 34,
+      height: 34,
+      borderRadius: 17,
+      backgroundColor: theme.background.accent,
+      alignItems: "center",
+      justifyContent: "center",
     },
     header: { alignItems: "center", marginTop: 14 },
     title: {
@@ -261,7 +287,7 @@ function createStyles(theme: Theme) {
       justifyContent: "center",
     },
     qrCenter: {
-      ...StyleSheet.absoluteFillObject,
+      ...StyleSheet.absoluteFill,
       alignItems: "center",
       justifyContent: "center",
     },

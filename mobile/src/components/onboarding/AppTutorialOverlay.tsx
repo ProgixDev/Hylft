@@ -458,14 +458,14 @@ export default function AppTutorialOverlay({
 function createStyles(theme: Theme) {
   return StyleSheet.create({
     overlay: {
-      ...StyleSheet.absoluteFillObject,
+      ...StyleSheet.absoluteFill,
       zIndex: 2000,
       justifyContent: "space-between",
       paddingHorizontal: 18,
       paddingBottom: 82,
     },
     scrim: {
-      ...StyleSheet.absoluteFillObject,
+      ...StyleSheet.absoluteFill,
       backgroundColor: "rgba(3,7,18,0.78)",
     },
     topBar: {
