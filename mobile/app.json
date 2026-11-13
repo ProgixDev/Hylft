@@ -118,7 +118,11 @@
           "icon": "./assets/images/icon.png",
           "color": "#0B1437"
         }
-      ]
+      ],
+      "expo-image",
+      "expo-sharing",
+      "expo-splash-screen",
+      "expo-web-browser"
     ],
     "extra": {
       "router": {
