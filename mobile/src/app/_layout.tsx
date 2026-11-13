@@ -228,13 +228,6 @@ function AppContent() {
             paddingLeft: insets.left,
             paddingRight: insets.right,
           },
-          statusBarStyle:
-            isAuthRoute || isOnboardingRoute || isPlanBuildingRoute
-              ? "light"
-              : isGetStartedRoute || themeType !== "dark"
-                ? "dark"
-                : "light",
-          statusBarTranslucent: true,
           navigationBarColor: isAuthRoute ? "#364152" : "transparent",
         }}
       >
