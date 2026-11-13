@@ -16,6 +16,7 @@ import {
 } from "react-native";
 import { Text } from "../components/ui/ScaledText";
 import { FoodCardSkeletonList } from "../components/ui/FoodCardSkeleton";
+import CreateFoodSheet from "../components/ui/CreateFoodSheet";
 import FoodDetailSheet from "../components/ui/FoodDetailSheet";
 import { FONTS } from "../constants/fonts";
 import { Theme } from "../constants/themes";
@@ -29,11 +30,13 @@ import {
   loadCachedHistory,
   saveCachedHistory,
 } from "../services/foodHistoryCache";
-import type {
-  FoodHistoryItem,
-  FoodItem,
-  FoodSearchResponse,
-  MealType,
+import {
+  userFoodToFoodItem,
+  type FoodHistoryItem,
+  type FoodItem,
+  type FoodSearchResponse,
+  type MealType,
+  type UserFoodRow,
 } from "../services/nutritionApi";
 
 const VALID_MEAL_TYPES: MealType[] = ["breakfast", "lunch", "dinner", "snack"];
@@ -188,6 +191,9 @@ export default function FoodSearchScreen() {
     Array<{ food: FoodItem; servings: number }>
   >([]);
   const [selectedFood, setSelectedFood] = useState<FoodItem | null>(null);
+  // Private foods the user created (shown on top of search results).
+  const [myFoods, setMyFoods] = useState<FoodItem[]>([]);
+  const [showCreateFood, setShowCreateFood] = useState(false);
   const [showAddedModal, setShowAddedModal] = useState(false);
   const [isSavingSelection, setIsSavingSelection] = useState(false);
   const requestIdRef = useRef(0);
@@ -218,6 +224,16 @@ export default function FoodSearchScreen() {
           /* offline / unauthenticated / route not yet deployed: keep cached */
         });
     })();
+    api
+      .getUserFoods()
+      .then((rows: UserFoodRow[] | undefined) => {
+        if (!cancelled && Array.isArray(rows)) {
+          setMyFoods(rows.map(userFoodToFoodItem));
+        }
+      })
+      .catch(() => {
+        /* offline / route not yet deployed: just no private foods */
+      });
     doSearch(DEFAULT_QUERY[lang][selectedMealType]);
     return () => {
       cancelled = true;
@@ -419,6 +435,47 @@ export default function FoodSearchScreen() {
 
   const showHistorySection = !query.trim() && history.length > 0;
 
+  // User's private foods matching what's typed (all of them when nothing is typed).
+  const matchingMyFoods = useMemo(() => {
+    const q = trimmedQuery.toLowerCase();
+    if (!q) return myFoods;
+    return myFoods.filter(
+      (f) =>
+        f.name.toLowerCase().includes(q) ||
+        (f.brand?.toLowerCase().includes(q) ?? false),
+    );
+  }, [myFoods, trimmedQuery]);
+
+  const listItems = useMemo(
+    () => [...matchingMyFoods, ...items],
+    [matchingMyFoods, items],
+  );
+
+  const handleFoodCreated = (food: FoodItem) => {
+    setMyFoods((prev) => [food, ...prev]);
+    setShowCreateFood(false);
+    // Let the create sheet's native modal finish dismissing before presenting
+    // the detail sheet (iOS can't present two modals at once).
+    setTimeout(() => setSelectedFood(food), 450);
+  };
+
+  const createFoodButton = (
+    <Pressable
+      style={({ pressed }) => [
+        styles.createFoodBtn,
+        pressed && { opacity: 0.8 },
+      ]}
+      onPress={() => setShowCreateFood(true)}
+    >
+      <Ionicons name="add-circle-outline" size={20} color={theme.primary.main} />
+      <Text style={styles.createFoodText}>
+        {isFr
+          ? "Introuvable ? Créer un aliment"
+          : "Can't find it? Create a food"}
+      </Text>
+    </Pressable>
+  );
+
   const hasMacros = (item: FoodItem) =>
     item.calories > 0 || item.protein > 0 || item.carbs > 0 || item.fat > 0;
 
@@ -477,7 +534,13 @@ export default function FoodSearchScreen() {
           {showMacros ? (
             <>
               <Text style={styles.foodPer100}>
-                {isFr ? "pour 100g" : "per 100g"}
+                {item.isUserFood
+                  ? isFr
+                    ? "Mon aliment · pour 100g"
+                    : "My food · per 100g"
+                  : isFr
+                    ? "pour 100g"
+                    : "per 100g"}
               </Text>
               <View style={styles.macroRow}>
                 <View style={styles.macroChip}>
@@ -630,6 +693,24 @@ export default function FoodSearchScreen() {
         </View>
       )}
       {isTyping && suggestions.length > 0 && renderSuggestions()}
+      {isTyping && (
+        // Results scroll infinitely, so the create option must be reachable up top.
+        <Pressable
+          style={({ pressed }) => [
+            styles.createFoodRow,
+            pressed && { opacity: 0.8 },
+          ]}
+          onPress={() => setShowCreateFood(true)}
+        >
+          <Ionicons name="add-circle-outline" size={20} color={theme.primary.main} />
+          <Text style={styles.createFoodRowText} numberOfLines={1}>
+            {isFr
+              ? `Introuvable ? Créer « ${trimmedQuery} »`
+              : `Can't find it? Create "${trimmedQuery}"`}
+          </Text>
+          <Ionicons name="chevron-forward" size={18} color={theme.primary.main} />
+        </Pressable>
+      )}
       {showHistorySection && (
         <Text style={[styles.sectionTitle, { marginTop: 18 }]}>
           {isFr ? "Suggestions" : "Suggestions"}
@@ -737,9 +818,9 @@ export default function FoodSearchScreen() {
             </Text>
           </View>
         </ScrollView>
-      ) : isLoading && items.length === 0 ? (
+      ) : isLoading && listItems.length === 0 ? (
         <FoodCardSkeletonList count={7} />
-      ) : items.length === 0 && !showHistorySection ? (
+      ) : listItems.length === 0 && !showHistorySection ? (
         <View style={styles.emptyState}>
           <Ionicons
             name="close-circle"
@@ -754,10 +835,11 @@ export default function FoodSearchScreen() {
               ? "Essayez un autre terme de recherche"
               : "Try searching for a different food"}
           </Text>
+          {createFoodButton}
         </View>
       ) : (
         <FlatList
-          data={items}
+          data={listItems}
           numColumns={1}
           keyExtractor={(item, index) => `${item.id}-${index}`}
           contentContainerStyle={styles.listContent}
@@ -770,7 +852,9 @@ export default function FoodSearchScreen() {
               <View style={{ paddingVertical: 8 }}>
                 <FoodCardSkeletonList count={2} />
               </View>
-            ) : null
+            ) : hasMore ? null : (
+              createFoodButton
+            )
           }
         />
       )}
@@ -786,6 +870,13 @@ export default function FoodSearchScreen() {
           setSelectedFood(null);
           handleAddFood(food, servings);
         }}
+      />
+
+      <CreateFoodSheet
+        visible={showCreateFood}
+        initialName={trimmedQuery}
+        onClose={() => setShowCreateFood(false)}
+        onCreated={handleFoodCreated}
       />
 
     </View>
@@ -1009,6 +1100,46 @@ function createStyles(theme: Theme) {
       color: theme.foreground.gray,
       marginTop: 8,
       textAlign: "center",
+    },
+    createFoodBtn: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+      alignSelf: "center",
+      marginTop: 18,
+      marginBottom: 24,
+      paddingVertical: 12,
+      paddingHorizontal: 18,
+      borderRadius: 14,
+      borderWidth: 1,
+      borderColor: theme.primary.main + "55",
+      backgroundColor: theme.primary.main + "14",
+    },
+    createFoodRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+      marginHorizontal: 16,
+      marginTop: 10,
+      marginBottom: 4,
+      paddingVertical: 12,
+      paddingHorizontal: 14,
+      borderRadius: 14,
+      borderWidth: 1,
+      borderColor: theme.primary.main + "55",
+      backgroundColor: theme.primary.main + "14",
+    },
+    createFoodRowText: {
+      flex: 1,
+      fontFamily: FONTS.semiBold,
+      fontSize: 14,
+      color: theme.primary.main,
+    },
+    createFoodText: {
+      fontFamily: FONTS.semiBold,
+      fontSize: 14,
+      color: theme.primary.main,
     },
     listContent: {
       paddingVertical: 4,

@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { Text } from "../components/ui/ScaledText";
 import FoodDetailSheet from "../components/ui/FoodDetailSheet";
+import CreateFoodSheet from "../components/ui/CreateFoodSheet";
 import { FONTS } from "../constants/fonts";
 import { Theme } from "../constants/themes";
 import { useNutrition } from "../contexts/NutritionContext";
@@ -18,7 +19,11 @@ import { useTheme } from "../contexts/ThemeContext";
 import { getFoodByCodeOFF } from "../services/openFoodFactsApi";
 import { api } from "../services/api";
 import { bumpCachedHistory } from "../services/foodHistoryCache";
-import type { FoodItem } from "../services/nutritionApi";
+import {
+  userFoodToFoodItem,
+  type FoodItem,
+  type UserFoodRow,
+} from "../services/nutritionApi";
 
 const VALID_MEAL_TYPES = ["breakfast", "lunch", "dinner", "snack"] as const;
 type MealType = (typeof VALID_MEAL_TYPES)[number];
@@ -53,6 +58,9 @@ export default function FoodScanScreen() {
   const [error, setError] = useState<string | null>(null);
   const [scannedFood, setScannedFood] = useState<FoodItem | null>(null);
   const [added, setAdded] = useState(false);
+  // Barcode that matched nothing — offered to the user as a food to create.
+  const [notFoundBarcode, setNotFoundBarcode] = useState<string | null>(null);
+  const [showCreateFood, setShowCreateFood] = useState(false);
   const handledRef = useRef(false);
 
   const handleScan = useCallback(
@@ -63,10 +71,20 @@ export default function FoodScanScreen() {
       setError(null);
 
       try {
+        // The user's own foods win over OFF for the same barcode.
+        const mine: UserFoodRow[] | undefined = await api
+          .getUserFoods({ barcode: data })
+          .catch(() => undefined);
+        if (Array.isArray(mine) && mine.length > 0) {
+          setScannedFood(userFoodToFoodItem(mine[0]));
+          return;
+        }
+
         const food = await getFoodByCodeOFF(data, lang as "fr" | "en");
         if (!food) {
           setError(isFr ? "Produit non trouvé pour ce code-barres." : "Product not found for this barcode.");
-          handledRef.current = false;
+          // Keep scanning paused so the user can create the product.
+          setNotFoundBarcode(data);
           setLoading(false);
           return;
         }
@@ -192,12 +210,27 @@ export default function FoodScanScreen() {
           <Pressable
             onPress={() => {
               setError(null);
+              setNotFoundBarcode(null);
               handledRef.current = false;
             }}
             style={styles.errorBtn}
           >
             <Text style={styles.errorText}>
               {error} {isFr ? "Appuyez pour réessayer." : "Tap to retry."}
+            </Text>
+          </Pressable>
+        )}
+        {notFoundBarcode && (
+          <Pressable
+            onPress={() => setShowCreateFood(true)}
+            style={({ pressed }) => [
+              styles.createFoodBtn,
+              pressed && { opacity: 0.85 },
+            ]}
+          >
+            <Ionicons name="add-circle-outline" size={20} color={theme.primary.main} />
+            <Text style={styles.createFoodText}>
+              {isFr ? "Créer ce produit" : "Create this product"}
             </Text>
           </Pressable>
         )}
@@ -215,6 +248,19 @@ export default function FoodScanScreen() {
         }}
         onAdd={handleAdd}
       />
+
+      <CreateFoodSheet
+        visible={showCreateFood}
+        barcode={notFoundBarcode ?? undefined}
+        onClose={() => setShowCreateFood(false)}
+        onCreated={(food) => {
+          setShowCreateFood(false);
+          setError(null);
+          setNotFoundBarcode(null);
+          // Wait for the create sheet to dismiss before presenting the detail sheet.
+          setTimeout(() => setScannedFood(food), 450);
+        }}
+      />
     </View>
   );
 }
@@ -223,6 +269,22 @@ function createStyles(theme: Theme) {
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: theme.primary.main },
     center: { alignItems: "center", justifyContent: "center" },
+    createFoodBtn: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      alignSelf: "center",
+      marginTop: 12,
+      paddingVertical: 12,
+      paddingHorizontal: 18,
+      borderRadius: 14,
+      backgroundColor: "#fff",
+    },
+    createFoodText: {
+      fontFamily: FONTS.semiBold,
+      fontSize: 15,
+      color: theme.primary.main,
+    },
     header: {
       flexDirection: "row",
       alignItems: "center",

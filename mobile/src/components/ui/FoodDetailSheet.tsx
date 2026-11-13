@@ -22,7 +22,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { api } from "../../services/api";
 import { supabase } from "../../services/supabase";
 import { upgradeOFFImage } from "../../services/openFoodFactsApi";
-import type { FoodItem } from "../../services/nutritionApi";
+import { isUserFoodId, type FoodItem } from "../../services/nutritionApi";
 
 const SCREEN_HEIGHT = Dimensions.get("window").height;
 
@@ -156,6 +156,13 @@ const FoodDetailSheet: React.FC<FoodDetailSheetProps> = ({
   // Also check food_custom_values for user-corrected values.
   useEffect(() => {
     if (!visible || !food) return;
+
+    // User-created foods aren't in OFF and can't have corrections — use as-is.
+    if (food.isUserFood || isUserFoodId(food.id)) {
+      setDetail(food);
+      setLoadingDetail(false);
+      return;
+    }
 
     let cancelled = false;
 
@@ -459,17 +466,20 @@ const FoodDetailSheet: React.FC<FoodDetailSheetProps> = ({
                   color={favorite ? theme.primary.main : theme.foreground.white}
                 />
               </Pressable>
-              <Pressable
-                style={styles.appBarBtn}
-                hitSlop={8}
-                onPress={() => setShowOptionsMenu((prev) => !prev)}
-              >
-                <Ionicons
-                  name="ellipsis-vertical"
-                  size={20}
-                  color={theme.foreground.white}
-                />
-              </Pressable>
+              {/* "Edit values" submits a public correction — not for private foods */}
+              {!food.isUserFood && !isUserFoodId(food.id) && (
+                <Pressable
+                  style={styles.appBarBtn}
+                  hitSlop={8}
+                  onPress={() => setShowOptionsMenu((prev) => !prev)}
+                >
+                  <Ionicons
+                    name="ellipsis-vertical"
+                    size={20}
+                    color={theme.foreground.white}
+                  />
+                </Pressable>
+              )}
             </View>
           </View>
 

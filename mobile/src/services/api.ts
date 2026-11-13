@@ -122,6 +122,34 @@ export const api = {
   updateNutritionGoals: (data: Record<string, unknown>) =>
     authFetch("/nutrition/goals", { method: "PATCH", body: JSON.stringify(data) }),
 
+  // ── User foods (private, user-created products) ────────
+  getUserFoods: (opts: { q?: string; barcode?: string } = {}) => {
+    const qs = new URLSearchParams();
+    if (opts.q) qs.set("q", opts.q);
+    if (opts.barcode) qs.set("barcode", opts.barcode);
+    const suffix = qs.toString() ? `?${qs}` : "";
+    return authFetch(`/nutrition/user-foods${suffix}`);
+  },
+  createUserFood: (data: {
+    name: string;
+    brand?: string;
+    barcode?: string;
+    serving_size_g?: number;
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+    nutrients?: Record<string, number>;
+  }) =>
+    authFetch("/nutrition/user-foods", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  deleteUserFood: (id: string) =>
+    authFetch(`/nutrition/user-foods/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+    }),
+
   // ── Custom food values & corrections ───────────────────
   getFoodCustomValues: (foodId: string) =>
     authFetch(`/nutrition/food-custom-values/${encodeURIComponent(foodId)}`),
