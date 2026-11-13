@@ -12,7 +12,7 @@ import { supabase } from "./supabase";
 
 const BUCKET = "avatars";
 
-type SignedAvatarUpload = {
+type SignedUpload = {
   bucket: string;
   storage_path: string;
   signed_url: string;
@@ -20,7 +20,8 @@ type SignedAvatarUpload = {
   public_url: string;
 };
 
-type Source = "library" | "camera";
+export type ImageSource = "library" | "camera";
+type Source = ImageSource;
 
 function extFromAsset(asset: ImagePicker.ImagePickerAsset): "jpg" | "png" | "webp" | "heic" {
   const src = (asset.mimeType || asset.fileName || asset.uri || "").toLowerCase();
@@ -85,10 +86,15 @@ async function fetchAsArrayBuffer(uri: string): Promise<ArrayBuffer> {
 }
 
 /**
- * Picks an avatar and uploads it to the avatars bucket.
- * Returns the public URL to store as avatar_url, or null if the user cancelled.
+ * Picks a square image (camera or library) and uploads it through a signed URL.
+ * `sign` must call an API endpoint returning a SignedUpload for `bucket`.
+ * Returns the public URL, or null if the user cancelled.
  */
-export async function pickAndUploadAvatar(source: Source): Promise<string | null> {
+export async function pickAndUploadImage(
+  source: Source,
+  bucket: string,
+  sign: (ext: string) => Promise<SignedUpload>,
+): Promise<string | null> {
   const allowed = await ensurePermission(source);
   if (!allowed) return null;
 
@@ -98,14 +104,14 @@ export async function pickAndUploadAvatar(source: Source): Promise<string | null
   const ext = extFromAsset(asset);
   const mime = mimeFromExt(ext);
 
-  const signed = (await api.signAvatarUpload({ ext })) as SignedAvatarUpload;
+  const signed = await sign(ext);
   if (!signed?.signed_url || !signed?.storage_path || !signed?.token) {
-    throw new Error("Failed to sign avatar upload");
+    throw new Error("Failed to sign image upload");
   }
 
   const body = await fetchAsArrayBuffer(asset.uri);
   const { error } = await supabase.storage
-    .from(BUCKET)
+    .from(bucket)
     .uploadToSignedUrl(signed.storage_path, signed.token, body, {
       contentType: mime,
       upsert: true,
@@ -113,4 +119,25 @@ export async function pickAndUploadAvatar(source: Source): Promise<string | null
   if (error) throw error;
 
   return signed.public_url;
+}
+
+/**
+ * Picks an avatar and uploads it to the avatars bucket.
+ * Returns the public URL to store as avatar_url, or null if the user cancelled.
+ */
+export function pickAndUploadAvatar(source: Source): Promise<string | null> {
+  return pickAndUploadImage(
+    source,
+    BUCKET,
+    async (ext) => (await api.signAvatarUpload({ ext })) as SignedUpload,
+  );
+}
+
+/** Picks a photo of a user-created food and uploads it to the food-images bucket. */
+export function pickAndUploadFoodImage(source: Source): Promise<string | null> {
+  return pickAndUploadImage(
+    source,
+    "food-images",
+    async (ext) => (await api.signUserFoodImageUpload({ ext })) as SignedUpload,
+  );
 }

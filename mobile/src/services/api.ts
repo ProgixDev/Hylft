@@ -135,6 +135,7 @@ export const api = {
     brand?: string;
     barcode?: string;
     serving_size_g?: number;
+    image_url?: string;
     calories: number;
     protein: number;
     carbs: number;
@@ -142,6 +143,11 @@ export const api = {
     nutrients?: Record<string, number>;
   }) =>
     authFetch("/nutrition/user-foods", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  signUserFoodImageUpload: (data: { ext?: string } = {}) =>
+    authFetch("/nutrition/user-foods/image/sign-upload", {
       method: "POST",
       body: JSON.stringify(data),
     }),

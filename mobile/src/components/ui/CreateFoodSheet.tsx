@@ -3,6 +3,8 @@ import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
+  Alert,
+  Image,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -17,6 +19,10 @@ import { FONTS } from "../../constants/fonts";
 import { Theme } from "../../constants/themes";
 import { useTheme } from "../../contexts/ThemeContext";
 import { api } from "../../services/api";
+import {
+  pickAndUploadFoodImage,
+  type ImageSource,
+} from "../../services/avatarUploader";
 import {
   FoodItem,
   UserFoodNutrientKey,
@@ -146,6 +152,8 @@ const CreateFoodSheet: React.FC<CreateFoodSheetProps> = ({
     Partial<Record<UserFoodNutrientKey, string>>
   >({});
   const [showDetails, setShowDetails] = useState(false);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -164,13 +172,61 @@ const CreateFoodSheet: React.FC<CreateFoodSheetProps> = ({
       setServingSize("");
       setDetails({});
       setShowDetails(false);
+      setImageUrl(null);
+      setUploadingImage(false);
       setError(null);
       setSaving(false);
     }
   }
 
+  const uploadFrom = async (source: ImageSource) => {
+    setUploadingImage(true);
+    setError(null);
+    try {
+      const url = await pickAndUploadFoodImage(source);
+      if (url) setImageUrl(url);
+    } catch (e) {
+      console.error("[CreateFoodSheet] Image upload failed:", e);
+      setError(
+        isFr
+          ? "Impossible d'envoyer la photo. Réessayez."
+          : "Couldn't upload the photo. Please try again.",
+      );
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handlePhotoPress = () => {
+    if (uploadingImage) return;
+    Alert.alert(
+      isFr ? "Photo du produit" : "Product photo",
+      undefined,
+      [
+        {
+          text: isFr ? "Prendre une photo" : "Take a photo",
+          onPress: () => void uploadFrom("camera"),
+        },
+        {
+          text: isFr ? "Choisir dans la galerie" : "Choose from gallery",
+          onPress: () => void uploadFrom("library"),
+        },
+        ...(imageUrl
+          ? [
+              {
+                text: isFr ? "Supprimer la photo" : "Remove photo",
+                style: "destructive" as const,
+                onPress: () => setImageUrl(null),
+              },
+            ]
+          : []),
+        { text: isFr ? "Annuler" : "Cancel", style: "cancel" as const },
+      ],
+    );
+  };
+
   const handleSave = async () => {
-    if (saving) return;
+    if (saving || uploadingImage) return;
     const trimmedName = name.trim();
     const cal = parseNum(calories);
     if (!trimmedName) {
@@ -198,6 +254,7 @@ const CreateFoodSheet: React.FC<CreateFoodSheetProps> = ({
         brand: brand.trim() || undefined,
         barcode: barcode || undefined,
         serving_size_g: parseNum(servingSize) ?? undefined,
+        image_url: imageUrl ?? undefined,
         calories: cal,
         protein: parseNum(protein) ?? 0,
         carbs: parseNum(carbs) ?? 0,
@@ -288,6 +345,42 @@ const CreateFoodSheet: React.FC<CreateFoodSheetProps> = ({
             <Text style={styles.sectionTitle}>
               {isFr ? "Produit" : "Product"}
             </Text>
+            <Pressable
+              style={({ pressed }) => [
+                styles.photoRow,
+                pressed && { opacity: 0.8 },
+              ]}
+              onPress={handlePhotoPress}
+              disabled={uploadingImage}
+            >
+              <View style={styles.photoBox}>
+                {uploadingImage ? (
+                  <ActivityIndicator color={theme.primary.main} />
+                ) : imageUrl ? (
+                  <Image source={{ uri: imageUrl }} style={styles.photoImage} />
+                ) : (
+                  <Ionicons
+                    name="camera-outline"
+                    size={26}
+                    color={theme.foreground.gray}
+                  />
+                )}
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.photoTitle}>
+                  {imageUrl
+                    ? isFr
+                      ? "Changer la photo"
+                      : "Change photo"
+                    : isFr
+                      ? "Ajouter une photo (optionnel)"
+                      : "Add a photo (optional)"}
+                </Text>
+                <Text style={styles.photoHint}>
+                  {isFr ? "Appareil photo ou galerie" : "Camera or gallery"}
+                </Text>
+              </View>
+            </Pressable>
             <Text style={styles.label}>{isFr ? "Nom *" : "Name *"}</Text>
             <TextInput
               style={[styles.input, styles.textInput]}
@@ -412,10 +505,10 @@ const CreateFoodSheet: React.FC<CreateFoodSheetProps> = ({
             <Pressable
               style={({ pressed }) => [
                 styles.saveBtn,
-                (pressed || saving) && { opacity: 0.85 },
+                (pressed || saving || uploadingImage) && { opacity: 0.85 },
               ]}
               onPress={handleSave}
-              disabled={saving}
+              disabled={saving || uploadingImage}
             >
               {saving ? (
                 <ActivityIndicator color="#fff" />
@@ -533,6 +626,36 @@ function createStyles(theme: Theme) {
     },
     fieldHalf: {
       width: "48%",
+    },
+    photoRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 14,
+      marginBottom: 12,
+    },
+    photoBox: {
+      width: 72,
+      height: 72,
+      borderRadius: 14,
+      backgroundColor: theme.background.accent,
+      alignItems: "center",
+      justifyContent: "center",
+      overflow: "hidden",
+    },
+    photoImage: {
+      width: "100%",
+      height: "100%",
+    },
+    photoTitle: {
+      fontFamily: FONTS.semiBold,
+      fontSize: 15,
+      color: theme.foreground.white,
+    },
+    photoHint: {
+      fontFamily: FONTS.regular,
+      fontSize: 12,
+      color: theme.foreground.gray,
+      marginTop: 2,
     },
     detailsToggle: {
       flexDirection: "row",

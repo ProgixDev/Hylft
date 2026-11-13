@@ -31,7 +31,7 @@
         "UIViewControllerBasedStatusBarAppearance": false,
         "NSHealthShareUsageDescription": "Hylift needs access to your health data to track your calories burned, steps, and workouts.",
         "NSHealthUpdateUsageDescription": "Hylift needs to save your workout and nutrition data to Apple Health.",
-        "NSCameraUsageDescription": "Hylift uses the camera to scan profile QR codes."
+        "NSCameraUsageDescription": "Hylift uses the camera to scan QR codes and food barcodes, and to take photos of your foods and profile."
       },
       "entitlements": {
         "com.apple.developer.healthkit": true,
@@ -95,7 +95,7 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Hylift uses the camera to scan profile QR codes."
+          "cameraPermission": "Hylift uses the camera to scan QR codes and food barcodes, and to take photos of your foods and profile."
         }
       ],
       [

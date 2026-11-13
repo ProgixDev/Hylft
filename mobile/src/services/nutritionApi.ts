@@ -66,6 +66,7 @@ export interface UserFoodRow {
   brand: string | null;
   barcode: string | null;
   serving_size_g: number | string | null;
+  image_url?: string | null;
   calories: number | string;
   protein: number | string;
   carbs: number | string;
@@ -92,6 +93,7 @@ export function userFoodToFoodItem(row: UserFoodRow): FoodItem {
     id: `${USER_FOOD_ID_PREFIX}${row.id}`,
     name: row.name,
     brand: row.brand ?? undefined,
+    imageUrl: row.image_url ?? undefined,
     servingSize: serving > 0 ? serving : undefined,
     calories: Number(row.calories) || 0,
     protein: Number(row.protein) || 0,
