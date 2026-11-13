@@ -52,3 +52,7 @@ mobile/android/
 mobile/.expo/
 
 /vscode
+
+# Supabase CLI local cache
+supabase/.temp/
+server/supabase/.temp/
