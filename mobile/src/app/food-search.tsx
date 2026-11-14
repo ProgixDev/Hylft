@@ -762,11 +762,10 @@ export default function FoodSearchScreen() {
           <TextInput
             style={styles.searchInput}
             placeholder={
-              isFr
-                ? "Rechercher un aliment (poulet, riz, œuf...)"
-                : "Search food (chicken, rice, egg...)"
+              isFr ? "Ex. : poulet, riz, œufs…" : "e.g. chicken, rice, eggs…"
             }
             placeholderTextColor={theme.foreground.gray}
+            numberOfLines={1}
             value={query}
             onChangeText={setQuery}
             returnKeyType="search"
