@@ -10,15 +10,16 @@ import type {
   FoodSearchResponse,
 } from "./nutritionApi";
 
-// Primary: Search-a-licious (Elasticsearch-backed, typically <500ms).
-// Fallbacks: v2 search, then legacy CGI — both are slow but more complete.
+// Search-a-licious (Elasticsearch-backed) is the only working text search.
+// There is deliberately no fallback: /api/v2/search ignores `search_terms`
+// (returns the most-scanned products, unrelated to the query) and
+// /cgi/search.pl now requires a signed-in session (HTTP 503 login page).
 const SEARCH_A_LICIOUS_URL = "https://search.openfoodfacts.org/search";
-const OFF_V2_SEARCH_URL = "https://world.openfoodfacts.org/api/v2/search";
-const OFF_CGI_SEARCH_URL = "https://world.openfoodfacts.org/cgi/search.pl";
 const OFF_PRODUCT_URL = "https://world.openfoodfacts.org/api/v2/product";
 
-const REQUEST_TIMEOUT_MS = 5000;
-const MAX_RETRIES = 1;
+// Generous timeout: on mobile data the first request often exceeds 5 s.
+const REQUEST_TIMEOUT_MS = 12000;
+const MAX_RETRIES = 2;
 const BASE_BACKOFF_MS = 500;
 
 // In-memory result cache so repeat searches (same query + page) return instantly.
@@ -103,14 +104,6 @@ interface OFFProduct {
   image_front_small_url?: string;
   image_url?: string;
   image_front_url?: string;
-}
-
-interface OFFSearchResponse {
-  products?: OFFProduct[];
-  count?: number;
-  page?: number;
-  page_size?: number;
-  page_count?: number;
 }
 
 const FIELDS = [
@@ -338,50 +331,12 @@ export async function searchFoodsOFF(
   const cached = cacheGet(cacheKey);
   if (cached) return cached;
 
-  // 1. Try Search-a-licious (fast).
-  const fastResult = await trySearchALicious(trimmed, lang, page, pageSize);
-  if (fastResult) {
-    cacheSet(cacheKey, fastResult);
-    return fastResult;
-  }
-
-  // 2. Fall back to legacy OFF endpoints (slower but more complete).
-  const offPage = Math.max(1, page + 1);
-  const params = new URLSearchParams({
-    search_terms: trimmed,
-    search_simple: "1",
-    json: "1",
-    page: String(offPage),
-    page_size: String(pageSize),
-    lc: lang,
-    fields: FIELDS,
-  });
-
-  let data: OFFSearchResponse | null = null;
-  let lastErr: unknown = null;
-  for (const baseUrl of [OFF_V2_SEARCH_URL, OFF_CGI_SEARCH_URL]) {
-    try {
-      data = await fetchWithRetry(`${baseUrl}?${params.toString()}`);
-      break;
-    } catch (err) {
-      lastErr = err;
-    }
-  }
-  if (!data) {
-    console.warn("[OFF] search failed (all endpoints):", lastErr);
+  const result = await trySearchALicious(trimmed, lang, page, pageSize);
+  if (!result) {
+    // Network/API failure: show no results (and the "create food" option)
+    // rather than unrelated products. Not cached, so a retry hits the API.
     return { items: [], hasMore: false, nextPage: null };
   }
-
-  const products = Array.isArray(data?.products) ? data.products : [];
-  const items = products
-    .map((p, i) => mapProduct(p, lang, i))
-    .filter((it): it is FoodItem => it !== null);
-
-  const total = safeNum(data?.count);
-  const seen = page * pageSize + items.length;
-  const hasMore = seen < total && products.length > 0;
-
-  const result = { items, hasMore, nextPage: hasMore ? page + 1 : null };
   cacheSet(cacheKey, result);
   return result;
 }
