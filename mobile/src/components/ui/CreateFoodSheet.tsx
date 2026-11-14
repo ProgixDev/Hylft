@@ -1,10 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Alert,
   Image,
+  Keyboard,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -153,6 +154,23 @@ const CreateFoodSheet: React.FC<CreateFoodSheetProps> = ({
   >({});
   const [showDetails, setShowDetails] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  // Android doesn't resize a Modal's window for the keyboard, so we pad the
+  // sheet by the keyboard height ourselves (iOS uses KeyboardAvoidingView).
+  const [androidKeyboardHeight, setAndroidKeyboardHeight] = useState(0);
+
+  useEffect(() => {
+    if (Platform.OS !== "android") return;
+    const show = Keyboard.addListener("keyboardDidShow", (e) =>
+      setAndroidKeyboardHeight(e.endCoordinates.height),
+    );
+    const hide = Keyboard.addListener("keyboardDidHide", () =>
+      setAndroidKeyboardHeight(0),
+    );
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -227,6 +245,8 @@ const CreateFoodSheet: React.FC<CreateFoodSheetProps> = ({
 
   const handleSave = async () => {
     if (saving || uploadingImage) return;
+    // Close the keyboard now so it's fully gone before the detail sheet opens.
+    Keyboard.dismiss();
     const trimmedName = name.trim();
     const cal = parseNum(calories);
     if (!trimmedName) {
@@ -310,7 +330,7 @@ const CreateFoodSheet: React.FC<CreateFoodSheetProps> = ({
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
-        style={styles.backdrop}
+        style={[styles.backdrop, { paddingBottom: androidKeyboardHeight }]}
       >
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
         <View style={styles.sheet}>
@@ -338,7 +358,8 @@ const CreateFoodSheet: React.FC<CreateFoodSheetProps> = ({
           </Text>
 
           <ScrollView
-            style={{ maxHeight: 520 }}
+            // flexShrink lets the form shrink above the keyboard and scroll.
+            style={{ maxHeight: 520, flexShrink: 1 }}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
@@ -532,10 +553,12 @@ function createStyles(theme: Theme) {
     backdrop: {
       flex: 1,
       justifyContent: "flex-end",
+      paddingTop: 48,
       backgroundColor: "rgba(0,0,0,0.55)",
     },
     sheet: {
       width: "100%",
+      flexShrink: 1,
       backgroundColor: theme.background.darker,
       borderTopLeftRadius: 24,
       borderTopRightRadius: 24,

@@ -5,6 +5,7 @@ import {
   ActivityIndicator,
   Dimensions,
   Image,
+  Keyboard,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -100,6 +101,24 @@ const FoodDetailSheet: React.FC<FoodDetailSheetProps> = ({
   const [favorite, setFavorite] = useState(false);
   const [detail, setDetail] = useState<FoodItem | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
+  // Android: behavior="height" mis-measures inside a Modal (e.g. when it opens
+  // while another sheet's keyboard is closing) and leaves the sheet shifted up.
+  // Pad by the real keyboard height instead (iOS keeps KeyboardAvoidingView).
+  const [androidKeyboardHeight, setAndroidKeyboardHeight] = useState(0);
+
+  useEffect(() => {
+    if (Platform.OS !== "android") return;
+    const show = Keyboard.addListener("keyboardDidShow", (e) =>
+      setAndroidKeyboardHeight(e.endCoordinates.height),
+    );
+    const hide = Keyboard.addListener("keyboardDidHide", () =>
+      setAndroidKeyboardHeight(0),
+    );
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
   const [detailError, setDetailError] = useState(false);
   const [hiResFailed, setHiResFailed] = useState(false);
 
@@ -420,8 +439,8 @@ const FoodDetailSheet: React.FC<FoodDetailSheetProps> = ({
       statusBarTranslucent
     >
       <KeyboardAvoidingView
-        style={styles.container}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={[styles.container, { paddingBottom: androidKeyboardHeight }]}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <Pressable style={styles.backdrop} onPress={onClose} />
 
